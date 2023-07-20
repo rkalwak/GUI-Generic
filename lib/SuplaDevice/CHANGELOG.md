@@ -1,5 +1,30 @@
 # CHANGELOG.md
 
+## 23.07.01 (2023-07-20)
+
+  - Change: default proto version for SuplaDevice changed from 16 to 20 (if you want to use other proto version, please specify it in SuplaDevice.begin(proto_version) call)
+  - Change: supla-common update
+  - Fix: Relay: fix for stackoverflow issue with ESP8266 and restoring countdown timer. Timer update message will be send on iterateConnected, instead of onRegistered callback.
+  - Fix: Arduino IDE (ESP8266): for some reason when hostname is longer than 30 bytes, Wi-Fi connection can't be esablished. So as a workaround, we truncate hostname to 30 bytes
+  - Add: abbility to send Push notifications directly from device
+  - Add: Arduino IDE: add example with basic notifications usage (DSwithNotification)
+  - Add: SuplaDevice: always print device's GUID in debug logs
+
+## 23.07 (2023-07-07)
+
+  - Change: Relay with Staircase function: duration of staircase timer is now fetched from server after registration. It is no longer required to turn on timer from Supla app in order to store a new timer value on device.
+  - Change: Relay: keepTurnOnDuration() function is DEPRECATED. It can be removed from all application. Currently it is left empty in order to not break compilation of user applications.
+  - Change: Impulse counter: restrict updates send to server to at most 1 Hz
+  - Fix: Uptime: fix for uptime calculation error which resulted in very large number in "channel state info"
+  - Fix: Electricity Meter: fixed clearing EM parameters in case of any problem with data reading. Only "energy" parameters will be send in case of problems and all other fields (including current) are cleared. Previous implmentation was leaving "current" field reported with previous value.
+  - Fix: ESP-IDF: fix for reporting Wi-Fi connection fail reason
+  - Add: ESP-IDF: ADC driver interface
+  - Add: Relay: add countdowm timer support for Light and PowerSwitch functions. By default timer function is enabled and it will be updated on server after device firmware update. Countdown timer function can be disabled by calling disableCountdownTimerFunction() method. IMPORTANT: countdown timer fuction can't be removed from device without removing device from Cloud. WARNING: some custom implementation of classes inherit from Relay, may require adjustements to countdowm timer function.
+  - Add: SuplaDevice: add info print in log with device name and SW version
+  - Add: Element class: add onSoftReset callback
+  - Add: ImpulseCounter: add support for counter reset from Cloud button
+
+
 ## 23.05 (2023-05-25)
 
   - Change: ESP-IDF version update to 5.0.2

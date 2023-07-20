@@ -52,6 +52,53 @@ Relay::Relay(int pin, bool highIsOn, _supla_int_t functions)
   channel.setFuncList(functions);
 }
 
+void Relay::onRegistered(
+    Supla::Protocol::SuplaSrpc *suplaSrpc) {
+  Supla::Element::onRegistered(suplaSrpc);
+  channel.requestChannelConfig();
+
+  timerUpdateTimestamp = 0;
+}
+
+void Relay::handleChannelConfig(
+    TSD_ChannelConfig *result) {
+  SUPLA_LOG_DEBUG(
+      "Relay::handleChannelConfig, func %d, configtype %d, configsize %d",
+      result->Func,
+      result->ConfigType,
+      result->ConfigSize);
+  setChannelFunction(result->Func);
+  switch (result->Func) {
+    default:
+    case SUPLA_CHANNELFNC_LIGHTSWITCH:
+    case SUPLA_CHANNELFNC_POWERSWITCH: {
+      break;
+    }
+
+    case SUPLA_CHANNELFNC_STAIRCASETIMER: {
+      if (result->ConfigType == 0 &&
+          result->ConfigSize == sizeof(TChannelConfig_StaircaseTimer)) {
+        uint32_t newDurationMs =
+            reinterpret_cast<TChannelConfig_StaircaseTimer *>(result->Config)
+                ->TimeMS;
+        if (newDurationMs != storedTurnOnDurationMs) {
+          storedTurnOnDurationMs = newDurationMs;
+          Supla::Storage::ScheduleSave(2000);
+        }
+      }
+      break;
+    }
+
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATE:
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK:
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR:
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK: {
+      // add here reading of duration from config when it will be added
+      break;
+    }
+  }
+}
+
 uint8_t Relay::pinOnValue() {
   return highIsOn ? HIGH : LOW;
 }

@@ -112,9 +112,14 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   bool getLevel(uint8_t gpio);
   bool getPullUp(uint8_t gpio);
   bool getInversed(uint8_t gpio);
-
   uint8_t getMemory(uint8_t gpio, uint8_t nr = 0);
+
+  uint8_t mapGUIActionToInternal(uint8_t guiAction);
+  void setAction(uint8_t gpio, uint8_t actionGUI);
   uint8_t getAction(uint8_t gpio);
+
+  uint8_t mapGUIEventToInternal(uint8_t guiAction);
+  void setEvent(uint8_t gpio, uint8_t eventGUI);
   uint8_t getEvent(uint8_t gpio);
 
   bool checkBusyCfg(int gpio, int function);
@@ -128,8 +133,6 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
 
   void setPullUp(uint8_t gpio, int pullup);
   void setInversed(uint8_t gpio, int inversed);
-  void setAction(uint8_t gpio, int action);
-  void setEvent(uint8_t gpio, int event);
   void setNumberButton(uint8_t nr) {
     setNumberButton(nr, nr);
   }

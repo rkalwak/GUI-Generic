@@ -212,10 +212,10 @@ void handleButtonSaveSet() {
   ConfigESP->setNumberButton(button.toInt(), WebServer->httpServer->arg(input).toInt());
 
   input = INPUT_BUTTON_EVENT;
-  ConfigESP->setEvent(gpio, WebServer->httpServer->arg(input).toInt());
+  ConfigManager->setElement(key, EVENT_BUTTON, WebServer->httpServer->arg(input).toInt());
 
   input = INPUT_BUTTON_ACTION;
-  ConfigESP->setAction(gpio, WebServer->httpServer->arg(input).toInt());
+  ConfigManager->setElement(key, ACTION_BUTTON, WebServer->httpServer->arg(input).toInt());
 
   input = INPUT_ANALOG_EXPECTED;
   ConfigManager->setElement(KEY_ANALOG_INPUT_EXPECTED, button.toInt(), WebServer->httpServer->arg(input).toInt());
@@ -421,8 +421,8 @@ void handleButtonSaveSetMCP23017() {
 
     ConfigManager->setElement(key, PULL_UP_BUTTON, pullup);
     ConfigManager->setElement(key, INVERSED_BUTTON, inversed);
-    ConfigESP->setEvent(gpio, event);
-    ConfigESP->setAction(gpio, action);
+    ConfigManager->setElement(key, EVENT_BUTTON, event);
+    ConfigManager->setElement(key, ACTION_BUTTON, action);
 
     input = INPUT_BUTTON_NUMBER;
     ConfigESP->setNumberButton(button.toInt(), WebServer->httpServer->arg(input).toInt());
@@ -432,8 +432,8 @@ void handleButtonSaveSetMCP23017() {
       key = KEY_GPIO + gpio;
       ConfigManager->setElement(key, PULL_UP_BUTTON, pullup);
       ConfigManager->setElement(key, INVERSED_BUTTON, inversed);
-      ConfigESP->setEvent(gpio, event);
-      ConfigESP->setAction(gpio, action);
+      ConfigManager->setElement(key, EVENT_BUTTON, event);
+      ConfigManager->setElement(key, ACTION_BUTTON, action);
     }
   }
   switch (ConfigManager->save()) {

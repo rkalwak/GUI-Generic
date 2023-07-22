@@ -556,8 +556,10 @@ uint8_t SuplaConfigESP::getMemory(uint8_t gpio, uint8_t nr) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(MEMORY).toInt();
 }
 
-uint8_t SuplaConfigESP::mapGUIActionToInternal(uint8_t guiAction) {
-  switch (guiAction) {
+uint8_t SuplaConfigESP::getAction(uint8_t gpio) {
+  uint8_t action = ConfigManager->get(getKeyGpio(gpio))->getElement(ACTION_BUTTON).toInt();
+
+  switch (action) {
     case Supla::GUI::Action::TURN_ON:
       return Supla::Action::TURN_ON;
     case Supla::GUI::Action::TURN_OFF:
@@ -565,21 +567,14 @@ uint8_t SuplaConfigESP::mapGUIActionToInternal(uint8_t guiAction) {
     case Supla::GUI::Action::TOGGLE:
       return Supla::Action::TOGGLE;
     default:
-      return guiAction;
+      return action;
   }
 }
 
-void SuplaConfigESP::setAction(uint8_t gpio, uint8_t actionGUI) {
-  ConfigManager->setElement(getKeyGpio(gpio), ACTION_BUTTON, actionGUI);
-}
+uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
+  uint8_t event = ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 
-uint8_t SuplaConfigESP::getAction(uint8_t gpio) {
-  uint8_t actionInternal = ConfigManager->get(getKeyGpio(gpio))->getElement(ACTION_BUTTON).toInt();
-  return mapGUIEventToInternal(actionInternal);
-}
-
-uint8_t SuplaConfigESP::mapGUIEventToInternal(uint8_t internalEvent) {
-  switch (internalEvent) {
+  switch (event) {
     case Supla::GUI::Event::ON_PRESS:
       return Supla::Event::ON_PRESS;
     case Supla::GUI::Event::ON_RELEASE:
@@ -591,17 +586,8 @@ uint8_t SuplaConfigESP::mapGUIEventToInternal(uint8_t internalEvent) {
     case Supla::GUI::Event::CONDITIONAL_ON_CHANGE:
       return Supla::Event::CONDITIONAL_ON_CHANGE;
     default:
-      return internalEvent;
+      return event;
   }
-}
-
-void SuplaConfigESP::setEvent(uint8_t gpio, uint8_t eventGUI) {
-  ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, eventGUI);
-}
-
-uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
-  uint8_t eventInternal = ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
-  return mapGUIEventToInternal(eventInternal);
 }
 
 bool SuplaConfigESP::checkBusyCfg(int gpio, int function) {
@@ -674,6 +660,14 @@ void SuplaConfigESP::setPullUp(uint8_t gpio, int pullup) {
 
 void SuplaConfigESP::setInversed(uint8_t gpio, int inversed) {
   ConfigManager->setElement(getKeyGpio(gpio), INVERSED_BUTTON, inversed);
+}
+
+void SuplaConfigESP::setAction(uint8_t gpio, int action) {
+  ConfigManager->setElement(getKeyGpio(gpio), ACTION_BUTTON, action);
+}
+
+void SuplaConfigESP::setEvent(uint8_t gpio, int event) {
+  ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, event);
 }
 
 void SuplaConfigESP::setNumberButton(uint8_t nr, uint8_t nrButton) {

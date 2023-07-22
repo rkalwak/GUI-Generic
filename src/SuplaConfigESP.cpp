@@ -575,7 +575,7 @@ void SuplaConfigESP::setAction(uint8_t gpio, uint8_t actionGUI) {
 
 uint8_t SuplaConfigESP::getAction(uint8_t gpio) {
   uint8_t actionInternal = ConfigManager->get(getKeyGpio(gpio))->getElement(ACTION_BUTTON).toInt();
-  return mapGUIActionToInternal(actionInternal);
+  return mapGUIEventToInternal(actionInternal);
 }
 
 uint8_t SuplaConfigESP::mapGUIEventToInternal(uint8_t internalEvent) {

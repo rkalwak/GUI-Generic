@@ -560,6 +560,21 @@ uint8_t SuplaConfigESP::getAction(uint8_t gpio) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(ACTION_BUTTON).toInt();
 }
 
+Supla::Action SuplaConfigESP::getActionInternal(uint8_t gpio) {
+  Supla::Action actionInternal = static_cast<Supla::Action>(ConfigManager->get(getKeyGpio(gpio))->getElement(ACTION_BUTTON).toInt());
+
+  switch (actionInternal) {
+    case Supla::GUI::Action::TURN_ON:
+      return Supla::Action::TURN_ON;
+    case Supla::GUI::Action::TURN_OFF:
+      return Supla::Action::TURN_OFF;
+    case Supla::GUI::Action::TOGGLE:
+      return Supla::Action::TOGGLE;
+    default:
+      return actionInternal;
+  }
+}
+
 uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 }

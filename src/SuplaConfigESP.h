@@ -26,6 +26,7 @@
 #include <supla/action_handler.h>
 #include <supla/element.h>
 #include "SuplaConfigManager.h"
+#include <supla/actions.h>
 
 #include <Ticker.h>
 
@@ -115,6 +116,7 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
 
   uint8_t getMemory(uint8_t gpio, uint8_t nr = 0);
   uint8_t getAction(uint8_t gpio);
+  Supla::Action getActionInternal(uint8_t gpio);
   uint8_t getEvent(uint8_t gpio);
 
   bool checkBusyCfg(int gpio, int function);

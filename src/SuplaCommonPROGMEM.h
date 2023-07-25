@@ -19,9 +19,8 @@
 #include <pgmspace.h>
 #include "GUIGenericCommon.h"
 
-#define PGMT(pgm_ptr) (reinterpret_cast<const __FlashStringHelper*>(pgm_ptr))
+#define PGMT(pgm_ptr)           (reinterpret_cast<const __FlashStringHelper*>(pgm_ptr))
 #define COUNT_ELEMENTS_PGM(arr) (sizeof(arr) / sizeof(arr[0]))
-
 
 const char HTTP_META[] PROGMEM =
     "<!DOCTYPE HTML><html><head><meta http-equiv='content-type' content='text/html; charset=UTF-8'>"
@@ -254,6 +253,17 @@ const char* const LEVEL_P[] PROGMEM = {LOW_STATE_CONTROL, HIGH_STATE_CONTROL};
 
 const char POSITION_MEMORY[] PROGMEM = S_POSITION_MEMORY;
 const char* const MEMORY_P[] PROGMEM = {OFF, ON, POSITION_MEMORY};
+
+namespace Supla {
+namespace GUI {
+enum Action
+{
+  TURN_ON,
+  TURN_OFF,
+  TOGGLE
+};
+}
+}  // namespace Supla
 
 const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS,
                                          S_REACTION_ON_RELEASE,

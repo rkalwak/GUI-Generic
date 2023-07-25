@@ -163,7 +163,7 @@ void addButtonToRelay(uint8_t nrRelay) {
     nrButton = ConfigESP->getNumberButton(nr);
     pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
     pinRelay = ConfigESP->getGpio(nrButton, FUNCTION_RELAY);
-    buttonAction = ConfigESP->getAction(pinButton);
+    buttonAction = ConfigESP->getActionInternal(pinButton);
     buttonEvent = ConfigESP->getEvent(pinButton);
 
     if (pinButton != OFF_GPIO && pinRelay != OFF_GPIO && nrRelay == nrButton) {
@@ -255,7 +255,7 @@ void addButtonActionTrigger(uint8_t nr) {
     button->setSwNoiseFilterDelay(50);
     auto at = new Supla::Control::ActionTrigger();
 
-    button->addAction(ConfigESP->getAction(pinButton), at, ConfigESP->getEvent(pinButton));
+    button->addAction(ConfigESP->getActionInternal(pinButton), at, ConfigESP->getEvent(pinButton));
 
     int muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
     int holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
@@ -463,7 +463,7 @@ void addRolleShutter(uint8_t nr) {
   inversedButtonDown = ConfigESP->getInversed(pinButtonDown);
   inversedButtonStop = ConfigESP->getInversed(pinButtonStop);
 
-  actionButtonUp = ConfigESP->getAction(pinButtonUp);
+  actionButtonUp = ConfigESP->getActionInternal(pinButtonUp);
 
   eventButtonUp = ConfigESP->getEvent(pinButtonUp);
   eventButtonStop = ConfigESP->getEvent(pinButtonStop);

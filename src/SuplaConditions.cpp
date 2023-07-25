@@ -245,6 +245,9 @@ void addConditions() {
             conditions[nr].sensor->addAction(actionON, conditions[nr].client, OnGreaterEq(threshold, true));
             break;
           case CONDITION_GPIO:
+            if (threshold == 0) {
+	            actionON = Supla::TURN_OFF;
+            }
             conditions[nr].sensor->addAction(actionON, conditions[nr].client, Supla::ON_TURN_ON);
             break;
         }
@@ -271,6 +274,9 @@ void addConditions() {
             conditions[nr].sensor->addAction(actionOFF, conditions[nr].client, OnLessEq(threshold, true));
             break;
           case CONDITION_GPIO:
+            if (threshold == 1) {
+	            actionOFF = Supla::TURN_ON;
+            }
             conditions[nr].sensor->addAction(actionOFF, conditions[nr].client, Supla::ON_TURN_OFF);
             break;
         }

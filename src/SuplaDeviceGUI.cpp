@@ -463,7 +463,7 @@ void addRolleShutter(uint8_t nr) {
   inversedButtonDown = ConfigESP->getInversed(pinButtonDown);
   inversedButtonStop = ConfigESP->getInversed(pinButtonStop);
 
-  actionButtonUp = ConfigESP->getActionInternal(pinButtonUp);
+  actionButtonUp = ConfigESP->getAction(pinButtonUp);
 
   eventButtonUp = ConfigESP->getEvent(pinButtonUp);
   eventButtonStop = ConfigESP->getEvent(pinButtonStop);

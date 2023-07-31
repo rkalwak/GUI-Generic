@@ -797,7 +797,8 @@ void setup() {
   Supla::GUI::Conditions::addConditions();
 #endif
 
-  if (ConfigESP->getGpio(FUNCTION_CSE7766_RX) == OFF_GPIO) {
+  if (ConfigESP->getGpio(FUNCTION_CSE7766_RX) == OFF_GPIO || ConfigESP->getGpio(FUNCTION_SDM_RX) == OFF_GPIO ||
+      ConfigESP->getGpio(FUNCTION_SDM_TX) == OFF_GPIO) {
     new ImprovSerialComponent();
   }
 

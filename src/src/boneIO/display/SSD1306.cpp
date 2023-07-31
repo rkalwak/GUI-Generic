@@ -26,7 +26,7 @@ void msOverlay(OLEDDisplay* display, OLEDDisplayUiState* state) {
 
   display->setTextAlignment(TEXT_ALIGN_CENTER);
   display->setFont(ArialMT_Plain_16);
-  display->drawString(display->getWidth() / 2, 0, "boneIO");
+  display->drawString(display->getWidth() / 2, 0, S_BONEIO);
 }
 
 void drawFrameStart(OLEDDisplay* display) {

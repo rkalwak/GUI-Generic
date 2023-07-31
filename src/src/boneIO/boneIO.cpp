@@ -89,11 +89,7 @@ boneIO::boneIO() {
   RelayButtonPair RelayButtonPair[deviceRelaySize];
 
   for (int i = 0; i < deviceRelaySize; i++) {
-#ifdef USE_MCP_OUTPUT
-    RelayButtonPair[i] = createRelayChannel(deviceRelay[i], deviceButton[i], true);
-#else
-    RelayButtonPair[i] = createRelayChannel(deviceRelay[i], deviceButton[i], false);
-#endif
+    RelayButtonPair[i] = createRelayChannel(deviceRelay[i], deviceButton[i], ConfigESP->getLevel(BONEIO_RELAY_CONFIG));
 
     PCT2075->addAction(Supla::TURN_OFF, RelayButtonPair[i].relay, OnGreater(80.0));
   }
@@ -158,7 +154,18 @@ boneIO::createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutte
 RelayButtonPair boneIO::createRelayChannel(DevicePin relayPin, DevicePin buttonPin, bool highIsOn) {
   auto relay = new Supla::Control::Relay(relayPin.io, relayPin.pin, highIsOn);
   relay->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
-  relay->setDefaultStateRestore();
+
+  switch (ConfigESP->getMemory(BONEIO_RELAY_CONFIG)) {
+    case MEMORY_OFF:
+      relay->setDefaultStateOff();
+      break;
+    case MEMORY_ON:
+      relay->setDefaultStateOn();
+      break;
+    case MEMORY_RESTORE:
+      relay->setDefaultStateRestore();
+      break;
+  }
 
   auto button = new Supla::Control::Button(buttonPin.io, buttonPin.pin, false, true);
   button->addAction(Supla::TOGGLE, relay, Supla::ON_PRESS);

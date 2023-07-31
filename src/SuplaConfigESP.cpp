@@ -60,6 +60,15 @@ SuplaConfigESP::SuplaConfigESP() {
     if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO)
       ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
 
+#ifdef SUPLA_BONEIO
+    ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
+#ifdef USE_MCP_OUTPUT
+    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
+#else
+    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
+#endif
+#endif
+
     ConfigManager->save();
 
     configModeInit();

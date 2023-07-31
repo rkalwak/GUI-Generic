@@ -152,6 +152,15 @@ void handlePageHome(int save) {
   addTextBoxPassword(webContentBuffer, INPUT_MODUL_PASS, S_LOGIN_PASS, KEY_LOGIN_PASS, MIN_PASSWORD, MAX_MPASSWORD, true);
   addFormHeaderEnd(webContentBuffer);
 
+#ifdef SUPLA_BONEIO
+  addFormHeader(webContentBuffer, String(S_SETTINGS_FOR) + S_SPACE + S_BONEIO);
+  uint8_t selected = ConfigESP->getLevel(BONEIO_RELAY_CONFIG);
+  addListBox(webContentBuffer, INPUT_RELAY_LEVEL, S_STATE_CONTROL, LEVEL_P, 2, selected);
+  selected = ConfigESP->getMemory(BONEIO_RELAY_CONFIG);
+  addListBox(webContentBuffer, INPUT_RELAY_MEMORY, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
+  addFormHeaderEnd(webContentBuffer);
+#endif
+
 #ifdef SUPLA_ROLLERSHUTTER
   uint8_t maxrollershutter = ConfigManager->get(KEY_MAX_RELAY)->getValueInt();
   if (maxrollershutter >= 2) {
@@ -184,6 +193,11 @@ void handlePageHomeSave() {
   if (strcmp(WebServer->httpServer->arg(INPUT_MODUL_PASS).c_str(), "") != 0)
     ConfigManager->set(KEY_LOGIN_PASS, WebServer->httpServer->arg(INPUT_MODUL_PASS).c_str());
 
+#ifdef SUPLA_BONEIO
+  ConfigESP->setMemory(BONEIO_RELAY_CONFIG, WebServer->httpServer->arg(INPUT_RELAY_MEMORY).toInt());
+  ConfigESP->setLevel(BONEIO_RELAY_CONFIG, WebServer->httpServer->arg(INPUT_RELAY_LEVEL).toInt());
+#endif
+
 #ifdef SUPLA_ROLLERSHUTTER
   if (strcmp(WebServer->httpServer->arg(INPUT_ROLLERSHUTTER).c_str(), "") != 0) {
     ConfigManager->set(KEY_MAX_ROLLERSHUTTER, WebServer->httpServer->arg(INPUT_ROLLERSHUTTER).toInt());
@@ -197,10 +211,10 @@ void handlePageHomeSave() {
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
       if (ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
-        handlePageHome(1);
+        handlePageHome(SaveResult::DATA_SAVE);
       }
       else {
-        handlePageHome(7);
+        handlePageHome(SaveResult::DATA_SAVE_MODE_CONFIG);
       }
       break;
 

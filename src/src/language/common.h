@@ -61,4 +61,6 @@
 #define S_UNIT_MS "[ms]"
 
 #define S_GG_UPDATER "GUI-GenericUpdater.bin"
+
+#define S_BONEIO "boneIO"
 #endif /* LANGUAGE_COMMON_H_ */

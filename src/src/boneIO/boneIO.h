@@ -58,6 +58,9 @@
 #define P15 13
 #define P16 14
 #define P17 15
+
+#define BONEIO_RELAY_CONFIG 30
+
 namespace Supla {
 
 struct DevicePin {

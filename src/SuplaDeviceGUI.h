@@ -31,6 +31,9 @@
 
 #include "SuplaConfigESP.h"
 
+#include "SuplaCommonPROGMEM.h"
+#include "src/boneIO/boneIO.h"
+
 #include "SuplaConfigManager.h"
 #include "SuplaWebPageRelay.h"
 #include "SuplaWebPageControl.h"
@@ -52,7 +55,6 @@
 #include "SuplaWebPageTools.h"
 #include "SuplaWebCorrection.h"
 
-#include "SuplaCommonPROGMEM.h"
 #include "Markup.h"
 #include "SuplaConditions.h"
 #include "SuplaWebPageHome.h"

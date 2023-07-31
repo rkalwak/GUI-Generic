@@ -149,24 +149,6 @@ String getParameterRequest(const String& url, const String& param, const String&
 
 const String SuplaJavaScript(const String& java_return = PATH_START);
 
-enum SaveResult
-{
-  DATA_SAVE = 1,
-  RESTART_MODULE,
-  DATA_ERASED_RESTART_DEVICE,
-  WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING,
-  DATA_SAVED_RESTART_MODULE,
-  WRITE_ERROR_BAD_DATA,
-  DATA_SAVE_MODE_CONFIG,
-  UPDATE_SUCCESS,
-  UPDATE_ERROR,
-  UPDATE_WAIT,
-  UPDATE_NO_UPDATES,
-  UPDATE_TOO_LESS_SPACE,
-  UPDATE_NEW_VERSION,
-  UPDATE_2STEP
-};
-
 const String SuplaSaveResult(int save);
 
 #endif  // Markup_h

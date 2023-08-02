@@ -22,9 +22,14 @@
 #endif
 #endif
 
-#ifdef SUPLA_BONEIO
+#if defined(SUPLA_BONEIO)
+
 #if defined(SUPLA_MCP23017)
 #define USE_MCP_OUTPUT
+#endif
+
+#if defined(SUPLA_BONEIO_24x16A)
+#define BONEIO_BOARD_OUTPUT_24
 #endif
 
 #if defined(SUPLA_ROLLERSHUTTER)

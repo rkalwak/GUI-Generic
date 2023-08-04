@@ -122,17 +122,28 @@ String DirectLinksConnect::getRequest() {
       Serial.println(F("Direct links - Headers received"));
       break;
     }
+    yield();
   }
-  char result[1200];
+
+  const int bufferSize = 1200;
+  char result[bufferSize];
   int i = 0;
+
   while (client->connected() || client->available()) {
-    result[i++] = (char)client->read();
+    if (i < bufferSize - 1) {  // Avoid buffer overflow
+      result[i++] = (char)client->read();
+    }
+    else {
+      break;  // Stop reading to prevent buffer overflow
+    }
+    yield(); 
   }
-  result[strlen(result)] = '\0';
+
+  result[i] = '\0';  // Null-terminate the result string
 
   Serial.println(result);
 
-  return result;
+  return String(result);
 }
 
 void DirectLinksConnect::sendRequest() {

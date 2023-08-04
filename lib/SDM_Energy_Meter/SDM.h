@@ -66,11 +66,11 @@
 #endif
 
 #if !defined ( WAITING_TURNAROUND_DELAY )
-  #define WAITING_TURNAROUND_DELAY                    200                       //  time in ms to wait for process current request
+  #define WAITING_TURNAROUND_DELAY                    100                       //  time in ms to wait for process current request
 #endif
 
 #if !defined ( RESPONSE_TIMEOUT )
-  #define RESPONSE_TIMEOUT                            500                       //  time in ms to wait for return response from all devices before next request
+  #define RESPONSE_TIMEOUT                            250                       //  time in ms to wait for return response from all devices before next request
 #endif
 
 #if !defined ( SDM_MIN_DELAY )

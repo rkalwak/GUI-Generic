@@ -194,15 +194,22 @@ void addButtonToRelay(uint8_t nrRelay) {
           //   relay[nrButton]->attach(button);
           //   break;
 
-        case Supla::Event::CONDITIONAL_ON_CHANGE:
+        case Supla::GUI::Event::ON_MOTION_SENSOR:
           button->setButtonType(Supla::Control::Button::ButtonType::MOTION_SENSOR);
           relay[nrButton]->attach(button);
           break;
 
-        case Supla::Event::ON_HOLD:
+        case Supla::GUI::Event::ON_HOLD:
           button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
           button->repeatOnHoldEvery(2000);
-          button->addAction(buttonAction, relay[nrButton], buttonEvent);
+          button->addAction(buttonAction, relay[nrButton], Supla::Event::ON_HOLD);
+          break;
+
+        case Supla::GUI::Event::ON_AUTOMATIC_STAIRCASE:
+          button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
+          button->repeatOnHoldEvery(2000);
+          button->addAction(buttonAction, relay[nrButton], Supla::Event::ON_PRESS);
+          button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_HOLD);
           break;
 
         default:

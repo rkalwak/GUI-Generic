@@ -262,43 +262,21 @@ enum Action
   TURN_OFF,
   TOGGLE
 };
-}
+
+enum Event
+{
+  ON_PRESS,    // Triggered on transition to valueOnPress()
+  ON_RELEASE,  // Triggered on transition from valueOnPress()
+  ON_CHANGE,   // Triggered on all transitions
+  ON_HOLD,     // Triggered when button is hold
+  ON_MOTION_SENSOR,
+  ON_AUTOMATIC_STAIRCASE
+};
+}  // namespace GUI
 }  // namespace Supla
 
-const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS,
-                                         S_REACTION_ON_RELEASE,
-                                         S_REACTION_ON_CHANGE,
-                                         S_REACTION_ON_HOLD,
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         "",
-                                         S_REACTION_MOTION_SENSOR};
+const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELEASE,    S_REACTION_ON_CHANGE,
+                                         S_REACTION_ON_HOLD,  S_REACTION_MOTION_SENSOR, S_REACTION_AUTOMATIC_STAIRCASE};
 
 const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE};
 

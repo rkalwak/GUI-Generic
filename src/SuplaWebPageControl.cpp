@@ -158,10 +158,8 @@ void handleControl(int save) {
   addFormHeader(webContentBuffer, S_ADDITIONAL);
 
   String value;
-#ifdef SUPLA_ACTION_TRIGGER
   value = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValue();
   addNumberBox(webContentBuffer, INPUT_AT_MULTICLICK_TIME, "Multiclick[s]", "", true, value);
-#endif
 
   value = ConfigManager->get(KEY_AT_HOLD_TIME)->getValue();
   addNumberBox(webContentBuffer, INPUT_AT_HOLD_TIME, "Hold[s]", "", true, value);
@@ -304,7 +302,7 @@ void handleButtonSet(int save) {
       selected = ConfigESP->getEvent(gpio);
       addListBox(webContentBuffer, INPUT_BUTTON_EVENT, S_REACTION, TRIGGER_P, COUNT_ELEMENTS_PGM(TRIGGER_P), selected);
       selected = ConfigESP->getAction(gpio);
-      addListBox(webContentBuffer, INPUT_BUTTON_ACTION, S_ACTION, ACTION_P, 3, selected);
+      addListBox(webContentBuffer, INPUT_BUTTON_ACTION, S_ACTION, ACTION_P, COUNT_ELEMENTS_PGM(ACTION_P), selected);
     }
 
     addFormHeaderEnd(webContentBuffer);

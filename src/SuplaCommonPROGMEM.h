@@ -260,7 +260,8 @@ enum Action
 {
   TURN_ON,
   TURN_OFF,
-  TOGGLE
+  TOGGLE,
+  AUTOMATIC_STAIRCASE
 };
 
 enum Event
@@ -269,16 +270,15 @@ enum Event
   ON_RELEASE,  // Triggered on transition from valueOnPress()
   ON_CHANGE,   // Triggered on all transitions
   ON_HOLD,     // Triggered when button is hold
-  ON_MOTION_SENSOR,
-  ON_AUTOMATIC_STAIRCASE
+  ON_MOTION_SENSOR
 };
 }  // namespace GUI
 }  // namespace Supla
 
 const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELEASE,    S_REACTION_ON_CHANGE,
-                                         S_REACTION_ON_HOLD,  S_REACTION_MOTION_SENSOR, S_REACTION_AUTOMATIC_STAIRCASE};
+                                         S_REACTION_ON_HOLD,  S_REACTION_MOTION_SENSOR};
 
-const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE};
+const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE};
 
 #ifdef SUPLA_VL53L0X
 const char* const STATE_VL53L0X_P[] PROGMEM = {OFF, "SENSE DEFAULT", "SENSE LONG RANGE", "SENSE HIGH SPEED", "SENSE HIGH ACCURACY"};

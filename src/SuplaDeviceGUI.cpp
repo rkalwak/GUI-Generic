@@ -201,19 +201,26 @@ void addButtonToRelay(uint8_t nrRelay) {
 
         case Supla::GUI::Event::ON_HOLD:
           button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
-          button->repeatOnHoldEvery(2000);
           button->addAction(buttonAction, relay[nrButton], Supla::Event::ON_HOLD);
           break;
 
-        case Supla::GUI::Event::ON_AUTOMATIC_STAIRCASE:
-          button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
-          button->repeatOnHoldEvery(2000);
-          button->addAction(buttonAction, relay[nrButton], Supla::Event::ON_PRESS);
-          button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_HOLD);
-          break;
-
         default:
-          button->addAction(buttonAction, relay[nrButton], buttonEvent);
+          if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::AUTOMATIC_STAIRCASE) {
+            if (buttonEvent == Supla::GUI::Event::ON_CHANGE) {
+              button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
+
+              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CHANGE);
+              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_CLICK_2);
+            }
+            else {
+              button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
+              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_PRESS);
+              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_HOLD);
+            }
+          }
+          else {
+            button->addAction(buttonAction, relay[nrButton], buttonEvent);
+          }
           break;
       }
 

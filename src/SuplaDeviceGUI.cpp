@@ -207,14 +207,16 @@ void addButtonToRelay(uint8_t nrRelay) {
         default:
           if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::AUTOMATIC_STAIRCASE) {
             if (buttonEvent == Supla::GUI::Event::ON_CHANGE) {
-              button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
+              button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000, true);
 
-              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CHANGE);
+              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CLICK_1);
               button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_CLICK_2);
             }
             else {
+              button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
               button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
-              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_PRESS);
+
+              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CLICK_1);
               button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_HOLD);
             }
           }

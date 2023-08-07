@@ -60,6 +60,11 @@ SuplaConfigESP::SuplaConfigESP() {
     if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO)
       ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
 
+    if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
+      ConfigESP->setGpio(2, FUNCTION_CFG_LED);
+      ConfigESP->setLevel(2, LOW);
+    }
+
 #ifdef SUPLA_BONEIO
     ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
 #ifdef USE_MCP_OUTPUT
@@ -796,8 +801,10 @@ void SuplaConfigESP::factoryReset(bool forceReset) {
     ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
     ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
     Supla::TanplateBoard::addTemplateBoard();
-    if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO)
-      ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+
+    ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+    ConfigESP->setGpio(2, FUNCTION_CFG_LED);
+    ConfigESP->setLevel(2, LOW);
 
     ConfigManager->save();
 
@@ -818,8 +825,9 @@ void SuplaConfigESP::reset(bool forceReset) {
     ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
     ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
     Supla::TanplateBoard::addTemplateBoard();
-    if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO)
-      ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+    ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+    ConfigESP->setGpio(2, FUNCTION_CFG_LED);
+    ConfigESP->setLevel(2, LOW);
 
     ConfigManager->save();
 

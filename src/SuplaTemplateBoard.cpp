@@ -694,7 +694,7 @@ void addButton(uint8_t nr, uint8_t gpio, uint8_t event, JsonArray& buttonAction,
   if (buttonAction[nr].success())
     ConfigESP->setAction(gpio, (int)buttonAction[nr]);
   else
-    ConfigESP->setAction(gpio, Supla::Action::TOGGLE);
+    ConfigESP->setAction(gpio, Supla::GUI::Action::TOGGLE);
 
   ConfigESP->setEvent(gpio, event);
   ConfigESP->setPullUp(gpio, pullUp);
@@ -714,9 +714,9 @@ void addButtonAnalog(uint8_t nr, uint8_t gpio, JsonArray& buttonAction) {
   if (buttonAction[nr].success())
     ConfigESP->setAction(gpio, (int)buttonAction[nr]);
   else
-    ConfigESP->setAction(gpio, Supla::Action::TOGGLE);
+    ConfigESP->setAction(gpio, Supla::GUI::Action::TOGGLE);
 
-  ConfigESP->setEvent(gpio, Supla::Event::ON_PRESS);
+  ConfigESP->setEvent(gpio, Supla::GUI::Event::ON_PRESS);
   ConfigESP->setNumberButton(nr);
   ConfigManager->set(KEY_MAX_BUTTON, maxButton + 1);
 }
@@ -873,8 +873,8 @@ void addExpander(uint8_t typeExpander, JsonArray& expander) {
             ConfigESP->setMemory(gpio, MEMORY_RESTORE);
             break;
           case FUNCTION_BUTTON:
-            ConfigESP->setAction(gpio, Supla::Action::TOGGLE);
-            ConfigESP->setEvent(gpio, Supla::Event::ON_CHANGE);
+            ConfigESP->setAction(gpio, Supla::GUI::Action::TOGGLE);
+            ConfigESP->setEvent(gpio, Supla::GUI::Event::ON_CHANGE);
             ConfigESP->setPullUp(gpio, true);
             ConfigESP->setInversed(gpio, true);
             ConfigESP->setNumberButton(nr);

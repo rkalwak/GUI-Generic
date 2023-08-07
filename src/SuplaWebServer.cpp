@@ -275,7 +275,7 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
 #ifdef SUPLA_ROLLERSHUTTER
       if (ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt() * 2 > nr) {
         // if (nr % 2 == 0) {
-        ConfigESP->setEvent(_gpio, Supla::Event::ON_PRESS);
+        ConfigESP->setEvent(_gpio, Supla::GUI::Event::ON_PRESS);
         ConfigESP->setAction(_gpio, Supla::GUI::ActionRolleShutter::OPEN_OR_CLOSE);
         //  }
       }
@@ -355,7 +355,7 @@ bool SuplaWebServer::saveGpioMCP23017(const String& _input, uint8_t function, ui
 #ifdef SUPLA_ROLLERSHUTTER
     if (ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt() * 2 > nr) {
       if (nr % 2 == 0) {
-        ConfigESP->setEvent(_gpio, Supla::Event::ON_PRESS);
+        ConfigESP->setEvent(_gpio, Supla::GUI::Event::ON_PRESS);
         ConfigESP->setAction(_gpio, Supla::GUI::ActionRolleShutter::OPEN_OR_CLOSE);
       }
     }

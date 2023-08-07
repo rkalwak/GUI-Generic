@@ -133,8 +133,8 @@ void ConfigExpander::clearGpioExpander(uint8_t gpio, uint8_t nr, uint8_t functio
     }
 
     ConfigESP->setInversed(gpio, true);
-    ConfigESP->setAction(gpio, Supla::Action::TOGGLE);
-    ConfigESP->setEvent(gpio, Supla::Event::ON_PRESS);
+    ConfigESP->setAction(gpio, Supla::GUI::Action::TOGGLE);
+    ConfigESP->setEvent(gpio, Supla::GUI::Event::ON_PRESS);
   }
 
   if (function == FUNCTION_LIMIT_SWITCH) {

@@ -728,8 +728,8 @@ void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function) {
     setPullUp(gpio, true);
     setInversed(gpio, true);
 
-    setAction(gpio, Supla::Action::TOGGLE);
-    setEvent(gpio, Supla::Event::ON_PRESS);
+    setAction(gpio, Supla::GUI::Action::TOGGLE);
+    setEvent(gpio, Supla::GUI::Event::ON_PRESS);
   }
   if (function == FUNCTION_RELAY) {
     setLevel(gpio, LOW);

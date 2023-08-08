@@ -760,6 +760,7 @@ void addLimitSwitch(uint8_t nr, uint8_t gpio) {
   uint8_t max = ConfigManager->get(KEY_MAX_LIMIT_SWITCH)->getValueInt();
 
   ConfigESP->setGpio(gpio, nr, FUNCTION_LIMIT_SWITCH);
+  ConfigESP->setPullUp(gpio, HIGH);
   ConfigManager->set(KEY_MAX_LIMIT_SWITCH, max + 1);
 }
 

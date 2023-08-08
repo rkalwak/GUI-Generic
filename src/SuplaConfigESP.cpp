@@ -800,11 +800,15 @@ void SuplaConfigESP::factoryReset(bool forceReset) {
     ConfigManager->set(KEY_LOGIN_PASS, DEFAULT_LOGIN_PASS);
     ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
     ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
-    Supla::TanplateBoard::addTemplateBoard();
+
+    ConfigManager->set(KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME);
+    ConfigManager->set(KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME);
 
     ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
     ConfigESP->setGpio(2, FUNCTION_CFG_LED);
     ConfigESP->setLevel(2, LOW);
+
+    Supla::TanplateBoard::addTemplateBoard();
 
     ConfigManager->save();
 
@@ -824,11 +828,15 @@ void SuplaConfigESP::reset(bool forceReset) {
 
     ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
     ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
-    Supla::TanplateBoard::addTemplateBoard();
+
+    ConfigManager->set(KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME);
+    ConfigManager->set(KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME);
+
     ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
     ConfigESP->setGpio(2, FUNCTION_CFG_LED);
     ConfigESP->setLevel(2, LOW);
 
+    Supla::TanplateBoard::addTemplateBoard();
     ConfigManager->save();
 
     if (!forceReset) {

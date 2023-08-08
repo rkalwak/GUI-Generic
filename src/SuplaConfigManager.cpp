@@ -233,14 +233,17 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_ANALOG_BUTTON, 2 * MAX_ANALOG_BUTTON);
     this->addKey(KEY_ANALOG_INPUT_EXPECTED, 5 * MAX_ANALOG_BUTTON);
     this->addKey(KEY_NUMBER_BUTTON, MAX_GPIO * 2);
-    this->addKey(KEY_AT_HOLD_TIME, "0.45", 4);
+    this->addKey(KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME, 4);
+    this->addKey(KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME, 4);
+
     this->addKey(KEY_NUMBER_BUTTON_ADDITIONAL, 36);
 #else
     this->addKey(KEY_MAX_BUTTON, 2, false);
     this->addKey(KEY_ANALOG_BUTTON, 2 * MAX_ANALOG_BUTTON, false);
     this->addKey(KEY_ANALOG_INPUT_EXPECTED, 5 * MAX_ANALOG_BUTTON, false);
     this->addKey(KEY_NUMBER_BUTTON, MAX_GPIO * 2, false);
-    this->addKey(KEY_AT_HOLD_TIME, "0.45", 4, false);
+    this->addKey(KEY_AT_HOLD_TIME, 4, false);
+    this->addKey(KEY_AT_MULTICLICK_TIME, 4, false);
     this->addKey(KEY_NUMBER_BUTTON_ADDITIONAL, 36, false);
 #endif
 
@@ -392,12 +395,6 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_RF_BRIDGE_PROTOCOL, MAX_BRIDGE_RF * 3, false);
     this->addKey(KEY_RF_BRIDGE_PULSE_LENGTHINT, MAX_BRIDGE_RF * 4, false);
     this->addKey(KEY_RF_BRIDGE_REPEAT, MAX_BRIDGE_RF * 2, false);
-#endif
-
-#ifdef SUPLA_ACTION_TRIGGER
-    this->addKey(KEY_AT_MULTICLICK_TIME, "0.45", 4);
-#else
-    this->addKey(KEY_AT_MULTICLICK_TIME, 4, false);
 #endif
 
 #ifdef SUPLA_ANALOG_READING_MAP

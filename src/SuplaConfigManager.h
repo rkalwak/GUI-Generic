@@ -64,8 +64,8 @@
 #define MAX_GPIO 39
 #endif
 
-#define DEFAULT_AT_MULTICLICK_TIME 0.45
-#define DEFAULT_AT_HOLD_TIME       0.45
+#define DEFAULT_AT_MULTICLICK_TIME "0.45"
+#define DEFAULT_AT_HOLD_TIME       "0.45"
 
 enum _key
 {

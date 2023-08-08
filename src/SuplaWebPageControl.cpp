@@ -101,11 +101,8 @@ void handleControlSave() {
     ConfigManager->set(KEY_MAX_BUTTON, WebServer->httpServer->arg(INPUT_MAX_BUTTON).c_str());
 
 #ifdef SUPLA_BUTTON
-
-#ifdef SUPLA_ACTION_TRIGGER
   if (strcmp(WebServer->httpServer->arg(INPUT_AT_MULTICLICK_TIME).c_str(), "") != 0)
     ConfigManager->set(KEY_AT_MULTICLICK_TIME, WebServer->httpServer->arg(INPUT_AT_MULTICLICK_TIME).c_str());
-#endif
 
   if (strcmp(WebServer->httpServer->arg(INPUT_AT_HOLD_TIME).c_str(), "") != 0)
     ConfigManager->set(KEY_AT_HOLD_TIME, WebServer->httpServer->arg(INPUT_AT_HOLD_TIME).c_str());

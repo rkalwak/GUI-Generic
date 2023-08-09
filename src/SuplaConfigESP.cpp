@@ -799,7 +799,7 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 
   ConfigManager->save();
 
-  if (!forceReset) {
+  if (forceReset) {
     rebootESP();
   }
 }

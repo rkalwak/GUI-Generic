@@ -244,6 +244,7 @@ extern ActionTrigger *actionTrigger;
 
 void addButtonActionTrigger(uint8_t nr);
 void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
+int calculateElementCountActionTrigger();
 #endif
 
 #if defined(SUPLA_RF_BRIDGE)

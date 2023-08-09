@@ -79,7 +79,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER
-  Supla::GUI::actionTrigger = new Supla::GUI::ActionTrigger[ConfigManager->get(KEY_MAX_BUTTON)->getValueInt() + MAX_BRIDGE_RF];
+  Supla::GUI::actionTrigger = new Supla::GUI::ActionTrigger[Supla::GUI::calculateElementCountActionTrigger()];
 #endif
 
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
@@ -777,7 +777,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt() + MAX_BRIDGE_RF; nr++) {
+  for (nr = 0; nr < Supla::GUI::calculateElementCountActionTrigger(); nr++) {
     Supla::GUI::addButtonActionTrigger(nr);
   }
   delete Supla::GUI::actionTrigger;

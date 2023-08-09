@@ -236,10 +236,7 @@ void addButtonToRelay(uint8_t nrRelay) {
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER
-uint8_t activeActionTriggers;
-ActionTrigger *actionTrigger;
-
-std::vector<ActionTrigger> actionTrigger1;
+ActionTrigger *actionTrigger = nullptr;
 
 void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element) {
   button->setSwNoiseFilterDelay(50);
@@ -286,6 +283,16 @@ void addButtonActionTrigger(uint8_t nr) {
 
     at->attach(button);
   }
+}
+
+int calculateElementCountActionTrigger() {
+  int maxButtonValue = ConfigManager->get(KEY_MAX_BUTTON)->getValueInt();
+
+#ifdef SUPLA_RF_BRIDGE
+  return maxButtonValue + MAX_BRIDGE_RF;
+#else
+  return maxButtonValue;
+#endif
 }
 #endif
 

@@ -70,6 +70,13 @@ typedef struct {
   const char *msg;
 } _supla_status;
 
+enum ResetType
+{
+  NO_RESET,
+  RESET_DEVICE_DATA,
+  RESET_FACTORY_DATA
+};
+
 class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaConfigESP();
@@ -143,8 +150,9 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   }
 
   void clearGpio(uint8_t gpio, uint8_t function = 0);
-  void reset(bool forceReset = false);
-  void factoryReset(bool forceReset = false);
+
+  void commonReset(const char *resetMessage, ResetType resetType, bool forceReset = false);
+
   const String getConfigNameAP();
 
   void configModeInit();

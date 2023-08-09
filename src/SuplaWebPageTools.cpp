@@ -35,13 +35,13 @@ void createWebTools() {
       WebServer->httpServer->sendHeader(F("Location"), PATH_START);
       // WebServer->httpServer->send(303);
       handlePageHome(2);
-      ConfigESP->reset(true);
+      ConfigESP->commonReset("DEVICES CONFIGURATION RESET!", ResetType::RESET_DEVICE_DATA, true);
     }
     else if (strcasecmp_P(sCommand.c_str(), PATH_FACTORY_RESET) == 0) {
       WebServer->httpServer->sendHeader(F("Location"), PATH_START);
       // WebServer->httpServer->send(303);
       handlePageHome(1);
-      ConfigESP->factoryReset(true);
+      ConfigESP->commonReset("FACTORY RESET!", ResetType::RESET_FACTORY_DATA, true);
     }
     else {
       handleTools();

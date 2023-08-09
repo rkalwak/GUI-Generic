@@ -21,60 +21,11 @@ SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 
   if (ConfigManager->isDeviceConfigured()) {
+    commonReset("SET DEVICE CONFIGURATION!", ResetType::NO_RESET);
+
     if (strcmp(ConfigManager->get(KEY_SUPLA_GUID)->getValue(), "") == 0 || strcmp(ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), "") == 0) {
-      clearEEPROM();
       ConfigManager->setGUIDandAUTHKEY();
     }
-
-    if (strcmp(ConfigManager->get(KEY_LOGIN)->getValue(), "") == 0)
-      ConfigManager->set(KEY_LOGIN, DEFAULT_LOGIN);
-
-    if (strcmp(ConfigManager->get(KEY_LOGIN_PASS)->getValue(), "") == 0)
-      ConfigManager->set(KEY_LOGIN_PASS, DEFAULT_LOGIN_PASS);
-
-    if (strcmp(ConfigManager->get(KEY_HOST_NAME)->getValue(), "") == 0)
-      ConfigManager->set(KEY_HOST_NAME, DEFAULT_HOSTNAME);
-
-    if (strcmp(ConfigManager->get(KEY_SUPLA_SERVER)->getValue(), "") == 0)
-      ConfigManager->set(KEY_SUPLA_SERVER, DEFAULT_SERVER);
-
-    if (strcmp(ConfigManager->get(KEY_SUPLA_EMAIL)->getValue(), "") == 0)
-      ConfigManager->set(KEY_SUPLA_EMAIL, DEFAULT_EMAIL);
-
-    if (strcmp(ConfigManager->get(KEY_ENABLE_GUI)->getValue(), "") == 0)
-      ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
-
-    if (strcmp(ConfigManager->get(KEY_ENABLE_SSL)->getValue(), "") == 0)
-      ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
-
-#ifdef TEMPLATE_BOARD_JSON
-    if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
-      Supla::TanplateBoard::addTemplateBoard();
-    }
-#elif defined(TEMPLATE_BOARD_OLD)
-    if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
-      chooseTemplateBoard(getDefaultTamplateBoard());
-    }
-#endif
-
-    if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO)
-      ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
-
-    if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
-      ConfigESP->setGpio(2, FUNCTION_CFG_LED);
-      ConfigESP->setLevel(2, LOW);
-    }
-
-#ifdef SUPLA_BONEIO
-    ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
-#ifdef USE_MCP_OUTPUT
-    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
-#else
-    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
-#endif
-#endif
-
-    ConfigManager->save();
 
     configModeInit();
   }
@@ -783,65 +734,73 @@ bool SuplaConfigESP::checkGpio(int gpio) {
   return true;
 }
 
-void SuplaConfigESP::factoryReset(bool forceReset) {
-  delay(2000);
-  pinMode(0, INPUT_PULLUP);
-  if (digitalRead(0) != HIGH || forceReset) {
-    Serial.println(F("FACTORY RESET!!!"));
+void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, bool forceReset) {
+  struct KeyValuePair {
+    uint8_t key;
+    const char *defaultValue;
+  };
 
+  Serial.println(resetMessage);
+
+  if (resetType == RESET_FACTORY_DATA) {
     clearEEPROM();
-
     ConfigManager->deleteAllValues();
-
-    ConfigManager->set(KEY_SUPLA_SERVER, DEFAULT_SERVER);
-    ConfigManager->set(KEY_SUPLA_EMAIL, DEFAULT_EMAIL);
-    ConfigManager->set(KEY_HOST_NAME, DEFAULT_HOSTNAME);
-    ConfigManager->set(KEY_LOGIN, DEFAULT_LOGIN);
-    ConfigManager->set(KEY_LOGIN_PASS, DEFAULT_LOGIN_PASS);
-    ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
-    ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
-
-    ConfigManager->set(KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME);
-    ConfigManager->set(KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME);
-
-    ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
-    ConfigESP->setGpio(2, FUNCTION_CFG_LED);
-    ConfigESP->setLevel(2, LOW);
-
-    Supla::TanplateBoard::addTemplateBoard();
-
-    ConfigManager->save();
-
-    if (!forceReset) {
-      rebootESP();
-    }
   }
-}
-void SuplaConfigESP::reset(bool forceReset) {
-  delay(2000);
-  pinMode(0, INPUT_PULLUP);
-  if (digitalRead(0) != HIGH || forceReset) {
-    Serial.println(F("DEVICES CONFIGURATION RESET!"));
-
+  else if (resetType == RESET_DEVICE_DATA) {
     clearEEPROM();
     ConfigManager->deleteDeviceValues();
+  }
 
-    ConfigManager->set(KEY_ENABLE_GUI, getDefaultEnableGUI());
-    ConfigManager->set(KEY_ENABLE_SSL, getDefaultEnableSSL());
+  KeyValuePair keysToUpdate[] = {
+      {KEY_LOGIN, DEFAULT_LOGIN},
+      {KEY_LOGIN_PASS, DEFAULT_LOGIN_PASS},
+      {KEY_HOST_NAME, DEFAULT_HOSTNAME},
+      {KEY_SUPLA_SERVER, DEFAULT_SERVER},
+      {KEY_SUPLA_EMAIL, DEFAULT_EMAIL},
+      {KEY_ENABLE_GUI, getDefaultEnableGUI() ? "1" : "0"},
+      {KEY_ENABLE_SSL, getDefaultEnableSSL() ? "1" : "0"},
+      {KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME},
+      {KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME},
+  };
 
-    ConfigManager->set(KEY_AT_MULTICLICK_TIME, DEFAULT_AT_MULTICLICK_TIME);
-    ConfigManager->set(KEY_AT_HOLD_TIME, DEFAULT_AT_HOLD_TIME);
+  for (auto &kvp : keysToUpdate) {
+    if (strcmp(ConfigManager->get(kvp.key)->getValue(), "") == 0) {
+      ConfigManager->set(kvp.key, kvp.defaultValue);
+    }
+  }
 
+  if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO) {
     ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+  }
+
+  if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
     ConfigESP->setGpio(2, FUNCTION_CFG_LED);
     ConfigESP->setLevel(2, LOW);
+  }
 
+#ifdef SUPLA_BONEIO
+  ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
+#ifdef USE_MCP_OUTPUT
+  ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
+#else
+  ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
+#endif
+#endif
+
+#ifdef TEMPLATE_BOARD_JSON
+  if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
     Supla::TanplateBoard::addTemplateBoard();
-    ConfigManager->save();
+  }
+#elif defined(TEMPLATE_BOARD_OLD)
+  if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
+    chooseTemplateBoard(getDefaultTamplateBoard());
+  }
+#endif
 
-    if (!forceReset) {
-      rebootESP();
-    }
+  ConfigManager->save();
+
+  if (!forceReset) {
+    rebootESP();
   }
 }
 

@@ -798,7 +798,8 @@ void setup() {
 #endif
 
   if (ConfigESP->getGpio(FUNCTION_CSE7766_RX) == OFF_GPIO || ConfigESP->getGpio(FUNCTION_SDM_RX) == OFF_GPIO ||
-      ConfigESP->getGpio(FUNCTION_SDM_TX) == OFF_GPIO) {
+      ConfigESP->getGpio(FUNCTION_SDM_TX) == OFF_GPIO || ConfigESP->getGpio(1, FUNCTION_PZEM_RX) == OFF_GPIO ||
+      ConfigESP->getGpio(1, FUNCTION_PZEM_TX == OFF_GPIO)) {
     new ImprovSerialComponent();
   }
 

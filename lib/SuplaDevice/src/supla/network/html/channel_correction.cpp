@@ -23,6 +23,7 @@
 #include <supla/storage/config.h>
 #include <supla/storage/storage.h>
 #include <supla/tools.h>
+#include <supla/element.h>
 
 #include <stdio.h>
 
@@ -84,7 +85,16 @@ bool ChannelCorrection::handleResponse(const char* key, const char* value) {
   if (strcmp(key, keyRef) == 0) {
     int32_t correction = floatStringToInt(value, 1);
     if (correction >= -500 && correction <= 500) {
-      cfg->setInt32(keyRef, correction);
+      int32_t currentValue = 0;
+      cfg->getInt32(keyRef, &currentValue);
+
+      if (currentValue != correction) {
+        cfg->setInt32(keyRef, correction);
+
+        char keyCfg[SUPLA_CONFIG_MAX_KEY_SIZE] = {};
+        Supla::Config::generateKey(keyCfg, channelNumber, "cfg_chng");
+        cfg->setUInt8(keyCfg, 1);
+      }
     }
     return true;
   }

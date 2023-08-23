@@ -10,6 +10,8 @@ ImprovSerialComponent::ImprovSerialComponent() {
   this->uart_num_ = &UART_NUM_0;
 #endif
   this->state_ = improv::STATE_AUTHORIZED;
+
+  isEnabled = true;
 };
 
 int ImprovSerialComponent::available_() {
@@ -51,32 +53,35 @@ void ImprovSerialComponent::write_data_(std::vector<uint8_t> &data) {
 // }
 
 void ImprovSerialComponent::iterateAlways() {
-  if (Supla::Network::IsReady() && this->state_ == improv::STATE_AUTHORIZED) {
-    this->state_ = improv::STATE_PROVISIONED;
-  }
+  if (isEnabled || ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG) {
+    
+    if (Supla::Network::IsReady() && this->state_ == improv::STATE_AUTHORIZED) {
+      this->state_ = improv::STATE_PROVISIONED;
+    }
 
-  const uint32_t now = millis();
-  if (now - this->last_read_byte_ > 50) {
-    this->rx_buffer_.clear();
-    this->last_read_byte_ = now;
-  }
-
-  while (this->available_()) {
-    uint8_t byte = this->read_byte_();
-    if (this->parse_improv_serial_byte_(byte)) {
+    const uint32_t now = millis();
+    if (now - this->last_read_byte_ > 50) {
+      this->rx_buffer_.clear();
       this->last_read_byte_ = now;
     }
-    else {
-      this->rx_buffer_.clear();
+
+    while (this->available_()) {
+      uint8_t byte = this->read_byte_();
+      if (this->parse_improv_serial_byte_(byte)) {
+        this->last_read_byte_ = now;
+      }
+      else {
+        this->rx_buffer_.clear();
+      }
     }
-  }
 
-  if (this->state_ == improv::STATE_PROVISIONING) {
-    if (Supla::Network::IsReady()) {
-      this->set_state_(improv::STATE_PROVISIONED);
+    if (this->state_ == improv::STATE_PROVISIONING) {
+      if (Supla::Network::IsReady()) {
+        this->set_state_(improv::STATE_PROVISIONED);
 
-      std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
-      this->send_response_(url);
+        std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
+        this->send_response_(url);
+      }
     }
   }
 }
@@ -251,4 +256,12 @@ void ImprovSerialComponent::on_wifi_connect_timeout_() {
   this->set_error_(improv::ERROR_UNABLE_TO_CONNECT);
   this->set_state_(improv::STATE_AUTHORIZED);
   // Serial.println("Timed out trying to connect to given WiFi network");
+}
+
+void ImprovSerialComponent::enable() {
+  isEnabled = true;
+}
+
+void ImprovSerialComponent::disable() {
+  isEnabled = false;
 }

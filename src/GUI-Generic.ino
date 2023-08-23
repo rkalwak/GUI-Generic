@@ -51,6 +51,9 @@ void setup() {
   ConfigManager = new SuplaConfigManager();
   ConfigESP = new SuplaConfigESP();
 
+  ImprovSerialComponent *improvSerialComponent = new ImprovSerialComponent();
+  improvSerialComponent->enable();
+
 #ifdef SUPLA_BONEIO
   new Supla::boneIO();
 #endif
@@ -379,6 +382,7 @@ void setup() {
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_VINDRIKTNING_IKEA, S_VINDRIKTNING_IKEA, vindriktningIkea);
 #endif
+    improvSerialComponent->disable();
   }
 #endif
 
@@ -420,6 +424,7 @@ void setup() {
 #ifdef SUPLA_HLW8012
   if (ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) {
     Supla::GUI::addHLW8012(ConfigESP->getGpio(FUNCTION_CF), ConfigESP->getGpio(FUNCTION_CF1), ConfigESP->getGpio(FUNCTION_SEL));
+    improvSerialComponent->disable();
   }
 #endif
 
@@ -438,6 +443,7 @@ void setup() {
 #else
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(pinRX1, pinTX1, pinRX2, pinTX2, pinRX3, pinTX3);
 #endif
+    improvSerialComponent->disable();
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinTX2 != OFF_GPIO && pinTX3 != OFF_GPIO) {
 #ifdef ARDUINO_ARCH_ESP32
@@ -445,6 +451,7 @@ void setup() {
 #else
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(pinRX1, pinTX1, pinRX1, pinTX2, pinRX1, pinTX3);
 #endif
+    improvSerialComponent->disable();
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO) {
 #ifdef ARDUINO_ARCH_ESP32
@@ -452,6 +459,7 @@ void setup() {
 #else
     PZEMv3 = new Supla::Sensor::PZEMv3(pinRX1, pinTX1);
 #endif
+    improvSerialComponent->disable();
   }
 
   if (PZEMv3) {
@@ -464,6 +472,7 @@ void setup() {
 #ifdef SUPLA_CSE7766
   if (ConfigESP->getGpio(FUNCTION_CSE7766_RX) != OFF_GPIO) {
     Supla::GUI::addCSE7766(ConfigESP->getGpio(FUNCTION_CSE7766_RX));
+    improvSerialComponent->disable();
   }
 #endif
 
@@ -505,6 +514,7 @@ void setup() {
     }
 
 #endif
+    improvSerialComponent->disable();
   }
 #endif
 
@@ -796,12 +806,6 @@ void setup() {
 #ifdef SUPLA_CONDITIONS
   Supla::GUI::Conditions::addConditions();
 #endif
-
-  if (ConfigESP->getGpio(FUNCTION_CSE7766_RX) == OFF_GPIO || ConfigESP->getGpio(FUNCTION_SDM_RX) == OFF_GPIO ||
-      ConfigESP->getGpio(FUNCTION_SDM_TX) == OFF_GPIO || ConfigESP->getGpio(1, FUNCTION_PZEM_RX) == OFF_GPIO ||
-      ConfigESP->getGpio(1, FUNCTION_PZEM_TX == OFF_GPIO)) {
-    new ImprovSerialComponent();
-  }
 
   Supla::GUI::begin();
 

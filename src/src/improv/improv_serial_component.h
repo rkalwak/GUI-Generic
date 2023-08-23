@@ -36,6 +36,9 @@ class ImprovSerialComponent : public Supla::Element {
     return 0;
   }
 
+  void enable();
+  void disable();
+
  protected:
   bool parse_improv_serial_byte_(uint8_t byte);
   bool parse_improv_payload_(improv::ImprovCommand &command);
@@ -62,5 +65,8 @@ class ImprovSerialComponent : public Supla::Element {
   std::vector<uint8_t> rx_buffer_;
   uint32_t last_read_byte_{0};
   improv::State state_;
+
+ private:
+  bool isEnabled;
 };
 #endif

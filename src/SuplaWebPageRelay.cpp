@@ -195,6 +195,21 @@ void handleRelaySaveSet() {
   }
 #endif
 
+#ifdef SUPLA_THERMOSTAT
+  input = INPUT_THERMOSTAT_TYPE;
+  ConfigManager->setElement(KEY_THERMOSTAT_TYPE, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+
+  input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
+  ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+
+  input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
+  ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+
+  input = INPUT_THERMOSTAT_HISTERESIS;
+  ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+
+#endif
+
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
       handleRelaySet(1);
@@ -281,6 +296,22 @@ void handleRelaySet(int save) {
 
       addFormHeaderEnd(webContentBuffer);
     }
+#endif
+
+#ifdef SUPLA_THERMOSTAT
+    addFormHeader(webContentBuffer, S_THERMOSTAT);
+    selected = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr_relay.toInt()).toInt();
+    addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
+
+    selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
+    addListNumbersBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, 20, selected);
+
+    selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
+    addListNumbersBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, 20, selected);
+
+    String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr_relay.toInt()).c_str();
+    addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);
+    addFormHeaderEnd(webContentBuffer);
 #endif
 
 #if defined(SUPLA_DIRECT_LINKS)

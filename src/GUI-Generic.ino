@@ -105,22 +105,10 @@ void setup() {
         Supla::GUI::addRelayBridge(nr);
       }
       else {
-#ifdef SUPLA_RELAY
-        Supla::GUI::addRelay(nr);
-#ifdef SUPLA_BUTTON
-        Supla::GUI::addButtonToRelay(nr);
-#endif
-#endif
+        Supla::GUI::addRelayOrThermostat(nr);
       }
 #else
-
-#ifdef SUPLA_RELAY
-      Supla::GUI::addRelay(nr);
-#ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr);
-#endif
-#endif
-
+      Supla::GUI::addRelayOrThermostat(nr);
 #endif
 
       if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {

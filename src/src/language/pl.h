@@ -218,4 +218,13 @@
 
 #define S_BAUDRATE "Prędkość komunikacji"
 
+#ifdef SUPLA_THERMOSTAT
+#define S_HEAT                     "Grzanie"
+#define S_COOL                     "Chłodzenie"
+#define S_THERMOSTAT               "Termostat"
+#define S_MAIN_THERMOMETER_CHANNEL "Kanał termometru"
+#define S_AUX_THERMOMETER_CHANNEL  "Dod. kanał termometru"
+#define S_HISTERESIS               "Histereza"
+#endif
+
 #endif  // _LANGUAGE_PL_S_H_

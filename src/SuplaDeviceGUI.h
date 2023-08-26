@@ -222,6 +222,10 @@
 #include "src/control/deepSleep.h"
 #endif
 
+#ifdef SUPLA_THERMOSTAT
+#include "src/control/ThermostatGUI.h"
+#endif
+
 namespace Supla {
 namespace GUI {
 
@@ -231,6 +235,7 @@ void enableConnectionSSL(bool value);
 void crateWebServer();
 
 #ifdef SUPLA_RELAY
+void addRelayOrThermostat(int nr);
 void addRelay(uint8_t nr);
 void addButtonToRelay(uint8_t nrRelay);
 #endif

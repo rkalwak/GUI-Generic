@@ -433,6 +433,18 @@ SuplaConfigManager::SuplaConfigManager() {
 #endif
     //  this->addKey(KEY_VERSION_CONFIG, String(CURENT_VERSION).c_str(), 2);
 
+#ifdef SUPLA_THERMOSTAT
+    this->addKey(KEY_THERMOSTAT_TYPE, 2 * MAX_THERMOSTAT);
+    this->addKey(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT);
+    this->addKey(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT);
+    this->addKey(KEY_THERMOSTAT_HISTERESIS, "0,4", 4 * MAX_THERMOSTAT);
+#else
+    this->addKey(KEY_THERMOSTAT_TYPE, 2 * MAX_THERMOSTAT, false);
+    this->addKey(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT, false);
+    this->addKey(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT, false);
+    this->addKey(KEY_THERMOSTAT_HISTERESIS, 4 * MAX_THERMOSTAT, false);
+#endif
+
     SPIFFS.end();
     switch (this->load()) {
       case E_CONFIG_OK:

@@ -63,4 +63,6 @@
 #define S_GG_UPDATER "GUI-GenericUpdater.bin"
 
 #define S_BONEIO "boneIO"
+
+#define S_CELSIUS "°C"
 #endif /* LANGUAGE_COMMON_H_ */

@@ -68,19 +68,22 @@ void handlePageHome(int save) {
         auto channel = element->getChannel();
 
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-          addLabel(webContentBuffer, String(channel->getValueDouble(), 2) + "°C");
+          addLabel(webContentBuffer,
+                   String(element->getChannelNumber()) + S_SPACE + "-" + S_SPACE + String(channel->getValueDouble(), 2) + S_CELSIUS);
         }
 
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-          addLabel(webContentBuffer, String(channel->getValueDoubleFirst(), 2) + "°C" + S_SPACE + String(channel->getValueDoubleSecond(), 2) + "%");
+          addLabel(webContentBuffer, String(element->getChannelNumber()) + S_SPACE + "-" + S_SPACE + String(channel->getValueDoubleFirst(), 2) +
+                                         S_CELSIUS + S_SPACE + String(channel->getValueDoubleSecond(), 2) + "%");
         }
 
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYSENSOR) {
-          addLabel(webContentBuffer, String(channel->getValueDoubleSecond(), 2) + "%");
+          addLabel(webContentBuffer,
+                   String(element->getChannelNumber()) + S_SPACE + "-" + S_SPACE + String(channel->getValueDoubleSecond(), 2) + "%");
         }
 
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_DISTANCESENSOR) {
-          addLabel(webContentBuffer, String(channel->getValueDouble(), 2) + "m");
+          addLabel(webContentBuffer, String(element->getChannelNumber()) + S_SPACE + "-" + S_SPACE + String(channel->getValueDouble(), 2) + "m");
         }
 
 #ifdef GUI_ALL_ENERGY

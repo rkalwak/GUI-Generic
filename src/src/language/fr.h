@@ -217,4 +217,13 @@
 
 #define S_BAUDRATE "Baudrate"
 
+#ifdef SUPLA_THERMOSTAT
+#define S_HEAT                     "Heat"
+#define S_COOL                     "Cool"
+#define S_THERMOSTAT               "Thermostat"
+#define S_MAIN_THERMOMETER_CHANNEL "Main thermometrer"
+#define S_AUX_THERMOMETER_CHANNEL  "Aux thermometrer"
+#define S_HISTERESIS               "Histeresis"
+#endif
+
 #endif  // _LANGUAGE_FR_S_H_

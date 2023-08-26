@@ -275,10 +275,25 @@ enum Event
 }  // namespace GUI
 }  // namespace Supla
 
-const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELEASE,    S_REACTION_ON_CHANGE,
-                                         S_REACTION_ON_HOLD,  S_REACTION_MOTION_SENSOR};
+const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELEASE, S_REACTION_ON_CHANGE, S_REACTION_ON_HOLD,
+                                         S_REACTION_MOTION_SENSOR};
 
 const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE};
+
+#ifdef SUPLA_THERMOSTAT
+namespace Supla {
+namespace GUI {
+enum ThermostatType
+{
+  THERMOSTAT_OFF,
+  THERMOSTAT_HEAT,
+  THERMOSTAT_COOL,
+};
+}  // namespace GUI
+}  // namespace Supla
+
+const char* const THERMOSTAT_TYPE_P[] PROGMEM = {S_OFF, S_HEAT, S_COOL};
+#endif
 
 #ifdef SUPLA_VL53L0X
 const char* const STATE_VL53L0X_P[] PROGMEM = {OFF, "SENSE DEFAULT", "SENSE LONG RANGE", "SENSE HIGH SPEED", "SENSE HIGH ACCURACY"};

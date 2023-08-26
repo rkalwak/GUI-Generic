@@ -46,7 +46,7 @@ void begin() {
   SuplaDevice.begin((char *)ConfigManager->get(KEY_SUPLA_GUID)->getValue(),      // Global Unique Identifier
                     suplaServer.c_str(),                                         // SUPLA server address
                     ConfigManager->get(KEY_SUPLA_EMAIL)->getValue(),             // Email address used to login to Supla Cloud
-                    (char *)ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue());  // Authorization key
+                    (char *)ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), 21);  // Authorization key
 
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
     Supla::Network::SetConfigMode();
@@ -109,6 +109,22 @@ void crateWebServer() {
 }
 
 #ifdef SUPLA_RELAY
+
+void addRelayOrThermostat(int nr) {
+#ifdef SUPLA_RELAY
+    if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
+        Supla::GUI::addRelay(nr);
+#ifdef SUPLA_BUTTON
+        Supla::GUI::addButtonToRelay(nr);
+#endif
+    } else {
+#ifdef SUPLA_THERMOSTAT
+        new Supla::Control::GUI::ThermostatGUI(nr);
+#endif
+    }
+#endif
+}
+
 void addRelay(uint8_t nr) {
   uint8_t pinRelay, pinLED;
   bool highIsOn, levelLed;

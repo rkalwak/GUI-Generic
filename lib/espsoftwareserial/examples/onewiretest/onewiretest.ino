@@ -10,17 +10,39 @@
 #endif
 #endif
 
-SoftwareSerial swSer1;
-SoftwareSerial swSer2;
+EspSoftwareSerial::UART swSer1;
+EspSoftwareSerial::UART swSer2;
+
+void checkSwSerial(EspSoftwareSerial::UART* ss) {
+	byte ch;
+	while (!Serial.available());
+	ss->enableTx(true);
+	while (Serial.available()) {
+		ch = Serial.read();
+		ss->write(ch);
+	}
+	ss->enableTx(false);
+	// wait 1 second for the reply from EspSoftwareSerial if any
+	delay(1000);
+	if (ss->available()) {
+		Serial.print(PSTR("\nResult:"));
+		while (ss->available()) {
+			ch = (byte)ss->read();
+			Serial.print(ch < 0x10 ? PSTR(" 0") : PSTR(" "));
+			Serial.print(ch, HEX);
+		}
+		Serial.println();
+	}
+}
 
 void setup() {
 	delay(2000);
 	Serial.begin(115200);
 	Serial.println(PSTR("\nOne Wire Half Duplex Serial Tester"));
-	swSer1.begin(115200, SWSERIAL_8N1, D6, D6, false, 256);
+	swSer1.begin(115200, EspSoftwareSerial::SWSERIAL_8N1, D6, D6, false, 256);
 	// high speed half duplex, turn off interrupts during tx
 	swSer1.enableIntTx(false);
-	swSer2.begin(115200, SWSERIAL_8N1, D5, D5, false, 256);
+	swSer2.begin(115200, EspSoftwareSerial::SWSERIAL_8N1, D5, D5, false, 256);
 	// high speed half duplex, turn off interrupts during tx
 	swSer2.enableIntTx(false);
 }
@@ -34,26 +56,4 @@ void loop() {
 	Serial.print(PSTR("Enter something to send using swSer2."));
 	checkSwSerial(&swSer2);
 
-}
-
-void checkSwSerial(SoftwareSerial* ss) {
-	byte ch;
-	while (!Serial.available());
-	ss->enableTx(true);
-	while (Serial.available()) {
-		ch = Serial.read();
-		ss->write(ch);
-	}
-	ss->enableTx(false);
-	// wait 1 second for the reply from SOftwareSerial if any
-	delay(1000);
-	if (ss->available()) {
-		Serial.print(PSTR("\nResult:"));
-		while (ss->available()) {
-			ch = (byte)ss->read();
-			Serial.print(ch < 0x10 ? PSTR(" 0") : PSTR(" "));
-			Serial.print(ch, HEX);
-		}
-		Serial.println();
-	}
 }

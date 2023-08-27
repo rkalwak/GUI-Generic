@@ -168,12 +168,12 @@ SuplaConfigManager::SuplaConfigManager() {
   if (SPIFFSbegin()) {
     _optionCount = OPTION_COUNT;
 
-    Serial.println("SPIFFS all file:");
-    Dir dir = SPIFFS.openDir("");
-    while (dir.next()) {
-      Serial.println(dir.fileName());
-      Serial.println(dir.fileSize());
-    }
+    // Serial.println("SPIFFS all file:");
+    // Dir dir = SPIFFS.openDir("");
+    // while (dir.next()) {
+    //   Serial.println(dir.fileName());
+    //   Serial.println(dir.fileSize());
+    // }
 
     this->addKey(KEY_SUPLA_GUID, SUPLA_GUID_SIZE);
     this->addKey(KEY_SUPLA_AUTHKEY, SUPLA_AUTHKEY_SIZE);

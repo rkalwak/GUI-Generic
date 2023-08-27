@@ -40,8 +40,12 @@ extern "C" {
 
 #include "src/boneIO/boneIO.h"
 
+#include "src/storage/SPIFFS_config.h"
+
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
+
+Supla::SPIFFSConfig configSupla;
 
 void setup() {
   uint8_t nr, gpio;

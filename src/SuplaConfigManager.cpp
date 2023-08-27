@@ -163,8 +163,17 @@ void ConfigOption::setValue(const char *value) {
 // class SuplaConfigManager
 //
 SuplaConfigManager::SuplaConfigManager() {
+  Supla::Storage::SetConfigInstance(this);
+
   if (SPIFFSbegin()) {
     _optionCount = OPTION_COUNT;
+
+    Serial.println("SPIFFS all file:");
+    Dir dir = SPIFFS.openDir("");
+    while (dir.next()) {
+      Serial.println(dir.fileName());
+      Serial.println(dir.fileSize());
+    }
 
     this->addKey(KEY_SUPLA_GUID, SUPLA_GUID_SIZE);
     this->addKey(KEY_SUPLA_AUTHKEY, SUPLA_AUTHKEY_SIZE);
@@ -811,4 +820,92 @@ void SuplaConfigManager::setGUIDandAUTHKEY() {
   if (GUID_S.endsWith("0") || AUTHKEY_S.endsWith("0")) {
     setGUIDandAUTHKEY();
   }
+}
+
+bool SuplaConfigManager::init() {
+  return true;
+}
+
+bool SuplaConfigManager::setSuplaServer(const char *server) {
+  if (strlen(server) > SUPLA_SERVER_NAME_MAXSIZE - 1) {
+    return false;
+  }
+  return set(KEY_SUPLA_SERVER, server);
+}
+
+bool SuplaConfigManager::setEmail(const char *email) {
+  if (strlen(email) > SUPLA_EMAIL_MAXSIZE - 1) {
+    return false;
+  }
+  return set(KEY_SUPLA_EMAIL, email);
+}
+
+bool SuplaConfigManager::setAuthKey(const char *authkey) {
+  return set(KEY_SUPLA_AUTHKEY, authkey);
+}
+
+bool SuplaConfigManager::setGUID(const char *guid) {
+  return set(KEY_SUPLA_GUID, guid);
+}
+
+bool SuplaConfigManager::setDeviceName(const char *name) {
+  if (strlen(name) > SUPLA_DEVICE_NAME_MAXSIZE - 1) {
+    return false;
+  }
+  return set(KEY_HOST_NAME, name);
+}
+
+bool SuplaConfigManager::getSuplaServer(char *result) {
+  String server = ConfigManager->get(KEY_SUPLA_SERVER)->getValue();
+  int npos = server.indexOf(":");
+  if (npos != -1) {
+    server.remove(npos);  // Usuń wszystko od npos
+  }
+
+  strncpy(result, server.c_str(), SUPLA_SERVER_NAME_MAXSIZE);
+  return true;
+}
+
+bool SuplaConfigManager::getEmail(char *result) {
+  strncpy(result, ConfigManager->get(KEY_SUPLA_EMAIL)->getValue(), SUPLA_EMAIL_MAXSIZE);
+  return true;
+}
+
+bool SuplaConfigManager::getGUID(char *result) {
+  strncpy(result, ConfigManager->get(KEY_SUPLA_GUID)->getValue(), SUPLA_GUID_SIZE);
+  return true;
+}
+
+bool SuplaConfigManager::getAuthKey(char *result) {
+  strncpy(result, ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), SUPLA_AUTHKEY_SIZE);
+  return true;
+}
+
+bool SuplaConfigManager::getDeviceName(char *result) {
+  strncpy(result, ConfigManager->get(KEY_HOST_NAME)->getValue(), SUPLA_DEVICE_NAME_MAXSIZE);
+  return true;
+}
+
+bool SuplaConfigManager::setWiFiSSID(const char *ssid) {
+  if (strlen(ssid) > MAX_SSID_SIZE - 1) {
+    return false;
+  }
+  return set(KEY_WIFI_SSID, ssid);
+}
+
+bool SuplaConfigManager::setWiFiPassword(const char *password) {
+  if (strlen(password) > MAX_WIFI_PASSWORD_SIZE - 1) {
+    return false;
+  }
+  return set(KEY_WIFI_PASS, password);
+}
+
+bool SuplaConfigManager::getWiFiSSID(char *result) {
+  strncpy(result, ConfigManager->get(KEY_WIFI_SSID)->getValue(), MAX_SSID_SIZE);
+  return true;
+}
+
+bool SuplaConfigManager::getWiFiPassword(char *result) {
+  strncpy(result, ConfigManager->get(KEY_WIFI_PASS)->getValue(), MAX_WIFI_PASSWORD_SIZE);
+  return true;
 }

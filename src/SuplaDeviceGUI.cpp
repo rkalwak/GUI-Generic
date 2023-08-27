@@ -29,24 +29,17 @@ void begin() {
   setupConnection();
   enableConnectionSSL(ConfigESP->checkSSL());
 
-  SuplaDevice.setName(ConfigManager->get(KEY_HOST_NAME)->getValue());
-
 #ifdef BUILD_VERSION
   String ver = "GG v" + String(BUILD_VERSION);
   ver.reserve(16);
   SuplaDevice.setSwVersion(ver.c_str());
 #endif
 
-  String server = ConfigManager->get(KEY_SUPLA_SERVER)->getValue();
-  auto npos = server.indexOf(":");
-  String suplaServer = server.substring(0, npos);
-
-  SuplaDevice.addFlags(SUPLA_DEVICE_FLAG_CALCFG_ENTER_CFG_MODE);
-
-  SuplaDevice.begin((char *)ConfigManager->get(KEY_SUPLA_GUID)->getValue(),      // Global Unique Identifier
-                    suplaServer.c_str(),                                         // SUPLA server address
-                    ConfigManager->get(KEY_SUPLA_EMAIL)->getValue(),             // Email address used to login to Supla Cloud
-                    (char *)ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), 21);  // Authorization key
+#ifdef SUPLA_THERMOSTAT
+  SuplaDevice.begin(21);
+#else
+  SuplaDevice.begin();
+#endif
 
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
     Supla::Network::SetConfigMode();
@@ -112,16 +105,17 @@ void crateWebServer() {
 
 void addRelayOrThermostat(int nr) {
 #ifdef SUPLA_RELAY
-    if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
-        Supla::GUI::addRelay(nr);
+  if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
+    Supla::GUI::addRelay(nr);
 #ifdef SUPLA_BUTTON
-        Supla::GUI::addButtonToRelay(nr);
+    Supla::GUI::addButtonToRelay(nr);
 #endif
-    } else {
+  }
+  else {
 #ifdef SUPLA_THERMOSTAT
-        new Supla::Control::GUI::ThermostatGUI(nr);
+    new Supla::Control::GUI::ThermostatGUI(nr);
 #endif
-    }
+  }
 #endif
 }
 

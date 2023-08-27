@@ -27,6 +27,9 @@
 #include <time.h>
 #endif
 
+#include <supla/storage/key_value.h>
+#include <supla/storage/storage.h>
+
 #define CURENT_VERSION   1
 #define CONFIG_FILE_PATH "/dat"
 
@@ -289,9 +292,9 @@ class ConfigOption {
   bool _loadKey;
 };
 
-class SuplaConfigManager {
+class SuplaConfigManager : public Supla::KeyValue {
  public:
-  SuplaConfigManager();
+  explicit SuplaConfigManager();
   bool SPIFFSbegin();
   bool migrationConfig();
   uint8_t addKey(uint8_t key, int maxLength, bool loadKey = true);
@@ -314,6 +317,28 @@ class SuplaConfigManager {
 
   bool isDeviceConfigured();
   void setGUIDandAUTHKEY();
+
+  bool init() override;
+
+  // Supla protocol config
+  virtual bool setSuplaServer(const char *server) override;
+  virtual bool setEmail(const char *email) override;
+  virtual bool setAuthKey(const char *authkey) override;
+  virtual bool setGUID(const char *guid) override;
+  virtual bool setDeviceName(const char *name) override;
+
+  virtual bool getSuplaServer(char *result) override;
+  virtual bool getEmail(char *result) override;
+  virtual bool getGUID(char *result) override;
+  virtual bool getAuthKey(char *result) override;
+  virtual bool getDeviceName(char *result) override;
+
+  // WiFi config
+  bool setWiFiSSID(const char *ssid) override;
+  bool setWiFiPassword(const char *password) override;
+
+  bool getWiFiSSID(char *result) override;
+  bool getWiFiPassword(char *result) override;
 
  private:
   int _optionCount;

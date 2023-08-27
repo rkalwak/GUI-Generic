@@ -45,4 +45,8 @@
 #endif
 #endif
 
+#ifdef SUPLA_THERMOSTAT
+#define SUPLA_RELAY
+#endif
+
 #endif

@@ -79,7 +79,7 @@ void SDM120::readValuesFromDevice() {
   if (!isnan(freq))
     setFreq(freq * 100);
   if (!isnan(powerReactive))
-    setPowerReactive(0, powerReactive * 10000);
+    setPowerReactive(0, powerReactive * 100000);
   if (!isnan(powerApparent))
     setPowerApparent(0, powerApparent * 100000);
   if (!isnan(phaseAngle))

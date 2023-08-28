@@ -1,5 +1,8 @@
 {
 	"version": "5.0.0",
+	"compiler": {
+		"gglib": []
+	},
 	"Opis struktury": {
 		"SEKCJA": {
 			"SUPLA_OPTION": {

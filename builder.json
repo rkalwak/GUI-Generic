@@ -1,7 +1,7 @@
 {
 	"version": "5.0.0",
 	"compiler": {
-		"gglib": []
+		"gglib": ["EspSoftwareSerial"]
 	},
 	"Opis struktury": {
 		"SEKCJA": {

@@ -58,7 +58,7 @@
 #define MAX_DIRECT_LINK      5
 #define MAX_VIRTUAL_RELAY    10
 #define MAX_BRIDGE_RF        10
-#define MAX_THERMOSTAT       10
+#define MAX_THERMOSTAT       5
 #define MAX_ANALOG_BUTTON    5
 #define MAX_WAKE_ON_LAN      5
 

@@ -16,11 +16,36 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_CHANNEL_EXTENDED_H_
-#define SRC_SUPLA_CHANNEL_EXTENDED_H_
+#ifndef SRC_SUPLA_SENSOR_BINARY_BASE_H_
+#define SRC_SUPLA_SENSOR_BINARY_BASE_H_
 
-// File added for backward compatibility
+#include <supla/channels/binary_sensor_channel.h>
+#include <supla/element_with_channel_actions.h>
 
-#include "channels/channel_extended.h"
+namespace Supla {
 
-#endif  // SRC_SUPLA_CHANNEL_EXTENDED_H_
+class Io;
+
+namespace Sensor {
+class BinaryBase : public ElementWithChannelActions {
+ public:
+  BinaryBase();
+  virtual ~BinaryBase();
+  virtual bool getValue() = 0;
+  void iterateAlways() override;
+  Channel *getChannel() override;
+
+  void setServerInvertLogic(bool invertLogic);
+  void setReadIntervalMs(uint32_t intervalMs);
+
+ protected:
+  uint32_t lastReadTime = 0;
+  uint32_t readIntervalMs = 100;
+  BinarySensorChannel channel;
+};
+
+}  // namespace Sensor
+}  // namespace Supla
+
+
+#endif  // SRC_SUPLA_SENSOR_BINARY_BASE_H_

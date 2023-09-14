@@ -14,13 +14,15 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include "channel_element.h"
+#include "channel_extended.h"
 
-#include <supla/storage/config.h>
-#include <supla/log_wrapper.h>
-
-#include "events.h"
-
-Supla::Channel *Supla::ChannelElement::getChannel() {
-  return &channel;
+namespace Supla {
+bool ChannelExtended::isExtended() const {
+  return true;
 }
+
+TSuplaChannelExtendedValue *ChannelExtended::getExtValue() {
+  return &extValue;
+}
+
+};  // namespace Supla

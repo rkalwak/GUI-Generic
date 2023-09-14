@@ -16,11 +16,18 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_CHANNEL_EXTENDED_H_
-#define SRC_SUPLA_CHANNEL_EXTENDED_H_
+#include "binary_sensor_channel.h"
 
-// File added for backward compatibility
+using Supla::BinarySensorChannel;
 
-#include "channels/channel_extended.h"
+bool BinarySensorChannel::getValueBool() {
+  return serverInvertLogic ? !Channel::getValueBool() : Channel::getValueBool();
+}
 
-#endif  // SRC_SUPLA_CHANNEL_EXTENDED_H_
+void BinarySensorChannel::setServerInvertLogic(bool invert) {
+  serverInvertLogic = invert;
+}
+
+bool BinarySensorChannel::isServerInvertLogic() const {
+  return serverInvertLogic;
+}

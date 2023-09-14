@@ -16,11 +16,37 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_CHANNEL_EXTENDED_H_
-#define SRC_SUPLA_CHANNEL_EXTENDED_H_
+#include "binary_base.h"
 
-// File added for backward compatibility
+#include <supla/time.h>
 
-#include "channels/channel_extended.h"
+using Supla::Sensor::BinaryBase;
 
-#endif  // SRC_SUPLA_CHANNEL_EXTENDED_H_
+BinaryBase::BinaryBase() {
+  channel.setType(SUPLA_CHANNELTYPE_SENSORNO);
+}
+
+BinaryBase::~BinaryBase() {
+}
+
+void BinaryBase::iterateAlways() {
+  if (millis() - lastReadTime > readIntervalMs) {
+    lastReadTime = millis();
+    channel.setNewValue(getValue());
+  }
+}
+
+Supla::Channel *BinaryBase::getChannel() {
+  return &channel;
+}
+
+void BinaryBase::setServerInvertLogic(bool invertLogic) {
+  channel.setServerInvertLogic(invertLogic);
+}
+
+void BinaryBase::setReadIntervalMs(uint32_t intervalMs) {
+  if (intervalMs == 0) {
+    intervalMs = 100;
+  }
+  readIntervalMs = intervalMs;
+}

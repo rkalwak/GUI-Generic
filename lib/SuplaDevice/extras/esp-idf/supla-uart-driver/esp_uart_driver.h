@@ -16,11 +16,31 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_CHANNEL_EXTENDED_H_
-#define SRC_SUPLA_CHANNEL_EXTENDED_H_
+#ifndef EXTRAS_ESP_IDF_SUPLA_UART_DRIVER_ESP_UART_DRIVER_H_
+#define EXTRAS_ESP_IDF_SUPLA_UART_DRIVER_ESP_UART_DRIVER_H_
 
-// File added for backward compatibility
+#include "driver/uart.h"
+#include "driver/gpio.h"
 
-#include "channels/channel_extended.h"
+namespace Supla {
+class UartDriver {
+ public:
+  UartDriver(int txGpio, int rxGpio, int uartNum);
+  virtual ~UartDriver();
 
-#endif  // SRC_SUPLA_CHANNEL_EXTENDED_H_
+  void initialize();
+  bool isInitialized() const;
+
+  int read(void *buf, size_t maxSize);
+  int write(const void *buf, size_t size);
+
+ protected:
+  bool initialized = false;
+  int txGpio = 0;
+  int rxGpio = 0;
+  uart_port_t uartNum = static_cast<uart_port_t>(1);
+};
+
+}  // namespace Supla
+
+#endif  // EXTRAS_ESP_IDF_SUPLA_UART_DRIVER_ESP_UART_DRIVER_H_

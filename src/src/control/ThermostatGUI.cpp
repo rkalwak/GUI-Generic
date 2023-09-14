@@ -14,6 +14,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#if SUPLA_THERMOSTAT
 #include "ThermostatGUI.h"
 
 #include <SuplaDevice.h>
@@ -104,3 +105,4 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
 };  // namespace GUI
 };  // namespace Control
 };  // namespace Supla
+#endif

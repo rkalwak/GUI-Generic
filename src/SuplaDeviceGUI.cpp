@@ -101,8 +101,7 @@ void crateWebServer() {
   WebServer->begin();
 }
 
-#ifdef SUPLA_RELAY
-
+#ifdef SUPLA_THERMOSTAT
 void addRelayOrThermostat(int nr) {
 #ifdef SUPLA_RELAY
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
@@ -118,7 +117,9 @@ void addRelayOrThermostat(int nr) {
   }
 #endif
 }
+#endif
 
+#ifdef SUPLA_RELAY
 void addRelay(uint8_t nr) {
   uint8_t pinRelay, pinLED;
   bool highIsOn, levelLed;

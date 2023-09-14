@@ -20,12 +20,13 @@
 //#include <DoubleResetDetector.h>
 #include <SPI.h>
 
+#include "GUI-Generic_Config.h"
+#include "GUIGenericCommonDefined.h"
+
 #include <SuplaDeviceExtensions.h>
 #include <SuplaDevice.h>
 #include "src/control/ControlGUI.h"
 
-#include "GUI-Generic_Config.h"
-#include "GUIGenericCommonDefined.h"
 #include "GUIGenericCommon.h"
 #include "SuplaTemplateBoard.h"
 
@@ -234,8 +235,11 @@ void setupConnection();
 void enableConnectionSSL(bool value);
 void crateWebServer();
 
-#ifdef SUPLA_RELAY
+#ifdef SUPLA_THERMOSTAT
 void addRelayOrThermostat(int nr);
+#endif
+
+#ifdef SUPLA_RELAY
 void addRelay(uint8_t nr);
 void addButtonToRelay(uint8_t nrRelay);
 #endif

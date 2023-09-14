@@ -48,6 +48,8 @@
 #ifdef SUPLA_THERMOSTAT
 #define SUPLA_RELAY
 #define SUPLA_LED
+#else
+#define SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #endif
 
 #endif

@@ -20,9 +20,6 @@
 //#include <DoubleResetDetector.h>
 #include <SPI.h>
 
-#include "GUI-Generic_Config.h"
-#include "GUIGenericCommonDefined.h"
-
 #include <SuplaDeviceExtensions.h>
 #include <SuplaDevice.h>
 #include "src/control/ControlGUI.h"

@@ -56,21 +56,24 @@ class HvacBase : public ChannelElement, public ActionHandler {
   int handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) override;
   uint8_t handleChannelConfig(TSD_ChannelConfig *config,
                               bool local = false) override;
-  uint8_t handleWeeklySchedule(TSD_ChannelConfig *result,
+  uint8_t handleWeeklySchedule(TSD_ChannelConfig *newWeeklySchedule,
+                               bool altSchedule = false,
                                bool local = false) override;
   void handleSetChannelConfigResult(
       TSDS_SetChannelConfigResult *result) override;
+  void handleChannelConfigFinished() override;
+
   void handleAction(int event, int action) override;
 
   // 0 = off, >= 1 enable heating, <= -1 enable cooling
   void setOutput(int value, bool force = false);
   void setTargetMode(int mode, bool keepSchedule = false);
-  void clearTemperatureSetpointMin();
-  void clearTemperatureSetpointMax();
-  void setTemperatureSetpointMin(int tMin);
-  void setTemperatureSetpointMax(int tMax);
-  int getTemperatureSetpointMin();
-  int getTemperatureSetpointMax();
+  void clearTemperatureSetpointHeat();
+  void clearTemperatureSetpointCool();
+  void setTemperatureSetpointHeat(int tHeat);
+  void setTemperatureSetpointCool(int tCool);
+  int getTemperatureSetpointHeat();
+  int getTemperatureSetpointCool();
   int getMode();
   int getDefaultManualMode();
   bool isWeeklyScheduleEnabled();
@@ -94,6 +97,11 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool setUsedAlgorithm(unsigned _supla_int16_t newAlgorithm);
   unsigned _supla_int16_t getUsedAlgorithm() const;
 
+  // Subfunction can be set only for HVAC_THERMOSTAT channel function
+  // SUPLA_HVAC_SUBFUNCTION_*
+  void setSubfunction(uint8_t subfunction);
+  void setDefaultSubfunction(uint8_t subfunction);
+
   // use this function to set value based on local config change
   bool setMainThermometerChannelNo(uint8_t channelNo);
   uint8_t getMainThermometerChannelNo() const;
@@ -108,6 +116,9 @@ class HvacBase : public ChannelElement, public ActionHandler {
   // use this function to set value based on local config change
   void setAntiFreezeAndHeatProtectionEnabled(bool enebled);
   bool isAntiFreezeAndHeatProtectionEnabled() const;
+
+  void setTemperatureSetpointChangeSwitchesToManualMode(bool enabled);
+  bool isTemperatureSetpointChangeSwitchesToManualMode() const;
 
   // use this function to set value based on local config change
   bool setMinOnTimeS(uint16_t seconds);
@@ -223,11 +234,16 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool isFanSupported() const;
   bool isDrySupported() const;
 
+  bool isHeatingSubfunction() const;
+  bool isCoolingSubfunction() const;
+
   bool isFunctionSupported(_supla_int_t channelFunction) const;
   bool isConfigValid(TChannelConfig_HVAC *config) const;
   bool isWeeklyScheduleValid(
-      TChannelConfig_WeeklySchedule *newSchedule) const;
+      TChannelConfig_WeeklySchedule *newSchedule,
+      bool isAltWeeklySchedule = false) const;
   bool isChannelThermometer(uint8_t channelNo) const;
+  bool isChannelBinarySensor(uint8_t channelNo) const;
   bool isAlgorithmValid(unsigned _supla_int16_t algorithm) const;
   bool areTemperaturesValid(const THVACTemperatureCfg *temperatures) const;
 
@@ -262,8 +278,8 @@ class HvacBase : public ChannelElement, public ActionHandler {
   // validates temperature against current configuration
   bool isTemperatureAuxMaxSetpointValid(
       _supla_int16_t temperature) const;
-  bool isTemperatureInAutoConstrain(_supla_int16_t tMin,
-                                    _supla_int16_t tMax) const;
+  bool isTemperatureInAutoConstrain(_supla_int16_t tHeat,
+                                    _supla_int16_t tCool) const;
 
   bool isTemperatureFreezeProtectionValid(
       const THVACTemperatureCfg *temperatures) const;
@@ -288,29 +304,35 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void clearChannelConfigChangedFlag();
   void clearWeeklyScheduleChangedFlag();
 
-  int getWeeklyScheduleProgramId(int index) const;
-  int getWeeklyScheduleProgramId(enum DayOfWeek dayOfWeek,
-                                  int hour,
-                                  int quarter) const;
   int getWeeklyScheduleProgramId(
       const TChannelConfig_WeeklySchedule *schedule, int index) const;
-  bool isProgramValid(const TWeeklyScheduleProgram &program) const;
+  bool isProgramValid(const TWeeklyScheduleProgram &program,
+                      bool isAltWeeklySchedule) const;
 
   bool setProgram(int programId,
                   unsigned char mode,
-                  _supla_int16_t tMin,
-                  _supla_int16_t tMax);
+                  _supla_int16_t tHeat,
+                  _supla_int16_t tCool,
+                  bool isAltWeeklySchedule = false);
   // index is the number of quarter in week
-  bool setWeeklySchedule(int index, int programId);
+  bool setWeeklySchedule(int index,
+                         int programId,
+                         bool isAltWeeklySchedule = false);
   // schedule internally works on 15 min intervals (quarters)
   bool setWeeklySchedule(enum DayOfWeek dayOfWeek,
                          int hour,
                          int quarter,
-                         int programId);
+                         int programId,
+                         bool isAltWeeklySchedule = false);
   int calculateIndex(enum DayOfWeek dayOfWeek,
                      int hour,
                      int quarter) const;
-  TWeeklyScheduleProgram getProgram(int programId) const;
+  int getCurrentQuarter() const;
+  TWeeklyScheduleProgram getCurrentProgram() const;
+  int getCurrentProgramId() const;
+  TWeeklyScheduleProgram getProgramAt(int quarterIndex) const;
+  TWeeklyScheduleProgram getProgramById(int programId,
+                                        bool isAltWeeklySchedule = false) const;
 
   void copyFixedChannelConfigTo(HvacBase *hvac) const;
   void copyFullChannelConfigTo(TChannelConfig_HVAC *hvac) const;
@@ -328,8 +350,8 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool isDomesticHotWaterFunctionSupported() const;
 
   bool applyNewRuntimeSettings(int mode,
-                               int16_t tMin,
-                               int16_t tMax,
+                               int16_t tHeat,
+                               int16_t tCool,
                                int32_t durationSec = 0);
 
   // keeps the temperature setpoints
@@ -338,19 +360,26 @@ class HvacBase : public ChannelElement, public ActionHandler {
 
   _supla_int16_t getLastTemperature();
 
-  static void debugPrintConfigStruct(const TChannelConfig_HVAC *config);
+  bool setBinarySensorChannelNo(uint8_t channelNo);
+  uint8_t getBinarySensorChannelNo() const;
+
+  static void debugPrintConfigStruct(const TChannelConfig_HVAC *config, int id);
 
   _supla_int16_t getPrimaryTemp();
   _supla_int16_t getSecondaryTemp();
 
+  bool isWeelkySchedulManualOverrideMode() const;
+
  private:
   _supla_int16_t getTemperature(int channelNo);
+  // returns true if forced off should be set
+  bool getForcedOffSensorState();
   bool isSensorTempValid(_supla_int16_t temperature) const;
   bool checkOverheatProtection(_supla_int16_t t);
   bool checkAntifreezeProtection(_supla_int16_t t);
   bool checkAuxProtection(_supla_int16_t t);
   bool processWeeklySchedule();
-  void setSetpointTemperaturesForCurrentMode(int tMin, int tMax);
+  void setSetpointTemperaturesForCurrentMode(int tHeat, int tCool);
   bool checkThermometersStatusForCurrentMode(_supla_int16_t t1,
                                              _supla_int16_t t2) const;
   int evaluateHeatOutputValue(_supla_int16_t tMeasured,
@@ -365,12 +394,14 @@ class HvacBase : public ChannelElement, public ActionHandler {
 
   TChannelConfig_HVAC config = {};
   TChannelConfig_WeeklySchedule weeklySchedule = {};
+  TChannelConfig_WeeklySchedule altWeeklySchedule = {};
   bool isWeeklyScheduleConfigured = false;
   uint8_t channelConfigChangedOffline = 0;
   uint8_t weeklyScheduleChangedOffline = 0;
-  bool firstChannelConfigAfterRegister = false;
-  bool waitForChannelConfigAndIgnoreIt = false;
-  bool waitForWeeklyScheduleAndIgnoreIt = false;
+  bool configFinishedReceived = true;
+  bool defaultConfigReceived = false;
+  bool weeklyScheduleReceived = false;
+  bool altWeeklyScheduleReceived = false;
   bool initDone = false;
   // primaryOutput can be used for heating or cooling (cooling is supported
   // when secondaryOutput is not used, in such case "AUTO" mode is not
@@ -379,30 +410,38 @@ class HvacBase : public ChannelElement, public ActionHandler {
   // secondaryOutput can be used only for cooling
   Supla::Control::OutputInterface *secondaryOutput = nullptr;
   THVACValue lastWorkingMode = {};
+  int16_t lastManualSetpointHeat = INT16_MIN;
+  int16_t lastManualSetpointCool = INT16_MIN;
+  uint8_t previousSubfunction = 0;
+  uint8_t defaultSubfunction = 0;
+
+  uint8_t defaultMainThermometer = 0;
+  uint8_t defaultAuxThermometer = 0;
+  uint8_t defaultBinarySensor = 0;
+
   time_t countdownTimerEnds = 0;
   uint32_t lastConfigChangeTimestampMs = 0;
   uint32_t lastIterateTimestampMs = 0;
   uint32_t lastOutputStateChangeTimestampMs = 0;
   int lastValue = -1000;  // set out of output value range
   _supla_int16_t lastTemperature = 0;
+  int lastProgramManualOverride = -1;
 
   _supla_int16_t defaultTemperatureRoomMin[6] = {
-      1000,  // default min temperature for all other functions or when value is
+      500,  // default min temperature for all other functions or when value is
              // set to INT16_MIN
-      1000,  // HEAT
-      1000,  // COOL
-      1000,  // AUTO
+      500,  // HVAC_THERMOSTAT (heat or cool)
+      500,  // AUTO
       -5000,  // DIFFERENTIAL
       1000,   // DOMESTIC_HOT_WATER
   };
   _supla_int16_t defaultTemperatureRoomMax[6] = {
-      4000,  // default min temperature for all other functions or when value is
+      4000,  // default max temperature for all other functions or when value is
              // set to INT16_MIN
-      4000,  // HEAT
-      4000,  // COOL
+      4000,  // HVAC_THERMOSTAT (heat or cool)
       4000,  // AUTO
       5000,  // DIFFERENTIAL
-      9000,   // DOMESTIC_HOT_WATER
+      7500,   // DOMESTIC_HOT_WATER
   };
 };
 

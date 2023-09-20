@@ -14,13 +14,21 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include "channel_element.h"
+#ifndef SRC_SUPLA_CHANNELS_CHANNEL_EXTENDED_H_
+#define SRC_SUPLA_CHANNELS_CHANNEL_EXTENDED_H_
 
-#include <supla/storage/config.h>
-#include <supla/log_wrapper.h>
+#include "channel.h"
 
-#include "events.h"
+namespace Supla {
+class ChannelExtended : public Channel {
+ public:
+  bool isExtended() const override;
+  TSuplaChannelExtendedValue *getExtValue() override;
 
-Supla::Channel *Supla::ChannelElement::getChannel() {
-  return &channel;
-}
+ protected:
+  TSuplaChannelExtendedValue extValue = {};
+};
+
+};  // namespace Supla
+
+#endif  // SRC_SUPLA_CHANNELS_CHANNEL_EXTENDED_H_

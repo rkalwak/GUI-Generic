@@ -10,11 +10,9 @@ set(SUPLA_DEVICE_SRCS
 
   ../../../src/supla/action_handler.cpp
   ../../../src/supla/at_channel.cpp
-  ../../../src/supla/channels/channel.cpp
-  ../../../src/supla/channels/binary_sensor_channel.cpp
+  ../../../src/supla/channel.cpp
   ../../../src/supla/channel_element.cpp
-  ../../../src/supla/element_with_channel_actions.cpp
-  ../../../src/supla/channels/channel_extended.cpp
+  ../../../src/supla/channel_extended.cpp
   ../../../src/supla/correction.cpp
   ../../../src/supla/element.cpp
   ../../../src/supla/io.cpp
@@ -113,11 +111,9 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/device/sw_update.cpp
   ../../../src/supla/device/factory_test.cpp
   ../../../src/supla/device/remote_device_config.cpp
-  ../../../src/supla/device/enter_cfg_mode_after_power_cycle.cpp
 # not all files from sensor folder are compiled here. Some still require
 # porting from ARDUINO
   ../../../src/supla/sensor/binary.cpp
-  ../../../src/supla/sensor/binary_base.cpp
   ../../../src/supla/sensor/electricity_meter.cpp
   ../../../src/supla/sensor/hygro_meter.cpp
   ../../../src/supla/sensor/impulse_counter.cpp

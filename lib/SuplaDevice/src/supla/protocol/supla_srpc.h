@@ -23,9 +23,6 @@
 
 #include "protocol_layer.h"
 
-#define SUPLA_SRPC_CALCFG_RESULT_DONT_REPLY (-1)
-#define SUPLA_SRPC_CALCFG_RESULT_PENDING (-2)
-
 namespace Supla {
 
 class Client;
@@ -35,21 +32,6 @@ class RemoteDeviceConfig;
 }  // namespace Device
 
 namespace Protocol {
-
-struct CalCfgResultPendingItem;
-
-class CalCfgResultPending {
- public:
-  friend class SuplaSrpc;
-  void set(uint8_t channelNo, int32_t receiverId, int32_t command);
-  void clear(uint8_t channelNo);
-  CalCfgResultPendingItem *get(uint8_t channelNo);
-
- protected:
-  CalCfgResultPending();
-  ~CalCfgResultPending();
-  CalCfgResultPendingItem *first = nullptr;
-};
 
 class SuplaSrpc : public ProtocolLayer {
  public:
@@ -116,12 +98,6 @@ class SuplaSrpc : public ProtocolLayer {
   void handleSetDeviceConfigResult(TSDS_SetDeviceConfigResult *result);
 
   Supla::Client *client = nullptr;
-  CalCfgResultPending calCfgResultPending;
-  void sendPendingCalCfgResult(uint8_t channelNo,
-                               int32_t result,
-                               int32_t command,
-                               int dataSize = 0,
-                               void *data = nullptr);
 
   static const char *configResultToCStr(int result);
 

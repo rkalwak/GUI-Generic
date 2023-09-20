@@ -29,16 +29,23 @@ Supla::Sensor::Binary::Binary(Supla::Io *io,
 }
 
 Supla::Sensor::Binary::Binary(int pin, bool pullUp, bool invertLogic)
-    : pin(pin), pullUp(pullUp), invertLogic(invertLogic) {
+    : pin(pin), pullUp(pullUp), invertLogic(invertLogic), lastReadTime(0) {
   channel.setType(SUPLA_CHANNELTYPE_SENSORNO);
 }
 
 bool Supla::Sensor::Binary::getValue() {
   auto value =
-      Supla::Io::digitalRead(channel.getChannelNumber(), pin, io) == LOW ? false
-                                                                         : true;
+    Supla::Io::digitalRead(channel.getChannelNumber(), pin, io) == LOW ? false
+                                                                   : true;
   value = !invertLogic ? value : !value;
   return value;
+}
+
+void Supla::Sensor::Binary::iterateAlways() {
+  if (lastReadTime + 100 < millis()) {
+    lastReadTime = millis();
+    channel.setNewValue(getValue());
+  }
 }
 
 void Supla::Sensor::Binary::onInit() {
@@ -46,4 +53,3 @@ void Supla::Sensor::Binary::onInit() {
       channel.getChannelNumber(), pin, pullUp ? INPUT_PULLUP : INPUT, io);
   channel.setNewValue(getValue());
 }
-

@@ -3,15 +3,13 @@
 
 set(SRCS
   supla/uptime.cpp
-  supla/channels/channel.cpp
-  supla/channels/binary_sensor_channel.cpp
-  supla/channels/channel_extended.cpp
+  supla/channel.cpp
+  supla/channel_extended.cpp
   supla/io.cpp
   supla/tools.cpp
   supla/element.cpp
   supla/local_action.cpp
   supla/channel_element.cpp
-  supla/element_with_channel_actions.cpp
   supla/correction.cpp
   supla/at_channel.cpp
   supla/action_handler.cpp
@@ -24,7 +22,6 @@ set(SRCS
   supla/device/status_led.cpp
   supla/device/remote_device_config.cpp
   supla/device/notifications.cpp
-  supla/device/enter_cfg_mode_after_power_cycle.cpp
 
   supla/storage/storage.cpp
   supla/storage/config.cpp
@@ -92,7 +89,6 @@ set(SRCS
   supla/sensor/thermometer_driver.cpp
   supla/sensor/electricity_meter.cpp
   supla/sensor/binary.cpp
-  supla/sensor/binary_base.cpp
   supla/sensor/virtual_binary.cpp
   supla/sensor/impulse_counter.cpp
   supla/sensor/virtual_impulse_counter.cpp

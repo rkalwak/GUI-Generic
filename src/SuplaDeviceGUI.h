@@ -24,6 +24,7 @@
 
 #include <SuplaDeviceExtensions.h>
 #include <SuplaDevice.h>
+#include <supla/storage/littlefs_config.h>
 #include "src/control/ControlGUI.h"
 
 #include "GUIGenericCommon.h"

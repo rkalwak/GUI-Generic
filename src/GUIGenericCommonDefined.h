@@ -19,6 +19,9 @@
 
 #include "GUI-Generic_Config.h"
 
+#define SUPLA_EXCLUDE_LITTLEFS_CONFIG
+#include <supla/storage/littlefs_config.h>  //Dodany aby wykluczyć SUPLA_EXCLUDE_LITTLEFS_CONFIG
+
 #if defined(SUPLA_MCP23017) || defined(SUPLA_PCF8575) || defined(SUPLA_PCF8574)
 #define GUI_SENSOR_I2C_EXPENDER
 #endif
@@ -48,8 +51,6 @@
 #ifdef SUPLA_THERMOSTAT
 #define SUPLA_RELAY
 #define SUPLA_LED
-#else
-#define SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #endif
 
 #endif

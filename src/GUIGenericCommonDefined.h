@@ -19,9 +19,6 @@
 
 #include "GUI-Generic_Config.h"
 
-#define SUPLA_EXCLUDE_LITTLEFS_CONFIG
-#include <supla/storage/littlefs_config.h>
-
 #if defined(SUPLA_MCP23017) || defined(SUPLA_PCF8575) || defined(SUPLA_PCF8574)
 #define GUI_SENSOR_I2C_EXPENDER
 #endif

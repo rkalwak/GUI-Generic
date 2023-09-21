@@ -26,7 +26,7 @@
 #define GUI_ALL_SENSOR
 #endif
 
-#if defined(GUI_OTHER_ENERGY) || defined(GUI_SENSOR_I2C_ENERGY_METER)
+#if defined(GUI_OTHER_ENERGY) || defined(GUI_SENSOR_I2C_ENERGY_METER) || defined(SUPLA_DIRECT_LINKS_MULTI_SENSOR)
 #define GUI_ALL_ENERGY
 #endif
 

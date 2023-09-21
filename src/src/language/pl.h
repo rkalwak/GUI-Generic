@@ -206,11 +206,12 @@
 #define S_RECEIVER    "Odbiornik"
 #endif
 
-#define S_TEMP_HYGR         "Temperatur + Wilgotność"
-#define S_PRESS             "Ciśnienie"
-#define S_ELECTRICITY_METER "Licznik energii elektycznej"
-#define S_DISTANCE          "Odległość"
-#define S_DEPTH             "Głębokość"
+#define S_TEMP_HYGR                   "Temperatur + Wilgotność"
+#define S_PRESS                       "Ciśnienie"
+#define S_ELECTRICITY_METER           "Licznik energii elektycznej 3F"
+#define S_ELECTRICITY_ONE_PHASE_METER "Licznik energii elektycznej 1F"
+#define S_DISTANCE                    "Odległość"
+#define S_DEPTH                       "Głębokość"
 
 #ifdef SUPLA_PUSHOVER
 #define S_SOUND "Dźwięk"

@@ -170,6 +170,47 @@ void DirectLinksOnePhaseElectricityMeter::sendRequest() {
   }
 }
 
+DirectLinksElectricityMeter::DirectLinksElectricityMeter(const char *url, const char *host, bool isSecured)
+    : DirectLinksConnect(url, host, isSecured){};
+
+void DirectLinksElectricityMeter::sendRequest() {
+  if (client) {
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject &root = jsonBuffer.parseObject(getRequest());
+
+    if (root.success()) {
+      if (!root["connected"].success() || !root["phases"].success()) {
+        Serial.println(F("no connected"));
+        retryCount++;
+        if (retryCount > 3) {
+          retryCount = 0;
+        }
+      }
+      else {
+        JsonArray &phases = root["phases"];
+        for (size_t i = 0; i < phases.size(); i++) {
+          JsonObject &phase = phases[i];
+          setPhaseData(i, phase);
+        }
+        retryCount = 0;
+      }
+    }
+    else {
+      Serial.println(F("parseObject - failed"));
+    }
+  }
+}
+
+void DirectLinksElectricityMeter::setPhaseData(int phaseIndex, JsonObject &phase) {
+  setVoltage(phaseIndex, (double)phase["voltage"] * 100); // voltage in 0.01 V
+  setCurrent(phaseIndex, (double)phase["current"] * 1000); // current in 0.001 A
+  setPowerActive(phaseIndex, (double)phase["powerActive"] * 100000); // power in 0.00001 kW
+  setPowerReactive(phaseIndex, (double)phase["powerReactive"] * 100000); // power in 0.00001 kvar
+  setPowerApparent(phaseIndex, (double)phase["powerApparent"] * 100000); // power in 0.00001 kVA
+  setPowerFactor(phaseIndex, (double)phase["powerFactor"] * 1000); // power in 0.001
+  setFwdActEnergy(phaseIndex, (double)phase["totalForwardActiveEnergy"] * 100000); // energy in 0.00001 kWh
+}
+
 DirectLinksDistance::DirectLinksDistance(const char *url, const char *host, bool isSecured) : DirectLinksConnect(url, host, isSecured){};
 
 void DirectLinksDistance::sendRequest() {

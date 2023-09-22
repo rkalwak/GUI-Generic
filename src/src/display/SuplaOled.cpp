@@ -314,9 +314,9 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double averageVoltage = ((emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3) / 1000.0;
+    double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
 
-    displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 1), "V");
+    displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
   }
 }
 
@@ -332,8 +332,8 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double sumCurrent = (emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2]) / 1000.0;
-    displayUiGeneral(display, state, x, y, sumCurrent, "A");
+    double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
+    displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
   }
 }
 
@@ -349,8 +349,8 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double sumPowerActive = (emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2]) / 1000.0;
-    displayUiGeneral(display, state, x, y, String(sumPowerActive, 1), "W");
+    double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
+    displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
   }
 }
 

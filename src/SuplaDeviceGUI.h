@@ -17,9 +17,6 @@
 #ifndef SuplaDeviceGUI_h
 #define SuplaDeviceGUI_h
 
-#include "GUI-Generic_Config.h"
-#include "GUIGenericCommonDefined.h"
-
 #include <SPI.h>
 
 #include <SuplaDeviceExtensions.h>

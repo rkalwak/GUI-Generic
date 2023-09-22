@@ -17,7 +17,9 @@
 #ifndef GUI_GENERIC_COMMON_DEFINED_H
 #define GUI_GENERIC_COMMON_DEFINED_H
 
+#ifndef SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #define SUPLA_EXCLUDE_LITTLEFS_CONFIG
+#endif
 
 #include "GUI-Generic_Config.h"
 
@@ -48,8 +50,13 @@
 #endif
 
 #ifdef SUPLA_THERMOSTAT
+#ifndef SUPLA_RELAY
 #define SUPLA_RELAY
+#endif
+
+#ifndef SUPLA_LED
 #define SUPLA_LED
+#endif
 #endif
 
 #endif

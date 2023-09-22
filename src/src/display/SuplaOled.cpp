@@ -130,7 +130,11 @@ void displayUiRelayState(OLEDDisplay* display) {
 
   display->setFont(ArialMT_Win1250_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  for (size_t i = 0; i < Supla::GUI::relay.size(); i++) {
+
+  size_t maxIterations = 7;  // Maksymalna liczba iteracji
+  size_t relaySize = Supla::GUI::relay.size();
+
+  for (size_t i = 0; i < relaySize && i < maxIterations; i++) {
     if (Supla::GUI::relay[i] != nullptr) {
       if (Supla::GUI::relay[i]->isOn()) {
         display->setColor(WHITE);
@@ -145,6 +149,7 @@ void displayUiRelayState(OLEDDisplay* display) {
       x += 15;
     }
   }
+
   display->setColor(WHITE);
   display->drawHorizontalLine(0, 14, display->getWidth());
 }
@@ -482,8 +487,6 @@ void SuplaOled::onInit() {
     setupAnimate();
 
     ui->setTargetFPS(60);
-    ui->setIndicatorPosition(BOTTOM);
-    ui->setIndicatorDirection(LEFT_RIGHT);
     ui->setFrameAnimation(SLIDE_LEFT);
 
     ui->setFrames(frames, frameCount);
@@ -508,7 +511,10 @@ void SuplaOled::setupAnimate() {
     ui->disableAllIndicators();
     ui->disableAutoTransition();
   }
-  else {
+  else if (frameCount <= 6) {
+    ui->setIndicatorPosition(BOTTOM);
+    ui->setIndicatorDirection(LEFT_RIGHT);
+
     if (ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() > 0) {
       ui->enableAutoTransition();
       ui->setTimePerFrame(ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() * 1000);
@@ -517,6 +523,9 @@ void SuplaOled::setupAnimate() {
       ui->disableAutoTransition();
       ui->setTimePerTransition(250);
     }
+  }
+  else {
+    ui->disableAllIndicators();
   }
 }
 

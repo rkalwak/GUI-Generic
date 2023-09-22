@@ -75,15 +75,19 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   hvac->setTemperatureAuxMin(500);   // 5 degrees
   hvac->setTemperatureAuxMax(7500);  // 75 degrees
 
-  // grzanie od 5,00 do 55,00
-  hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT, 1000);
-  hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT, 9500);
-  // chłodzenie od 0,00 do 10,00
-  hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_COOL, 0);
-  hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_COOL, 4000);
+  if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
+    // grzanie od 5,00 do 55,00
+    hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 1000);
+    hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 9500);
 
-  if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
-    hvac->getChannel()->setDefault(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_COOL);
+    hvac->getChannel()->setDefault(SUPLA_HVAC_SUBFUNCTION_HEAT);
+  }
+  else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
+    // chłodzenie od 0,00 do 40,00
+    hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 0);
+    hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 4000);
+
+    hvac->getChannel()->setDefault(SUPLA_HVAC_SUBFUNCTION_COOL);
   }
 
   if (pinLED != OFF_GPIO) {

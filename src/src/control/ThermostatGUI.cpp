@@ -80,14 +80,14 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
     hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 1000);
     hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 9500);
 
-    hvac->getChannel()->setDefault(SUPLA_HVAC_SUBFUNCTION_HEAT);
+    hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_HEAT);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
     // chłodzenie od 0,00 do 40,00
     hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 0);
     hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 4000);
 
-    hvac->getChannel()->setDefault(SUPLA_HVAC_SUBFUNCTION_COOL);
+    hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_COOL);
   }
 
   if (pinLED != OFF_GPIO) {

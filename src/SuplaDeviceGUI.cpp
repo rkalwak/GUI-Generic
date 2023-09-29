@@ -113,6 +113,7 @@ void addRelayOrThermostat(int nr) {
   else {
 #ifdef SUPLA_THERMOSTAT
     new Supla::Control::GUI::ThermostatGUI(nr);
+    relay.push_back(nullptr);
 #endif
   }
 #endif

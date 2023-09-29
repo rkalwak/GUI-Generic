@@ -76,18 +76,22 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   hvac->setTemperatureAuxMax(7500);  // 75 degrees
 
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
-    // grzanie od 5,00 do 55,00
-    hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 1000);
-    hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 9500);
-
+    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
     hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_HEAT);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
-    // chłodzenie od 0,00 do 40,00
-    hvac->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 0);
-    hvac->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, 4000);
-
+    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
     hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_COOL);
+  }
+  else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_AUTO) {
+    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO);
+  }
+  else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_DOMESTIC_HOT_WATER) {
+    hvac->enableDomesticHotWaterFunctionSupport();
+    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER);
+  }
+  else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_DIFFERENTIAL) {
+    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL);
   }
 
   if (pinLED != OFF_GPIO) {

@@ -20,6 +20,8 @@
 
 #include <Arduino.h>
 
+#define THERMOSTAT_DEFAULT_HISTERESIS "0.4"
+
 namespace Supla {
 namespace Control {
 namespace GUI {

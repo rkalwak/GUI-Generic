@@ -219,8 +219,12 @@
 #define S_BAUDRATE "Prędkość komunikacji"
 
 #ifdef SUPLA_THERMOSTAT
-#define S_HEAT                     "Grzanie"
-#define S_COOL                     "Chłodzenie"
+#define S_HEAT               "Grzanie"
+#define S_COOL               "Chłodzenie"
+#define S_AUTO               "Auto"
+#define S_DOMESTIC_HOT_WATER "Ciepła woda użytkowa"
+#define S_DIFFERENTIAL       "Różnicowy"
+
 #define S_THERMOSTAT               "Termostat"
 #define S_MAIN_THERMOMETER_CHANNEL "Kanał termometru"
 #define S_AUX_THERMOMETER_CHANNEL  "Dod. kanał termometru"

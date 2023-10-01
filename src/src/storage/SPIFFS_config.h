@@ -37,8 +37,13 @@ class SPIFFSConfig : public KeyValue {
   int getCustomCASize() override;
   bool setCustomCA(const char* customCA) override;
 
- protected:
-  bool initSPIFFS();
+  // override blob storage to use separate file for each value
+  bool setBlob(const char* key, const char* value, size_t blobSize) override;
+  bool getBlob(const char* key, char* value, size_t blobSize) override;
+
+ protected:  
+ int getBlobSize(const char* key) override;
+ bool initSPIFFS();
 };
 };  // namespace Supla
 

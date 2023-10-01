@@ -31,21 +31,22 @@
 #include <supla/log_wrapper.h>
 
 namespace Supla {
-const char ConfigFileName[] = "/supla-dev.cfg";
-const char CustomCAFileName[] = "/custom_ca.pem";
-};  // namespace Supla
+  const char ConfigFileName[] = "/supla-dev.cfg";
+  const char CustomCAFileName[] = "/custom_ca.pem";
+};
 
 #define SUPLA_SPIFFS_CONFIG_BUF_SIZE 1024
 
-Supla::SPIFFSConfig::SPIFFSConfig() {
-}
+#define BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE 32
 
-Supla::SPIFFSConfig::~SPIFFSConfig() {
-}
+Supla::SPIFFSConfig::SPIFFSConfig() {}
+
+Supla::SPIFFSConfig::~SPIFFSConfig() {}
 
 bool Supla::SPIFFSConfig::init() {
   if (first) {
-    SUPLA_LOG_WARNING("SPIFFSConfig: init called on non empty database. Aborting");
+    SUPLA_LOG_WARNING(
+        "SPIFFSConfig: init called on non empty database. Aborting");
     // init can be done only on empty storage
     return false;
   }
@@ -64,6 +65,7 @@ bool Supla::SPIFFSConfig::init() {
 
     int fileSize = cfg.size();
 
+    SUPLA_LOG_DEBUG("SPIFFSConfig: config file size %d", fileSize);
     if (fileSize > SUPLA_SPIFFS_CONFIG_BUF_SIZE) {
       SUPLA_LOG_ERROR("SPIFFSConfig: config file is too big");
       cfg.close();
@@ -77,14 +79,18 @@ bool Supla::SPIFFSConfig::init() {
     cfg.close();
     SPIFFS.end();
     if (bytesRead != fileSize) {
-      SUPLA_LOG_DEBUG("SPIFFSConfig: read bytes %d, while file is %d bytes", bytesRead, fileSize);
+      SUPLA_LOG_DEBUG(
+          "SPIFFSConfig: read bytes %d, while file is %d bytes",
+          bytesRead,
+          fileSize);
       return false;
     }
 
     SUPLA_LOG_DEBUG("SPIFFSConfig: initializing storage from file...");
-    return initFromMemory(buf, fileSize);
-  }
-  else {
+    auto result =  initFromMemory(buf, fileSize);
+    SUPLA_LOG_DEBUG("SPIFFSConfig: init result %d", result);
+    return result;
+  } else {
     SUPLA_LOG_DEBUG("SPIFFSConfig:: config file missing");
   }
   SPIFFS.end();
@@ -134,18 +140,20 @@ bool Supla::SPIFFSConfig::getCustomCA(char* customCA, int maxSize) {
       return false;
     }
 
-    int bytesRead = file.read(reinterpret_cast<uint8_t*>(customCA), fileSize);
+    int bytesRead = file.read(reinterpret_cast<uint8_t *>(customCA), fileSize);
 
     file.close();
     SPIFFS.end();
     if (bytesRead != fileSize) {
-      SUPLA_LOG_DEBUG("SPIFFSConfig: read bytes %d, while file is %d bytes", bytesRead, fileSize);
+      SUPLA_LOG_DEBUG(
+          "SPIFFSConfig: read bytes %d, while file is %d bytes",
+          bytesRead,
+          fileSize);
       return false;
     }
 
     return true;
-  }
-  else {
+  } else {
     SUPLA_LOG_DEBUG("SPIFFSConfig:: custom ca file missing");
   }
   SPIFFS.end();
@@ -183,7 +191,8 @@ bool Supla::SPIFFSConfig::setCustomCA(const char* customCA) {
 
   File file = SPIFFS.open(CustomCAFileName, "w");
   if (!file) {
-    SUPLA_LOG_ERROR("SPIFFSConfig: failed to open custom CA file for write");
+    SUPLA_LOG_ERROR(
+        "SPIFFSConfig: failed to open custom CA file for write");
     SPIFFS.end();
     return false;
   }
@@ -201,7 +210,8 @@ bool Supla::SPIFFSConfig::initSPIFFS() {
     SPIFFS.format();
     result = SPIFFS.begin();
     if (!result) {
-      SUPLA_LOG_ERROR("SPIFFSConfig: failed to mount and to format partition");
+      SUPLA_LOG_ERROR(
+          "SPIFFSConfig: failed to mount and to format partition");
     }
   }
 
@@ -215,10 +225,117 @@ void Supla::SPIFFSConfig::removeAll() {
     return;
   }
   SPIFFS.remove(CustomCAFileName);
+
+  File suplaDir = SPIFFS.open("/supla", "r");
+  if (suplaDir && suplaDir.isDirectory()) {
+    File file = suplaDir.openNextFile();
+    while (file) {
+      if (!file.isDirectory()) {
+        SUPLA_LOG_DEBUG("SPIFFSConfig: removing file /supla/%s", file.name());
+        char path[200] = {};
+        snprintf(path, sizeof(path), "/supla/%s", file.name());
+        file.close();
+        if (!SPIFFS.remove(path)) {
+          SUPLA_LOG_ERROR("SPIFFSConfig: failed to remove file");
+        }
+      }
+      file = suplaDir.openNextFile();
+    }
+  } else {
+    SUPLA_LOG_DEBUG("SPIFFSConfig: failed to open supla directory");
+  }
+
   SPIFFS.end();
 
   Supla::KeyValue::removeAll();
 }
+
+bool Supla::SPIFFSConfig::setBlob(const char* key,
+                                    const char* value,
+                                    size_t blobSize) {
+  if (blobSize < BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE) {
+    return Supla::KeyValue::setBlob(key, value, blobSize);
+  }
+
+  SUPLA_LOG_DEBUG("SPIFFS: writing file %s", key);
+  if (!initSPIFFS()) {
+    return false;
+  }
+
+  SPIFFS.mkdir("/supla");
+
+  char filename[50] = {};
+  snprintf(filename, sizeof(filename), "/supla/%s", key);
+  File file = SPIFFS.open(filename, "w");
+  if (!file) {
+    SUPLA_LOG_ERROR(
+        "SPIFFSConfig: failed to open blob file \"%s\" for write", key);
+    SPIFFS.end();
+    return false;
+  }
+
+  file.write(reinterpret_cast<const uint8_t*>(value), blobSize);
+  file.close();
+  SPIFFS.end();
+  return true;
+}
+
+bool Supla::SPIFFSConfig::getBlob(const char* key,
+                                    char* value,
+                                    size_t blobSize) {
+  if (blobSize < BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE) {
+    return Supla::KeyValue::getBlob(key, value, blobSize);
+  }
+
+  if (!initSPIFFS()) {
+    return false;
+  }
+
+  char filename[50] = {};
+  snprintf(filename, sizeof(filename), "/supla/%s", key);
+  File file = SPIFFS.open(filename, "r");
+  if (!file) {
+    SUPLA_LOG_ERROR(
+        "SPIFFSConfig: failed to open blob file \"%s\" for read", key);
+    SPIFFS.end();
+    return false;
+  }
+  size_t fileSize = file.size();
+  if (fileSize > blobSize) {
+    SUPLA_LOG_ERROR("SPIFFSConfig: blob file is too big");
+    file.close();
+    SPIFFS.end();
+    return false;
+  }
+
+  int bytesRead = file.read(reinterpret_cast<uint8_t*>(value), fileSize);
+
+  file.close();
+  SPIFFS.end();
+  return bytesRead == fileSize;
+}
+
+int Supla::SPIFFSConfig::getBlobSize(const char* key) {
+  if (!initSPIFFS()) {
+    return false;
+  }
+
+  char filename[50] = {};
+  snprintf(filename, sizeof(filename), "/supla/%s", key);
+  File file = SPIFFS.open(filename, "r");
+  if (!file) {
+    SUPLA_LOG_ERROR(
+        "SPIFFSConfig: failed to open blob file \"%s\"", key);
+    SPIFFS.end();
+    return false;
+  }
+  int fileSize = file.size();
+
+  file.close();
+  SPIFFS.end();
+  return fileSize;
+}
+
 
 #endif
 #endif  // SUPLA_EXCLUDE_SPIFFS_CONFIG

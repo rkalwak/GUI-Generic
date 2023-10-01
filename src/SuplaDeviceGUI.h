@@ -227,6 +227,11 @@
 #include "src/control/ThermostatGUI.h"
 #endif
 
+#define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds
+#define TIME_SAVE_PERIOD_IMPULSE_COUNTER_SEK 600  // 10min
+#define STORAGE_OFFSET                       0
+#include <supla/storage/eeprom.h>
+
 namespace Supla {
 namespace GUI {
 

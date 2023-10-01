@@ -46,11 +46,13 @@ uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
 
 Supla::SPIFFSConfig configSupla;
+Supla::Eeprom eeprom(STORAGE_OFFSET);
 
 void setup() {
   uint8_t nr, gpio;
 
   Serial.begin(74880);
+  eeprom.setStateSavePeriod(5000);
 
   ConfigManager = new SuplaConfigManager();
   ConfigESP = new SuplaConfigESP();

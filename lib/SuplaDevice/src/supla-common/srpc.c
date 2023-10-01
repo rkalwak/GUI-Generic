@@ -43,6 +43,7 @@
 #else
 // ESP8266 nonos SDK target
 #include <user_interface.h>
+
 #include "espmissingincludes.h"
 #endif
 
@@ -1826,6 +1827,10 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_async__call(void *_srpc,
                                                 char *data,
                                                 unsigned _supla_int_t data_size,
                                                 unsigned char *version) {
+  if (_srpc == NULL) {
+    return SUPLA_RESULT_FALSE;
+  }
+
   Tsrpc *srpc = (Tsrpc *)_srpc;
 
   if (!srpc_call_allowed(_srpc, call_id)) {
@@ -2292,15 +2297,14 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_set_channel_config_result(
 }
 
 _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_channel_config_finished(
-    void *_srpc, TSD_ChannelConfigFinished *result) {
-  if (result == NULL) {
+    void *_srpc, TSD_ChannelConfigFinished *fin) {
+  if (fin == NULL) {
     return 0;
   }
 
   return srpc_async_call(_srpc, SUPLA_SD_CALL_CHANNEL_CONFIG_FINISHED,
-                         (char *)result, sizeof(TSD_ChannelConfigFinished));
+                         (char *)fin, sizeof(TSD_ChannelConfigFinished));
 }
-
 
 _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_set_device_config_request(
     void *_srpc, TSDS_SetDeviceConfig *config) {

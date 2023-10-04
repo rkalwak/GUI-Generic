@@ -535,6 +535,14 @@ Supla::Action SuplaConfigESP::getActionInternal(uint8_t gpio) {
       return Supla::Action::TURN_OFF;
     case Supla::GUI::Action::TOGGLE:
       return Supla::Action::TOGGLE;
+    case Supla::GUI::Action::INCREASE_TEMPERATURE:
+      return Supla::Action::INCREASE_TEMPERATURE;
+    case Supla::GUI::Action::DECREASE_TEMPERATURE:
+      return Supla::Action::DECREASE_TEMPERATURE;
+    case Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF:
+      return Supla::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES;
+          case Supla::GUI::Action::TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES:
+      return Supla::Action::TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES;
     default:
       return actionInternal;
   }

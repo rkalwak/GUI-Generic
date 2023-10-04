@@ -246,7 +246,7 @@ void addRelayOrThermostat(int nr);
 
 #ifdef SUPLA_RELAY
 void addRelay(uint8_t nr);
-void addButtonToRelay(uint8_t nrRelay);
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element = nullptr, Supla::ActionHandler *client = nullptr);
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER
@@ -257,7 +257,8 @@ struct ActionTrigger {
 extern ActionTrigger *actionTrigger;
 
 void addButtonActionTrigger(uint8_t nr);
-void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
+void addActionTriggerRelatedChannel(
+    uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
 int calculateElementCountActionTrigger();
 #endif
 

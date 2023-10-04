@@ -59,6 +59,10 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   hvac->setMainThermometerChannelNo(mainThermometr);  // Main Thermometer
   if (mainThermometr != auxThermometr) {
     hvac->setAuxThermometerChannelNo(auxThermometr);  // Aux Thermometer
+                                                      // AUX
+    hvac->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
+    hvac->setTemperatureAuxMin(500);   // 5 degrees
+    hvac->setTemperatureAuxMax(7500);  // 75 degrees
   }
 
   hvac->setTemperatureHisteresis(histeresis * 10);
@@ -69,11 +73,6 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   hvac->setTemperatureAutoOffsetMin(200);   // 2 degrees
   hvac->setTemperatureAutoOffsetMax(1000);  // 10 degrees
   hvac->addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_AT_MOST);
-
-  // AUX
-  hvac->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
-  hvac->setTemperatureAuxMin(500);   // 5 degrees
-  hvac->setTemperatureAuxMax(7500);  // 75 degrees
 
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
     hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
@@ -108,6 +107,11 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
       hvac->addAction(Supla::TURN_ON, statusLed, Supla::ON_HVAC_HEATING, true);
     }
   }
+
+  hvac->setButtonTemperatureStep(10);
+#ifdef SUPLA_BUTTON
+  Supla::GUI::addButtonToRelay(nr, hvac, hvac);
+#endif
 };
 
 };  // namespace GUI

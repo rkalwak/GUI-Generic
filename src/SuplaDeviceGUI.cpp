@@ -161,7 +161,7 @@ void addRelay(uint8_t nr) {
   delay(0);
 }
 
-void addButtonToRelay(uint8_t nrRelay) {
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client) {
   uint8_t pinButton, nrButton, pinRelay, buttonAction, buttonEvent;
 
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
@@ -170,6 +170,14 @@ void addButtonToRelay(uint8_t nrRelay) {
     pinRelay = ConfigESP->getGpio(nrButton, FUNCTION_RELAY);
     buttonAction = ConfigESP->getActionInternal(pinButton);
     buttonEvent = ConfigESP->getEvent(pinButton);
+
+    if (element == nullptr) {
+      element = relay[nrButton];
+    }
+
+    if (client == nullptr) {
+      client = relay[nrButton];
+    }
 
     if (pinButton != OFF_GPIO && pinRelay != OFF_GPIO && nrRelay == nrButton) {
       Supla::Control::Button *button = nullptr;
@@ -206,7 +214,7 @@ void addButtonToRelay(uint8_t nrRelay) {
 
         case Supla::GUI::Event::ON_HOLD:
           button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
-          button->addAction(buttonAction, relay[nrButton], Supla::Event::ON_HOLD);
+          button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
           break;
 
         default:
@@ -214,25 +222,41 @@ void addButtonToRelay(uint8_t nrRelay) {
             if (buttonEvent == Supla::GUI::Event::ON_CHANGE) {
               button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000, true);
 
-              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CLICK_1);
-              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_CLICK_2);
+              button->addAction(Supla::Action::TOGGLE, client, Supla::Event::ON_CLICK_1);
+              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, client, Supla::Event::ON_CLICK_2);
             }
             else {
               button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
               button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
 
-              button->addAction(Supla::Action::TOGGLE, relay[nrButton], Supla::Event::ON_CLICK_1);
-              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, relay[nrButton], Supla::Event::ON_HOLD);
+              button->addAction(Supla::Action::TOGGLE, client, Supla::Event::ON_CLICK_1);
+              button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, client, Supla::Event::ON_HOLD);
             }
           }
+          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::DECREASE_TEMPERATURE ||
+                   ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
+            button->setMulticlickTime(200);
+            button->setHoldTime(400);
+            button->repeatOnHoldEvery(35);
+
+            button->addAction(buttonAction, client, Supla::ON_HOLD);
+            button->addAction(buttonAction, client, buttonEvent);
+          }
+          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
+            button->setMulticlickTime(200);
+            button->setHoldTime(400);
+
+            button->addAction(Supla::TOGGLE, client, Supla::ON_HOLD);
+            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
+          }
           else {
-            button->addAction(buttonAction, relay[nrButton], buttonEvent);
+            button->addAction(buttonAction, client, buttonEvent);
           }
           break;
       }
 
 #ifdef SUPLA_ACTION_TRIGGER
-      addActionTriggerRelatedChannel(nrButton, button, ConfigESP->getEvent(pinButton), relay[nrButton]);
+      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(pinButton), element);
 #endif
     }
     delay(0);

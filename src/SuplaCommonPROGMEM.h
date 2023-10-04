@@ -256,12 +256,28 @@ const char* const MEMORY_P[] PROGMEM = {OFF, ON, POSITION_MEMORY};
 
 namespace Supla {
 namespace GUI {
+// INCREASE_TEMPERATURE,
+// DECREASE_TEMPERATURE,
+// INCREASE_HEATING_TEMPERATURE,
+// DECREASE_HEATING_TEMPERATURE,
+// INCREASE_COOLING_TEMPERATURE,
+// DECREASE_COOLING_TEMPERATURE,
+// SWITCH_TO_MANUAL_MODE,
+// SWITCH_TO_WEEKLY_SCHEDULE_MODE,
+// SWITCH_TO_MANUAL_MODE_HEAT,
+// SWITCH_TO_MANUAL_MODE_COOL,
+// SWITCH_TO_MANUAL_MODE_AUTO,
+
 enum Action
 {
   TURN_ON,
   TURN_OFF,
   TOGGLE,
-  AUTOMATIC_STAIRCASE
+  AUTOMATIC_STAIRCASE,
+  INCREASE_TEMPERATURE,
+  DECREASE_TEMPERATURE,
+  TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES,
+  TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF
 };
 
 enum Event
@@ -278,7 +294,18 @@ enum Event
 const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELEASE, S_REACTION_ON_CHANGE, S_REACTION_ON_HOLD,
                                          S_REACTION_MOTION_SENSOR};
 
+#ifdef SUPLA_THERMOSTAT
+const char* const ACTION_P[] PROGMEM = {ON,
+                                        OFF,
+                                        S_TOGGLE,
+                                        S_REACTION_AUTOMATIC_STAIRCASE,
+                                        "Zwiększ temperaturę",
+                                        "Zmniejsz temperaturę",
+                                        "Wyłącz/Ręczny/Program",
+                                        "Przytrzymaj Wyłącz || Ręczny/Program"};
+#else
 const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE};
+#endif
 
 #ifdef SUPLA_THERMOSTAT
 namespace Supla {

@@ -74,6 +74,7 @@ void displayDistance(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x,
 void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
+void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 
 Supla::Channel* getChanelByChannelNumber(int channelNumber);
 

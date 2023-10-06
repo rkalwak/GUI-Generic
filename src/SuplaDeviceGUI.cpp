@@ -243,7 +243,7 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 
             button->addAction(buttonAction, client, Supla::ON_HOLD);
             button->addAction(buttonAction, client, buttonEvent);
-            button->disableActionsInConfigMode();
+            button->dontUseOnLoadConfig();
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
             button->setMulticlickTime(200);

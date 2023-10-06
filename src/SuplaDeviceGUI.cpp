@@ -96,20 +96,22 @@ void crateWebServer() {
 
 #ifdef SUPLA_THERMOSTAT
 void addRelayOrThermostat(int nr) {
+  if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {
 #ifdef SUPLA_RELAY
-  if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
-    Supla::GUI::addRelay(nr);
+    if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
+      Supla::GUI::addRelay(nr);
 #ifdef SUPLA_BUTTON
-    Supla::GUI::addButtonToRelay(nr);
+      Supla::GUI::addButtonToRelay(nr);
 #endif
-  }
-  else {
+    }
+    else {
 #ifdef SUPLA_THERMOSTAT
-    new Supla::Control::GUI::ThermostatGUI(nr);
-    relay.push_back(nullptr);
+      new Supla::Control::GUI::ThermostatGUI(nr);
+      relay.push_back(nullptr);
+#endif
+    }
 #endif
   }
-#endif
 }
 #endif
 
@@ -241,6 +243,7 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 
             button->addAction(buttonAction, client, Supla::ON_HOLD);
             button->addAction(buttonAction, client, buttonEvent);
+            button->disableActionsInConfigMode();
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
             button->setMulticlickTime(200);

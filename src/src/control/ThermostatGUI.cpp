@@ -44,8 +44,6 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
 
   uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(nr).toInt();
   uint8_t auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr).toInt();
-  mainThermometr++;
-  auxThermometr++;
   double histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr).toDouble();
 
   // WARNING: using default Clock class. It works only when there is connection
@@ -56,17 +54,10 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   auto output = new Supla::Control::InternalPinOutput(pinRelay, highIsOn);
   auto hvac = new Supla::Control::HvacBase(output);
 
-  hvac->setMainThermometerChannelNo(mainThermometr);  // Main Thermometer
-  if (mainThermometr != auxThermometr) {
-    hvac->setAuxThermometerChannelNo(auxThermometr);  // Aux Thermometer
-                                                      // AUX
-    hvac->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
-    hvac->setTemperatureAuxMin(500);   // 5 degrees
-    hvac->setTemperatureAuxMax(7500);  // 75 degrees
+  if (mainThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+    hvac->setMainThermometerChannelNo(mainThermometr);  // Main Thermometer
   }
-
   hvac->setTemperatureHisteresis(histeresis * 10);
-
   // Configure thermostat parameters
   hvac->setTemperatureHisteresisMin(20);    // 0.2 degree
   hvac->setTemperatureHisteresisMax(1000);  // 10 degree
@@ -74,6 +65,14 @@ ThermostatGUI::ThermostatGUI(uint8_t nr) {
   hvac->setTemperatureAutoOffsetMax(1000);  // 10 degrees
   hvac->addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_AT_MOST);
 
+  if (auxThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+    hvac->setAuxThermometerChannelNo(auxThermometr);  // Aux Thermometer
+                                                      // AUX
+    hvac->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
+    hvac->setTemperatureAuxMin(500);   // 5 degrees
+    hvac->setTemperatureAuxMax(7500);  // 75 degrees
+  }
+  
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
     hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
     hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_HEAT);

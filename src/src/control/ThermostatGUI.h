@@ -21,6 +21,7 @@
 #include <Arduino.h>
 
 #define THERMOSTAT_DEFAULT_HISTERESIS "0.4"
+#define THERMOSTAT_NO_TEMP_CHANNEL    0
 
 namespace Supla {
 namespace Control {

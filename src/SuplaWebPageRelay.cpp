@@ -304,10 +304,10 @@ void handleRelaySet(int save) {
     addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
 
     selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
-    addListNumbersBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, 20, selected);
+    addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
 
     selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
-    addListNumbersBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, 20, selected);
+    addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
     String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr_relay.toInt()).c_str();
     addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);

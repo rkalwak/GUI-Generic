@@ -352,7 +352,6 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
 
 void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(state->currentFrame).toInt();
-  mainThermometr++;
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 

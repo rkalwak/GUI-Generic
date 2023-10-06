@@ -372,30 +372,41 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
     display->setColor(WHITE);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-    if (channel->getHvacIsOn()) {
-      display->setColor(WHITE);
-      display->fillCircle(x + 4, y + 4, 4);
-    }
-
-    if (channel->isHvacFlagWeeklySchedule()) {
-      display->setFont(ArialMT_Plain_10);
-      display->drawString(display->getWidth() / 2 - 10, 0, String("PROGRAM"));
+    if (channel->getHvacMode() == SUPLA_HVAC_MODE_OFF) {
+      display->setFont(ArialMT_Win1250_Plain_24);
+      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 12,
+                          getTempString(temperature) + S_CELSIUS);
     }
     else {
-      display->setFont(ArialMT_Plain_10);
-      display->drawString(display->getWidth() / 2 - 10, 0, String("MANUAL"));
+      if (channel->getHvacIsOn()) {
+        display->setColor(WHITE);
+        display->fillCircle(x + 4, y + 20, 4);
+      }
+
+      if (channel->isHvacFlagWeeklySchedule()) {
+        display->setFont(ArialMT_Plain_10);
+        display->drawString(display->getWidth() / 2 + 20, 0, String("P"));
+      }
+      else {
+        display->setFont(ArialMT_Plain_10);
+        display->drawString(display->getWidth() / 2 + 20, 0, String("M"));
+      }
+
+      display->setFont(ArialMT_Win1250_Plain_24);
+      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 12,
+                          getTempString(temperature) + S_CELSIUS);
+
+      display->setFont(ArialMT_Win1250_Plain_10);
+      display->drawString(x + display->getWidth() - 46, display->getHeight() - 10, String("set"));
+
+      display->setFont(ArialMT_Plain_16);
+      display->drawString(x + display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperatureHeat).c_str());
     }
-
-    display->setFont(ArialMT_Win1250_Plain_24);
-    display->drawString(x + 10, y + display->getHeight() / 2 - 14, getTempString(temperature));
-
-    display->setFont(ArialMT_Plain_16);
-    display->drawString(x + display->getWidth() / 2, display->getHeight() / 2 - 6, String("set ") + getTempString(setpointTemperatureHeat).c_str());
 
     String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
     if (!name.isEmpty()) {
       display->setFont(ArialMT_Win1250_Plain_10);
-      display->drawString(display->getWidth() - getWidthValue(display, name), display->getHeight() - 10, name);
+      display->drawString(0, 0, name);
     }
   }
 }

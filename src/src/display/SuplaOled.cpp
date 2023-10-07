@@ -355,6 +355,11 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 
+  int8_t shiftWhenAddedRelay = 0;
+  if (!Supla::GUI::relay.empty()) {
+    shiftWhenAddedRelay = 12;
+  }
+
   if (channelMainThermometr) {
     if (channelMainThermometr->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
       temperature = channelMainThermometr->getValueDouble();
@@ -373,26 +378,26 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 
     if (channel->getHvacMode() == SUPLA_HVAC_MODE_OFF) {
       display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 12,
+      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 10,
                           getTempString(temperature) + S_CELSIUS);
     }
     else {
       if (channel->getHvacIsOn()) {
         display->setColor(WHITE);
-        display->fillCircle(x + 4, y + 20, 4);
+        display->fillCircle(x + 4, y + 20 + shiftWhenAddedRelay, 4);
       }
 
       if (channel->isHvacFlagWeeklySchedule()) {
         display->setFont(ArialMT_Plain_10);
-        display->drawString(display->getWidth() / 2 + 20, 0, String("P"));
+        display->drawString(display->getWidth() / 2 + 20, 0 + shiftWhenAddedRelay, String("P"));
       }
       else {
         display->setFont(ArialMT_Plain_10);
-        display->drawString(display->getWidth() / 2 + 20, 0, String("M"));
+        display->drawString(display->getWidth() / 2 + 20, 0 + shiftWhenAddedRelay, String("M"));
       }
 
       display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 12,
+      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 10,
                           getTempString(temperature) + S_CELSIUS);
 
       display->setFont(ArialMT_Win1250_Plain_10);
@@ -405,7 +410,7 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
     String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
     if (!name.isEmpty()) {
       display->setFont(ArialMT_Win1250_Plain_10);
-      display->drawString(0, 0, name);
+      display->drawString(0, 0 + shiftWhenAddedRelay, name);
     }
   }
 }

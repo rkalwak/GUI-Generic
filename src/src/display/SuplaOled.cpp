@@ -27,6 +27,7 @@ struct oledStruct {
 };
 
 oledStruct* oled;
+bool activeRelaysToOled = true;
 
 String getTempString(double temperature) {
   if (temperature == TEMPERATURE_NOT_AVAILABLE) {
@@ -356,7 +357,7 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 
   int8_t shiftWhenAddedRelay = 0;
-  if (!Supla::GUI::relay.empty()) {
+  if (activeRelaysToOled) {
     shiftWhenAddedRelay = 12;
   }
 
@@ -401,10 +402,10 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
                           getTempString(temperature) + S_CELSIUS);
 
       display->setFont(ArialMT_Win1250_Plain_10);
-      display->drawString(x + display->getWidth() - 46, display->getHeight() - 10, String("set"));
+      display->drawString(display->getWidth() - 46, display->getHeight() - 10, String("set"));
 
       display->setFont(ArialMT_Plain_16);
-      display->drawString(x + display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperatureHeat).c_str());
+      display->drawString(display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperatureHeat).c_str());
     }
 
     String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
@@ -467,16 +468,16 @@ void SuplaOled::onInit() {
       maxFrame = 1;
     }
 
-    bool activeThermostat = false;
+    uint8_t activeThermostatOled = 0;
     for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-      if (element->getChannel()) {
-        auto channel = element->getChannel();
-
-        if (channel->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
-          activeThermostat = true;
-          maxFrame++;
-        }
+      if (element->getChannel() && element->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
+        activeThermostatOled++;
+        maxFrame++;
       }
+    }
+
+    if (activeThermostatOled >= Supla::GUI::relay.size()) {
+      activeRelaysToOled = false;
     }
 
     frames = new FrameCallback[maxFrame];
@@ -494,7 +495,7 @@ void SuplaOled::onInit() {
       }
     }
 
-    if (activeThermostat == false) {
+    if (activeThermostatOled == 0) {
       for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
         if (element->getChannel()) {
           auto channel = element->getChannel();

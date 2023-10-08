@@ -24,6 +24,7 @@
 struct oledStruct {
   uint8_t chanelSensor;
   bool forSecondaryValue;
+  uint8_t nrRealy;
 };
 
 oledStruct* oled;
@@ -352,7 +353,7 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
 }
 
 void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(state->currentFrame).toInt();
+  uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(oled[state->currentFrame].nrRealy).toInt();
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 
@@ -483,13 +484,21 @@ void SuplaOled::onInit() {
     frames = new FrameCallback[maxFrame];
     oled = new oledStruct[maxFrame];
 
+    uint8_t nr = 0;
     for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
       if (element->getChannel()) {
         auto channel = element->getChannel();
 
+        if (channel->getChannelType() == SUPLA_CHANNELTYPE_RELAY) {
+          nr++;
+        }
+
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
           frames[frameCount] = {displayThermostat};
           oled[frameCount].chanelSensor = channel->getChannelNumber();
+          oled[frameCount].nrRealy = nr;
+          nr++;
+
           frameCount += 1;
         }
       }

@@ -101,7 +101,7 @@ void addRelayOrThermostat(int nr) {
     if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
       Supla::GUI::addRelay(nr);
 #ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr);
+      Supla::GUI::addButtonToRelay(nr, relay[nr], relay[nr]);
 #endif
     }
     else {
@@ -172,14 +172,6 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
     pinRelay = ConfigESP->getGpio(nrButton, FUNCTION_RELAY);
     buttonAction = ConfigESP->getActionInternal(pinButton);
     buttonEvent = ConfigESP->getEvent(pinButton);
-
-    if (element == nullptr) {
-      element = relay[nrButton];
-    }
-
-    if (client == nullptr) {
-      client = relay[nrButton];
-    }
 
     if (pinButton != OFF_GPIO && pinRelay != OFF_GPIO && nrRelay == nrButton) {
       Supla::Control::Button *button = nullptr;

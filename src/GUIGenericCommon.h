@@ -31,6 +31,7 @@
 
 uint8_t *HexToBytes(String _value);
 uint8_t getCountSensorChannels();
+uint8_t getCountActiveThermostat();
 int getCountChannels();
 const String getAPName();
 

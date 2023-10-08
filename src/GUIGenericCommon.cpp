@@ -69,6 +69,16 @@ uint8_t getCountSensorChannels() {
   return maxFrame;
 }
 
+uint8_t getCountActiveThermostat() {
+  uint8_t activeThermostatOled = 0;
+  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
+    if (element->getChannel() && element->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
+      activeThermostatOled++;
+    }
+  }
+  return activeThermostatOled;
+}
+
 int getCountChannels() {
   int count = 0;
   for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {

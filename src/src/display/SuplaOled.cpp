@@ -28,7 +28,6 @@ struct oledStruct {
 };
 
 oledStruct* oled;
-bool activeRelaysToOled = true;
 
 String getTempString(double temperature) {
   if (temperature == TEMPERATURE_NOT_AVAILABLE) {
@@ -358,7 +357,9 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 
   int8_t shiftWhenAddedRelay = 0;
-  if (activeRelaysToOled) {
+  Serial.println(getCountActiveThermostat());
+Serial.println(Supla::GUI::relay.size());
+  if (getCountActiveThermostat() < Supla::GUI::relay.size()) {
     shiftWhenAddedRelay = 12;
   }
 
@@ -460,27 +461,14 @@ void SuplaOled::onInit() {
         break;
     }
 
-    ui = new OLEDDisplayUi(display);
-
     overlays[0] = {msOverlay};
-    int maxFrame = getCountSensorChannels();
+    int maxFrame = getCountSensorChannels() + getCountActiveThermostat();
 
     if (maxFrame == 0) {
       maxFrame = 1;
     }
 
-    uint8_t activeThermostatOled = 0;
-    for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-      if (element->getChannel() && element->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
-        activeThermostatOled++;
-        maxFrame++;
-      }
-    }
-
-    if (activeThermostatOled >= Supla::GUI::relay.size()) {
-      activeRelaysToOled = false;
-    }
-
+    ui = new OLEDDisplayUi(display);
     frames = new FrameCallback[maxFrame];
     oled = new oledStruct[maxFrame];
 
@@ -489,24 +477,21 @@ void SuplaOled::onInit() {
       if (element->getChannel()) {
         auto channel = element->getChannel();
 
-        if (channel->getChannelType() == SUPLA_CHANNELTYPE_RELAY) {
-          nr++;
+        if (getCountActiveThermostat() != 0) {
+          if (channel->getChannelType() == SUPLA_CHANNELTYPE_RELAY) {
+            nr++;
+          }
+
+          if (channel->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
+            frames[frameCount] = {displayThermostat};
+            oled[frameCount].chanelSensor = channel->getChannelNumber();
+            oled[frameCount].nrRealy = nr;
+            nr++;
+
+            frameCount += 1;
+          }
         }
-
-        if (channel->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
-          frames[frameCount] = {displayThermostat};
-          oled[frameCount].chanelSensor = channel->getChannelNumber();
-          oled[frameCount].nrRealy = nr;
-          nr++;
-
-          frameCount += 1;
-        }
-      }
-    }
-
-    if (activeThermostatOled == 0) {
-      for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-        if (element->getChannel()) {
+        else {
           auto channel = element->getChannel();
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {

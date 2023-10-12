@@ -184,8 +184,6 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
       if (button == nullptr) {
         button = Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nrButton);
       }
-      button->setSwNoiseFilterDelay(50);
-
       switch (buttonEvent) {
           // case Supla::Event::ON_PRESS:
           //   button->setButtonType(Supla::Control::Button::ButtonType::MONOSTABLE);
@@ -235,7 +233,6 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 
             button->addAction(buttonAction, client, Supla::ON_HOLD);
             button->addAction(buttonAction, client, buttonEvent);
-            button->dontUseOnLoadConfig();
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
             button->setMulticlickTime(200);

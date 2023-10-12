@@ -33,6 +33,9 @@ Supla::Control::Button *Button(int pin, bool pullUp, bool invertLogic, uint8_t n
     button = new Supla::Control::Button(pin, pullUp, invertLogic);
   }
 
+  button->setSwNoiseFilterDelay(50);
+  button->dontUseOnLoadConfig();
+
   return button;
 }
 

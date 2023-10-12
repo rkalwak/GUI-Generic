@@ -357,8 +357,6 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   double temperature = TEMPERATURE_NOT_AVAILABLE;
 
   int8_t shiftWhenAddedRelay = 0;
-  Serial.println(getCountActiveThermostat());
-Serial.println(Supla::GUI::relay.size());
   if (getCountActiveThermostat() < Supla::GUI::relay.size()) {
     shiftWhenAddedRelay = 12;
   }

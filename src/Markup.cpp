@@ -154,6 +154,10 @@ void addCheckBox(String& html, const String& input_id, const String& name, bool 
 }
 
 void addNumberBox(String& html, const String& input_id, const String& name, uint8_t value_key, int max) {
+  addNumberBox(html, input_id, name, String(ConfigManager->get(value_key)->getValue()).c_str(), max);
+}
+
+void addNumberBox(String& html, const String& input_id, const String& name, const String& value, int max) {
   html += F("<i><label>");
   html += name;
   html += F("</label><input name='");
@@ -161,14 +165,10 @@ void addNumberBox(String& html, const String& input_id, const String& name, uint
   html += F("' type='number' placeholder='0' step='1' min='0'");
 
   if (max >= 0) {
-    html += F(" max='");
-    html += String(max);
-    html += F("'");
+    html += F(" max='") + String(max) + F("'");
   }
 
-  html += F(" value='");
-  html += String(ConfigManager->get(value_key)->getValue());
-  html += F("'></i>");
+  html += F(" value='") + value + F("'></i>");
   WebServer->sendHeader();
 }
 

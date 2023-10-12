@@ -115,6 +115,8 @@ class HvacBase : public ChannelElement, public ActionHandler {
   // use this function to set value based on local config change
   void setAntiFreezeAndHeatProtectionEnabled(bool enebled);
   bool isAntiFreezeAndHeatProtectionEnabled() const;
+  void setAuxMinMaxSetpointEnabled(bool enabled);
+  bool isAuxMinMaxSetpointEnabled() const;
 
   void setTemperatureSetpointChangeSwitchesToManualMode(bool enabled);
   bool isTemperatureSetpointChangeSwitchesToManualMode() const;
@@ -243,6 +245,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool isChannelBinarySensor(uint8_t channelNo) const;
   bool isAlgorithmValid(unsigned _supla_int16_t algorithm) const;
   bool areTemperaturesValid(const THVACTemperatureCfg *temperatures) const;
+  void fixTempearturesConfig();
 
   // Check if mode is supported by currently configured Function
   bool isModeSupported(int mode) const;
@@ -390,6 +393,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void applyConfigWithoutValidation(TChannelConfig_HVAC *hvacConfig);
   int channelFunctionToIndex(int channelFunction) const;
   void changeTemperatureSetpointsBy(int16_t tHeat, int16_t tCool);
+  void updateTimerValue();
 
   TChannelConfig_HVAC config = {};
   TChannelConfig_WeeklySchedule weeklySchedule = {};
@@ -419,7 +423,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   uint8_t defaultAuxThermometer = 0;
   uint8_t defaultBinarySensor = 0;
 
-  time_t countdownTimerEnds = 0;
+  time_t countdownTimerEnds = 1;
   uint32_t lastConfigChangeTimestampMs = 0;
   uint32_t lastIterateTimestampMs = 0;
   uint32_t lastOutputStateChangeTimestampMs = 0;
@@ -444,6 +448,8 @@ class HvacBase : public ChannelElement, public ActionHandler {
       5000,  // DIFFERENTIAL
       7500,   // DOMESTIC_HOT_WATER
   };
+
+  uint32_t timerUpdateTimestamp = 0;
 };
 
 }  // namespace Control

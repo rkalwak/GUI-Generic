@@ -195,12 +195,6 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   gpio = ConfigESP->getGpio(nr, function);
   _gpio = WebServer->httpServer->arg(input).toInt();
 
-#ifdef SUPLA_THERMOSTAT
-  if (strcmp(ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr).c_str(), "") == 0 && function == FUNCTION_RELAY) {
-    ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr, THERMOSTAT_DEFAULT_HISTERESIS);
-  }
-#endif
-
   // VIRTUAL RELAY
   if (function == FUNCTION_RELAY && _gpio == GPIO_VIRTUAL_RELAY) {
     if (gpio != GPIO_VIRTUAL_RELAY) {

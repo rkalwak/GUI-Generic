@@ -172,7 +172,10 @@ void handleSensorI2c(int save) {
 
       addNumberBox(webContentBuffer, INPUT_OLED_ANIMATION, S_SCREEN_TIME, KEY_OLED_ANIMATION, 99);
       addNumberBox(webContentBuffer, INPUT_OLED_BRIGHTNESS_TIME, S_BACKLIGHT_S, KEY_OLED_BACK_LIGHT_TIME, 99);
-      addNumberBox(webContentBuffer, INPUT_OLED_BRIGHTNESS_LVL, S_BACKLIGHT_PERCENT, KEY_OLED_BACK_LIGHT, 99);
+      int value = ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt();
+      value++;
+
+      addNumberBox(webContentBuffer, INPUT_OLED_BRIGHTNESS_LVL, S_BACKLIGHT_PERCENT, String(value), 100);
 
       for (uint8_t i = 0; i < getCountSensorChannels(); i++) {
         sensorName = String(ConfigManager->get(KEY_NAME_SENSOR)->getElement(i));
@@ -386,8 +389,12 @@ void handleSensorI2cSave() {
     ConfigManager->set(KEY_OLED_BACK_LIGHT_TIME, WebServer->httpServer->arg(input).c_str());
 
   input = INPUT_OLED_BRIGHTNESS_LVL;
-  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0)
-    ConfigManager->set(KEY_OLED_BACK_LIGHT, WebServer->httpServer->arg(input).c_str());
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    int value = WebServer->httpServer->arg(input).toInt();
+    value--;
+
+    ConfigManager->set(KEY_OLED_BACK_LIGHT, value);
+  }
 
   for (uint8_t i = 0; i < getCountSensorChannels(); i++) {
     input = INPUT_OLED_NAME;

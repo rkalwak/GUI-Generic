@@ -206,7 +206,7 @@ void handleRelaySaveSet() {
   ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
 
   input = INPUT_THERMOSTAT_HISTERESIS;
-  ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+  Supla::GUI::thermostat[nr_relay.toInt()]->setTemperatureHisteresis(WebServer->httpServer->arg(input).toDouble() * 100);
 
 #endif
 
@@ -309,8 +309,8 @@ void handleRelaySet(int save) {
     selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
     addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
-    String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr_relay.toInt()).c_str();
-    addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);
+    addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false,
+                 String(Supla::GUI::thermostat[nr_relay.toInt()]->getTemperatureHisteresis() / 100.0));
     addFormHeaderEnd(webContentBuffer);
 #endif
 

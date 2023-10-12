@@ -20,6 +20,17 @@
 
 #include <Arduino.h>
 
+#include <SuplaDevice.h>
+#include <supla/storage/eeprom.h>
+#include <supla/storage/littlefs_config.h>
+#include <supla/control/hvac_base.h>
+#include <supla/clock/clock.h>
+#include <supla/control/internal_pin_output.h>
+#include <supla/events.h>
+#include <supla/actions.h>
+
+#include "../../SuplaDeviceGUI.h"
+
 #define THERMOSTAT_DEFAULT_HISTERESIS "0.4"
 #define THERMOSTAT_NO_TEMP_CHANNEL    0
 
@@ -27,7 +38,7 @@ namespace Supla {
 namespace Control {
 namespace GUI {
 
-class ThermostatGUI {
+class ThermostatGUI : public Supla::Control::HvacBase {
  public:
   ThermostatGUI(uint8_t nr);
 };
@@ -35,6 +46,12 @@ class ThermostatGUI {
 };  // namespace GUI
 };  // namespace Control
 };  // namespace Supla
+
+namespace Supla {
+namespace GUI {
+extern std::vector<Control::GUI::ThermostatGUI*> thermostat;
+}
+}  // namespace Supla
 
 #endif
 #endif

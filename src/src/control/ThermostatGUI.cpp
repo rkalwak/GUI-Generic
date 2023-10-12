@@ -17,99 +17,83 @@
 #if SUPLA_THERMOSTAT
 #include "ThermostatGUI.h"
 
-#include <SuplaDevice.h>
-#include <supla/storage/eeprom.h>
-#include <supla/storage/littlefs_config.h>
-#include <supla/control/hvac_base.h>
-#include <supla/clock/clock.h>
-#include <supla/control/internal_pin_output.h>
-#include <supla/events.h>
-#include <supla/actions.h>
-
-#include "../../SuplaDeviceGUI.h"
-
 namespace Supla {
 namespace Control {
 namespace GUI {
 
-ThermostatGUI::ThermostatGUI(uint8_t nr) {
+ThermostatGUI::ThermostatGUI(uint8_t nr)
+    : Supla::Control::HvacBase(new Supla::Control::InternalPinOutput(ConfigESP->getGpio(nr, FUNCTION_RELAY),
+                                                                     ConfigESP->getLevel(ConfigESP->getGpio(nr, FUNCTION_RELAY)))) {
   Serial.print("Dodano termostat dla przekaźnika ");
   Serial.println(nr + 1);
-
-  uint8_t pinRelay = ConfigESP->getGpio(nr, FUNCTION_RELAY);
-  bool highIsOn = ConfigESP->getLevel(pinRelay);
 
   uint8_t pinLED = ConfigESP->getGpio(nr, FUNCTION_LED);
   bool levelLed = ConfigESP->getLevel(pinLED);
 
   uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(nr).toInt();
   uint8_t auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr).toInt();
-  double histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr).toDouble();
 
-  // WARNING: using default Clock class. It works only when there is connection
-  // with Supla server. In real thermostat application, use RTC HW clock,
-  // which will keep time after ESP power reset
   new Supla::Clock;
 
-  auto output = new Supla::Control::InternalPinOutput(pinRelay, highIsOn);
-  auto hvac = new Supla::Control::HvacBase(output);
+  // auto output = new Supla::Control::InternalPinOutput(pinRelay, highIsOn);
+  // auto hvac = new Supla::Control::HvacBase(output);
 
   if (mainThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
-    hvac->setMainThermometerChannelNo(mainThermometr);  // Main Thermometer
+    HvacBase::setMainThermometerChannelNo(mainThermometr);  // Main Thermometer
   }
-  hvac->setTemperatureHisteresis(histeresis * 10);
   // Configure thermostat parameters
-  hvac->setTemperatureHisteresisMin(20);    // 0.2 degree
-  hvac->setTemperatureHisteresisMax(1000);  // 10 degree
-  hvac->setTemperatureAutoOffsetMin(200);   // 2 degrees
-  hvac->setTemperatureAutoOffsetMax(1000);  // 10 degrees
-  hvac->addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_AT_MOST);
+  HvacBase::setTemperatureHisteresisMin(20);    // 0.2 degree
+  HvacBase::setTemperatureHisteresisMax(1000);  // 10 degree
+  HvacBase::setTemperatureAutoOffsetMin(200);   // 2 degrees
+  HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees
+  HvacBase::addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_MIDDLE);
+  
 
   if (auxThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
-    hvac->setAuxThermometerChannelNo(auxThermometr);  // Aux Thermometer
-                                                      // AUX
-    hvac->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
-    hvac->setTemperatureAuxMin(500);   // 5 degrees
-    hvac->setTemperatureAuxMax(7500);  // 75 degrees
+    HvacBase::setAuxThermometerChannelNo(auxThermometr);  // Aux Thermometer
+                                                          // AUX
+    HvacBase::setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
+    HvacBase::setTemperatureAuxMin(500);   // 5 degrees
+    HvacBase::setTemperatureAuxMax(7500);  // 75 degrees
   }
-  
+
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
-    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
-    hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_HEAT);
+    HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
+    HvacBase::setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_HEAT);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
-    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
-    hvac->setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_COOL);
+    HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);
+    HvacBase::setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_COOL);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_AUTO) {
-    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO);
+    HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_DOMESTIC_HOT_WATER) {
-    hvac->enableDomesticHotWaterFunctionSupport();
-    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER);
+    HvacBase::enableDomesticHotWaterFunctionSupport();
+    HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER);
   }
   else if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_DIFFERENTIAL) {
-    hvac->getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL);
+    HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL);
   }
 
   if (pinLED != OFF_GPIO) {
     auto statusLed = new Supla::Control::InternalPinOutput(pinLED, levelLed);
 
     if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_COOL) {
-      hvac->addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_STANDBY, true);
-      hvac->addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_HEATING, true);
-      hvac->addAction(Supla::TURN_ON, statusLed, Supla::ON_HVAC_COOLING, true);
+      HvacBase::addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_STANDBY, true);
+      HvacBase::addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_HEATING, true);
+      HvacBase::addAction(Supla::TURN_ON, statusLed, Supla::ON_HVAC_COOLING, true);
     }
     else {
-      hvac->addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_STANDBY, true);
-      hvac->addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_COOLING, true);
-      hvac->addAction(Supla::TURN_ON, statusLed, Supla::ON_HVAC_HEATING, true);
+      HvacBase::addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_STANDBY, true);
+      HvacBase::addAction(Supla::TURN_OFF, statusLed, Supla::ON_HVAC_COOLING, true);
+      HvacBase::addAction(Supla::TURN_ON, statusLed, Supla::ON_HVAC_HEATING, true);
     }
   }
 
-  hvac->setButtonTemperatureStep(10);
+  HvacBase::setButtonTemperatureStep(10);
 #ifdef SUPLA_BUTTON
-  Supla::GUI::addButtonToRelay(nr, hvac, hvac);
+  Supla::GUI::addButtonToRelay(nr, this, this);
 #endif
 };
 

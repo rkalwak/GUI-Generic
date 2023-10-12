@@ -95,6 +95,8 @@ void crateWebServer() {
 }
 
 #ifdef SUPLA_THERMOSTAT
+std::vector<Supla::Control::GUI::ThermostatGUI *> thermostat;
+
 void addRelayOrThermostat(int nr) {
   if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {
 #ifdef SUPLA_RELAY
@@ -106,7 +108,7 @@ void addRelayOrThermostat(int nr) {
     }
     else {
 #ifdef SUPLA_THERMOSTAT
-      new Supla::Control::GUI::ThermostatGUI(nr);
+      thermostat.push_back(new Supla::Control::GUI::ThermostatGUI(nr));
       relay.push_back(nullptr);
 #endif
     }

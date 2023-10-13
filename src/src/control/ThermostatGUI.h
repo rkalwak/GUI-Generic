@@ -49,7 +49,7 @@ class ThermostatGUI : public Supla::Control::HvacBase {
 
 namespace Supla {
 namespace GUI {
-extern std::vector<Control::GUI::ThermostatGUI*> thermostat;
+extern std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostat;
 }
 }  // namespace Supla
 

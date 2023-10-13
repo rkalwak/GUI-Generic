@@ -37,7 +37,6 @@
 #define ARG_PARM_NUMBER "number"
 
 #define PATH_START     "/"
-#define PATH_RESET_ESP "?reboot=1"
 
 #ifdef GUI_SENSOR_I2C_EXPENDER
 #define INPUT_ADRESS_MCP23017 "iam"

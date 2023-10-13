@@ -639,6 +639,10 @@ const String SuplaJavaScript(const String& java_return) {
 // TODO: @krycha88 Usunąć z SuplaSaveResult nieużywany status WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING```
 const String SuplaSaveResult(int save) {
   String saveresult = "";
+  if (save == SaveResult::DATA_SAVED_RESTART_MODULE || save == SaveResult::RESTART_MODULE) {
+    saveresult += "<meta http-equiv=\"refresh\" content=\"1\">\n";
+  }
+
   saveresult += F("<div id=\"msg\" class=\"c\">");
 
   switch (save) {

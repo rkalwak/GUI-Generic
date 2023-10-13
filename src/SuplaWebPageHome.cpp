@@ -23,15 +23,7 @@ void createWebPageHome() {
     }
 
     if (strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "1") == 0) {
-      WebServer->httpServer->sendHeader("Location", PATH_START, true);
-      handlePageHome(2);
-      ConfigESP->rebootESP();
-      return;
-    }
-
-    if (strcmp(WebServer->httpServer->arg(PATH_REBOT_CREATOR).c_str(), "1") == 0) {
-      WebServer->httpServer->sendHeader("Location", PATH_START, true);
-      handlePageHome(2);
+      handlePageHome(SaveResult::RESTART_MODULE);
       ConfigESP->rebootESP();
       return;
     }

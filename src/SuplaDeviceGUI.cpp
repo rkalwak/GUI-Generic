@@ -105,6 +105,10 @@ void addRelayOrThermostat(int nr) {
 #ifdef SUPLA_BUTTON
       Supla::GUI::addButtonToRelay(nr, relay[nr], relay[nr]);
 #endif
+
+#ifdef SUPLA_THERMOSTAT
+      thermostat.push_back(nullptr);
+#endif
     }
     else {
 #ifdef SUPLA_THERMOSTAT
@@ -112,6 +116,11 @@ void addRelayOrThermostat(int nr) {
       relay.push_back(nullptr);
 #endif
     }
+#endif
+  }
+  else {
+#ifdef SUPLA_THERMOSTAT
+    thermostat.push_back(new Supla::Control::GUI::ThermostatGUI(nr));
 #endif
   }
 }
@@ -494,8 +503,14 @@ void addRolleShutter(uint8_t nr) {
 
   pinRelayUp = ConfigESP->getGpio(nr, FUNCTION_RELAY);
   relay.push_back(nullptr);
+#ifdef SUPLA_THERMOSTAT
+  thermostat.push_back(nullptr);
+#endif
   pinRelayDown = ConfigESP->getGpio(nr + 1, FUNCTION_RELAY);
   relay.push_back(nullptr);
+#ifdef SUPLA_THERMOSTAT
+  thermostat.push_back(nullptr);
+#endif
 
   pinButtonUp = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
   pinButtonDown = ConfigESP->getGpio(nr + 1, FUNCTION_BUTTON);

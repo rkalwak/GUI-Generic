@@ -197,7 +197,9 @@ void handleRelaySaveSet() {
 
 #ifdef SUPLA_THERMOSTAT
   input = INPUT_THERMOSTAT_TYPE;
-  ConfigManager->setElement(KEY_THERMOSTAT_TYPE, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
+  uint8_t oldThermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr_relay.toInt()).toInt();
+  uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
+  ConfigManager->setElement(KEY_THERMOSTAT_TYPE, nr_relay.toInt(), newThermostatType);
 
   input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
   ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
@@ -206,16 +208,32 @@ void handleRelaySaveSet() {
   ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, nr_relay.toInt(), WebServer->httpServer->arg(input).c_str());
 
   input = INPUT_THERMOSTAT_HISTERESIS;
-  Supla::GUI::thermostat[nr_relay.toInt()]->setTemperatureHisteresis(WebServer->httpServer->arg(input).toDouble() * 100);
+  auto thermostatIndex = nr_relay.toInt();
+
+  if (thermostatIndex >= 0 &&
+      static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex) < Supla::GUI::thermostat.size()) {
+    auto thermostatPtr = Supla::GUI::thermostat[static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex)];
+
+    if (thermostatPtr != nullptr) {
+      thermostatPtr->setTemperatureHisteresis(WebServer->httpServer->arg(input).toDouble() * 100);
+    }
+  }
 
 #endif
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
-      handleRelaySet(1);
+#ifdef SUPLA_THERMOSTAT
+      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
+        handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
+        ConfigESP->rebootESP();
+      }
+#endif
+
+      handleRelaySet(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:
-      handleRelaySet(2);
+      handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
       break;
   }
 }
@@ -309,8 +327,17 @@ void handleRelaySet(int save) {
     selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr_relay.toInt()).toInt();
     addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
-    addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false,
-                 String(Supla::GUI::thermostat[nr_relay.toInt()]->getTemperatureHisteresis() / 100.0));
+    auto thermostatIndex = nr_relay.toInt();
+
+    if (thermostatIndex >= 0 &&
+        static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex) < Supla::GUI::thermostat.size()) {
+      auto thermostatPtr = Supla::GUI::thermostat[static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex)];
+
+      if (thermostatPtr != nullptr) {
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false,
+                     String(thermostatPtr->getTemperatureHisteresis() / 100.0));
+      }
+    }
     addFormHeaderEnd(webContentBuffer);
 #endif
 

@@ -149,7 +149,7 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
     setGpio(gpio, 0, function);
   }
 
-  void clearGpio(uint8_t gpio, uint8_t function = 0);
+  void clearGpio(uint8_t gpio, uint8_t function = 0, uint8_t nr = 0);
 
   void commonReset(const char *resetMessage, ResetType resetType, bool forceReset = false);
 

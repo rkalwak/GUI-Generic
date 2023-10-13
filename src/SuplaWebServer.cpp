@@ -199,7 +199,7 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   if (function == FUNCTION_RELAY && _gpio == GPIO_VIRTUAL_RELAY) {
     if (gpio != GPIO_VIRTUAL_RELAY) {
       ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
-      ConfigESP->clearGpio(gpio, function);
+      ConfigESP->clearGpio(gpio, function, nr);
     }
 
     ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, true);
@@ -220,7 +220,7 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   if (function == FUNCTION_BUTTON && _gpio == A0) {
     if (gpio != A0) {
       ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
-      ConfigESP->clearGpio(gpio, function);
+      ConfigESP->clearGpio(gpio, function, nr);
     }
 
     ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, true);
@@ -249,29 +249,14 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   }
 
   if (_gpio == OFF_GPIO) {
-    ConfigESP->clearGpio(gpio, function);
-    if (gpio == GPIO_VIRTUAL_RELAY) {
-      ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
-    }
-#ifdef ARDUINO_ARCH_ESP8266
-    if (gpio == A0) {
-      ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
-    }
-#endif
+    ConfigESP->clearGpio(gpio, function, nr);
   }
 
   if (_gpio != OFF_GPIO) {
     if (_function == FUNCTION_OFF) {
-      ConfigESP->clearGpio(gpio, function);
-      ConfigESP->clearGpio(_gpio, function);
+      ConfigESP->clearGpio(gpio, function, nr);
+      ConfigESP->clearGpio(_gpio, function, nr);
       ConfigESP->setGpio(_gpio, nr, function);
-
-      if (gpio == GPIO_VIRTUAL_RELAY) {
-        ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
-      }
-      if (function == FUNCTION_BUTTON) {
-        ConfigESP->setNumberButton(nr);
-      }
 
 #ifdef SUPLA_ROLLERSHUTTER
       if (ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt() * 2 > nr) {
@@ -296,7 +281,7 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   if (input_max != "\n") {
     current_value = WebServer->httpServer->arg(input_max).toInt();
     if ((ConfigManager->get(key)->getElement(NR).toInt() - 1) >= current_value) {
-      ConfigESP->clearGpio(gpio, function);
+      ConfigESP->clearGpio(gpio, function, nr);
     }
   }
 

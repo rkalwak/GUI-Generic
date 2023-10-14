@@ -352,9 +352,16 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
 }
 
 void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(oled[state->currentFrame].nrRealy).toInt();
-  auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
+  uint8_t mainThermometr = 0;
   double temperature = TEMPERATURE_NOT_AVAILABLE;
+  uint8_t thermostatIndex = oled[state->currentFrame].nrRealy;
+
+  if (thermostatIndex >= 0) {
+    auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
+    mainThermometr = thermostatPtr->getMainThermometerChannelNo();
+  }
+
+  auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
 
   int8_t shiftWhenAddedRelay = 0;
   if (getCountActiveThermostat() < Supla::GUI::relay.size()) {

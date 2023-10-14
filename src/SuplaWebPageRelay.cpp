@@ -202,22 +202,32 @@ void handleRelaySaveSet() {
   uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
 
-  input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
-  ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, WebServer->httpServer->arg(input).c_str());
-
-  input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
-  ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, WebServer->httpServer->arg(input).c_str());
-
-  if (thermostatIndex >= 0 &&
-      static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex) < Supla::GUI::thermostat.size()) {
-    auto thermostatPtr = Supla::GUI::thermostat[static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex)];
+  if (thermostatIndex >= 0) {
+    auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
 
     if (thermostatPtr != nullptr) {
+      input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
+      uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      if (thermomeetrChannel == SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET) {
+        thermostatPtr->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET);
+      }
+      else {
+        thermostatPtr->setMainThermometerChannelNo(thermomeetrChannel);
+      }
+
+      input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
+      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      if (thermomeetrChannel == SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET) {
+        thermostatPtr->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET);
+      }
+      else {
+        thermostatPtr->setAuxThermometerChannelNo(thermomeetrChannel);
+      }
+
       input = INPUT_THERMOSTAT_HISTERESIS;
       thermostatPtr->setTemperatureHisteresis(WebServer->httpServer->arg(input).toDouble() * 100);
     }
   }
-
 #endif
 
   switch (ConfigManager->save()) {
@@ -323,17 +333,16 @@ void handleRelaySet(int save) {
     addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
 
     if (selected != Supla::GUI::THERMOSTAT_OFF) {
-      selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-      addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
-
-      selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-      addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
-
-      if (thermostatIndex >= 0 &&
-          static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex) < Supla::GUI::thermostat.size()) {
-        auto thermostatPtr = Supla::GUI::thermostat[static_cast<std::vector<Supla::Control::GUI::ThermostatGUI*>::size_type>(thermostatIndex)];
+      if (thermostatIndex >= 0) {
+        auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
 
         if (thermostatPtr != nullptr) {
+          selected = thermostatPtr->getMainThermometerChannelNo();
+          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
+
+          selected = thermostatPtr->getAuxThermometerChannelNo();
+          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
+
           addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false,
                        String(thermostatPtr->getTemperatureHisteresis() / 100.0));
         }

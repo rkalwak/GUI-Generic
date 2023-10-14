@@ -170,7 +170,9 @@ void addNumberBox(String& html, const String& input_id, const String& name, cons
     html += F("'");
   }
 
-  html += F(" value='") + value + F("'></i>");
+  html += F(" value='");
+  html += value;
+  html += F("'></i>");
   WebServer->sendHeader();
 }
 

@@ -165,7 +165,9 @@ void addNumberBox(String& html, const String& input_id, const String& name, cons
   html += F("' type='number' placeholder='0' step='1' min='0'");
 
   if (max >= 0) {
-    html += F(" max='") + String(max) + F("'");
+    html += F(" max='");
+    html += String(max);
+    html += F("'");
   }
 
   html += F(" value='") + value + F("'></i>");

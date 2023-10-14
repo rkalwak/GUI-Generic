@@ -695,7 +695,9 @@ void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function, uint8_t nr) {
     setLevel(gpio, LOW);
     setMemory(gpio, MEMORY_RESTORE);
 
+#ifdef SUPLA_THERMOSTAT
     ConfigManager->setElement(KEY_THERMOSTAT_TYPE, nr, Supla::GUI::THERMOSTAT_OFF);
+#endif
   }
   if (function == FUNCTION_LIMIT_SWITCH) {
     setPullUp(gpio, true);

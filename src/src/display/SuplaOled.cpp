@@ -319,7 +319,15 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
+    _supla_int_t flags = channel->getFlags();
+    double averageVoltage;
+
+    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+      averageVoltage = (emValue->m[0].voltage[0]);
+    }
+    else {
+      averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
+    }
 
     displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
   }

@@ -225,6 +225,14 @@ void handleRelaySaveSet() {
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
+
+#ifdef SUPLA_THERMOSTAT
+      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF && thermostatIndex >= 0) {
+        handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
+        ConfigESP->rebootESP();
+      }
+#endif
+
       handleRelaySet(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:

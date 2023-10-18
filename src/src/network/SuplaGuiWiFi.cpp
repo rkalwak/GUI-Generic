@@ -67,7 +67,7 @@ void GUIESPWifi::setup() {
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
     // https://github.com/esp8266/Arduino/issues/8412
     // https://forum.supla.org/viewtopic.php?t=11999
-    WiFi.setPhyMode(WIFI_PHY_MODE_11G);
+    // WiFi.setPhyMode(WIFI_PHY_MODE_11G);
 #endif
 
     wifiConfigured = true;

@@ -357,8 +357,7 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   uint8_t thermostatIndex = oled[state->currentFrame].nrRealy;
 
   if (thermostatIndex >= 0) {
-    auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
-    mainThermometr = thermostatPtr->getMainThermometerChannelNo();
+    mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
   }
 
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);

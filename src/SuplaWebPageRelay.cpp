@@ -197,48 +197,34 @@ void handleRelaySaveSet() {
 
 #ifdef SUPLA_THERMOSTAT
   auto thermostatIndex = nr_relay.toInt();
-  input = INPUT_THERMOSTAT_TYPE;
   uint8_t oldThermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
+
+  input = INPUT_THERMOSTAT_TYPE;
   uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
 
   if (thermostatIndex >= 0) {
-    auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
+    input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
+    uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
 
-    if (thermostatPtr != nullptr) {
-      input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
-      uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      if (thermomeetrChannel == SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET) {
-        thermostatPtr->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET);
-      }
-      else {
-        thermostatPtr->setMainThermometerChannelNo(thermomeetrChannel);
-      }
+    input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
+    thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
 
-      input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
-      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      if (thermomeetrChannel == SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET) {
-        thermostatPtr->setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET);
-      }
-      else {
-        thermostatPtr->setAuxThermometerChannelNo(thermomeetrChannel);
-      }
-
+    if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
+      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
+    }
+    else {
       input = INPUT_THERMOSTAT_HISTERESIS;
-      thermostatPtr->setTemperatureHisteresis(WebServer->httpServer->arg(input).toDouble() * 100);
+      String histeresis = WebServer->httpServer->arg(input).c_str();
+      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, histeresis.c_str());
     }
   }
 #endif
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
-#ifdef SUPLA_THERMOSTAT
-      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
-        handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
-        ConfigESP->rebootESP();
-      }
-#endif
-
       handleRelaySet(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:
@@ -334,18 +320,14 @@ void handleRelaySet(int save) {
 
     if (selected != Supla::GUI::THERMOSTAT_OFF) {
       if (thermostatIndex >= 0) {
-        auto thermostatPtr = Supla::GUI::thermostat[thermostatIndex];
+        selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
 
-        if (thermostatPtr != nullptr) {
-          selected = thermostatPtr->getMainThermometerChannelNo();
-          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
+        selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
-          selected = thermostatPtr->getAuxThermometerChannelNo();
-          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
-
-          addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false,
-                       String(thermostatPtr->getTemperatureHisteresis() / 100.0));
-        }
+        String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);
       }
     }
     addFormHeaderEnd(webContentBuffer);

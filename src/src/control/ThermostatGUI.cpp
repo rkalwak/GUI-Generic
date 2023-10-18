@@ -24,13 +24,28 @@ namespace GUI {
 ThermostatGUI::ThermostatGUI(uint8_t nr)
     : Supla::Control::HvacBase(new Supla::Control::InternalPinOutput(ConfigESP->getGpio(nr, FUNCTION_RELAY),
                                                                      ConfigESP->getLevel(ConfigESP->getGpio(nr, FUNCTION_RELAY)))) {
-  Serial.print("Dodano termostat dla przekaźnika ");
-  Serial.println(nr + 1);
-
   uint8_t pinLED = ConfigESP->getGpio(nr, FUNCTION_LED);
   bool levelLed = ConfigESP->getLevel(pinLED);
 
+  uint8_t mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(nr).toInt();
+  uint8_t auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(nr).toInt();
+  double histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(nr).toDouble();
+
   new Supla::Clock;
+
+  HvacBase::setTemperatureHisteresis(histeresis * 10);
+
+  if (mainThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+    HvacBase::setMainThermometerChannelNo(mainThermometr);
+  }
+
+  if (auxThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+    HvacBase::setAuxThermometerChannelNo(auxThermometr);
+
+    HvacBase::setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
+    HvacBase::setTemperatureAuxMin(500);   // 5 degrees
+    HvacBase::setTemperatureAuxMax(7500);  // 75 degrees
+  }
 
   // Configure thermostat parameters
   HvacBase::setTemperatureHisteresisMin(20);    // 0.2 degree
@@ -38,10 +53,6 @@ ThermostatGUI::ThermostatGUI(uint8_t nr)
   HvacBase::setTemperatureAutoOffsetMin(200);   // 2 degrees
   HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees
   HvacBase::addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_MIDDLE);
-  // AUX
-  HvacBase::setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);
-  HvacBase::setTemperatureAuxMin(500);   // 5 degrees
-  HvacBase::setTemperatureAuxMax(7500);  // 75 degrees
 
   if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_HEAT) {
     HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT);

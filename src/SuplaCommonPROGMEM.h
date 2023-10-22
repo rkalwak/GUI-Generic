@@ -307,7 +307,6 @@ const char* const ACTION_P[] PROGMEM = {ON,
 const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE};
 #endif
 
-#ifdef SUPLA_THERMOSTAT
 namespace Supla {
 namespace GUI {
 enum ThermostatType
@@ -322,6 +321,7 @@ enum ThermostatType
 }  // namespace GUI
 }  // namespace Supla
 
+#ifdef SUPLA_THERMOSTAT
 const char* const THERMOSTAT_TYPE_P[] PROGMEM = {S_OFF, S_HEAT, S_COOL, S_AUTO, S_DOMESTIC_HOT_WATER, S_DIFFERENTIAL};
 #endif
 

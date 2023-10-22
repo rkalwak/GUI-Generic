@@ -552,6 +552,10 @@ uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 }
 
+uint8_t SuplaConfigESP::getLightRelay(uint8_t gpio) {
+  return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
+}
+
 bool SuplaConfigESP::checkBusyCfg(int gpio, int function) {
   uint8_t key = KEY_GPIO + gpio;
 
@@ -630,6 +634,10 @@ void SuplaConfigESP::setAction(uint8_t gpio, int action) {
 
 void SuplaConfigESP::setEvent(uint8_t gpio, int event) {
   ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, event);
+}
+
+void SuplaConfigESP::setLightRelay(uint8_t gpio, int type) {
+  ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, type);
 }
 
 void SuplaConfigESP::setNumberButton(uint8_t nr, uint8_t nrButton) {

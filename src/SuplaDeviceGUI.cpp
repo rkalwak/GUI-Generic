@@ -96,15 +96,13 @@ void crateWebServer() {
 
 #ifdef SUPLA_THERMOSTAT
 std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostat;
+#endif
 
 void addRelayOrThermostat(int nr) {
   if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {
 #ifdef SUPLA_RELAY
     if (ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(nr).toInt() == Supla::GUI::THERMOSTAT_OFF) {
       Supla::GUI::addRelay(nr);
-#ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr, relay[nr], relay[nr]);
-#endif
     }
     else {
 #ifdef SUPLA_THERMOSTAT
@@ -115,7 +113,6 @@ void addRelayOrThermostat(int nr) {
 #endif
   }
 }
-#endif
 
 #ifdef SUPLA_RELAY
 void addRelay(uint8_t nr) {
@@ -129,10 +126,27 @@ void addRelay(uint8_t nr) {
   if (pinRelay != OFF_GPIO) {
     if (pinRelay == GPIO_VIRTUAL_RELAY) {
       relay.push_back(new Supla::Control::VirtualRelay());
+      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
+    }
+    else if (ConfigESP->getLightRelay(pinRelay) == true) {
+      highIsOn = ConfigESP->getLevel(pinRelay);
+
+      Supla::Control::LightRelay *lightRelay = new Supla::Control::LightRelay(pinRelay, highIsOn);
+      relay.push_back(static_cast<Supla::Control::Relay *>(lightRelay));
+      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_LIGHTSWITCH);
+
+#ifdef SUPLA_BUTTON
+      Supla::GUI::addButtonToRelay(nr, lightRelay, lightRelay);
+#endif
     }
     else {
       highIsOn = ConfigESP->getLevel(pinRelay);
       relay.push_back(Supla::Control::GUI::Relay(pinRelay, highIsOn, nr));
+      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
+
+#ifdef SUPLA_BUTTON
+      Supla::GUI::addButtonToRelay(nr, relay[nr], relay[nr]);
+#endif
     }
 
 #ifdef SUPLA_CONDITIONS
@@ -153,7 +167,6 @@ void addRelay(uint8_t nr) {
     }
 
     relay[nr]->keepTurnOnDuration();
-    relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
 
     if (pinLED != OFF_GPIO) {
       new Supla::Control::PinStatusLedGUI(pinRelay, pinLED, !levelLed);

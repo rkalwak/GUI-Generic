@@ -43,6 +43,7 @@
 #define S_RELAY_NR_SETTINGS                                    "Konfiguration des Relais Nr. "
 #define S_STATE_CONTROL                                        "Status Kontrolle"
 #define S_REACTION_AFTER_RESET                                 "Reaktion nach Neustart"
+#define S_LIGHT_RELAY                                          "Sterowowanie światłem"
 #define S_GPIO_SETTINGS_FOR_BUTTONS                            "GPIO-Parameter für Tasten"
 #define S_BUTTON                                               "TASTE"
 #define S_BUTTON_NR_SETTINGS                                   "Parameter für Tasten Nr. "

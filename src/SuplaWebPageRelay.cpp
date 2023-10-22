@@ -144,6 +144,14 @@ void handleRelaySaveSet() {
     input = INPUT_RELAY_LEVEL;
     input += nr_relay;
     ConfigESP->setLevel(gpio, WebServer->httpServer->arg(input).toInt());
+
+    input = INPUT_LIGHT_RELAY;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigESP->setLightRelay(gpio, 1);
+    }
+    else {
+      ConfigESP->setLightRelay(gpio, 0);
+    }
   }
 
 #if defined(SUPLA_LED)
@@ -243,7 +251,7 @@ void handleRelaySaveSet() {
 
 void handleRelaySet(int save) {
   uint8_t gpio, selected;
-  String nr_relay, massage;
+  String nr_relay, massage, input;
 
   massage.reserve(MAX_MESSAGE_SIZE);
   nr_relay = WebServer->httpServer->arg(ARG_PARM_NUMBER);
@@ -261,11 +269,20 @@ void handleRelaySet(int save) {
 
     if (gpio != GPIO_VIRTUAL_RELAY) {
       selected = ConfigESP->getLevel(gpio);
+      input = INPUT_RELAY_LEVEL;
+      input += nr_relay;
       addListBox(webContentBuffer, INPUT_RELAY_LEVEL + nr_relay, S_STATE_CONTROL, LEVEL_P, 2, selected);
+
+      input = INPUT_LIGHT_RELAY;
+      selected = ConfigESP->getLightRelay(gpio);
+      addCheckBox(webContentBuffer, input, S_LIGHT_RELAY, selected);
     }
 
     selected = ConfigESP->getMemory(gpio, nr_relay.toInt());
-    addListBox(webContentBuffer, INPUT_RELAY_MEMORY + nr_relay, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
+    input = INPUT_RELAY_MEMORY;
+    input += nr_relay;
+    addListBox(webContentBuffer, input, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
+
     addFormHeaderEnd(webContentBuffer);
 
 #ifdef SUPLA_RF_BRIDGE

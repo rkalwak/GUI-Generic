@@ -125,6 +125,7 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   uint8_t getAction(uint8_t gpio);
   Supla::Action getActionInternal(uint8_t gpio);
   uint8_t getEvent(uint8_t gpio);
+  uint8_t getLightRelay(uint8_t gpio);
 
   bool checkBusyCfg(int gpio, int function);
   int checkBusyGpio(int gpio, int function);
@@ -139,6 +140,8 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   void setInversed(uint8_t gpio, int inversed);
   void setAction(uint8_t gpio, int action);
   void setEvent(uint8_t gpio, int event);
+  void setLightRelay(uint8_t gpio, int type);
+
   void setNumberButton(uint8_t nr) {
     setNumberButton(nr, nr);
   }

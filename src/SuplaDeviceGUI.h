@@ -69,6 +69,7 @@
 #include <supla/control/button.h>
 #include <supla/control/ButtonAnalog.h>
 #include <supla/control/relay.h>
+#include <supla/control/light_relay.h>
 #include <supla/control/virtual_relay.h>
 #include <supla/control/roller_shutter.h>
 
@@ -240,9 +241,7 @@ void setupConnection();
 void enableConnectionSSL(bool value);
 void crateWebServer();
 
-#ifdef SUPLA_THERMOSTAT
 void addRelayOrThermostat(int nr);
-#endif
 
 #ifdef SUPLA_RELAY
 void addRelay(uint8_t nr);

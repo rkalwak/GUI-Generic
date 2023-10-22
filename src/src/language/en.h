@@ -43,6 +43,7 @@
 #define S_RELAY_NR_SETTINGS                                    "Settings relay nr. "
 #define S_STATE_CONTROL                                        "State control"
 #define S_REACTION_AFTER_RESET                                 "Reaction after reset"
+#define S_LIGHT_RELAY                                          "Sterowowanie światłem"
 #define S_GPIO_SETTINGS_FOR_BUTTONS                            "GPIO settings for buttons"
 #define S_BUTTON                                               "Button"
 #define S_BUTTON_NR_SETTINGS                                   "Setting button nr. "

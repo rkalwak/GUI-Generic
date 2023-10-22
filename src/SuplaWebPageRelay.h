@@ -21,6 +21,7 @@
 
 #define INPUT_RELAY_LEVEL  "irl"
 #define INPUT_RELAY_MEMORY "irm"
+#define INPUT_LIGHT_RELAY  "ilr"
 
 #if defined(SUPLA_RELAY) || defined(GUI_SENSOR_I2C_EXPENDER)
 #define GUI_RELAY

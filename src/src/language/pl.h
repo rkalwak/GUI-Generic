@@ -44,6 +44,7 @@
 #define S_RELAY_NR_SETTINGS                                    "Ustawienia przekaźnika nr. "
 #define S_STATE_CONTROL                                        "Załączany stanem"
 #define S_REACTION_AFTER_RESET                                 "Reakcja po resecie"
+#define S_LIGHT_RELAY                                          "Sterowowanie światłem"
 #define S_GPIO_SETTINGS_FOR_BUTTONS                            "Ustawienie GPIO dla przycisków"
 #define S_BUTTON                                               "Przycisk"
 #define S_BUTTON_NR_SETTINGS                                   "Ustawienia przycisku nr. "

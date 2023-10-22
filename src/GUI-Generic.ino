@@ -110,15 +110,11 @@ void setup() {
            strcmp(ConfigManager->get(KEY_RF_BRIDGE_CODE_OFF)->getElement(nr).c_str(), "") != 0)) {
         Supla::GUI::addRelayBridge(nr);
       }
-#ifdef SUPLA_THERMOSTAT
       else {
         Supla::GUI::addRelayOrThermostat(nr);
       }
-#endif
 #else
-#ifdef SUPLA_THERMOSTAT
       Supla::GUI::addRelayOrThermostat(nr);
-#endif
 #endif
 
       if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {

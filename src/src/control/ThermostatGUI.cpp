@@ -49,7 +49,7 @@ ThermostatGUI::ThermostatGUI(uint8_t nr)
 
   // Configure thermostat parameters
   HvacBase::setTemperatureHisteresisMin(20);    // 0.2 degree
-  HvacBase::setTemperatureHisteresisMax(1000);  // 10 degree
+  HvacBase::setTemperatureHisteresisMax(4000);  // 10 degree
   HvacBase::setTemperatureAutoOffsetMin(200);   // 2 degrees
   HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees
   HvacBase::addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_MIDDLE);

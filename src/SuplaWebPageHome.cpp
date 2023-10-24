@@ -92,8 +92,15 @@ void handlePageHome(int save) {
           String power_active = "";
           String current = "";
 
-          for (size_t i = 0; i < MAX_PHASES; i++) {
-            if (emValue->m[0].voltage[i] > 0) {
+          _supla_int_t flags = channel->getFlags();
+
+          if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+            voltage += String(emValue->m[0].voltage[0] / 100.0) + " | ";
+            power_active += String(emValue->m[0].power_active[0] / 100000.0) + " | ";
+            current += String(emValue->m[0].current[0] / 1000.0) + " | ";
+          }
+          else {
+            for (size_t i = 0; i < MAX_PHASES; i++) {
               voltage += String(emValue->m[0].voltage[i] / 100.0) + " | ";
               power_active += String(emValue->m[0].power_active[i] / 100000.0) + " | ";
               current += String(emValue->m[0].current[i] / 1000.0) + " | ";

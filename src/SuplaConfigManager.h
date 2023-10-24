@@ -27,6 +27,9 @@
 #include <time.h>
 #endif
 
+#include <supla/storage/key_value.h>
+#include <supla/storage/storage.h>
+
 #define CURENT_VERSION   1
 #define CONFIG_FILE_PATH "/dat"
 
@@ -55,6 +58,7 @@
 #define MAX_DIRECT_LINK      5
 #define MAX_VIRTUAL_RELAY    10
 #define MAX_BRIDGE_RF        10
+#define MAX_THERMOSTAT       5
 #define MAX_ANALOG_BUTTON    5
 #define MAX_WAKE_ON_LAN      5
 
@@ -157,6 +161,12 @@ enum _key
   // KEY_VERSION_CONFIG,
   KEY_ALTITUDE_MS5611,
   KEY_ACTIVE_SENSOR_2,
+
+  KEY_THERMOSTAT_TYPE,
+  KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL,
+  KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL,
+  KEY_THERMOSTAT_HISTERESIS,
+
   OPTION_COUNT
 };
 
@@ -282,9 +292,9 @@ class ConfigOption {
   bool _loadKey;
 };
 
-class SuplaConfigManager {
+class SuplaConfigManager : public Supla::KeyValue {
  public:
-  SuplaConfigManager();
+  explicit SuplaConfigManager();
   bool SPIFFSbegin();
   bool migrationConfig();
   uint8_t addKey(uint8_t key, int maxLength, bool loadKey = true);
@@ -307,6 +317,28 @@ class SuplaConfigManager {
 
   bool isDeviceConfigured();
   void setGUIDandAUTHKEY();
+
+  bool init() override;
+
+  // Supla protocol config
+  virtual bool setSuplaServer(const char *server) override;
+  virtual bool setEmail(const char *email) override;
+  virtual bool setAuthKey(const char *authkey) override;
+  virtual bool setGUID(const char *guid) override;
+  virtual bool setDeviceName(const char *name) override;
+
+  virtual bool getSuplaServer(char *result) override;
+  virtual bool getEmail(char *result) override;
+  virtual bool getGUID(char *result) override;
+  virtual bool getAuthKey(char *result) override;
+  virtual bool getDeviceName(char *result) override;
+
+  // WiFi config
+  bool setWiFiSSID(const char *ssid) override;
+  bool setWiFiPassword(const char *password) override;
+
+  bool getWiFiSSID(char *result) override;
+  bool getWiFiPassword(char *result) override;
 
  private:
   int _optionCount;

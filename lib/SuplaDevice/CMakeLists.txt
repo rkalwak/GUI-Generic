@@ -2,13 +2,15 @@ set(SUPLA_DEVICE_SRCS
   src/SuplaDevice.cpp
 
   src/supla/uptime.cpp
-  src/supla/channel.cpp
-  src/supla/channel_extended.cpp
+  src/supla/channels/channel.cpp
+  src/supla/channels/binary_sensor_channel.cpp
+  src/supla/channels/channel_extended.cpp
   src/supla/io.cpp
   src/supla/tools.cpp
   src/supla/element.cpp
   src/supla/local_action.cpp
   src/supla/channel_element.cpp
+  src/supla/element_with_channel_actions.cpp
   src/supla/correction.cpp
   src/supla/at_channel.cpp
   src/supla/action_handler.cpp
@@ -37,7 +39,9 @@ set(SUPLA_DEVICE_SRCS
   src/supla/device/last_state_logger.cpp
   src/supla/device/status_led.cpp
   src/supla/device/sw_update.cpp
+  src/supla/device/remote_device_config.cpp
   src/supla/device/notifications.cpp
+  src/supla/device/enter_cfg_mode_after_power_cycle.cpp
 
   src/supla/storage/storage.cpp
   src/supla/storage/config.cpp
@@ -65,6 +69,11 @@ set(SUPLA_DEVICE_SRCS
   src/supla/network/html/button_config_parameters.cpp
   src/supla/network/html/button_action_trigger_config.cpp
   src/supla/network/html/rgbw_button_parameters.cpp
+  src/supla/network/html/time_parameters.cpp
+  src/supla/network/html/volume_parameters.cpp
+  src/supla/network/html/screen_delay_parameters.cpp
+  src/supla/network/html/disable_user_interface_parameter.cpp
+  src/supla/network/html/h2_tag.cpp
 
   src/supla/network/client.cpp
   src/supla/network/ip_address.cpp
@@ -92,6 +101,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/control/sequence_button.cpp
   src/supla/control/simple_button.cpp
   src/supla/control/virtual_relay.cpp
+  src/supla/control/hvac_base.cpp
 
   # FreeRTOS target can't compile those files currently. So they are removed
   # here and added in linux porting cmake only;
@@ -102,12 +112,15 @@ set(SUPLA_DEVICE_SRCS
 # not all files from sensor folder are compiled here. Some still require
 # porting from ARDUINO
   src/supla/sensor/binary.cpp
+  src/supla/sensor/binary_base.cpp
   src/supla/sensor/electricity_meter.cpp
   src/supla/sensor/hygro_meter.cpp
   src/supla/sensor/impulse_counter.cpp
+  src/supla/sensor/virtual_impulse_counter.cpp
   src/supla/sensor/therm_hygro_meter.cpp
   src/supla/sensor/therm_hygro_press_meter.cpp
   src/supla/sensor/thermometer.cpp
+  src/supla/sensor/thermometer_driver.cpp
   src/supla/sensor/virtual_binary.cpp
   src/supla/sensor/ntc10k.cpp
 )

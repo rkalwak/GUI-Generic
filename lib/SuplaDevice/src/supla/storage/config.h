@@ -60,7 +60,6 @@ class Config {
 
   virtual bool setBlob(const char* key, const char* value, size_t blobSize) = 0;
   virtual bool getBlob(const char* key, char* value, size_t blobSize) = 0;
-  virtual int getBlobSize(const char* key) = 0;
 
   virtual bool getInt8(const char* key, int8_t* result) = 0;
   virtual bool getUInt8(const char* key, uint8_t* result) = 0;
@@ -138,9 +137,17 @@ class Config {
   virtual bool getAltWiFiSSID(char* result);
   virtual bool getAltWiFiPassword(char* result);
 
+  virtual bool isDeviceConfigChangeFlagSet();
+  virtual bool isDeviceConfigChangeReadyToSend();
+  virtual bool setDeviceConfigChangeFlag();
+  virtual bool clearDeviceConfigChangeFlag();
+
  protected:
+  virtual int getBlobSize(const char* key) = 0;
   uint32_t saveDelayTimestamp = 0;
+  uint32_t deviceConfigUpdateDelayTimestamp = 0;
   uint32_t saveDelayMs = 0;
+  int8_t deviceConfigChangeFlag = -1;
 };
 };  // namespace Supla
 

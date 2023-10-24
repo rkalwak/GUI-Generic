@@ -21,7 +21,6 @@
 #include <iostream>
 #include <cxxopts.hpp>
 
-
 #include <SuplaDevice.h>
 #include <supla/control/dimmer_leds.h>
 #include <supla/control/rgb_leds.h>
@@ -38,6 +37,7 @@
 #include <linux_file_state_logger.h>
 #include <linux_yaml_config.h>
 #include <linux_file_storage.h>
+#include <linux_clock.h>
 #include <supla/IEEE754tools.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>
@@ -178,11 +178,13 @@ int main(int argc, char* argv[]) {
     SuplaDevice.setSuplaCACert(suplaCACert);
     SuplaDevice.setSupla3rdPartyCACert(supla3rdCACert);
 
-    SuplaDevice.begin();
+    auto clock = std::make_unique<Supla::LinuxClock>();
+    (void)(clock);
+
+    SuplaDevice.begin(config->getProtoVersion());
 
     if (SuplaDevice.getCurrentStatus() != STATUS_INITIALIZED) {
-      SUPLA_LOG_INFO(
-                "Incomplete configuration. Please fix it and try again");
+      SUPLA_LOG_INFO("Incomplete configuration. Please fix it and try again");
       exit(1);
     }
 

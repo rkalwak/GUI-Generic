@@ -17,6 +17,10 @@
 #ifndef GUI_GENERIC_COMMON_DEFINED_H
 #define GUI_GENERIC_COMMON_DEFINED_H
 
+#ifndef SUPLA_EXCLUDE_LITTLEFS_CONFIG
+#define SUPLA_EXCLUDE_LITTLEFS_CONFIG
+#endif
+
 #include "GUI-Generic_Config.h"
 
 #if defined(SUPLA_MCP23017) || defined(SUPLA_PCF8575) || defined(SUPLA_PCF8574)
@@ -42,6 +46,16 @@
 #ifndef TEMPLATE_BOARD_OLD
 #ifndef TEMPLATE_BOARD_JSON
 #define TEMPLATE_BOARD_JSON
+#endif
+#endif
+
+#ifdef SUPLA_THERMOSTAT
+#ifndef SUPLA_RELAY
+#define SUPLA_RELAY
+#endif
+
+#ifndef SUPLA_LED
+#define SUPLA_LED
 #endif
 #endif
 

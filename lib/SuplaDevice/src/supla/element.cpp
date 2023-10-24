@@ -202,17 +202,56 @@ Element & Element::disableChannelState() {
   return *this;
 }
 
-void Element::handleChannelConfig(TSD_ChannelConfig *result) {
+uint8_t Element::handleChannelConfig(TSD_ChannelConfig *result, bool local) {
   (void)(result);
-  SUPLA_LOG_DEBUG(
+  (void)(local);
+  SUPLA_LOG_ERROR(
       "Element: received channel config reply, but handling is missing");
+  return SUPLA_RESULTCODE_UNSUPORTED;
 }
+
+uint8_t Element::handleWeeklySchedule(TSD_ChannelConfig *newWeeklySchedule,
+                                      bool altSchedule,
+                                      bool local) {
+  (void)(newWeeklySchedule);
+  (void)(altSchedule);
+  (void)(local);
+  SUPLA_LOG_ERROR(
+      "Element: received weekly schedly, but handling is missing");
+  return SUPLA_RESULTCODE_UNSUPORTED;
+}
+
+void Element::handleSetChannelConfigResult(
+    TSDS_SetChannelConfigResult *result) {
+  (void)(result);
+  SUPLA_LOG_ERROR(
+      "Element: received set channel config reply, but handling is missing");
+}
+
+void Element::handleChannelConfigFinished() {
+  SUPLA_LOG_ERROR(
+      "Element: received channel config finished, but handling is missing");
+}
+
 
 void Element::generateKey(char *output, const char *key) {
   Supla::Config::generateKey(output, getChannelNumber(), key);
 }
 
 void Element::onSoftReset() {
+}
+
+void Element::onDeviceConfigChange(uint64_t fieldBit) {
+  (void)(fieldBit);
+}
+
+void Element::NotifyElementsAboutConfigChange(
+    uint64_t fieldBit) {
+  for (auto element = Supla::Element::begin(); element != nullptr;
+       element = element->next()) {
+    element->onDeviceConfigChange(fieldBit);
+    delay(0);
+  }
 }
 
 bool Element::IsInvalidPtrSet() {

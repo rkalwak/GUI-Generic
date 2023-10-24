@@ -19,8 +19,9 @@
 
 #include "SuplaDeviceGUI.h"
 
-#define INPUT_RELAY_LEVEL    "irl"
-#define INPUT_RELAY_MEMORY   "irm"
+#define INPUT_RELAY_LEVEL  "irl"
+#define INPUT_RELAY_MEMORY "irm"
+#define INPUT_LIGHT_RELAY  "ilr"
 
 #if defined(SUPLA_RELAY) || defined(GUI_SENSOR_I2C_EXPENDER)
 #define GUI_RELAY
@@ -92,6 +93,14 @@ void directLinksWebPageSave(int nr);
 
 // void directLinksWebPage(int nr);
 // void directLinksWebPageSave(int nr);
+#endif
+
+#ifdef SUPLA_THERMOSTAT
+#define INPUT_THERMOSTAT_TYPE                     "itt"
+#define INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL "itmtc"
+#define INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL  "itatc"
+#define INPUT_THERMOSTAT_HISTERESIS               "ith"
+
 #endif
 
 #endif  // SuplaWebPageRelay_h

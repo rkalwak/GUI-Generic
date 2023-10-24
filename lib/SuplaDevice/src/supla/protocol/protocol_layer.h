@@ -59,12 +59,25 @@ class ProtocolLayer {
                                       uint32_t timeMs,
                                       uint8_t state,
                                       int32_t senderId);
+  virtual void sendRemainingTimeValue(uint8_t channelNumber,
+                                      uint32_t remainingTime,
+                                      uint8_t* state,
+                                      int32_t senderId,
+                                      bool useSecondsInsteadOfMs);
   virtual void getUserLocaltime();
   virtual void sendChannelValueChanged(uint8_t channelNumber, char *value,
       unsigned char offline, uint32_t validityTimeSec) = 0;
   virtual void sendExtendedChannelValueChanged(uint8_t channelNumber,
     TSuplaChannelExtendedValue *value) = 0;
-  virtual void getChannelConfig(uint8_t channelNumber);
+
+  virtual void getChannelConfig(uint8_t channelNumber,
+      uint8_t configType = SUPLA_CONFIG_TYPE_DEFAULT);
+  virtual bool setChannelConfig(uint8_t channelNumber,
+      _supla_int_t channelFunction, void *channelConfig, int size,
+      uint8_t configType = SUPLA_CONFIG_TYPE_DEFAULT);
+
+  virtual bool setDeviceConfig(TSDS_SetDeviceConfig *deviceConfig);
+
   virtual void sendRegisterNotification(
       TDS_RegisterPushNotification *notification);
   virtual bool sendNotification(int context,

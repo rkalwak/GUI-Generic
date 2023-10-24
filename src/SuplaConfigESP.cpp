@@ -535,12 +535,24 @@ Supla::Action SuplaConfigESP::getActionInternal(uint8_t gpio) {
       return Supla::Action::TURN_OFF;
     case Supla::GUI::Action::TOGGLE:
       return Supla::Action::TOGGLE;
+    case Supla::GUI::Action::INCREASE_TEMPERATURE:
+      return Supla::Action::INCREASE_TEMPERATURE;
+    case Supla::GUI::Action::DECREASE_TEMPERATURE:
+      return Supla::Action::DECREASE_TEMPERATURE;
+    case Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF:
+      return Supla::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES;
+    case Supla::GUI::Action::TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES:
+      return Supla::Action::TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES;
     default:
       return actionInternal;
   }
 }
 
 uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
+  return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
+}
+
+uint8_t SuplaConfigESP::getLightRelay(uint8_t gpio) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 }
 
@@ -624,6 +636,10 @@ void SuplaConfigESP::setEvent(uint8_t gpio, int event) {
   ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, event);
 }
 
+void SuplaConfigESP::setLightRelay(uint8_t gpio, int type) {
+  ConfigManager->setElement(getKeyGpio(gpio), EVENT_BUTTON, type);
+}
+
 void SuplaConfigESP::setNumberButton(uint8_t nr, uint8_t nrButton) {
 #ifdef GUI_SENSOR_I2C_EXPENDER
   ConfigManager->setElement(KEY_EXPANDER_NUMBER_BUTTON, nr, nrButton);
@@ -659,7 +675,7 @@ void SuplaConfigESP::setGpio(uint8_t gpio, uint8_t nr, uint8_t function) {
    */
 }
 
-void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function) {
+void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function, uint8_t nr) {
   uint8_t key = KEY_GPIO + gpio;
 
   if (function == FUNCTION_CFG_BUTTON) {
@@ -676,6 +692,7 @@ void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function) {
   ConfigManager->setElement(key, FUNCTION, FUNCTION_OFF);
 
   if (function == FUNCTION_BUTTON || function == FUNCTION_BUTTON_STOP) {
+    setNumberButton(nr);
     setPullUp(gpio, true);
     setInversed(gpio, true);
 
@@ -685,10 +702,24 @@ void SuplaConfigESP::clearGpio(uint8_t gpio, uint8_t function) {
   if (function == FUNCTION_RELAY) {
     setLevel(gpio, LOW);
     setMemory(gpio, MEMORY_RESTORE);
+
+#ifdef SUPLA_THERMOSTAT
+    ConfigManager->setElement(KEY_THERMOSTAT_TYPE, nr, Supla::GUI::THERMOSTAT_OFF);
+#endif
   }
   if (function == FUNCTION_LIMIT_SWITCH) {
     setPullUp(gpio, true);
   }
+
+  if (gpio == GPIO_VIRTUAL_RELAY) {
+    ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
+  }
+
+#ifdef ARDUINO_ARCH_ESP8266
+  if (gpio == A0) {
+    ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
+  }
+#endif
 }
 
 uint8_t SuplaConfigESP::countFreeGpio(uint8_t exception) {

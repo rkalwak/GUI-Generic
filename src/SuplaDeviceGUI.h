@@ -17,15 +17,16 @@
 #ifndef SuplaDeviceGUI_h
 #define SuplaDeviceGUI_h
 
-//#include <DoubleResetDetector.h>
+#include "GUI-Generic_Config.h"
+#include "GUIGenericCommonDefined.h"
+
 #include <SPI.h>
 
 #include <SuplaDeviceExtensions.h>
 #include <SuplaDevice.h>
+#include <supla/storage/littlefs_config.h>
 #include "src/control/ControlGUI.h"
 
-#include "GUI-Generic_Config.h"
-#include "GUIGenericCommonDefined.h"
 #include "GUIGenericCommon.h"
 #include "SuplaTemplateBoard.h"
 
@@ -68,6 +69,7 @@
 #include <supla/control/button.h>
 #include <supla/control/ButtonAnalog.h>
 #include <supla/control/relay.h>
+#include <supla/control/light_relay.h>
 #include <supla/control/virtual_relay.h>
 #include <supla/control/roller_shutter.h>
 
@@ -222,6 +224,15 @@
 #include "src/control/deepSleep.h"
 #endif
 
+#ifdef SUPLA_THERMOSTAT
+#include "src/control/ThermostatGUI.h"
+#endif
+
+#define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds
+#define TIME_SAVE_PERIOD_IMPULSE_COUNTER_SEK 600  // 10min
+#define STORAGE_OFFSET                       0
+#include <supla/storage/eeprom.h>
+
 namespace Supla {
 namespace GUI {
 
@@ -230,9 +241,11 @@ void setupConnection();
 void enableConnectionSSL(bool value);
 void crateWebServer();
 
+void addRelayOrThermostat(int nr);
+
 #ifdef SUPLA_RELAY
 void addRelay(uint8_t nr);
-void addButtonToRelay(uint8_t nrRelay);
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element = nullptr, Supla::ActionHandler *client = nullptr);
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER

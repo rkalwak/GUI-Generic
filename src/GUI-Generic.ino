@@ -40,13 +40,19 @@ extern "C" {
 
 #include "src/boneIO/boneIO.h"
 
+#include "src/storage/SPIFFS_config.h"
+
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
+
+Supla::SPIFFSConfig configSupla;
+Supla::Eeprom eeprom(STORAGE_OFFSET);
 
 void setup() {
   uint8_t nr, gpio;
 
   Serial.begin(74880);
+  eeprom.setStateSavePeriod(5000);
 
   ConfigManager = new SuplaConfigManager();
   ConfigESP = new SuplaConfigESP();
@@ -105,22 +111,10 @@ void setup() {
         Supla::GUI::addRelayBridge(nr);
       }
       else {
-#ifdef SUPLA_RELAY
-        Supla::GUI::addRelay(nr);
-#ifdef SUPLA_BUTTON
-        Supla::GUI::addButtonToRelay(nr);
-#endif
-#endif
+        Supla::GUI::addRelayOrThermostat(nr);
       }
 #else
-
-#ifdef SUPLA_RELAY
-      Supla::GUI::addRelay(nr);
-#ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr);
-#endif
-#endif
-
+      Supla::GUI::addRelayOrThermostat(nr);
 #endif
 
       if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {

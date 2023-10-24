@@ -23,6 +23,9 @@
 #include <supla/protocol/protocol_layer.h>
 #include <supla/storage/storage.h>
 #include <supla/time.h>
+#include <supla/log_wrapper.h>
+#include <supla/protocol/supla_srpc.h>
+#include <supla/device/remote_device_config.h>
 
 Supla::Device::StatusLed::StatusLed(Supla::Io *io, uint8_t outPin, bool invert)
     : StatusLed(outPin, invert) {
@@ -38,7 +41,7 @@ void Supla::Device::StatusLed::onLoadConfig(SuplaDeviceClass *sdc) {
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     int8_t value = 0;
-    if (cfg->getInt8("statusled", &value)) {
+    if (cfg->getInt8(StatusLedCfgTag, &value)) {
       switch (value) {
         default:
         case 0: {
@@ -54,6 +57,39 @@ void Supla::Device::StatusLed::onLoadConfig(SuplaDeviceClass *sdc) {
           break;
         }
       }
+    }
+
+    // register DeviceConfig field bit:
+    Supla::Device::RemoteDeviceConfig::RegisterConfigField(
+        SUPLA_DEVICE_CONFIG_FIELD_STATUS_LED);
+  }
+}
+
+void Supla::Device::StatusLed::storeModeToConfig() {
+  auto cfg = Supla::Storage::ConfigInstance();
+  if (cfg) {
+    int8_t currentCfgValue = 0;
+    cfg->getInt8(StatusLedCfgTag, &currentCfgValue);
+    if (currentCfgValue != ledMode) {
+      switch (ledMode) {
+        default:
+        case 0: {
+          cfg->setInt8(Supla::Device::StatusLedCfgTag, 0);
+          break;
+        }
+        case 1: {
+          cfg->setInt8(Supla::Device::StatusLedCfgTag,
+                       static_cast<int8_t>(ledMode));
+          break;
+        }
+        case 2: {
+          cfg->setInt8(Supla::Device::StatusLedCfgTag,
+                       static_cast<int8_t>(ledMode));
+          break;
+        }
+      }
+      cfg->setDeviceConfigChangeFlag();
+      cfg->saveWithDelay(2000);
     }
   }
 }
@@ -266,4 +302,16 @@ void Supla::Device::StatusLed::setAutoSequence() {
 
 void Supla::Device::StatusLed::setMode(LedMode newMode) {
   ledMode = newMode;
+}
+
+Supla::LedMode Supla::Device::StatusLed::getMode() const {
+  return ledMode;
+}
+
+void Supla::Device::StatusLed::onDeviceConfigChange(uint64_t fieldBit) {
+  if (fieldBit == SUPLA_DEVICE_CONFIG_FIELD_STATUS_LED) {
+    // reload config
+    SUPLA_LOG_DEBUG("StatusLed: reload config");
+    onLoadConfig(nullptr);
+  }
 }

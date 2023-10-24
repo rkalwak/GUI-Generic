@@ -43,6 +43,7 @@
 #define S_RELAY_NR_SETTINGS                                    "Konfiguration des Relais Nr. "
 #define S_STATE_CONTROL                                        "Status Kontrolle"
 #define S_REACTION_AFTER_RESET                                 "Reaktion nach Neustart"
+#define S_LIGHT_RELAY                                          "Sterowowanie światłem"
 #define S_GPIO_SETTINGS_FOR_BUTTONS                            "GPIO-Parameter für Tasten"
 #define S_BUTTON                                               "TASTE"
 #define S_BUTTON_NR_SETTINGS                                   "Parameter für Tasten Nr. "
@@ -215,5 +216,17 @@
 #endif
 
 #define S_BAUDRATE "Baudrate"
+
+#ifdef SUPLA_THERMOSTAT
+#define S_HEAT                     "Heat"
+#define S_COOL                     "Cool"
+#define S_DOMESTIC_HOT_WATER       "Domestic hot water"
+#define S_DIFFERENTIAL             "Differential"
+#define S_THERMOSTAT               "Thermostat"
+#define S_THERMOSTAT               "Thermostat"
+#define S_MAIN_THERMOMETER_CHANNEL "Main thermometrer"
+#define S_AUX_THERMOMETER_CHANNEL  "Aux thermometrer"
+#define S_HISTERESIS               "Histeresis"
+#endif
 
 #endif  // _LANGUAGE_DE_S_H_

@@ -93,8 +93,26 @@ bool ProtocolLayer::isConnecting() {
 void ProtocolLayer::getUserLocaltime() {
 }
 
-void ProtocolLayer::getChannelConfig(uint8_t channelNumber) {
+void ProtocolLayer::getChannelConfig(uint8_t channelNumber,
+                                     uint8_t configType) {
   (void)(channelNumber);
+  (void)(configType);
+}
+
+bool ProtocolLayer::setChannelConfig(uint8_t channelNumber,
+      _supla_int_t channelFunction, void *channelConfig, int size,
+      uint8_t configType) {
+  (void)(channelNumber);
+  (void)(channelFunction);
+  (void)(channelConfig);
+  (void)(size);
+  (void)(configType);
+  return false;
+}
+
+bool ProtocolLayer::setDeviceConfig(TSDS_SetDeviceConfig *deviceConfig) {
+  (void)(deviceConfig);
+  return false;
 }
 
 bool ProtocolLayer::isConfigEmpty() {
@@ -125,6 +143,18 @@ void ProtocolLayer::sendRemainingTimeValue(uint8_t channelNumber,
   (void)(timeMs);
   (void)(state);
   (void)(senderId);
+}
+
+void ProtocolLayer::sendRemainingTimeValue(uint8_t channelNumber,
+                                           uint32_t remainingTime,
+                                           uint8_t *state,
+                                           int32_t senderId,
+                                           bool useSecondsInsteadOfMs) {
+  (void)(channelNumber);
+  (void)(remainingTime);
+  (void)(state);
+  (void)(senderId);
+  (void)(useSecondsInsteadOfMs);
 }
 
 }  // namespace Protocol

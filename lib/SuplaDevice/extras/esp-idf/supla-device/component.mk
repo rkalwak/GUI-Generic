@@ -10,9 +10,11 @@ COMPONENT_OBJS := \
   ../../../src/SuplaDevice.o \
   ../../../src/supla/action_handler.o \
   ../../../src/supla/at_channel.o \
-  ../../../src/supla/channel.o \
+  ../../../src/supla/channels/channel.o \
+	../../../src/supla/channels/binary_sensor_channel.o \
   ../../../src/supla/channel_element.o \
-  ../../../src/supla/channel_extended.o \
+  ../../../src/supla/element_with_channel_actions.o \
+  ../../../src/supla/channels/channel_extended.o \
   ../../../src/supla/correction.o \
   ../../../src/supla/element.o \
   ../../../src/supla/io.o \
@@ -53,6 +55,8 @@ COMPONENT_OBJS := \
   ../../../src/supla/network/html/button_action_trigger_config.o \
   ../../../src/supla/network/html/text_cmd_input_parameter.o \
   ../../../src/supla/network/html/select_cmd_input_parameter.o \
+  ../../../src/supla/network/html/volume_parameters.o \
+  ../../../src/supla/network/html/screen_delay_parameters.o \
   ../../../src/supla/network/client.o \
   ../../../src/supla/network/ip_address.o \
   \
@@ -97,8 +101,10 @@ COMPONENT_OBJS := \
   ../../../src/supla/device/last_state_logger.o \
   ../../../src/supla/device/sw_update.o \
   ../../../src/supla/device/factory_test.o \
+  ../../../src/supla/device/remote_device_config.o \
 	\
   ../../../src/supla/sensor/binary.o \
+	../../../src/supla/sensor/binary_base.o \
   ../../../src/supla/sensor/electricity_meter.o \
   ../../../src/supla/sensor/hygro_meter.o \
   ../../../src/supla/sensor/impulse_counter.o \
@@ -135,6 +141,7 @@ COMPONENT_OBJS := \
 COMPONENT_SRCDIRS := ../../../src/supla-common \
 										 ../../../src/supla \
 										 ../../../src/supla/conditions \
+										 ../../../src/supla/channels \
 										 ../../../src/supla/clock \
 										 ../../../src/supla/control \
 										 ../../../src/supla/device \

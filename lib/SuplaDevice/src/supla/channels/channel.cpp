@@ -18,12 +18,12 @@
 
 #include <supla/log_wrapper.h>
 #include <supla/protocol/protocol_layer.h>
+#include <supla-common/srpc.h>
+#include <supla/tools.h>
+#include <supla/events.h>
+#include <supla/correction.h>
 
 #include "channel.h"
-#include "supla-common/srpc.h"
-#include "tools.h"
-#include "events.h"
-#include "correction.h"
 
 namespace Supla {
 
@@ -232,7 +232,11 @@ void Channel::setDefault(_supla_int_t value) {
   }
 }
 
-int32_t Channel::getDefaultFunction() {
+void Channel::setDefaultFunction(_supla_int_t function) {
+  setDefault(function);
+}
+
+int32_t Channel::getDefaultFunction() const {
   if (channelNumber >= 0) {
     return reg_dev.channels[channelNumber].Default;
   }
@@ -257,11 +261,23 @@ void Channel::setFuncList(_supla_int_t functions) {
   }
 }
 
-_supla_int_t Channel::getFuncList() {
+_supla_int_t Channel::getFuncList() const {
   if (channelNumber >= 0) {
     return reg_dev.channels[channelNumber].FuncList;
   }
   return 0;
+}
+
+void Channel::addToFuncList(_supla_int_t function) {
+  if (channelNumber >= 0) {
+    reg_dev.channels[channelNumber].FuncList |= function;
+  }
+}
+
+void Channel::removeFromFuncList(_supla_int_t function) {
+  if (channelNumber >= 0) {
+    reg_dev.channels[channelNumber].FuncList &= ~function;
+  }
 }
 
 _supla_int_t Channel::getFlags() const {
@@ -537,12 +553,32 @@ uint8_t Channel::getValueBrightness() {
   return reg_dev.channels[channelNumber].value[0];
 }
 
+#define TEMPERATURE_NOT_AVAILABLE -275.0
+
+double Channel::getLastTemperature() {
+  switch (getChannelType()) {
+    case SUPLA_CHANNELTYPE_THERMOMETER: {
+      return getValueDouble();
+    }
+    case SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR: {
+      return getValueDoubleFirst();
+    }
+    default: {
+      return TEMPERATURE_NOT_AVAILABLE;
+    }
+  }
+}
+
 void Channel::setValidityTimeSec(unsigned _supla_int_t timeSec) {
   validityTimeSec = timeSec;
 }
 
 bool Channel::isSleepingEnabled() {
   return validityTimeSec > 0;
+}
+
+bool Channel::isWeeklyScheduleAvailable() {
+  return getFlags() & SUPLA_CHANNEL_FLAG_WEEKLY_SCHEDULE;
 }
 
 void Channel::setCorrection(double correction, bool forSecondaryValue) {
@@ -568,6 +604,482 @@ void Channel::setBatteryLevel(unsigned char level) {
   batteryLevel = level;
 }
 
+void Channel::setHvacIsOn(uint8_t isOn) {
+  auto value = getValueHvac();
+  if (value != nullptr && value->IsOn != isOn) {
+    if (value->IsOn == 0 && isOn != 0) {
+      runAction(Supla::ON_TURN_ON);
+    } else if (value->IsOn != 0 && isOn == 0) {
+      runAction(Supla::ON_TURN_OFF);
+    }
+    runAction(Supla::ON_CHANGE);
+
+    setUpdateReady();
+    value->IsOn = isOn;
+  }
+}
+
+void Channel::setHvacMode(uint8_t mode) {
+  auto value = getValueHvac();
+  if (value != nullptr && value->Mode != mode && mode <= SUPLA_HVAC_MODE_DRY) {
+    setUpdateReady();
+    value->Mode = mode;
+  }
+}
+
+THVACValue *Channel::getValueHvac() const {
+  if (channelNumber >= 0 && getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
+    return &reg_dev.channels[channelNumber].hvacValue;
+  }
+  return nullptr;
+}
+
+void Channel::setHvacSetpointTemperatureCool(int16_t temperature) {
+  auto value = getValueHvac();
+  if (value != nullptr && (value->SetpointTemperatureCool != temperature ||
+                           !isHvacFlagSetpointTemperatureCoolSet())) {
+    setUpdateReady();
+    value->SetpointTemperatureCool = temperature;
+    setHvacFlagSetpointTemperatureCoolSet(true);
+  }
+}
+
+void Channel::setHvacSetpointTemperatureHeat(int16_t temperature) {
+  auto value = getValueHvac();
+  if (value != nullptr && (value->SetpointTemperatureHeat != temperature ||
+                           !isHvacFlagSetpointTemperatureHeatSet())) {
+    setUpdateReady();
+    value->SetpointTemperatureHeat = temperature;
+    setHvacFlagSetpointTemperatureHeatSet(true);
+  }
+}
+
+void Channel::clearHvacSetpointTemperatureCool() {
+  auto value = getValueHvac();
+  if (value != nullptr && (value->SetpointTemperatureCool != 0 ||
+                           isHvacFlagSetpointTemperatureCoolSet())) {
+    setUpdateReady();
+    value->SetpointTemperatureCool = 0;
+    setHvacFlagSetpointTemperatureCoolSet(false);
+  }
+}
+
+void Channel::clearHvacSetpointTemperatureHeat() {
+  auto value = getValueHvac();
+  if (value != nullptr && (value->SetpointTemperatureHeat != 0 ||
+                           isHvacFlagSetpointTemperatureHeatSet())) {
+    setUpdateReady();
+    value->SetpointTemperatureHeat = 0;
+    setHvacFlagSetpointTemperatureHeatSet(false);
+  }
+}
+
+void Channel::setHvacSetpointTemperatureHeat(THVACValue *hvacValue,
+                                             int16_t setpointTemperatureHeat) {
+  if (hvacValue != nullptr &&
+      (hvacValue->SetpointTemperatureHeat != setpointTemperatureHeat ||
+       !isHvacFlagSetpointTemperatureHeatSet(hvacValue))) {
+    hvacValue->SetpointTemperatureHeat = setpointTemperatureHeat;
+    hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
+  }
+}
+
+void Channel::setHvacSetpointTemperatureCool(THVACValue *hvacValue,
+                                             int16_t setpointTemperatureCool) {
+  if (hvacValue != nullptr &&
+      (hvacValue->SetpointTemperatureCool != setpointTemperatureCool ||
+       !isHvacFlagSetpointTemperatureCoolSet(hvacValue))) {
+    hvacValue->SetpointTemperatureCool = setpointTemperatureCool;
+    hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
+  }
+}
+
+void Channel::setHvacFlags(uint16_t flags) {
+  auto value = getValueHvac();
+  if (value != nullptr && value->Flags != flags) {
+    setUpdateReady();
+    value->Flags = flags;
+  }
+}
+
+void Channel::setHvacFlagSetpointTemperatureCoolSet(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagSetpointTemperatureCoolSet()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagSetpointTemperatureHeatSet(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagSetpointTemperatureHeatSet()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagHeating(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagHeating()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_HEATING;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_HEATING;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagCooling(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagCooling()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_COOLING;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_COOLING;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagWeeklySchedule(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagWeeklySchedule()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagFanEnabled(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagFanEnabled()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_FAN_ENABLED;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_FAN_ENABLED;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagThermometerError(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagThermometerError()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_THERMOMETER_ERROR;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_THERMOMETER_ERROR;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagClockError(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagClockError()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_CLOCK_ERROR;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_CLOCK_ERROR;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagCountdownTimer(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagCountdownTimer()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_COUNTDOWN_TIMER;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_COUNTDOWN_TIMER;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagForcedOffBySensor(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagForcedOffBySensor()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_FORCED_OFF_BY_SENSOR;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_FORCED_OFF_BY_SENSOR;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagCoolSubfunction(enum HvacCoolSubfunctionFlag flag) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && flag != getHvacFlagCoolSubfunction()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (flag == HvacCoolSubfunctionFlag::CoolSubfunction) {
+      // cool subfunction is stored as 1
+      flags |= SUPLA_HVAC_VALUE_FLAG_COOL;
+    } else {
+      // heat subfunction and "not used" is stored as 0
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_COOL;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+void Channel::setHvacFlagWeeklyScheduleTemporalOverride(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr &&
+      value != isHvacFlagWeeklyScheduleTemporalOverride()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE_TEMPORAL_OVERRIDE;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE_TEMPORAL_OVERRIDE;
+    }
+    setHvacFlags(flags);
+  }
+}
+
+bool Channel::isHvacFlagSetpointTemperatureCoolSet() {
+  return isHvacFlagSetpointTemperatureCoolSet(getValueHvac());
+}
+
+bool Channel::isHvacFlagSetpointTemperatureHeatSet() {
+  return isHvacFlagSetpointTemperatureHeatSet(getValueHvac());
+}
+
+bool Channel::isHvacFlagHeating() {
+  return isHvacFlagHeating(getValueHvac());
+}
+
+bool Channel::isHvacFlagCooling() {
+  return isHvacFlagCooling(getValueHvac());
+}
+
+bool Channel::isHvacFlagWeeklySchedule() {
+  return isHvacFlagWeeklySchedule(getValueHvac());
+}
+
+bool Channel::isHvacFlagFanEnabled() {
+  return isHvacFlagFanEnabled(getValueHvac());
+}
+
+bool Channel::isHvacFlagThermometerError() {
+  return isHvacFlagThermometerError(getValueHvac());
+}
+
+bool Channel::isHvacFlagClockError() {
+  return isHvacFlagClockError(getValueHvac());
+}
+
+bool Channel::isHvacFlagCountdownTimer() {
+  return isHvacFlagCountdownTimer(getValueHvac());
+}
+
+bool Channel::isHvacFlagForcedOffBySensor() {
+  return isHvacFlagForcedOffBySensor(getValueHvac());
+}
+
+enum HvacCoolSubfunctionFlag Channel::getHvacFlagCoolSubfunction() {
+  return getHvacFlagCoolSubfunction(getValueHvac());
+}
+
+bool Channel::isHvacFlagWeeklyScheduleTemporalOverride() {
+  return isHvacFlagWeeklyScheduleTemporalOverride(getValueHvac());
+}
+
+bool Channel::isHvacFlagSetpointTemperatureHeatSet(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagSetpointTemperatureCoolSet(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagHeating(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_HEATING;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagCooling(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_COOLING;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagWeeklySchedule(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagFanEnabled(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_FAN_ENABLED;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagThermometerError(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_THERMOMETER_ERROR;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagClockError(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_CLOCK_ERROR;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagCountdownTimer(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_COUNTDOWN_TIMER;
+  }
+  return false;
+}
+
+bool Channel::isHvacFlagForcedOffBySensor(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags & SUPLA_HVAC_VALUE_FLAG_FORCED_OFF_BY_SENSOR;
+  }
+  return false;
+}
+
+enum HvacCoolSubfunctionFlag Channel::getHvacFlagCoolSubfunction(
+    THVACValue *hvacValue) {
+  if (hvacValue != nullptr) {
+    return (hvacValue->Flags & SUPLA_HVAC_VALUE_FLAG_COOL
+                ? HvacCoolSubfunctionFlag::CoolSubfunction
+                : HvacCoolSubfunctionFlag::HeatSubfunctionOrNotUsed);
+  }
+  return HvacCoolSubfunctionFlag::HeatSubfunctionOrNotUsed;
+}
+
+bool Channel::isHvacFlagWeeklyScheduleTemporalOverride(THVACValue *value) {
+  if (value != nullptr) {
+    return value->Flags &
+           SUPLA_HVAC_VALUE_FLAG_WEEKLY_SCHEDULE_TEMPORAL_OVERRIDE;
+  }
+  return false;
+}
+
+uint8_t Channel::getHvacIsOn() {
+  auto value = getValueHvac();
+  if (value != nullptr) {
+    return value->IsOn;
+  }
+  return 0;
+}
+
+uint8_t Channel::getHvacMode() const {
+  auto value = getValueHvac();
+  if (value != nullptr) {
+    return value->Mode;
+  }
+  return 0;
+}
+
+const char *Channel::getHvacModeCstr(int mode) const {
+  if (mode == -1) {
+    mode = getHvacMode();
+  }
+  switch (mode) {
+    case SUPLA_HVAC_MODE_NOT_SET:
+      return "NOT SET";
+    case SUPLA_HVAC_MODE_OFF:
+      return "OFF";
+    case SUPLA_HVAC_MODE_HEAT:
+      return "HEAT";
+    case SUPLA_HVAC_MODE_COOL:
+      return "COOL";
+    case SUPLA_HVAC_MODE_AUTO:
+      return "AUTO";
+    case SUPLA_HVAC_MODE_FAN_ONLY:
+      return "FAN ONLY";
+    case SUPLA_HVAC_MODE_DRY :
+      return "DRY";
+    case SUPLA_HVAC_MODE_CMD_TURN_ON:
+      return "CMD TURN ON";
+    case SUPLA_HVAC_MODE_CMD_WEEKLY_SCHEDULE:
+      return "CMD WEEKLY SCHEDULE";
+    case SUPLA_HVAC_MODE_CMD_SWITCH_TO_MANUAL:
+      return "CMD SWITCH TO MANUAL";
+
+    default:
+      return "UNKNOWN";
+  }
+}
+
+int16_t Channel::getHvacSetpointTemperatureCool() {
+  auto value = getValueHvac();
+  if (value != nullptr) {
+    return value->SetpointTemperatureCool;
+  }
+  return INT16_MIN;
+}
+
+int16_t Channel::getHvacSetpointTemperatureHeat() {
+  auto value = getValueHvac();
+  if (value != nullptr) {
+    return value->SetpointTemperatureHeat;
+  }
+  return INT16_MIN;
+}
+
+uint16_t Channel::getHvacFlags() {
+  auto value = getValueHvac();
+  if (value != nullptr) {
+    return value->Flags;
+  }
+  return 0;
+}
+
 void Channel::setOffline() {
   if (offline == false) {
     offline = true;
@@ -582,4 +1094,4 @@ void Channel::setOnline() {
   }
 }
 
-};  // namespace Supla
+}  // namespace Supla

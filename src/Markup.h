@@ -69,6 +69,8 @@ void addTextBoxPassword(String& html, const String& input_id, const String& name
 
 void addCheckBox(String& html, const String& input_id, const String& name, bool checked);
 
+void addNumberBox(String& html, const String& input_id, const String& name, const String& value, int max = -1);
+
 void addNumberBox(String& html, const String& input_id, const String& name, uint8_t value_key, int max = -1);
 
 void addNumberBox(String& html,
@@ -99,7 +101,7 @@ void addListGPIOBox(String& html,
                     bool underline = true,
                     const String& url = "",
                     bool no_number = false);
-
+void addListNumbersSensorBox(String& html, const String& input_id, const String& name, uint8_t selected);
 void addListNumbersBox(String& html, const String& input_id, const String& name, uint8_t size, uint8_t selected);
 
 void addGPIOOptionValue(String& html, uint8_t gpio, uint8_t selectedGpio, const String& name);

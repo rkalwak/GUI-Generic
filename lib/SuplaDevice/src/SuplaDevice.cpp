@@ -14,36 +14,35 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include <string.h>
+#include "SuplaDevice.h"
+
 #include <stdio.h>
+#include <string.h>
 #include <supla/log_wrapper.h>
 #include <supla/protocol/protocol_layer.h>
 #include <supla/protocol/supla_srpc.h>
-
-#include "SuplaDevice.h"
-#include "supla/actions.h"
-#include "supla/channel.h"
-#include "supla/device/last_state_logger.h"
-#include "supla/device/sw_update.h"
-#include "supla/element.h"
-#include "supla/events.h"
-#include "supla/io.h"
-#include "supla/network/network.h"
-#include "supla/network/web_server.h"
-#include "supla/storage/config.h"
-#include "supla/storage/storage.h"
-#include "supla/time.h"
-#include "supla/timer.h"
-#include "supla/tools.h"
-#include "supla/version.h"
+#include <supla/actions.h>
+#include <supla/channel.h>
+#include <supla/device/last_state_logger.h>
+#include <supla/device/sw_update.h>
+#include <supla/element.h>
+#include <supla/events.h>
+#include <supla/io.h>
+#include <supla/network/network.h>
+#include <supla/network/web_server.h>
+#include <supla/storage/config.h>
+#include <supla/storage/storage.h>
+#include <supla/time.h>
+#include <supla/timer.h>
+#include <supla/tools.h>
+#include <supla/version.h>
 
 void SuplaDeviceClass::status(int newStatus, const char *msg, bool alwaysLog) {
   bool showLog = false;
 
   if ((currentStatus == STATUS_CONFIG_MODE ||
        currentStatus == STATUS_TEST_WAIT_FOR_CFG_BUTTON) &&
-      newStatus != STATUS_SOFTWARE_RESET &&
-      newStatus != STATUS_INVALID_GUID &&
+      newStatus != STATUS_SOFTWARE_RESET && newStatus != STATUS_INVALID_GUID &&
       newStatus != STATUS_INVALID_AUTHKEY) {
     // Config mode and testing is final state and the only exit goes through
     // reset with exception for invalid GUID and AUTHKEY
@@ -167,7 +166,7 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
     if (!atLeastOneProtoIsEnabled) {
       status(STATUS_ALL_PROTOCOLS_DISABLED,
-          "All communication protocols are disabled");
+             "All communication protocols are disabled");
       configComplete = false;
     }
 
@@ -324,8 +323,10 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
   status(STATUS_INITIALIZED, "SuplaDevice initialized");
 
-  if (allowOfflineMode && deviceMode == Supla::DEVICE_MODE_CONFIG &&
-      configEmpty) {
+  if ((allowOfflineMode == 1 && deviceMode == Supla::DEVICE_MODE_CONFIG &&
+       configEmpty) ||
+      (allowOfflineMode == 2 && deviceMode == Supla::DEVICE_MODE_CONFIG &&
+       !atLeastOneProtoIsEnabled)) {
     deviceMode = Supla::DEVICE_MODE_NORMAL;
     SUPLA_LOG_INFO("Disabling network setup, device work in offline mode");
     skipNetwork = true;
@@ -382,12 +383,16 @@ void SuplaDeviceClass::iterate(void) {
     return;
   }
 
+  uint32_t _millis = millis();
+//  if (_millis == lastIterateTime) {
+//    return;
+//  }
+
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     cfg->saveIfNeeded();
   }
 
-  uint32_t _millis = millis();
   checkIfRestartIsNeeded(_millis);
   handleLocalActionTriggers();
   iterateAlwaysElements(_millis);
@@ -476,13 +481,12 @@ void SuplaDeviceClass::iterate(void) {
           cfg->getSwUpdateServer(url);
         }
         if (strlen(url) == 0) {
-          swUpdate =
-              Supla::Device::SwUpdate::Create(
-                  this, "https://updates.supla.org/check-updates");
+          swUpdate = Supla::Device::SwUpdate::Create(
+              this, "https://updates.supla.org/check-updates");
         } else {
           swUpdate = Supla::Device::SwUpdate::Create(this, url);
         }
-        if (cfg && cfg->isSwUpdateBeta()) {
+        if (cfg && swUpdate && cfg->isSwUpdateBeta()) {
           swUpdate->useBeta();
         }
       }
@@ -562,15 +566,25 @@ void SuplaDeviceClass::setEmail(const char *email) {
 void SuplaDeviceClass::setServer(const char *server) {
   setString(
       Supla::Channel::reg_dev.ServerName, server, SUPLA_SERVER_NAME_MAXSIZE);
+
+  // for Supla public servers we check if address is misspelled (srv instead
+  // of svr) and replace it
+  if (Supla::Protocol::SuplaSrpc::isSuplaPublicServerConfigured()) {
+    if (strncmpInsensitive(server, "srv", 3) == 0 && server[3] >= '0' &&
+        server[3] <= '9') {
+      Supla::Channel::reg_dev.ServerName[1] = 'v';
+      Supla::Channel::reg_dev.ServerName[2] = 'r';
+    }
+  }
 }
 
 void SuplaDeviceClass::addClock(Supla::Clock *_clock) {
-  SUPLA_LOG_DEBUG("Clock class added");
-  clock = _clock;
+  (void)(_clock);
+  SUPLA_LOG_DEBUG("addClock: DEPRECATED");
 }
 
 Supla::Clock *SuplaDeviceClass::getClock() {
-  return clock;
+  return Supla::Clock::GetInstance();
 }
 
 bool SuplaDeviceClass::loadDeviceConfig() {
@@ -608,8 +622,8 @@ bool SuplaDeviceClass::loadDeviceConfig() {
       cfg->setWiFiSSID(wifiApName);
     } else {
       if (strncmp(wifiApName, buf, strlen(wifiApName)) != 0) {
-        SUPLA_LOG_DEBUG("Test mode: leaving. Invalid SSID: %s != %s",
-            wifiApName, buf);
+        SUPLA_LOG_DEBUG(
+            "Test mode: leaving. Invalid SSID: %s != %s", wifiApName, buf);
         deviceMode = Supla::DEVICE_MODE_NORMAL;
       }
     }
@@ -1155,13 +1169,13 @@ bool SuplaDeviceClass::getStorageInitResult() {
 // Sleeping is allowed only in normal and test mode.
 // Additionally sleeping is not allowed, when device restet is requested.
 bool SuplaDeviceClass::isSleepingAllowed() {
-  return (getDeviceMode() == Supla::DEVICE_MODE_NORMAL
-            || getDeviceMode() == Supla::DEVICE_MODE_TEST)
-    && forceRestartTimeMs == 0;
+  return (getDeviceMode() == Supla::DEVICE_MODE_NORMAL ||
+          getDeviceMode() == Supla::DEVICE_MODE_TEST) &&
+         forceRestartTimeMs == 0;
 }
 
-void SuplaDeviceClass::allowWorkInOfflineMode() {
-  allowOfflineMode = true;
+void SuplaDeviceClass::allowWorkInOfflineMode(int mode) {
+  allowOfflineMode = mode;
 }
 
 SuplaDeviceClass SuplaDevice;

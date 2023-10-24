@@ -154,6 +154,10 @@ void addCheckBox(String& html, const String& input_id, const String& name, bool 
 }
 
 void addNumberBox(String& html, const String& input_id, const String& name, uint8_t value_key, int max) {
+  addNumberBox(html, input_id, name, String(ConfigManager->get(value_key)->getValue()).c_str(), max);
+}
+
+void addNumberBox(String& html, const String& input_id, const String& name, const String& value, int max) {
   html += F("<i><label>");
   html += name;
   html += F("</label><input name='");
@@ -167,7 +171,7 @@ void addNumberBox(String& html, const String& input_id, const String& name, uint
   }
 
   html += F(" value='");
-  html += String(ConfigManager->get(value_key)->getValue());
+  html += value;
   html += F("'></i>");
   WebServer->sendHeader();
 }
@@ -503,6 +507,51 @@ void addListNumbersBox(String& html, const String& input_id, const String& name,
   html += F("</select></i>");
 }
 
+void addListNumbersSensorBox(String& html, const String& input_id, const String& name, uint8_t selected) {
+  html += F("<i><label>");
+  html += name;
+  html += "</label><select name='";
+  html += input_id;
+  html += F("'>");
+
+  html += F("<option value='0'");
+  if (selected == 0) {
+    html += F(" selected");
+  }
+  html += F(">");
+  html += S_ABSENT;
+  html += F("</option>");
+
+  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
+    if (element->getChannel()) {
+      auto channel = element->getChannel();
+      uint8_t channelNumber = channel->getChannelNumber();
+
+      if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER || channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+        html += F("<option value='");
+        html += channelNumber;
+        html += F("'");
+        if (selected == channelNumber) {
+          html += F(" selected");
+        }
+        html += F(">");
+        html += channelNumber;
+        html += F(" - ");
+
+        if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
+          html += channel->getValueDouble();
+        }
+        else if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+          html += channel->getValueDoubleFirst();
+        }
+        html += S_CELSIUS;
+      }
+    }
+    WebServer->sendHeader();
+  }
+  html += F("</select></i>");
+}
+
 void addListLinkBox(String& html,
                     const String& input_id,
                     const String& name,
@@ -594,6 +643,10 @@ const String SuplaJavaScript(const String& java_return) {
 // TODO: @krycha88 Usunąć z SuplaSaveResult nieużywany status WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING```
 const String SuplaSaveResult(int save) {
   String saveresult = "";
+  if (save == SaveResult::DATA_SAVED_RESTART_MODULE || save == SaveResult::RESTART_MODULE) {
+    saveresult += "<meta http-equiv=\"refresh\" content=\"1\">\n";
+  }
+
   saveresult += F("<div id=\"msg\" class=\"c\">");
 
   switch (save) {

@@ -44,6 +44,7 @@
 #define S_RELAY_NR_SETTINGS                                    "Ustawienia przekaźnika nr. "
 #define S_STATE_CONTROL                                        "Załączany stanem"
 #define S_REACTION_AFTER_RESET                                 "Reakcja po resecie"
+#define S_LIGHT_RELAY                                          "Sterowowanie światłem"
 #define S_GPIO_SETTINGS_FOR_BUTTONS                            "Ustawienie GPIO dla przycisków"
 #define S_BUTTON                                               "Przycisk"
 #define S_BUTTON_NR_SETTINGS                                   "Ustawienia przycisku nr. "
@@ -97,18 +98,18 @@
 #define S_STATUS_NETWORK_DISCONNECTED    "Brak połączenia z siecią"
 
 //#### SuplaCommonPROGMEM.h ####
-#define S_OFF                          "WYŁĄCZ"
-#define S_ON                           "ZAŁĄCZ"
-#define S_TOGGLE                       "PRZEŁĄCZ"
+#define S_OFF                          "Wyłącz"
+#define S_ON                           "Załącz"
+#define S_TOGGLE                       "Przełącz"
 #define S_LOW                          "LOW"
 #define S_HIGH                         "HIGH"
 #define S_POSITION_MEMORY              "PAMIĘTAJ STAN"
-#define S_REACTION_ON_PRESS            "WCIŚNIĘCIE - monostabilny"
-#define S_REACTION_ON_RELEASE          "ZWOLNIENIE - monostabilny"
-#define S_REACTION_ON_CHANGE           "ZMIANA STANU - bistabilny"
-#define S_REACTION_ON_HOLD             "PRZYTRZYMANIE"
-#define S_REACTION_MOTION_SENSOR       "CZUJNIK RUCHU"
-#define S_REACTION_AUTOMATIC_STAIRCASE "AUTOMAT SCHODOWY"
+#define S_REACTION_ON_PRESS            "Wciśnięcie - monostabilny"
+#define S_REACTION_ON_RELEASE          "Zwolnienie - monostabilny"
+#define S_REACTION_ON_CHANGE           "Zmiana stanu - bistabilny"
+#define S_REACTION_ON_HOLD             "Przytrzymanie"
+#define S_REACTION_MOTION_SENSOR       "Czujnik ruchu"
+#define S_REACTION_AUTOMATIC_STAIRCASE "Automat schodowy"
 #define S_CFG_10_PRESSES               "10 WCIŚNIĘĆ"
 #define S_5SEK_HOLD                    "WCIŚNIĘTY 5 SEKUND"
 #define S_NORMAL                       "NORMALNE"
@@ -218,5 +219,18 @@
 #endif
 
 #define S_BAUDRATE "Prędkość komunikacji"
+
+#ifdef SUPLA_THERMOSTAT
+#define S_HEAT               "Grzanie"
+#define S_COOL               "Chłodzenie"
+#define S_AUTO               "Auto"
+#define S_DOMESTIC_HOT_WATER "Ciepła woda użytkowa"
+#define S_DIFFERENTIAL       "Różnicowy"
+
+#define S_THERMOSTAT               "Termostat"
+#define S_MAIN_THERMOMETER_CHANNEL "Kanał termometru"
+#define S_AUX_THERMOMETER_CHANNEL  "Dod. kanał termometru"
+#define S_HISTERESIS               "Histereza"
+#endif
 
 #endif  // _LANGUAGE_PL_S_H_

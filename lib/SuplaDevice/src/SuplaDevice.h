@@ -85,7 +85,7 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   ~SuplaDeviceClass();
 
   void fillStateData(TDSC_ChannelState *channelState);
-  void addClock(Supla::Clock *clock);
+  void addClock(Supla::Clock *clock);  // DEPRECATED
   Supla::Clock *getClock();
 
   bool begin(const char GUID[SUPLA_GUID_SIZE],
@@ -174,7 +174,12 @@ class SuplaDeviceClass : public Supla::ActionHandler,
 
   // Call this method if you want to allow device to work in offline mode
   // without Wi-Fi network configuration
-  void allowWorkInOfflineMode();
+  // 1 - offline mode with empty config, but communication protocols may be
+  //     enabled
+  // 2 - offline mode only with empty config and communication protocols
+  //     disabled
+  // 0 - no offline mode
+  void allowWorkInOfflineMode(int mode = 1);
 
  protected:
   int networkIsNotReadyCounter = 0;
@@ -197,7 +202,7 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   bool isNetworkSetupOk = false;
   bool skipNetwork = false;
   bool storageInitResult = false;
-  bool allowOfflineMode = false;
+  int allowOfflineMode = 0;
   bool configEmpty = true;
   Supla::Protocol::SuplaSrpc *srpcLayer = nullptr;
   Supla::Device::SwUpdate *swUpdate = nullptr;
@@ -206,7 +211,6 @@ class SuplaDeviceClass : public Supla::ActionHandler,
 
   _impl_arduino_status impl_arduino_status = nullptr;
 
-  Supla::Clock *clock = nullptr;
   Supla::Device::LastStateLogger *lastStateLogger = nullptr;
 
   char *customHostnamePrefix = nullptr;

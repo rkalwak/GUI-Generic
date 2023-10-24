@@ -19,6 +19,8 @@
 #ifndef SRC_SUPLA_STORAGE_LITTLEFS_CONFIG_H_
 #define SRC_SUPLA_STORAGE_LITTLEFS_CONFIG_H_
 
+#ifndef SUPLA_EXCLUDE_LITTLEFS_CONFIG
+
 #include "key_value.h"
 
 namespace Supla {
@@ -35,9 +37,15 @@ class LittleFsConfig : public KeyValue {
   int getCustomCASize() override;
   bool setCustomCA(const char* customCA) override;
 
+  // override blob storage to use separate file for each value
+  bool setBlob(const char* key, const char* value, size_t blobSize) override;
+  bool getBlob(const char* key, char* value, size_t blobSize) override;
+
  protected:
+  int getBlobSize(const char* key) override;
   bool initLittleFs();
 };
 };  // namespace Supla
 
+#endif  // SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #endif  // SRC_SUPLA_STORAGE_LITTLEFS_CONFIG_H_

@@ -197,7 +197,6 @@
 			"name": "Wake on LAN",
 			"desc": "Włączanie komputerów poprzez sieć lokalną LAN.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "Wake on LAN",
 				"desc": "Turning on computers via LAN."
@@ -219,7 +218,6 @@
 			"name": "WT32-ETH01",
 			"desc": "WT32-ETH01 to wbudowany moduł szeregowo-ethernetowy oparty na jednostkach MCU WT32-S1 z serii ESP32.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "WT32-ETH01",
 				"desc": ""
@@ -316,6 +314,32 @@
 			},
 			"fr": {
 				"name": "Action Trigger"
+			}
+		},
+		"SUPLA_THERMOSTAT": {
+			"name": "Termostat - działa tylko na https://beta-cloud.supla.org/",
+			"desc": "",
+			"defOn": false,
+			"new": true,
+			"depOpt": [
+				"SUPLA_RELAY",
+				"SUPLA_LED"
+			],
+			"en": {
+				"name": "Thermostat - only works on https://beta-cloud.supla.org/",
+				"desc": ""
+			},
+			"es": {
+				"name": "Termostato: solo funciona en https://beta-cloud.supla.org/",
+				"desc": ""
+			},
+			"de": {
+				"name": "Thermostat – funktioniert nur auf https://beta-cloud.supla.org/",
+				"desc": ""
+			},
+			"fr": {
+				"name": "Thermostat - fonctionne uniquement sur https://beta-cloud.supla.org/",
+				"desc": ""
 			}
 		},
 		"SUPLA_ROLLERSHUTTER": {
@@ -492,7 +516,6 @@
 			"name": "PCF8575",
 			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę rozszerzenia portów x16 PCF8575.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "PCF8575",
 				"desc": "Device settings->I2C. Supports PCF8575 x16 port expansion."
@@ -514,7 +537,6 @@
 			"name": "PCF8574/A",
 			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę rozszerzenia portów x8 PCF8574/A.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "PCF8574/A",
 				"desc": "Device settings->I2C. Supports PCF8574/A x8 port expansion."
@@ -813,7 +835,6 @@
 			"name": "Sensor BH1750",
 			"desc": "Ustawienia urządzenia->I2C. Czujnik natężenia światła BH1750",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "BH1750 sensor",
 				"desc": "Device settings->I2C. Light intensity sensor BH1750."
@@ -835,7 +856,6 @@
 			"name": "Sensor MS5611",
 			"desc": "Ustawienia urządzenia->I2C. Barometr MS5611",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "MS5611 sensor",
 				"desc": "Device settings->I2C. Barometer MS5611."
@@ -857,7 +877,6 @@
 			"name": "Sensor MAX44009",
 			"desc": "Ustawienia urządzenia->I2C. Czujnik natężenia światła MAX44009",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "MAX44009 sensor",
 				"desc": "Device settings->I2C. Light intensity sensor MAX44009."
@@ -1080,7 +1099,6 @@
 			"name": "Licznik energii SDM Modbus 1F",
 			"desc": "Umożliwia obsługę licznika energii za pomoca protokołu Modbus.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "Energy meter SDM Modbus 1F",
 				"desc": "It enables the operation of the energy meter SDM Modbus 1F."
@@ -1102,7 +1120,6 @@
 			"name": "Licznik energii SDM Modbus 3F",
 			"desc": "Umożliwia obsługę licznika energii za pomoca protokołu Modbus.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "Energy meter SDM Modbus 3F",
 				"desc": "It enables the operation of the energy meter SDM Modbus 3F."
@@ -1213,7 +1230,6 @@
 			"name": "Linki bezpośrednie - odczyt wartości kanału",
 			"desc": "Umożliwia odczytywanie temperatury za pomocą linków bezpośrednich.",
 			"defOn": false,
-			"new": true,
 			"depRel": [
 				"SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR"
 			],
@@ -1240,7 +1256,6 @@
 			"name": "IKEA VINDRIKTNING",
 			"desc": "Ustawienia urządzenia->Inne. Czujnik cząstek stałych PM1006",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "IKEA VINDRIKTNING",
 				"desc": "Device settings->Other. Particulate Matter Sensor with PM1006 inside."
@@ -1262,7 +1277,6 @@
 			"name": "PMSx003",
 			"desc": "Ustawienia urządzenia->Inne. Czujnik cząstek stałych: PM1.0, PM2.5, PM10. Obsługiwane czujniki PMS1003, PMS3003, PMS5003, PMS5003S, PMS5003T, PMS5003ST, PMS7003, PMSA003.",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "PMSx003",
 				"desc": "Device settings->Other. Particulate sensor: PM1.0, PM2.5, PM10. Supported sensors PMS1003, PMS3003, PMS5003, PMS5003S, PMS5003T, PMS5003ST, PMS7003, PMSA003."
@@ -1286,7 +1300,6 @@
 			"name": "boneIO 32x10A",
 			"desc": "",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "boneIO 32x10A",
 				"desc": ""
@@ -1308,7 +1321,6 @@
 			"name": "boneIO 24x16A",
 			"desc": "",
 			"defOn": false,
-			"new": true,
 			"en": {
 				"name": "boneIO 24x16A",
 				"desc": ""

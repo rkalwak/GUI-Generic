@@ -144,6 +144,14 @@ void handleRelaySaveSet() {
     input = INPUT_RELAY_LEVEL;
     input += nr_relay;
     ConfigESP->setLevel(gpio, WebServer->httpServer->arg(input).toInt());
+
+    input = INPUT_LIGHT_RELAY;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigESP->setLightRelay(gpio, 1);
+    }
+    else {
+      ConfigESP->setLightRelay(gpio, 0);
+    }
   }
 
 #if defined(SUPLA_LED)
@@ -195,19 +203,55 @@ void handleRelaySaveSet() {
   }
 #endif
 
+#ifdef SUPLA_THERMOSTAT
+  auto thermostatIndex = nr_relay.toInt();
+  uint8_t oldThermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
+
+  input = INPUT_THERMOSTAT_TYPE;
+  uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
+  ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
+
+  if (thermostatIndex >= 0) {
+    input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
+    uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+
+    input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
+    thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+
+    if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
+      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
+    }
+    else {
+      input = INPUT_THERMOSTAT_HISTERESIS;
+      String histeresis = WebServer->httpServer->arg(input).c_str();
+      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, histeresis.c_str());
+    }
+  }
+#endif
+
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
-      handleRelaySet(1);
+
+#ifdef SUPLA_THERMOSTAT
+      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF && thermostatIndex >= 0) {
+        handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
+        ConfigESP->rebootESP();
+      }
+#endif
+
+      handleRelaySet(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:
-      handleRelaySet(2);
+      handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
       break;
   }
 }
 
 void handleRelaySet(int save) {
   uint8_t gpio, selected;
-  String nr_relay, massage;
+  String nr_relay, massage, input;
 
   massage.reserve(MAX_MESSAGE_SIZE);
   nr_relay = WebServer->httpServer->arg(ARG_PARM_NUMBER);
@@ -225,11 +269,20 @@ void handleRelaySet(int save) {
 
     if (gpio != GPIO_VIRTUAL_RELAY) {
       selected = ConfigESP->getLevel(gpio);
+      input = INPUT_RELAY_LEVEL;
+      input += nr_relay;
       addListBox(webContentBuffer, INPUT_RELAY_LEVEL + nr_relay, S_STATE_CONTROL, LEVEL_P, 2, selected);
+
+      input = INPUT_LIGHT_RELAY;
+      selected = ConfigESP->getLightRelay(gpio);
+      addCheckBox(webContentBuffer, input, S_LIGHT_RELAY, selected);
     }
 
     selected = ConfigESP->getMemory(gpio, nr_relay.toInt());
-    addListBox(webContentBuffer, INPUT_RELAY_MEMORY + nr_relay, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
+    input = INPUT_RELAY_MEMORY;
+    input += nr_relay;
+    addListBox(webContentBuffer, input, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
+
     addFormHeaderEnd(webContentBuffer);
 
 #ifdef SUPLA_RF_BRIDGE
@@ -281,6 +334,28 @@ void handleRelaySet(int save) {
 
       addFormHeaderEnd(webContentBuffer);
     }
+#endif
+
+#ifdef SUPLA_THERMOSTAT
+    auto thermostatIndex = nr_relay.toInt();
+
+    addFormHeader(webContentBuffer, S_THERMOSTAT);
+    selected = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
+    addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
+
+    if (selected != Supla::GUI::THERMOSTAT_OFF) {
+      if (thermostatIndex >= 0) {
+        selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
+
+        selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
+
+        String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);
+      }
+    }
+    addFormHeaderEnd(webContentBuffer);
 #endif
 
 #if defined(SUPLA_DIRECT_LINKS)

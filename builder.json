@@ -246,9 +246,6 @@
 				"SUPLA_DIRECT_LINKS",
 				"SUPLA_LED"
 			],
-			"depOpt": [
-				"SUPLA_THERMOSTAT"
-			],
 			"en": {
 				"name": "Relays",
 				"desc": "Device settings->Relays. It enables the operation of relays."
@@ -324,6 +321,10 @@
 			"desc": "",
 			"defOn": false,
 			"new": true,
+			"depOpt": [
+				"SUPLA_RELAY",
+				"SUPLA_LED"
+			],
 			"en": {
 				"name": "Thermostat - only works on https://beta-cloud.supla.org/",
 				"desc": ""

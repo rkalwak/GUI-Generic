@@ -379,9 +379,11 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
 
   int8_t shiftWhenAddedRelay = 0;
+#if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
   if (getCountActiveThermostat() < Supla::GUI::relay.size()) {
     shiftWhenAddedRelay = 12;
   }
+#endif
 
   if (channelMainThermometr) {
     if (channelMainThermometr->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {

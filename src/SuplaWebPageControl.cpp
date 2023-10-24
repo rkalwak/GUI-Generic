@@ -276,7 +276,7 @@ void handleButtonSet(int save) {
     }
     else {
       selected = ConfigESP->getNumberButton(button.toInt());
-      addListNumbersBox(webContentBuffer, INPUT_BUTTON_NUMBER, S_RELAY_CONTROL, ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(), selected);
+      addListNumbersBox(webContentBuffer, INPUT_BUTTON_NUMBER, S_RELAY_CONTROL, ConfigManager->get(KEY_MAX_RELAY)->getValueInt(), selected);
 
 #ifdef ARDUINO_ARCH_ESP8266
       if (gpio == A0) {

@@ -124,58 +124,61 @@ void addRelay(uint8_t nr) {
   levelLed = ConfigESP->getLevel(pinLED);
 
   if (pinRelay != OFF_GPIO) {
+    Supla::Control::Relay *newRelay = nullptr;
+
     if (pinRelay == GPIO_VIRTUAL_RELAY) {
-      relay.push_back(new Supla::Control::VirtualRelay());
-      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
-    }
-    else if (ConfigESP->getLightRelay(pinRelay) == true) {
-      highIsOn = ConfigESP->getLevel(pinRelay);
-
-      Supla::Control::LightRelay *lightRelay = new Supla::Control::LightRelay(pinRelay, highIsOn);
-      relay.push_back(static_cast<Supla::Control::Relay *>(lightRelay));
-      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_LIGHTSWITCH);
-
-#ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr, lightRelay, lightRelay);
-#endif
+      newRelay = new Supla::Control::VirtualRelay();
+      newRelay->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
     }
     else {
       highIsOn = ConfigESP->getLevel(pinRelay);
-      relay.push_back(Supla::Control::GUI::Relay(pinRelay, highIsOn, nr));
-      relay[nr]->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
+
+      if (ConfigESP->getLightRelay(pinRelay)) {
+        newRelay = new Supla::Control::LightRelay(pinRelay, highIsOn);
+        newRelay->getChannel()->setDefault(SUPLA_CHANNELFNC_LIGHTSWITCH);
 
 #ifdef SUPLA_BUTTON
-      Supla::GUI::addButtonToRelay(nr, relay[nr], relay[nr]);
+        Supla::GUI::addButtonToRelay(nr, newRelay, static_cast<Supla::Control::LightRelay *>(newRelay));
 #endif
-    }
+      }
+      else {
+        newRelay = Supla::Control::GUI::Relay(pinRelay, highIsOn, nr);
+        newRelay->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
+
+#ifdef SUPLA_BUTTON
+        Supla::GUI::addButtonToRelay(nr, newRelay, newRelay);
+#endif
+      }
 
 #ifdef SUPLA_CONDITIONS
-    Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RELAY, S_RELAY, relay[nr], nr);
-    Supla::GUI::Conditions::addConditionsSensor(SENSOR_RELAY, S_RELAY, relay[nr], nr);
+      Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RELAY, S_RELAY, newRelay, nr);
+      Supla::GUI::Conditions::addConditionsSensor(SENSOR_RELAY, S_RELAY, newRelay, nr);
 #endif
+    }
 
     switch (ConfigESP->getMemory(pinRelay, nr)) {
       case MEMORY_OFF:
-        relay[nr]->setDefaultStateOff();
+        newRelay->setDefaultStateOff();
         break;
       case MEMORY_ON:
-        relay[nr]->setDefaultStateOn();
+        newRelay->setDefaultStateOn();
         break;
       case MEMORY_RESTORE:
-        relay[nr]->setDefaultStateRestore();
+        newRelay->setDefaultStateRestore();
         break;
     }
 
-    relay[nr]->keepTurnOnDuration();
+    newRelay->keepTurnOnDuration();
 
     if (pinLED != OFF_GPIO) {
       new Supla::Control::PinStatusLedGUI(pinRelay, pinLED, !levelLed);
     }
+
+    relay.push_back(newRelay);
   }
   else {
     relay.push_back(nullptr);
   }
-  delay(0);
 }
 
 void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client) {

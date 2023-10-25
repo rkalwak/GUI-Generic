@@ -40,13 +40,8 @@ extern "C" {
 
 #include "src/boneIO/boneIO.h"
 
-#include "src/storage/SPIFFS_config.h"
-
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
-
-Supla::SPIFFSConfig configSupla;
-Supla::Eeprom eeprom(STORAGE_OFFSET);
 
 void setup() {
   uint8_t nr, gpio;

@@ -2094,12 +2094,16 @@ void HvacBase::saveConfig() {
 
     generateKey(key, "cfg_chng");
     if (channelConfigChangedOffline) {
-     cfg->setUInt8(key, 1);
+      cfg->setUInt8(key, 1);
     } else {
       cfg->setUInt8(key, 0);
     }
 
     cfg->saveWithDelay(5000);
+  }
+  for (auto proto = Supla::Protocol::ProtocolLayer::first();
+      proto != nullptr; proto = proto->next()) {
+    proto->notifyConfigChange(getChannelNumber());
   }
 }
 
@@ -2749,7 +2753,7 @@ void HvacBase::setTargetMode(int mode, bool keepScheduleOn) {
         lastWorkingMode.Mode = SUPLA_HVAC_MODE_CMD_WEEKLY_SCHEDULE;
       }
       channel.setHvacMode(mode);
-      setOutput(0, true);
+      setOutput(0, false);
     } else if (mode == SUPLA_HVAC_MODE_CMD_TURN_ON) {
       if (channel.getHvacMode() == SUPLA_HVAC_MODE_OFF ||
           !isModeSupported(channel.getHvacMode())) {
@@ -2788,7 +2792,7 @@ bool HvacBase::checkAntifreezeProtection(_supla_int16_t t) {
 
     auto outputValue = evaluateHeatOutputValue(t, tFreeze);
     if (outputValue > 0) {
-      setOutput(outputValue, true);
+      setOutput(outputValue, false);
       return true;
     }
   }
@@ -2807,7 +2811,7 @@ bool HvacBase::checkOverheatProtection(_supla_int16_t t) {
 
     auto outputValue = evaluateCoolOutputValue(t, tOverheat);
     if (outputValue < 0) {
-      setOutput(outputValue, true);
+      setOutput(outputValue, false);
       return true;
     }
   }
@@ -2816,6 +2820,11 @@ bool HvacBase::checkOverheatProtection(_supla_int16_t t) {
 
 bool HvacBase::checkAuxProtection(_supla_int16_t t) {
   if (!isAuxMinMaxSetpointEnabled()) {
+    return false;
+  }
+
+  if (channel.getHvacMode() == SUPLA_HVAC_MODE_OFF ||
+      channel.getHvacMode() == SUPLA_HVAC_MODE_NOT_SET) {
     return false;
   }
 
@@ -2828,7 +2837,7 @@ bool HvacBase::checkAuxProtection(_supla_int16_t t) {
     if (isSensorTempValid(tAuxMin)) {
       auto outputValue = evaluateHeatOutputValue(t, tAuxMin);
       if (outputValue > 0) {
-        setOutput(outputValue, true);
+        setOutput(outputValue, false);
         return true;
       }
     }
@@ -2836,7 +2845,7 @@ bool HvacBase::checkAuxProtection(_supla_int16_t t) {
     if (isSensorTempValid(tAuxMax)) {
       auto outputValue = evaluateCoolOutputValue(t, tAuxMax);
       if (outputValue < 0) {
-        setOutput(outputValue, true);
+        setOutput(outputValue, false);
         return true;
       }
     }

@@ -60,8 +60,6 @@
 #endif
 
 #ifdef SUPLA_PUSHOVER
-
-#endif
 #ifndef SUPLA_CONDITIONS
 #define SUPLA_CONDITIONS
 #endif

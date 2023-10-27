@@ -383,7 +383,7 @@ void handleOtherSave() {
     String input = INPUT_BUTTON_RGBW;
     input += nr;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_RGBW + nr, WebServer->httpServer->arg(input).toInt());
+      ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_RGBW + nr,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     }
 
     uint8_t redPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_RED);

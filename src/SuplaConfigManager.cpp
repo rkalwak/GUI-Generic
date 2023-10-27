@@ -773,20 +773,21 @@ bool SuplaConfigManager::set(uint8_t key, const char *value) {
 }
 
 bool SuplaConfigManager::setElement(uint8_t key, int index, int newvalue) {
-  for (int i = 0; i < _optionCount; i++) {
-    if (key == _options[i]->getKey()) {
-      String data = _options[i]->replaceElement(index, newvalue);
-      _options[i]->setValue(data.c_str());
-      return true;
-    }
-  }
-  return false;
+  return setElementInternal(key, index, String(newvalue));
 }
 
-bool SuplaConfigManager::setElement(uint8_t key, int index, const char *newvalue) {
+bool SuplaConfigManager::setElement(uint8_t key, int index, double newvalue) {
+  return setElementInternal(key, index, String(newvalue));
+}
+
+bool SuplaConfigManager::setElement(uint8_t key, int index, const String &newvalue) {
+  return setElementInternal(key, index, newvalue);
+}
+
+bool SuplaConfigManager::setElementInternal(uint8_t key, int index, const String &newvalue) {
   for (int i = 0; i < _optionCount; i++) {
     if (key == _options[i]->getKey()) {
-      String data = _options[i]->replaceElement(index, newvalue);
+      String data = _options[i]->replaceElement(index, newvalue.c_str());
       _options[i]->setValue(data.c_str());
       return true;
     }

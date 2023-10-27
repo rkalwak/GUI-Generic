@@ -312,8 +312,10 @@ class SuplaConfigManager : public Supla::KeyValue {
   ConfigOption *get(uint8_t key);
   bool set(uint8_t key, int value);
   bool set(uint8_t key, const char *value);
+
   bool setElement(uint8_t key, int index, int newvalue);
-  bool setElement(uint8_t key, int index, const char *newvalue);
+  bool setElement(uint8_t key, int index, double newvalue);
+  bool setElement(uint8_t key, int index, const String &newvalue);
 
   bool isDeviceConfigured();
   void setGUIDandAUTHKEY();
@@ -343,5 +345,7 @@ class SuplaConfigManager : public Supla::KeyValue {
  private:
   int _optionCount;
   ConfigOption *_options[CONFIG_MAX_OPTIONS];
+
+  bool setElementInternal(uint8_t key, int index, const String &newvalue);
 };
 #endif

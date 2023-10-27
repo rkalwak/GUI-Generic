@@ -84,16 +84,16 @@ void handleConditionsSave() {
     String input = INPUT_CONDITIONS_TYPE_CLIENT;
     input += nr;
     Serial.println(input);
-    ConfigManager->setElement(KEY_CONDITIONS_CLIENT_TYPE, nr, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_CONDITIONS_CLIENT_TYPE, nr, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     input = INPUT_CONDITIONS_CLIENT_NUMBER;
     input += nr;
-    ConfigManager->setElement(KEY_CONDITIONS_CLIENT_TYPE_NUMBER, nr, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_CONDITIONS_CLIENT_TYPE_NUMBER, nr, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     input = INPUT_CONDITIONS_SENSOR_TYPE;
     input += nr;
-    ConfigManager->setElement(KEY_CONDITIONS_SENSOR_TYPE, nr, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_CONDITIONS_SENSOR_TYPE, nr, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     input = INPUT_CONDITIONS_TYPE;
     input += nr;
-    ConfigManager->setElement(KEY_CONDITIONS_TYPE, nr, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_CONDITIONS_TYPE, nr, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     input = INPUT_CONDITIONS_MIN;
     input += nr;
     ConfigManager->setElement(KEY_CONDITIONS_MIN, nr, WebServer->httpServer->arg(input).c_str());
@@ -281,7 +281,7 @@ void addConditionForSensorElementWithChannelActions(ConditionsStruct *sensor, ui
   }
 
   if (strcmp(ConfigManager->get(KEY_CONDITIONS_MAX)->getElement(nr).c_str(), "") != 0) {
-    Serial.print("addConditions MAX: ");
+    Serial.print("addConditionForSensorElementWithChannelActions MAX: ");
     Serial.println(ConfigManager->get(KEY_CONDITIONS_MAX)->getElement(nr).c_str());
 
     double threshold = ConfigManager->get(KEY_CONDITIONS_MAX)->getElement(nr).toDouble();

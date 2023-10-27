@@ -30,6 +30,7 @@
 #include <supla/actions.h>
 
 #include "../../SuplaDeviceGUI.h"
+#include "supla/protocol/protocol_layer.h"
 
 #define THERMOSTAT_DEFAULT_HISTERESIS "0.4"
 #define THERMOSTAT_NO_TEMP_CHANNEL    0
@@ -38,9 +39,41 @@ namespace Supla {
 namespace Control {
 namespace GUI {
 
-class ThermostatGUI : public Supla::Control::HvacBase {
+class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::ProtocolLayer {
  public:
-  ThermostatGUI(uint8_t nr);
+  ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc);
+
+  virtual void notifyConfigChange(int channelNumber) override;
+  virtual void onInit() override{};
+  virtual bool onLoadConfig() override {
+    return true;
+  }
+  virtual bool verifyConfig() override {
+    return true;
+  }
+  virtual bool isEnabled() override {
+    return false;
+  }
+  virtual void disconnect() override{};
+  virtual bool iterate(uint32_t _millis) override {
+    return false;
+  }
+  virtual bool isNetworkRestartRequested() override {
+    return false;
+  }
+  virtual uint32_t getConnectionFailTime() override {
+    return false;
+  }
+  virtual bool isRegisteredAndReady() override {
+    return false;
+  }
+
+  virtual void sendActionTrigger(uint8_t channelNumber, uint32_t actionId) override{};
+  virtual void sendChannelValueChanged(uint8_t channelNumber, char *value, unsigned char offline, uint32_t validityTimeSec) override{};
+  virtual void sendExtendedChannelValueChanged(uint8_t channelNumber, TSuplaChannelExtendedValue *value) override{};
+
+ private:
+  uint8_t nr;
 };
 
 };  // namespace GUI

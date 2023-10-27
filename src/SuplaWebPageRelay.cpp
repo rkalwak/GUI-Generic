@@ -143,7 +143,7 @@ void handleRelaySaveSet() {
   if (gpio != GPIO_VIRTUAL_RELAY) {
     input = INPUT_RELAY_LEVEL;
     input += nr_relay;
-    ConfigESP->setLevel(gpio, WebServer->httpServer->arg(input).toInt());
+    ConfigESP->setLevel(gpio,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
     input = INPUT_LIGHT_RELAY;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -166,7 +166,7 @@ void handleRelaySaveSet() {
       input = INPUT_LEVEL_LED;
       input += nr_relay;
 
-      ConfigESP->setLevel(ConfigESP->getGpio(nr_relay.toInt(), FUNCTION_LED), WebServer->httpServer->arg(input).toInt());
+      ConfigESP->setLevel(ConfigESP->getGpio(nr_relay.toInt(), FUNCTION_LED),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     }
   }
 #endif

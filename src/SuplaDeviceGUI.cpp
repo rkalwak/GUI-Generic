@@ -109,7 +109,7 @@ void addRelayOrThermostat(int nr) {
     }
     else {
 #ifdef SUPLA_THERMOSTAT
-      thermostat[nr] = new Supla::Control::GUI::ThermostatGUI(nr);
+      thermostat[nr] = new Supla::Control::GUI::ThermostatGUI(nr, &SuplaDevice);
       relay.push_back(nullptr);
 #endif
     }

@@ -37,7 +37,7 @@ void handleConfigSave() {
   }
   else {
     String input = INPUT_CFG_LED_LEVEL;
-    ConfigESP->setLevel(ConfigESP->getGpio(FUNCTION_CFG_LED), WebServer->httpServer->arg(input).toInt());
+    ConfigESP->setLevel(ConfigESP->getGpio(FUNCTION_CFG_LED),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
   if (!WebServer->saveGPIO(INPUT_CFG_BTN_GPIO, FUNCTION_CFG_BUTTON)) {

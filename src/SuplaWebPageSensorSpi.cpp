@@ -73,14 +73,14 @@ void handleSensorSpiSave() {
 #ifdef SUPLA_MAX6675
   input = INPUT_MAX6675;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX6675, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX6675,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
 #ifdef SUPLA_MAX31855
   input = INPUT_MAX31855;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX31855, WebServer->httpServer->arg(input).toInt());
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX31855,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 

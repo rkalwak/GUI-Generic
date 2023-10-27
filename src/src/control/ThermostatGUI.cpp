@@ -21,9 +21,11 @@ namespace Supla {
 namespace Control {
 namespace GUI {
 
-ThermostatGUI::ThermostatGUI(uint8_t nr)
-    : Supla::Control::HvacBase(new Supla::Control::InternalPinOutput(ConfigESP->getGpio(nr, FUNCTION_RELAY),
-                                                                     ConfigESP->getLevel(ConfigESP->getGpio(nr, FUNCTION_RELAY)))) {
+ThermostatGUI::ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc)
+    : Supla::Control::HvacBase(
+          new Supla::Control::InternalPinOutput(ConfigESP->getGpio(nr, FUNCTION_RELAY), ConfigESP->getLevel(ConfigESP->getGpio(nr, FUNCTION_RELAY)))),
+      Supla::Protocol::ProtocolLayer(sdc),
+      nr(nr) {
   uint8_t pinLED = ConfigESP->getGpio(nr, FUNCTION_LED);
   bool levelLed = ConfigESP->getLevel(pinLED);
 
@@ -92,6 +94,15 @@ ThermostatGUI::ThermostatGUI(uint8_t nr)
 #ifdef SUPLA_BUTTON
   Supla::GUI::addButtonToRelay(nr, this, this);
 #endif
+}
+
+void ThermostatGUI::notifyConfigChange(int channelNumber) {
+  if (HvacBase::getChannelNumber() == channelNumber) {
+    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, nr, static_cast<int>(HvacBase::getMainThermometerChannelNo()));
+    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, nr, static_cast<int>(HvacBase::getAuxThermometerChannelNo()));
+    ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr, static_cast<double>(HvacBase::getTemperatureHisteresis() / 100.0));
+    ConfigManager->save();
+  }
 };
 
 };  // namespace GUI

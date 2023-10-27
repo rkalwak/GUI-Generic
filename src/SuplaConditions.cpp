@@ -240,7 +240,7 @@ void addConditions() {
 
 void addCondition(ConditionsStruct *condition, uint8_t nr, int actionON, int actionOFF) {
   if (condition->sensorElementWithChannelActions != nullptr) {
-    addConditionForSensor(condition, nr, actionON, actionOFF);
+    addConditionForSensorElementWithChannelActions(condition, nr, actionON, actionOFF);
   }
   else if (condition->sensorElement != nullptr) {
     addConditionForSensor(condition, nr, actionON, actionOFF);
@@ -252,7 +252,7 @@ void addCondition(ConditionsStruct *condition, uint8_t nr, int actionON, int act
 
 void addConditionForSensorElementWithChannelActions(ConditionsStruct *sensor, uint8_t nr, int actionON, int actionOFF) {
   if (strcmp(ConfigManager->get(KEY_CONDITIONS_MIN)->getElement(nr).c_str(), "") != 0) {
-    Serial.print("addConditions MIN: ");
+    Serial.print("addConditionForSensorElementWithChannelActions MIN: ");
     Serial.println(ConfigManager->get(KEY_CONDITIONS_MIN)->getElement(nr).c_str());
 
     double threshold = ConfigManager->get(KEY_CONDITIONS_MIN)->getElement(nr).toDouble();

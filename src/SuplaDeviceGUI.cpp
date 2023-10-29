@@ -141,7 +141,7 @@ void addRelay(uint8_t nr) {
         newRelay->getChannel()->setDefault(SUPLA_CHANNELFNC_LIGHTSWITCH);
 
 #ifdef SUPLA_BUTTON
-        Supla::GUI::addButtonToRelay(nr, newRelay, static_cast<Supla::Control::LightRelay *>(newRelay));
+        Supla::GUI::addButtonToRelay(nr, static_cast<Supla::Control::LightRelay *>(newRelay));
 #endif
       }
       else {
@@ -149,7 +149,7 @@ void addRelay(uint8_t nr) {
         newRelay->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
 
 #ifdef SUPLA_BUTTON
-        Supla::GUI::addButtonToRelay(nr, newRelay, newRelay);
+        Supla::GUI::addButtonToRelay(nr, newRelay);
 #endif
       }
 
@@ -184,7 +184,11 @@ void addRelay(uint8_t nr) {
   }
 }
 
-void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client) {
+void addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay) {
+  addButtonToRelay(nrRelay, relay, relay, relay);
+}
+
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client, Supla::Control::Relay *relay) {
   uint8_t pinButton, nrButton, pinRelay, buttonAction, buttonEvent;
 
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
@@ -222,7 +226,9 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 
         case Supla::GUI::Event::ON_MOTION_SENSOR:
           button->setButtonType(Supla::Control::Button::ButtonType::MOTION_SENSOR);
-          relay[nrButton]->attach(button);
+          if (relay) {
+            relay->attach(button);
+          }
           break;
 
         case Supla::GUI::Event::ON_HOLD:

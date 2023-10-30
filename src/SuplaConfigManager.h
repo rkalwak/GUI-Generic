@@ -342,6 +342,8 @@ class SuplaConfigManager : public Supla::KeyValue {
   bool getWiFiSSID(char *result) override;
   bool getWiFiPassword(char *result) override;
 
+  bool getUInt8(const char *key, uint8_t *result) override;
+
  private:
   int _optionCount;
   ConfigOption *_options[CONFIG_MAX_OPTIONS];

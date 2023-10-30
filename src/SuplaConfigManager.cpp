@@ -910,3 +910,12 @@ bool SuplaConfigManager::getWiFiPassword(char *result) {
   strncpy(result, ConfigManager->get(KEY_WIFI_PASS)->getValue(), MAX_WIFI_PASSWORD_SIZE);
   return true;
 }
+
+bool SuplaConfigManager::getUInt8(const char *key, uint8_t *result) {
+  if (strcmp(key, "security_level") == 0) {
+    *result = 2;
+    return true;
+  }
+
+  return KeyValue::getUInt8(key, result);
+}

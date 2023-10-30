@@ -82,8 +82,17 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
     return blockHandleAction;
   }
 
+  void setNrActiveThermostat(uint8_t newValue) {
+    nrActiveThermostat = newValue;
+  }
+
+  uint8_t getNrActiveThermostat() {
+    return nrActiveThermostat;
+  }
+
  private:
   uint8_t nr;
+  uint8_t nrActiveThermostat;
   bool blockHandleAction;
 };
 

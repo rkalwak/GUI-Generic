@@ -635,6 +635,14 @@ void SuplaOled::iterateAlways() {
       return;
     }
 
+#ifdef SUPLA_THERMOSTAT
+    for (int i = 0; i < MAX_THERMOSTAT; i++) {
+      if (this->thermostat[i] != nullptr) {
+        this->thermostat[i]->setNrActiveThermostat(ui->getUiState()->currentFrame);
+      }
+    }
+#endif
+
     if (ConfigESP->getLastStatusSupla() == STATUS_REGISTERED_AND_READY || ConfigESP->getLastStatusSupla() == STATUS_NETWORK_DISCONNECTED ||
         ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED) {
       // setupAnimate();
@@ -643,7 +651,13 @@ void SuplaOled::iterateAlways() {
           ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
         display->setBrightness((ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt() / 100.0) * 255);
         this->setOledON(false);
+
+        if (getCountActiveThermostat() > 1) {
+          ui->enableAutoTransition();
+          ui->setTimePerFrame(ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() * 1000);
+        }
       }
+
       int remainingTimeBudget = ui->update();
 
       if (remainingTimeBudget > 0)
@@ -701,6 +715,9 @@ void SuplaOled::handleAction(int event, int action) {
     }
     timeLastChangeOled = millis();
     this->setOledON(true);
+    if (getCountActiveThermostat() > 1) {
+      ui->disableAutoTransition();
+    }
   }
 }
 

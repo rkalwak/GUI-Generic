@@ -29,7 +29,7 @@
 #include <OLEDDisplayUi.h>
 
 #include <supla/control/hvac_base.h>
-#include "src/control/ThermostatGUI.h"
+#include "../control/ThermostatGUI.h"
 
 enum customActions
 {

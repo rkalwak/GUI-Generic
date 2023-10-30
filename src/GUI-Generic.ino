@@ -701,7 +701,11 @@ void setup() {
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
       SuplaOled *oled = new SuplaOled();
 #ifdef SUPLA_BUTTON
+#ifdef SUPLA_THERMOSTAT
+      oled->addButtonOled(Supla::GUI::thermostat);
+#else
       oled->addButtonOled();
+#endif
 #endif
     }
 #endif

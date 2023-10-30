@@ -28,9 +28,12 @@
 #include <SH1106Wire.h>   //OLED 1.3"
 #include <OLEDDisplayUi.h>
 
+#include <supla/control/hvac_base.h>
+#include "src/control/ThermostatGUI.h"
+
 enum customActions
 {
-  OLED_TURN_ON,
+  OLED_TURN_ON = 99,
   OLED_NEXT_FRAME
 };
 
@@ -78,17 +81,23 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 
 Supla::Channel* getChanelByChannelNumber(int channelNumber);
 
+namespace Supla::Control::GUI {
+class ThermostatGUI;
+}
+
 class SuplaOled : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaOled();
+  #ifdef SUPLA_THERMOSTAT
+  void addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT>& thermostatArray);
+#else
   void addButtonOled();
+#endif
 
  private:
-  void onInit();
-  void iterateAlways();
-  void handleAction(int event, int action);
-  void setupAnimate();
-
+   #ifdef SUPLA_THERMOSTAT
+  std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT> thermostat;
+  #endif
   OLEDDisplay* display;
   OLEDDisplayUi* ui;
 
@@ -99,6 +108,15 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
 
   unsigned long timeLastChangeOled = millis();
   bool oledON = true;
+
+  void onInit();
+  void iterateAlways();
+  void handleAction(int event, int action);
+  void setupAnimate();
+  void setOledON(bool status);
+  bool getOledON() const {
+    return oledON;
+  }
 };
 
 // https://www.online-utility.org/image/convert/to/XBM

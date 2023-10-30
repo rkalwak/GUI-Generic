@@ -103,7 +103,13 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
     ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr, static_cast<double>(HvacBase::getTemperatureHisteresis() / 100.0));
     ConfigManager->save();
   }
-};
+}
+
+void ThermostatGUI::handleAction(int event, int action) {
+  if (!this->getHandleActionBlocked()) {
+    HvacBase::handleAction(event, action);
+  }
+}
 
 };  // namespace GUI
 };  // namespace Control

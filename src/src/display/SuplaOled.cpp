@@ -639,10 +639,10 @@ void SuplaOled::iterateAlways() {
         ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED) {
       // setupAnimate();
 
-      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && oledON &&
+      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && this->getOledON() &&
           ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
         display->setBrightness((ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt() / 100.0) * 255);
-        oledON = false;
+        this->setOledON(false);
       }
       int remainingTimeBudget = ui->update();
 
@@ -655,29 +655,52 @@ void SuplaOled::iterateAlways() {
   }
 }
 
+#ifdef SUPLA_THERMOSTAT
+void SuplaOled::addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT>& thermostatArray) {
+  thermostat = thermostatArray;
+#else
 void SuplaOled::addButtonOled() {
-  uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_OLED);
-  uint8_t pinButton = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
+#endif
+  uint8_t nrButtonOled = ConfigESP->getNumberButtonAdditional(BUTTON_OLED);
 
-  if (pinButton != OFF_GPIO) {
-    Supla::Control::Button* button =
-        Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nrButton);
-    button->addAction(OLED_NEXT_FRAME, this, Supla::ON_PRESS);
-    button->addAction(OLED_TURN_ON, this, Supla::ON_PRESS);
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
+    uint8_t nrButton = ConfigESP->getNumberButton(nr);
+    uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
+
+    if (pinButton != OFF_GPIO && nrButtonOled == nrButton) {
+      Supla::Control::Button* button =
+          Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nrButton);
+      button->addAction(OLED_NEXT_FRAME, this, Supla::ON_PRESS);
+      button->addAction(OLED_TURN_ON, this, Supla::ON_PRESS);
+    }
   }
 }
 
-void SuplaOled::handleAction(int event, int action) {
-  if (action == OLED_NEXT_FRAME && oledON && frameCount > 1) {
-    ui->nextFrame();
-  }
+void SuplaOled::setOledON(bool status) {
+  oledON = status;
 
-  if (action == OLED_TURN_ON && oledON == false) {
-    if (ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
-      display->setBrightness(255);
-      timeLastChangeOled = millis();
+#ifdef SUPLA_THERMOSTAT
+  for (int i = 0; i < MAX_THERMOSTAT; i++) {
+    if (this->thermostat[i] != nullptr) {
+      if (oledON) {
+        this->thermostat[i]->setHandleActionBlocked(false);
+      }
+      else {
+        this->thermostat[i]->setHandleActionBlocked(true);
+      }
     }
-    oledON = true;
+  }
+#endif
+}
+
+void SuplaOled::handleAction(int event, int action) {
+  (void)(event);
+  if (action == OLED_TURN_ON) {
+    if (ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0 && getOledON() == false) {
+      display->setBrightness(255);
+    }
+    timeLastChangeOled = millis();
+    this->setOledON(true);
   }
 }
 

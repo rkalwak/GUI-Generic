@@ -254,19 +254,19 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::DECREASE_TEMPERATURE ||
                    ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
-            button->setMulticlickTime(200);
-            button->setHoldTime(400);
+            button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
+            button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
             button->repeatOnHoldEvery(35);
 
-            button->addAction(buttonAction, client, Supla::ON_HOLD);
+            button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
             button->addAction(buttonAction, client, buttonEvent);
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
-            button->setMulticlickTime(200);
-            button->setHoldTime(400);
+            button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
+            button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
 
-            button->addAction(Supla::TOGGLE, client, Supla::ON_HOLD);
-            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
+            button->addAction(Supla::TOGGLE, client, Supla::Event::ON_HOLD);
+            button->addAction(buttonAction, client, buttonEvent);
           }
           else {
             button->addAction(buttonAction, client, buttonEvent);

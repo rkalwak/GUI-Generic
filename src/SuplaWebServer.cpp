@@ -189,7 +189,7 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   }
 
 #ifdef GUI_SENSOR_I2C_EXPENDER
-  ConfigManager->setElement(KEY_ACTIVE_EXPENDER, function, WebServer->httpServer->arg(INPUT_EXPENDER_TYPE).toInt());
+  ConfigManager->setElement(KEY_ACTIVE_EXPENDER, function, static_cast<int>(WebServer->httpServer->arg(INPUT_EXPENDER_TYPE).toInt()));
 #endif
 
   gpio = ConfigESP->getGpio(nr, function);

@@ -44,7 +44,9 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
   ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc);
 
   virtual void notifyConfigChange(int channelNumber) override;
-  virtual void onInit() override{};
+  virtual void onInit() override{
+    HvacBase::onInit();
+  };
   virtual bool onLoadConfig() override {
     return true;
   }

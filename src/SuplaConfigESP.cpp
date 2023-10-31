@@ -644,6 +644,10 @@ void SuplaConfigESP::setNumberButton(uint8_t nr, uint8_t nrButton) {
 #ifdef GUI_SENSOR_I2C_EXPENDER
   ConfigManager->setElement(KEY_EXPANDER_NUMBER_BUTTON, nr, nrButton);
 #else
+  int maxRelayValue = ConfigManager->get(KEY_MAX_RELAY)->getValueInt() - 1;
+  if (nrButton >= maxRelayValue) {
+    nrButton = maxRelayValue;
+  }
   ConfigManager->setElement(KEY_NUMBER_BUTTON, nr, nrButton);
 #endif
 }

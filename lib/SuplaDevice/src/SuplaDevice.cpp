@@ -784,7 +784,7 @@ void SuplaDeviceClass::enterNormalMode() {
   Supla::Network::SetNormalMode();
 }
 
-void SuplaDeviceClass::setManufacurerId(_supla_int16_t id) {
+void SuplaDeviceClass::setManufacturerId(_supla_int16_t id) {
   Supla::Channel::reg_dev.ManufacturerID = id;
 }
 
@@ -810,6 +810,22 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
         SUPLA_LOG_INFO("CALCFG ENTER CFGMODE received");
         requestCfgMode(Supla::Device::WithTimeout);
         return SUPLA_CALCFG_RESULT_DONE;
+      }
+      case SUPLA_CALCFG_CMD_SET_TIME: {
+        SUPLA_LOG_INFO("CALCFG SET TIME received");
+        if (request->DataType != 0 &&
+            request->DataSize != sizeof(TSDC_UserLocalTimeResult)) {
+          SUPLA_LOG_WARNING("SET TIME invalid size %d", request->DataSize);
+          return SUPLA_CALCFG_RESULT_FALSE;
+        }
+        auto clock = getClock();
+        if (clock) {
+          clock->parseLocaltimeFromServer(
+              reinterpret_cast<TSDC_UserLocalTimeResult *>(request->Data));
+          return SUPLA_CALCFG_RESULT_DONE;
+        } else {
+          return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+        }
       }
       default:
         break;

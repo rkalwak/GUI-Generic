@@ -127,6 +127,9 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   uint8_t getEvent(uint8_t gpio);
   uint8_t getLightRelay(uint8_t gpio);
 
+  int getBrightnessLevelOLED();
+  void setBrightnessLevelOLED(int newBrightness);
+
   bool checkBusyCfg(int gpio, int function);
   int checkBusyGpio(int gpio, int function);
   bool checkBusyGpio(int gpio);

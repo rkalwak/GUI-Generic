@@ -556,6 +556,20 @@ uint8_t SuplaConfigESP::getLightRelay(uint8_t gpio) {
   return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 }
 
+int SuplaConfigESP::getBrightnessLevelOLED() {
+  int currentBrightness = ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt();
+  return (currentBrightness > 0) ? (currentBrightness + 1) : currentBrightness;
+}
+
+void SuplaConfigESP::setBrightnessLevelOLED(int newBrightness) {
+  if (newBrightness > 0) {
+    ConfigManager->set(KEY_OLED_BACK_LIGHT, newBrightness - 1);
+  }
+  else {
+    ConfigManager->set(KEY_OLED_BACK_LIGHT, newBrightness);
+  }
+}
+
 bool SuplaConfigESP::checkBusyCfg(int gpio, int function) {
   uint8_t key = KEY_GPIO + gpio;
 

@@ -61,7 +61,6 @@ void displayUiRelayState(OLEDDisplay* display);
 #endif
 void displayUiSuplaStatus(OLEDDisplay* display);
 void displayUiSuplaClock(OLEDDisplay* display);
-void displayUiConfigMode(OLEDDisplay* display);
 void displayUiBlank(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayUiGeneral(
     OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y, double value, const String& unit = "\n", const uint8_t* xbm = NULL);
@@ -69,7 +68,6 @@ void displayUiGeneral(
     OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y, const String& value, const String& unit = "\n", const uint8_t* xbm = NULL);
 
 void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
-void displayDoubleTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayPressure(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayGeneral(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -88,16 +86,16 @@ class ThermostatGUI;
 class SuplaOled : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaOled();
-  #ifdef SUPLA_THERMOSTAT
+#ifdef SUPLA_THERMOSTAT
   void addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT>& thermostatArray);
 #else
   void addButtonOled();
 #endif
 
  private:
-   #ifdef SUPLA_THERMOSTAT
+#ifdef SUPLA_THERMOSTAT
   std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT> thermostat;
-  #endif
+#endif
   OLEDDisplay* display;
   OLEDDisplayUi* ui;
 
@@ -105,17 +103,32 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
   int frameCount = 0;
   OverlayCallback overlays[1];
   int overlaysCount = 1;
+  int holdCounter = 0;
 
   unsigned long timeLastChangeOled = millis();
   bool oledON = true;
+  bool thermostatActionBlocked = true;
 
   void onInit();
   void iterateAlways();
   void handleAction(int event, int action);
   void setupAnimate();
-  void setOledON(bool status);
+  void setOledON(bool isOn);
   bool getOledON() const {
     return oledON;
+  }
+  void setThermostatActionBlocked(bool block) {
+    thermostatActionBlocked = block;
+  }
+  bool getThermostatActionBlocked() {
+    return thermostatActionBlocked;
+  }
+  int getFrameCount() {
+    return frameCount;
+  }
+
+  void setFrameCount(int count) {
+    frameCount = count;
   }
 };
 

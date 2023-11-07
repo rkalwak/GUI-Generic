@@ -245,28 +245,22 @@ void displayUiGeneral(
 
 void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
+  double lastTemperature = TEMPERATURE_NOT_AVAILABLE;
 
-  if (channel) {
-    double lastTemperature = channel->getValueDouble();
-
-    displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
+  if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
+    lastTemperature = channel->getValueDouble();
   }
-}
-
-void displayDoubleTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
-
-  if (channel) {
-    double lastTemperature = channel->getValueDoubleFirst();
-
-    displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
+  else if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+    lastTemperature = channel->getValueDoubleFirst();
   }
+
+  displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
 }
 
 void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
 
-  if (channel) {
+  if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
     double lastHumidit = channel->getValueDoubleSecond();
 
     displayUiGeneral(display, state, x, y, getHumidityString(lastHumidit), "%", humidity_bits);
@@ -276,7 +270,7 @@ void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int1
 void displayPressure(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
 
-  if (channel) {
+  if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
     double lastPressure = channel->getValueDouble();
 
     displayUiGeneral(display, state, x, y, getPressureString(lastPressure), "hPa", pressure_bits);
@@ -286,7 +280,7 @@ void displayPressure(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x,
 void displayDistance(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
 
-  if (channel) {
+  if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_DISTANCESENSOR) {
     double distance = channel->getValueDouble();
 
     displayUiGeneral(display, state, x, y, getDistanceString(distance), "m", distance_bits);
@@ -441,27 +435,29 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 }
 
 Supla::Channel* getChanelByChannelNumber(int channelNumber) {
-  Supla::Channel* channel = nullptr;
+  Supla::Channel* foundChannel = nullptr;
 
   for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
     if (element->getChannel()) {
-      auto channel = element->getChannel();
+      Supla::Channel* currentChannel = element->getChannel();
 
-      if (channel->getChannelNumber() == channelNumber) {
-        return channel;
+      if (currentChannel->getChannelNumber() == channelNumber) {
+        foundChannel = currentChannel;
+        break;
       }
     }
 
     if (element->getSecondaryChannel()) {
-      auto channel = element->getSecondaryChannel();
+      Supla::Channel* currentChannel = element->getSecondaryChannel();
 
-      if (channel->getChannelNumber() == channelNumber) {
-        return channel;
+      if (currentChannel->getChannelNumber() == channelNumber) {
+        foundChannel = currentChannel;
+        break;
       }
     }
   }
 
-  return channel;
+  return foundChannel;
 }
 
 SuplaOled::SuplaOled() {
@@ -505,82 +501,82 @@ void SuplaOled::onInit() {
           }
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_HVAC) {
-            frames[frameCount] = {displayThermostat};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].nrRealy = nr;
+            frames[getFrameCount()] = {displayThermostat};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].nrRealy = nr;
             nr++;
 
-            frameCount += 1;
+            setFrameCount(getFrameCount() + 1);
           }
         }
         else {
           auto channel = element->getChannel();
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-            frames[frameCount] = {displayTemperature};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            frameCount += 1;
+            frames[getFrameCount()] = {displayTemperature};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            setFrameCount(getFrameCount() + 1);
           }
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-            frames[frameCount] = {displayDoubleTemperature};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            frameCount += 1;
-            frames[frameCount] = {displayDoubleHumidity};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            frameCount += 1;
+            frames[getFrameCount()] = {displayTemperature};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            setFrameCount(getFrameCount() + 1);
+            frames[getFrameCount()] = {displayDoubleHumidity};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            setFrameCount(getFrameCount() + 1);
           }
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYSENSOR) {
-            frames[frameCount] = {displayGeneral};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].forSecondaryValue = true;
-            frameCount += 1;
+            frames[getFrameCount()] = {displayGeneral};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = true;
+            setFrameCount(getFrameCount() + 1);
           }
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_DISTANCESENSOR) {
-            frames[frameCount] = {displayDistance};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].forSecondaryValue = false;
-            frameCount += 1;
+            frames[getFrameCount()] = {displayDistance};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = false;
+            setFrameCount(getFrameCount() + 1);
           }
 
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_ELECTRICITY_METER) {
-            frames[frameCount] = {displayEnergyVoltage};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].forSecondaryValue = false;
-            frameCount += 1;
+            frames[getFrameCount()] = {displayEnergyVoltage};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = false;
+            setFrameCount(getFrameCount() + 1);
 
-            frames[frameCount] = {displayEnergyCurrent};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].forSecondaryValue = false;
-            frameCount += 1;
+            frames[getFrameCount()] = {displayEnergyCurrent};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = false;
+            setFrameCount(getFrameCount() + 1);
 
-            frames[frameCount] = {displayEnergyPowerActive};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            oled[frameCount].forSecondaryValue = false;
-            frameCount += 1;
+            frames[getFrameCount()] = {displayEnergyPowerActive};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = false;
+            setFrameCount(getFrameCount() + 1);
           }
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
-            frames[frameCount] = {displayPressure};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            frameCount += 1;
+            frames[getFrameCount()] = {displayPressure};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            setFrameCount(getFrameCount() + 1);
           }
         }
         if (element->getSecondaryChannel()) {
           auto channel = element->getSecondaryChannel();
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
-            frames[frameCount] = {displayPressure};
-            oled[frameCount].chanelSensor = channel->getChannelNumber();
-            frameCount += 1;
+            frames[getFrameCount()] = {displayPressure};
+            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            setFrameCount(getFrameCount() + 1);
           }
         }
       }
     }
 
-    if (frameCount == 0) {
-      frames[frameCount] = {displayUiBlank};
-      frameCount += 1;
+    if (getFrameCount() == 0) {
+      frames[getFrameCount()] = {displayUiBlank};
+      setFrameCount(getFrameCount() + 1);
     }
 
     setupAnimate();
@@ -588,7 +584,7 @@ void SuplaOled::onInit() {
     ui->setTargetFPS(60);
     ui->setFrameAnimation(SLIDE_LEFT);
 
-    ui->setFrames(frames, frameCount);
+    ui->setFrames(frames, getFrameCount());
     ui->setOverlays(overlays, overlaysCount);
     ui->init();
 
@@ -606,11 +602,11 @@ void SuplaOled::onInit() {
 }
 
 void SuplaOled::setupAnimate() {
-  if (frameCount == 1) {
+  if (getFrameCount() == 1) {
     ui->disableAllIndicators();
     ui->disableAutoTransition();
   }
-  else if (frameCount <= 6) {
+  else if (getFrameCount() <= 6) {
     ui->setIndicatorPosition(BOTTOM);
     ui->setIndicatorDirection(LEFT_RIGHT);
 
@@ -635,24 +631,15 @@ void SuplaOled::iterateAlways() {
       return;
     }
 
-#ifdef SUPLA_THERMOSTAT
-    for (int i = 0; i < MAX_THERMOSTAT; i++) {
-      if (this->thermostat[i] != nullptr) {
-        this->thermostat[i]->setNrActiveThermostat(ui->getUiState()->currentFrame);
-      }
-    }
-#endif
-
     if (ConfigESP->getLastStatusSupla() == STATUS_REGISTERED_AND_READY || ConfigESP->getLastStatusSupla() == STATUS_NETWORK_DISCONNECTED ||
-        ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED) {
+        ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED || ConfigESP->getLastStatusSupla() == STATUS_REGISTER_IN_PROGRESS) {
       // setupAnimate();
 
       if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && this->getOledON() &&
           ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
-        display->setBrightness((ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt() / 100.0) * 255);
         this->setOledON(false);
 
-        if (getCountActiveThermostat() > 1) {
+        if (getFrameCount() > 1 && ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() > 0) {
           ui->enableAutoTransition();
           ui->setTimePerFrame(ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() * 1000);
         }
@@ -675,50 +662,98 @@ void SuplaOled::addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MA
 #else
 void SuplaOled::addButtonOled() {
 #endif
-  uint8_t nrButtonOled = ConfigESP->getNumberButtonAdditional(BUTTON_OLED);
-
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
-    uint8_t nrButton = ConfigESP->getNumberButton(nr);
     uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
 
-    if (pinButton != OFF_GPIO && nrButtonOled == nrButton) {
-      Supla::Control::Button* button =
-          Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nrButton);
-      button->addAction(OLED_NEXT_FRAME, this, Supla::ON_PRESS);
-      button->addAction(OLED_TURN_ON, this, Supla::ON_PRESS);
-    }
-  }
-}
+    if (pinButton != OFF_GPIO) {
+      Supla::Control::Button* button = nullptr;
 
-void SuplaOled::setOledON(bool status) {
-  oledON = status;
-
-#ifdef SUPLA_THERMOSTAT
-  for (int i = 0; i < MAX_THERMOSTAT; i++) {
-    if (this->thermostat[i] != nullptr) {
-      if (oledON) {
-        this->thermostat[i]->setHandleActionBlocked(false);
+      if (getCountActiveThermostat() != 0) {
+        button = Supla::GUI::addButtonToRelay(ConfigESP->getNumberButton(0), this, this);
       }
       else {
-        this->thermostat[i]->setHandleActionBlocked(true);
+        button = Supla::GUI::addButtonToRelay(nr, this, this);
       }
+
+      button->addAction(OLED_TURN_ON, this, Supla::Event::ON_HOLD);
+      button->addAction(OLED_TURN_ON, this, Supla::Event::ON_CLICK_1);
+
+      button->addAction(OLED_NEXT_FRAME, this, Supla::Event::ON_HOLD);
+      button->addAction(OLED_NEXT_FRAME, this, Supla::Event::ON_RELEASE);
+      button->repeatOnHoldEvery(250);
+
+      button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
+      button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
     }
   }
-#endif
 }
 
 void SuplaOled::handleAction(int event, int action) {
-  (void)(event);
-  if (action == OLED_TURN_ON) {
-    if (ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0 && getOledON() == false) {
-      display->setBrightness(255);
+  if (getOledON()) {
+    setOledON(true);
+
+    if (event == Supla::Event::ON_HOLD) {
+      holdCounter++;
+
+      if (holdCounter >= 6) {
+        setThermostatActionBlocked(false);
+      }
+      else {
+        setThermostatActionBlocked(true);
+      }
     }
-    timeLastChangeOled = millis();
-    this->setOledON(true);
-    if (getCountActiveThermostat() > 1) {
-      ui->disableAutoTransition();
+
+#ifdef SUPLA_THERMOSTAT
+    if (!getThermostatActionBlocked()) {
+      if (thermostat[ui->getUiState()->currentFrame] != nullptr) {
+        if (action == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
+          if (holdCounter == 7) {
+            thermostat[ui->getUiState()->currentFrame]->handleAction(Supla::Event::ON_CLICK_1, Supla::Action::TOGGLE);
+          }
+        }
+        thermostat[ui->getUiState()->currentFrame]->handleAction(event, action);
+      }
+    }
+#endif
+
+    if (event == Supla::Event::ON_RELEASE) {
+      if (holdCounter > 0 && holdCounter <= 6 && getFrameCount() > 1) {
+        ui->nextFrame();
+      }
+
+      holdCounter = 0;
+      setThermostatActionBlocked(false);
     }
   }
+  else {
+    if (action == OLED_TURN_ON) {
+      setOledON(true);
+    }
+  }
+}
+
+void SuplaOled::setOledON(bool isOn) {
+  if (!oledON && isOn && ConfigESP->getBrightnessLevelOLED() != 100) {
+    display->setBrightness(255);
+  }
+
+  if (isOn) {
+    ui->disableAutoTransition();
+    setThermostatActionBlocked(false);
+  }
+  else {
+    int brightnessLevel = ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt();
+
+    if (brightnessLevel != 100) {
+      display->setBrightness((brightnessLevel / 100.0) * 255);
+    }
+
+    ui->enableAutoTransition();
+    setThermostatActionBlocked(true);
+  }
+
+  oledON = isOn;
+  timeLastChangeOled = millis();
 }
 
 // In ESP8266 Arduino core v2.3.0 missing bsearch: https://github.com/esp8266/Arduino/issues/2314

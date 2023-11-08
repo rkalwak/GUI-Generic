@@ -204,16 +204,16 @@ void handleButtonSaveSet() {
   }
 
   input = INPUT_BUTTON_NUMBER;
-  ConfigESP->setNumberButton(button.toInt(),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  ConfigESP->setNumberButton(button.toInt(), static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
   input = INPUT_BUTTON_EVENT;
-  ConfigManager->setElement(key, EVENT_BUTTON,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  ConfigManager->setElement(key, EVENT_BUTTON, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
   input = INPUT_BUTTON_ACTION;
-  ConfigManager->setElement(key, ACTION_BUTTON,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  ConfigManager->setElement(key, ACTION_BUTTON, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
   input = INPUT_ANALOG_EXPECTED;
-  ConfigManager->setElement(KEY_ANALOG_INPUT_EXPECTED, button.toInt(),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  ConfigManager->setElement(KEY_ANALOG_INPUT_EXPECTED, button.toInt(), static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
@@ -276,7 +276,8 @@ void handleButtonSet(int save) {
     }
     else {
       selected = ConfigESP->getNumberButton(button.toInt());
-      addListNumbersBox(webContentBuffer, INPUT_BUTTON_NUMBER, S_RELAY_CONTROL, ConfigManager->get(KEY_MAX_RELAY)->getValueInt(), selected);
+      addListNumbersBox(webContentBuffer, INPUT_BUTTON_NUMBER, S_RELAY_CONTROL,
+                        ConfigManager->get(KEY_MAX_RELAY)->getValueInt() + ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(), selected);
 
 #ifdef ARDUINO_ARCH_ESP8266
       if (gpio == A0) {
@@ -420,7 +421,7 @@ void handleButtonSaveSetMCP23017() {
     ConfigManager->setElement(key, ACTION_BUTTON, action);
 
     input = INPUT_BUTTON_NUMBER;
-    ConfigESP->setNumberButton(button.toInt(),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigESP->setNumberButton(button.toInt(), static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
   else {
     for (gpio = 0; gpio <= OFF_GPIO; gpio++) {

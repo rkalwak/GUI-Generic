@@ -242,6 +242,12 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
               button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, client, Supla::Event::ON_HOLD);
             }
           }
+          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::DECREASE_TEMPERATURE ||
+                   ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
+            button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
+            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
+            button->repeatOnHoldEvery(250);
+          }
           else {
             button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
           }

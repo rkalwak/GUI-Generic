@@ -249,9 +249,8 @@ void addRelayOrThermostat(int nr);
 
 #ifdef SUPLA_RELAY
 void addRelay(uint8_t nr);
-Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay);
-Supla::Control::Button *
-addButtonToRelay(uint8_t nrRelay, Supla::Element *element = nullptr, Supla::ActionHandler *client = nullptr, Supla::Control::Relay *relay = nullptr);
+void addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay);
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element = nullptr, Supla::ActionHandler *client = nullptr, Supla::Control::Relay *relay = nullptr);
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER

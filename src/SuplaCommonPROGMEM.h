@@ -277,7 +277,7 @@ enum Action
   INCREASE_TEMPERATURE,
   DECREASE_TEMPERATURE,
   TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES,
-  TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF
+  TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES
 };
 
 enum Event
@@ -295,14 +295,8 @@ const char* const TRIGGER_P[] PROGMEM = {S_REACTION_ON_PRESS, S_REACTION_ON_RELE
                                          S_REACTION_MOTION_SENSOR};
 
 #ifdef SUPLA_THERMOSTAT
-const char* const ACTION_P[] PROGMEM = {ON,
-                                        OFF,
-                                        S_TOGGLE,
-                                        S_REACTION_AUTOMATIC_STAIRCASE,
-                                        "Zwiększ temperaturę",
-                                        "Zmniejsz temperaturę",
-                                        "Wyłącz/Ręczny/Program",
-                                        "Przytrzymaj Wyłącz || Ręczny/Program"};
+const char* const ACTION_P[] PROGMEM = {
+    ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE, "Zwiększ temperaturę", "Zmniejsz temperaturę", "Wyłącz/Ręczny/Program", "Ręczny/Program"};
 #else
 const char* const ACTION_P[] PROGMEM = {ON, OFF, S_TOGGLE, S_REACTION_AUTOMATIC_STAIRCASE};
 #endif

@@ -175,13 +175,12 @@ void addRelay(uint8_t nr) {
   relay.push_back(newRelay);
 }
 
-Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay) {
-  return addButtonToRelay(nrRelay, relay, relay, relay);
+void addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay) {
+  addButtonToRelay(nrRelay, relay, relay, relay);
 }
 
-Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client, Supla::Control::Relay *relay) {
+void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHandler *client, Supla::Control::Relay *relay) {
   uint8_t pinButton, nrButton, pinRelay, buttonAction, buttonEvent;
-  Supla::Control::Button *button = nullptr;
 
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
     nrButton = ConfigESP->getNumberButton(nr);
@@ -191,6 +190,8 @@ Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Element *elemen
     buttonEvent = ConfigESP->getEvent(pinButton);
 
     if (pinButton != OFF_GPIO && pinRelay != OFF_GPIO && nrRelay == nrButton) {
+      Supla::Control::Button *button = nullptr;
+
 #ifdef ARDUINO_ARCH_ESP8266
       if (pinButton == A0) {
         button = new Supla::Control::ButtonAnalog(A0, ConfigManager->get(KEY_ANALOG_INPUT_EXPECTED)->getElement(nr).toInt());
@@ -241,20 +242,6 @@ Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Element *elemen
               button->addAction(Supla::Action::TURN_ON_WITHOUT_TIMER, client, Supla::Event::ON_HOLD);
             }
           }
-          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::DECREASE_TEMPERATURE ||
-                   ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
-            button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
-            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
-          }
-          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_OFF_MANUAL_WEEKLY_SCHEDULE_MODES) {
-            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
-          }
-          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
-            button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
-            button->addAction(Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF, client, Supla::Event::ON_HOLD);
-
-            button->repeatOnHoldEvery(250);
-          }
           else {
             button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
           }
@@ -267,7 +254,6 @@ Supla::Control::Button *addButtonToRelay(uint8_t nrRelay, Supla::Element *elemen
     }
     delay(0);
   }
-  return button;
 }
 #endif
 

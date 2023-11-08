@@ -662,18 +662,13 @@ void SuplaOled::addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MA
 #else
 void SuplaOled::addButtonOled() {
 #endif
+  Supla::Control::Button* button = nullptr;
+
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
     uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
 
     if (pinButton != OFF_GPIO) {
-      Supla::Control::Button* button = nullptr;
-
-      if (getCountActiveThermostat() != 0) {
-        button = Supla::GUI::addButtonToRelay(ConfigESP->getNumberButton(0), this, this);
-      }
-      else {
-        button = Supla::GUI::addButtonToRelay(nr, this, this);
-      }
+      button = Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nr);
 
       button->addAction(OLED_TURN_ON, this, Supla::Event::ON_HOLD);
       button->addAction(OLED_TURN_ON, this, Supla::Event::ON_CLICK_1);
@@ -702,19 +697,6 @@ void SuplaOled::handleAction(int event, int action) {
         setThermostatActionBlocked(true);
       }
     }
-
-#ifdef SUPLA_THERMOSTAT
-    if (!getThermostatActionBlocked()) {
-      if (thermostat[ui->getUiState()->currentFrame] != nullptr) {
-        if (action == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
-          if (holdCounter == 7) {
-            thermostat[ui->getUiState()->currentFrame]->handleAction(Supla::Event::ON_CLICK_1, Supla::Action::TOGGLE);
-          }
-        }
-        thermostat[ui->getUiState()->currentFrame]->handleAction(event, action);
-      }
-    }
-#endif
 
     if (event == Supla::Event::ON_RELEASE) {
       if (holdCounter > 0 && holdCounter <= 6 && getFrameCount() > 1) {
@@ -747,8 +729,6 @@ void SuplaOled::setOledON(bool isOn) {
     if (brightnessLevel != 100) {
       display->setBrightness((brightnessLevel / 100.0) * 255);
     }
-
-    ui->enableAutoTransition();
     setThermostatActionBlocked(true);
   }
 
@@ -756,6 +736,15 @@ void SuplaOled::setOledON(bool isOn) {
   timeLastChangeOled = millis();
 }
 
+void SuplaOled::setThermostatActionBlocked(bool block) {
+  thermostatActionBlocked = block;
+  for (int i = 0; i < MAX_THERMOSTAT; i++) {
+    if (thermostat[i] != nullptr) {
+      thermostat[i]->setNrActiveThermostat(ui->getUiState()->currentFrame);
+      thermostat[i]->setHandleActionBlocked(thermostatActionBlocked);
+    }
+  }
+}
 // In ESP8266 Arduino core v2.3.0 missing bsearch: https://github.com/esp8266/Arduino/issues/2314
 // Part of GNU C Library
 void* gnu_c_bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*)) {

@@ -117,9 +117,7 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
   bool getOledON() const {
     return oledON;
   }
-  void setThermostatActionBlocked(bool block) {
-    thermostatActionBlocked = block;
-  }
+  void setThermostatActionBlocked(bool block);
   bool getThermostatActionBlocked() {
     return thermostatActionBlocked;
   }

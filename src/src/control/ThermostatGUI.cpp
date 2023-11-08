@@ -93,8 +93,11 @@ ThermostatGUI::ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc)
   HvacBase::setButtonTemperatureStep(10);
 
 #ifdef SUPLA_BUTTON
-#ifndef SUPLA_OLED
+#ifdef SUPLA_OLED
+  Supla::GUI::addButtonToRelay(0, this, this);
+#else
   Supla::GUI::addButtonToRelay(nr, this, this);
+
 #endif
 #endif
 }
@@ -108,17 +111,17 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
   }
 }
 
-// void ThermostatGUI::handleAction(int event, int action) {
-// #ifdef SUPLA_OLED
-//   if (!this->getHandleActionBlocked()) {
-//     if (this->getNrActiveThermostat() == this->nr) {
-//       HvacBase::handleAction(event, action);
-//     }
-//   }
-// #else
-//   HvacBase::handleAction(event, action);
-// #endif
-// }
+void ThermostatGUI::handleAction(int event, int action) {
+#ifdef SUPLA_OLED
+  if (!getHandleActionBlocked()) {
+    if (getNrActiveThermostat() == getNrThermostat()) {
+      HvacBase::handleAction(event, action);
+    }
+  }
+#else
+  HvacBase::handleAction(event, action);
+#endif
+}
 
 };  // namespace GUI
 };  // namespace Control

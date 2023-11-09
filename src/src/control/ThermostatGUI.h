@@ -41,7 +41,7 @@ namespace GUI {
 
 class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::ProtocolLayer {
  public:
-  ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc);
+  ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc);
 
   virtual void notifyConfigChange(int channelNumber) override;
   virtual void onInit() override {
@@ -75,7 +75,15 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
   virtual void sendExtendedChannelValueChanged(uint8_t channelNumber, TSuplaChannelExtendedValue *value) override{};
 
  private:
-  uint8_t nr;
+  uint8_t number;
+
+  uint8_t getNumber() {
+    return number;
+  }
+
+  void setNumber(uint8_t newNumber) {
+    number = newNumber;
+  }
 };
 
 };  // namespace GUI

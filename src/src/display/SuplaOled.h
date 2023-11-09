@@ -80,10 +80,6 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 Supla::Channel* getChanelByChannelNumber(int channelNumber);
 double getTemperatureFromChannelThermometr(Supla::Channel* channelThermometr);
 
-namespace Supla::Control::GUI {
-class ThermostatGUI;
-}
-
 class SuplaOled : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaOled();
@@ -105,9 +101,6 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
   }
 
  private:
-#ifdef SUPLA_THERMOSTAT
-  std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT> thermostat;
-#endif
   OLEDDisplay* display;
   OLEDDisplayUi* ui;
 

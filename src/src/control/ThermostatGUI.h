@@ -74,36 +74,8 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
   virtual void sendChannelValueChanged(uint8_t channelNumber, char *value, unsigned char offline, uint32_t validityTimeSec) override{};
   virtual void sendExtendedChannelValueChanged(uint8_t channelNumber, TSuplaChannelExtendedValue *value) override{};
 
-  void handleAction(int event, int action) override;
-
-  void setHandleActionBlocked(bool block) {
-    blockHandleAction = block;
-  }
-  bool getHandleActionBlocked() {
-    return blockHandleAction;
-  }
-
-  void setNrActiveThermostat(uint8_t newValue) {
-    nrActiveThermostat = newValue;
-  }
-
-  uint8_t getNrActiveThermostat() {
-    return nrActiveThermostat;
-  }
-
-  void setNrThermostat(uint8_t newValue) {
-    nr = newValue;
-  }
-
-  uint8_t getNrThermostat() {
-    return nr;
-  }
-
  private:
   uint8_t nr;
-  uint8_t nrActiveThermostat;
-  bool blockHandleAction = false;
-  int holdCounter = 0;
 };
 
 };  // namespace GUI

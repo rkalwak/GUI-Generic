@@ -91,15 +91,6 @@ ThermostatGUI::ThermostatGUI(uint8_t nr, SuplaDeviceClass *sdc)
   }
 
   HvacBase::setButtonTemperatureStep(10);
-
-#ifdef SUPLA_BUTTON
-#ifdef SUPLA_OLED
-  Supla::GUI::addButtonToRelay(0, this, this);
-#else
-  Supla::GUI::addButtonToRelay(nr, this, this);
-
-#endif
-#endif
 }
 
 void ThermostatGUI::notifyConfigChange(int channelNumber) {
@@ -109,18 +100,6 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
     ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, nr, static_cast<double>(HvacBase::getTemperatureHisteresis() / 100.0));
     ConfigManager->save();
   }
-}
-
-void ThermostatGUI::handleAction(int event, int action) {
-#ifdef SUPLA_OLED
-  if (!getHandleActionBlocked()) {
-    if (getNrActiveThermostat() == getNrThermostat()) {
-      HvacBase::handleAction(event, action);
-    }
-  }
-#else
-  HvacBase::handleAction(event, action);
-#endif
 }
 
 };  // namespace GUI

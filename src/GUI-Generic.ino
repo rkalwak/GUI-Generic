@@ -39,6 +39,7 @@ extern "C" {
 #endif
 
 #include "src/boneIO/boneIO.h"
+#include "src/display/OledButtonController.h"
 
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
@@ -702,9 +703,9 @@ void setup() {
       SuplaOled *oled = new SuplaOled();
 #ifdef SUPLA_BUTTON
 #ifdef SUPLA_THERMOSTAT
-      oled->addButtonOled(Supla::GUI::thermostat);
+      new Supla::Control::GUI::OledButtonController(oled, Supla::GUI::thermostat);
 #else
-      oled->addButtonOled();
+      new Supla::Control::GUI::OledButtonController(oled);
 #endif
 #endif
     }

@@ -635,9 +635,9 @@ void SuplaOled::iterateAlways() {
         ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED || ConfigESP->getLastStatusSupla() == STATUS_REGISTER_IN_PROGRESS) {
       // setupAnimate();
 
-      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && this->getOledON() &&
+      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && this->isDisplayEnabled() &&
           ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
-        this->setOledON(false);
+        this->enableDisplay(false);
 
         if (getFrameCount() > 1 && ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() > 0) {
           ui->enableAutoTransition();
@@ -656,72 +656,19 @@ void SuplaOled::iterateAlways() {
   }
 }
 
-#ifdef SUPLA_THERMOSTAT
-void SuplaOled::addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT>& thermostatArray) {
-  thermostat = thermostatArray;
-#else
-void SuplaOled::addButtonOled() {
-#endif
-  Supla::Control::Button* button = nullptr;
-
-  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
-    uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
-
-    if (pinButton != OFF_GPIO) {
-      button = Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nr);
-
-      button->addAction(OLED_TURN_ON, this, Supla::Event::ON_HOLD);
-      button->addAction(OLED_TURN_ON, this, Supla::Event::ON_CLICK_1);
-
-      button->addAction(OLED_NEXT_FRAME, this, Supla::Event::ON_HOLD);
-      button->addAction(OLED_NEXT_FRAME, this, Supla::Event::ON_RELEASE);
-      button->repeatOnHoldEvery(250);
-
-      button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
-      button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
-    }
-  }
-}
-
 void SuplaOled::handleAction(int event, int action) {
-  if (getOledON()) {
-    setOledON(true);
-
-    if (event == Supla::Event::ON_HOLD) {
-      holdCounter++;
-
-      if (holdCounter >= 6) {
-        setThermostatActionBlocked(false);
-      }
-      else {
-        setThermostatActionBlocked(true);
-      }
-    }
-
-    if (event == Supla::Event::ON_RELEASE) {
-      if (holdCounter > 0 && holdCounter <= 6 && getFrameCount() > 1) {
-        ui->nextFrame();
-      }
-
-      holdCounter = 0;
-      setThermostatActionBlocked(false);
-    }
-  }
-  else {
-    if (action == OLED_TURN_ON) {
-      setOledON(true);
-    }
+  if (action == OLED_NEXT_FRAME) {
+    ui->nextFrame();
   }
 }
 
-void SuplaOled::setOledON(bool isOn) {
+void SuplaOled::enableDisplay(bool isOn) {
   if (!oledON && isOn && ConfigESP->getBrightnessLevelOLED() != 100) {
     display->setBrightness(255);
   }
 
   if (isOn) {
     ui->disableAutoTransition();
-    setThermostatActionBlocked(false);
   }
   else {
     int brightnessLevel = ConfigManager->get(KEY_OLED_BACK_LIGHT)->getValueInt();
@@ -729,22 +676,12 @@ void SuplaOled::setOledON(bool isOn) {
     if (brightnessLevel != 100) {
       display->setBrightness((brightnessLevel / 100.0) * 255);
     }
-    setThermostatActionBlocked(true);
   }
 
   oledON = isOn;
   timeLastChangeOled = millis();
 }
 
-void SuplaOled::setThermostatActionBlocked(bool block) {
-  thermostatActionBlocked = block;
-  for (int i = 0; i < MAX_THERMOSTAT; i++) {
-    if (thermostat[i] != nullptr) {
-      thermostat[i]->setNrActiveThermostat(ui->getUiState()->currentFrame);
-      thermostat[i]->setHandleActionBlocked(thermostatActionBlocked);
-    }
-  }
-}
 // In ESP8266 Arduino core v2.3.0 missing bsearch: https://github.com/esp8266/Arduino/issues/2314
 // Part of GNU C Library
 void* gnu_c_bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*)) {

@@ -201,8 +201,8 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
         button = Supla::Control::GUI::Button(pinButton, ConfigESP->getPullUp(pinButton), ConfigESP->getInversed(pinButton), nrButton);
       }
 
-      button->setMulticlickTime(ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000);
-      button->setHoldTime(ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000);
+      int muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
+      int holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
 
       switch (buttonEvent) {
           // case Supla::Event::ON_PRESS:
@@ -246,6 +246,15 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
                    ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
             button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
             button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
+            // muliclickTimeMs = 250;
+            // holdTimeMs = 250;
+            button->repeatOnHoldEvery(250);
+          }
+          else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
+            button->addAction(Supla::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES, client, Supla::Event::ON_CLICK_1);
+            button->addAction(Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF, client, Supla::Event::ON_HOLD);
+            // muliclickTimeMs = 250;
+            // holdTimeMs = 250;
             button->repeatOnHoldEvery(250);
           }
           else {
@@ -254,8 +263,12 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
           break;
       }
 
+      button->setMulticlickTime(muliclickTimeMs);
+      button->setHoldTime(holdTimeMs);
+      button->setSwNoiseFilterDelay(50);
+
 #ifdef SUPLA_ACTION_TRIGGER
-      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(pinButton), element);
+      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(pinButton), element, muliclickTimeMs, holdTimeMs);
 #endif
     }
     delay(0);
@@ -266,12 +279,16 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 #ifdef SUPLA_ACTION_TRIGGER
 ActionTrigger *actionTrigger = nullptr;
 
-void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element) {
-  button->setSwNoiseFilterDelay(50);
+void addActionTriggerRelatedChannel(
+    uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element, int muliclickTimeMs, int holdTimeMs) {
   auto at = new Supla::Control::ActionTrigger();
 
-  int muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
-  int holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
+  if (muliclickTimeMs == 0) {
+    muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
+  }
+  if (holdTimeMs == 0) {
+    holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
+  }
 
   if (eventButton == Supla::ON_CHANGE) {
     button->setMulticlickTime(muliclickTimeMs, true);

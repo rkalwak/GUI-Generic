@@ -86,11 +86,22 @@ class ThermostatGUI;
 class SuplaOled : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaOled();
-#ifdef SUPLA_THERMOSTAT
-  void addButtonOled(std::array<Supla::Control::GUI::ThermostatGUI*, MAX_THERMOSTAT>& thermostatArray);
-#else
-  void addButtonOled();
-#endif
+  void handleAction(int event, int action);
+  
+  void enableDisplay(bool isOn);
+  bool isDisplayEnabled() const {
+    return oledON;
+  }
+  int getFrameCount() {
+    return frameCount;
+  }
+  int getCurrentFrame() {
+    if (ui && ui->getUiState()) {
+      return ui->getUiState()->currentFrame;
+    }
+
+    return -1;
+  }
 
  private:
 #ifdef SUPLA_THERMOSTAT
@@ -103,27 +114,13 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
   int frameCount = 0;
   OverlayCallback overlays[1];
   int overlaysCount = 1;
-  int holdCounter = 0;
 
   unsigned long timeLastChangeOled = millis();
   bool oledON = true;
-  bool thermostatActionBlocked = true;
 
   void onInit();
   void iterateAlways();
-  void handleAction(int event, int action);
   void setupAnimate();
-  void setOledON(bool isOn);
-  bool getOledON() const {
-    return oledON;
-  }
-  void setThermostatActionBlocked(bool block);
-  bool getThermostatActionBlocked() {
-    return thermostatActionBlocked;
-  }
-  int getFrameCount() {
-    return frameCount;
-  }
 
   void setFrameCount(int count) {
     frameCount = count;

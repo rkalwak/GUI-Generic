@@ -17,6 +17,9 @@
 #ifndef OLED_BUTTON_CONTROLLER_H
 #define OLED_BUTTON_CONTROLLER_H
 
+#include "../../SuplaDeviceGUI.h"
+
+#ifdef SUPLA_OLED
 #include "SuplaOled.h"
 #include "../control/ThermostatGUI.h"
 
@@ -46,5 +49,5 @@ class OledButtonController : public Supla::ActionHandler {
 }  // namespace GUI
 }  // namespace Control
 }  // namespace Supla
-
+#endif
 #endif

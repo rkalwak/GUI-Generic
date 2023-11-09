@@ -78,6 +78,7 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
 void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 
 Supla::Channel* getChanelByChannelNumber(int channelNumber);
+double getTemperatureFromChannelThermometr(Supla::Channel* channelThermometr);
 
 namespace Supla::Control::GUI {
 class ThermostatGUI;
@@ -87,7 +88,7 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
  public:
   SuplaOled();
   void handleAction(int event, int action);
-  
+
   void enableDisplay(bool isOn);
   bool isDisplayEnabled() const {
     return oledON;

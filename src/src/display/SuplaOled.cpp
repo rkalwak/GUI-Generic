@@ -245,14 +245,7 @@ void displayUiGeneral(
 
 void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
-  double lastTemperature = TEMPERATURE_NOT_AVAILABLE;
-
-  if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-    lastTemperature = channel->getValueDouble();
-  }
-  else if (channel && channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-    lastTemperature = channel->getValueDoubleFirst();
-  }
+  double lastTemperature = getTemperatureFromChannelThermometr(channel);
 
   displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
 }
@@ -363,14 +356,16 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
 
 void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   uint8_t mainThermometr = 0;
-  double temperature = TEMPERATURE_NOT_AVAILABLE;
+  uint8_t auxThermometr = 0;
   uint8_t thermostatIndex = oled[state->currentFrame].nrRealy;
 
   if (thermostatIndex >= 0) {
     mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+    auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
   }
 
   auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
+  auto channelAuxThermometr = getChanelByChannelNumber(auxThermometr);
 
   int8_t shiftWhenAddedRelay = 0;
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
@@ -379,15 +374,6 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   }
 #endif
 
-  if (channelMainThermometr) {
-    if (channelMainThermometr->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-      temperature = channelMainThermometr->getValueDouble();
-    }
-    else if (channelMainThermometr->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-      temperature = channelMainThermometr->getValueDoubleFirst();
-    }
-  }
-
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
   if (channel) {
     double setpointTemperatureHeat = channel->getHvacSetpointTemperatureHeat() / 100.0;
@@ -395,15 +381,24 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
     display->setColor(WHITE);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-    if (channel->getHvacMode() == SUPLA_HVAC_MODE_OFF) {
+    double mainTemperature = getTemperatureFromChannelThermometr(channelMainThermometr);
+    double auxTemperature = getTemperatureFromChannelThermometr(channelAuxThermometr);
+
+    if (auxThermometr != 0) {
       display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 10,
-                          getTempString(temperature) + S_CELSIUS);
+      display->drawString(x + 10, y + display->getHeight() / 2 - 10, getTempString(mainTemperature));
+      display->drawString(x + 10 + (display->getWidth() / 2), y + display->getHeight() / 2 - 10, getTempString(auxTemperature));
     }
     else {
+      display->setFont(ArialMT_Win1250_Plain_24);
+      display->drawString(x + getWidthValue(display, getTempString(mainTemperature)) - 6, y + display->getHeight() / 2 - 10,
+                          getTempString(mainTemperature) + S_CELSIUS);
+    }
+
+    if (channel->getHvacMode() != SUPLA_HVAC_MODE_OFF) {
       if (channel->getHvacIsOn()) {
         display->setColor(WHITE);
-        display->fillCircle(x + 4, y + 20 + shiftWhenAddedRelay, 4);
+        display->fillCircle(x + 4, y + 7 + shiftWhenAddedRelay, 4);
       }
 
       if (channel->isHvacFlagWeeklySchedule()) {
@@ -414,10 +409,6 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
         display->setFont(ArialMT_Plain_10);
         display->drawString(display->getWidth() / 2 + 20, 0 + shiftWhenAddedRelay, String("M"));
       }
-
-      display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + getWidthValue(display, getTempString(temperature)) - 6, y + display->getHeight() / 2 - 10,
-                          getTempString(temperature) + S_CELSIUS);
 
       display->setFont(ArialMT_Win1250_Plain_10);
       display->drawString(display->getWidth() - 46, display->getHeight() - 10, String("set"));
@@ -458,6 +449,18 @@ Supla::Channel* getChanelByChannelNumber(int channelNumber) {
   }
 
   return foundChannel;
+}
+
+double getTemperatureFromChannelThermometr(Supla::Channel* channelThermometr) {
+  if (channelThermometr) {
+    if (channelThermometr->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
+      return channelThermometr->getValueDouble();
+    }
+    else if (channelThermometr->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+      return channelThermometr->getValueDoubleFirst();
+    }
+  }
+  return TEMPERATURE_NOT_AVAILABLE;
 }
 
 SuplaOled::SuplaOled() {
@@ -635,8 +638,8 @@ void SuplaOled::iterateAlways() {
         ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED || ConfigESP->getLastStatusSupla() == STATUS_REGISTER_IN_PROGRESS) {
       // setupAnimate();
 
-      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) && this->isDisplayEnabled() &&
-          ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
+      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) &&
+          this->isDisplayEnabled() && ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
         this->enableDisplay(false);
 
         if (getFrameCount() > 1 && ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() > 0) {

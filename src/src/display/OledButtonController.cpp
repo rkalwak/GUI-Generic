@@ -36,6 +36,12 @@ OledButtonController::OledButtonController(SuplaOled* oled) : oled(oled) {
 }
 
 void OledButtonController::initializeThermostatButtons() {
+#if defined(SUPLA_BUTTON) && defined(SUPLA_THERMOSTAT)
+  if (getCountActiveThermostat() != 0) {
+    Supla::GUI::addButtonToRelay(0, thermostat[0], this);
+  }
+#endif
+
   for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
     uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
 

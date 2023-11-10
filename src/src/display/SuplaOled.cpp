@@ -384,21 +384,23 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
     double mainTemperature = getTemperatureFromChannelThermometr(channelMainThermometr);
     double auxTemperature = getTemperatureFromChannelThermometr(channelAuxThermometr);
 
+    int centerYPosition = y + display->getHeight() / 2 - 8;
+
     if (auxThermometr != 0) {
       display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + 10, y + display->getHeight() / 2 - 10, getTempString(mainTemperature));
-      display->drawString(x + 10 + (display->getWidth() / 2), y + display->getHeight() / 2 - 10, getTempString(auxTemperature));
+      display->drawString(x + 15, centerYPosition, getTempString(mainTemperature));
+      display->drawString((x + 14) + display->getWidth() / 2, centerYPosition, getTempString(auxTemperature));
     }
     else {
       display->setFont(ArialMT_Win1250_Plain_24);
-      display->drawString(x + getWidthValue(display, getTempString(mainTemperature)) - 6, y + display->getHeight() / 2 - 10,
+      display->drawString(x + getWidthValue(display, getTempString(mainTemperature)) - 6, centerYPosition,
                           getTempString(mainTemperature) + S_CELSIUS);
     }
 
     if (channel->getHvacMode() != SUPLA_HVAC_MODE_OFF) {
       if (channel->getHvacIsOn()) {
         display->setColor(WHITE);
-        display->fillCircle(x + 4, y + 7 + shiftWhenAddedRelay, 4);
+        display->fillCircle(x + 4, y + 20 + shiftWhenAddedRelay, 4);
       }
 
       if (channel->isHvacFlagWeeklySchedule()) {

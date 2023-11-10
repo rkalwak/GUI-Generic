@@ -103,10 +103,6 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
   }
 
   HvacBase::setButtonTemperatureStep(10);
-
-  if (getNumber() == 0) {
-    Supla::GUI::addButtonToRelay(0, this, this);
-  }
 }
 
 void ThermostatGUI::notifyConfigChange(int channelNumber) {

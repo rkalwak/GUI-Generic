@@ -71,7 +71,7 @@
 #endif
 
 #define DEFAULT_AT_MULTICLICK_TIME "0.25"
-#define DEFAULT_AT_HOLD_TIME       "0.25"
+#define DEFAULT_AT_HOLD_TIME       "0.4"
 
 enum _key
 {

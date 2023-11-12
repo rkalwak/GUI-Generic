@@ -570,13 +570,14 @@ void SuplaOled::onInit() {
             oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
             setFrameCount(getFrameCount() + 1);
           }
-        }
-        if (element->getSecondaryChannel()) {
-          auto channel = element->getSecondaryChannel();
-          if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
-            frames[getFrameCount()] = {displayPressure};
-            oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
-            setFrameCount(getFrameCount() + 1);
+
+          if (element->getSecondaryChannel()) {
+            auto channel = element->getSecondaryChannel();
+            if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
+              frames[getFrameCount()] = {displayPressure};
+              oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+              setFrameCount(getFrameCount() + 1);
+            }
           }
         }
       }

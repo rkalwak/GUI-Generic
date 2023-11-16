@@ -16,8 +16,8 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_NETWORK_HTML_SCREEN_BRIGHTNESS_PARAMETERS_H_
-#define SRC_SUPLA_NETWORK_HTML_SCREEN_BRIGHTNESS_PARAMETERS_H_
+#ifndef SRC_SUPLA_NETWORK_HTML_H3_TAG_H_
+#define SRC_SUPLA_NETWORK_HTML_H3_TAG_H_
 
 #include <supla/network/html_element.h>
 
@@ -25,22 +25,17 @@ namespace Supla {
 
 namespace Html {
 
-const char ScreenBrightnessCfgTag[] = "bright";
-const char ScreenAdjustmentForAutomaticCfgTag[] = "adj_auto_br";
-
-class ScreenBrightnessParameters : public HtmlElement {
+class H3Tag : public HtmlElement {
  public:
-  ScreenBrightnessParameters();
-  virtual ~ScreenBrightnessParameters();
+  explicit H3Tag(const char *text);
+  virtual ~H3Tag();
   void send(Supla::WebSender* sender) override;
-  bool handleResponse(const char* key, const char* value) override;
-  void onProcessingEnd() override;
 
- private:
-  bool checkboxFound = false;
+ protected:
+  char *text = nullptr;
 };
 
 };  // namespace Html
 };  // namespace Supla
 
-#endif  // SRC_SUPLA_NETWORK_HTML_SCREEN_BRIGHTNESS_PARAMETERS_H_
+#endif  // SRC_SUPLA_NETWORK_HTML_H3_TAG_H_

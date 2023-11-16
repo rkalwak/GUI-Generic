@@ -370,6 +370,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   _supla_int16_t getSecondaryTemp();
 
   bool isWeelkySchedulManualOverrideMode() const;
+  void clearWaitingFlags();
 
  private:
   _supla_int16_t getTemperature(int channelNo);
@@ -379,6 +380,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool checkOverheatProtection(_supla_int16_t t);
   bool checkAntifreezeProtection(_supla_int16_t t);
   bool checkAuxProtection(_supla_int16_t t);
+  bool isAuxProtectionEnabled() const;
   bool processWeeklySchedule();
   void setSetpointTemperaturesForCurrentMode(int tHeat, int tCool);
   bool checkThermometersStatusForCurrentMode(_supla_int16_t t1,
@@ -450,6 +452,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   };
 
   uint32_t timerUpdateTimestamp = 0;
+  bool serverChannelFunctionValid = true;
 };
 
 }  // namespace Control

@@ -16,28 +16,34 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
    */
 
-#ifndef SRC_SUPLA_NETWORK_HTML_RGBW_BUTTON_PARAMETERS_H_
-#define SRC_SUPLA_NETWORK_HTML_RGBW_BUTTON_PARAMETERS_H_
+#include "h3_tag.h"
 
-#include <supla/network/html/select_input_parameter.h>
+#include <supla/network/web_sender.h>
 
-namespace Supla {
+#include <string.h>
+#include <stdio.h>
 
-namespace Html {
+using Supla::Html::H3Tag;
 
-const char RgbwButtonTag[] = "rgbw_btn";
+H3Tag::H3Tag(const char *text) {
+  int size = strlen(text);
+  this->text = new char[size + 1];
+  if (this->text) {
+    snprintf(this->text, size + 1, "%s", text);
+  }
+}
 
-class RgbwButtonParameters : public SelectInputParameter {
- public:
-  // if id is -1, it is applied to all rgbw elements
-  // otherwise it should be channel number
-  explicit RgbwButtonParameters(int id = -1, const char *label = nullptr);
+H3Tag::~H3Tag() {
+  if (text) {
+    delete[] text;
+    text = nullptr;
+  }
+}
 
- protected:
-};
-
-};  // namespace Html
-};  // namespace Supla
-
-
-#endif  // SRC_SUPLA_NETWORK_HTML_RGBW_BUTTON_PARAMETERS_H_
+void H3Tag::send(Supla::WebSender* sender) {
+  // form-field BEGIN
+  sender->send("<h3>");
+  sender->send(text);
+  sender->send("</h3>");
+  // form-field END
+}

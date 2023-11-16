@@ -143,7 +143,7 @@ void handleRelaySaveSet() {
   if (gpio != GPIO_VIRTUAL_RELAY) {
     input = INPUT_RELAY_LEVEL;
     input += nr_relay;
-    ConfigESP->setLevel(gpio,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigESP->setLevel(gpio, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
 
     input = INPUT_LIGHT_RELAY;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -166,7 +166,7 @@ void handleRelaySaveSet() {
       input = INPUT_LEVEL_LED;
       input += nr_relay;
 
-      ConfigESP->setLevel(ConfigESP->getGpio(nr_relay.toInt(), FUNCTION_LED),  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+      ConfigESP->setLevel(ConfigESP->getGpio(nr_relay.toInt(), FUNCTION_LED), static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     }
   }
 #endif
@@ -212,21 +212,23 @@ void handleRelaySaveSet() {
   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
 
   if (thermostatIndex >= 0) {
-    input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
-    uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
-
-    input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
-    thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
-
     if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
+      ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
+      ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
     }
     else {
       input = INPUT_THERMOSTAT_HISTERESIS;
       String histeresis = WebServer->httpServer->arg(input).c_str();
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, histeresis.c_str());
+
+      input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
+      uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+
+      input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
+      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
     }
   }
 #endif

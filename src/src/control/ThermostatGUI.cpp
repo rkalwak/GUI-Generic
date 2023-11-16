@@ -25,7 +25,6 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
     : Supla::Control::HvacBase(new Supla::Control::InternalPinOutput(ConfigESP->getGpio(thermostatNumber, FUNCTION_RELAY),
                                                                      ConfigESP->getLevel(ConfigESP->getGpio(thermostatNumber, FUNCTION_RELAY)))),
       Supla::Protocol::ProtocolLayer(sdc) {
-        
   setNumber(thermostatNumber);
   uint8_t pinLED = ConfigESP->getGpio(getNumber(), FUNCTION_LED);
   bool levelLed = ConfigESP->getLevel(pinLED);
@@ -38,11 +37,11 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
 
   HvacBase::setTemperatureHisteresis(histeresis * 10);
 
-  if (mainThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+  if (mainThermometr != HvacBase::getChannelNumber()) {
     HvacBase::setMainThermometerChannelNo(mainThermometr);
   }
 
-  if (auxThermometr != THERMOSTAT_NO_TEMP_CHANNEL) {
+  if (auxThermometr != HvacBase::getChannelNumber()) {
     HvacBase::setAuxThermometerChannelNo(auxThermometr);
 
     HvacBase::setAuxThermometerType(SUPLA_HVAC_AUX_THERMOMETER_TYPE_FLOOR);

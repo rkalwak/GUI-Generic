@@ -358,35 +358,33 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
   uint8_t mainThermometr = 0;
   uint8_t auxThermometr = 0;
   uint8_t thermostatIndex = oled[state->currentFrame].nrRealy;
-
-  if (thermostatIndex >= 0) {
-    mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-    auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-  }
-
-  auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
-  auto channelAuxThermometr = getChanelByChannelNumber(auxThermometr);
-
+  uint8_t channelSensor = oled[state->currentFrame].chanelSensor;
   int8_t shiftWhenAddedRelay = 0;
+  int centerYPosition = y + display->getHeight() / 2 - 8;
+
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
   if (getCountActiveThermostat() < Supla::GUI::relay.size()) {
     shiftWhenAddedRelay = 12;
   }
 #endif
 
-  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
-  if (channel) {
+  auto channel = getChanelByChannelNumber(channelSensor);
+
+  if (channel && thermostatIndex >= 0) {
+    mainThermometr = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+    auxThermometr = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+
+    auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
+    double mainTemperature = getTemperatureFromChannelThermometr(channelMainThermometr);
     double setpointTemperatureHeat = channel->getHvacSetpointTemperatureHeat() / 100.0;
 
     display->setColor(WHITE);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-    double mainTemperature = getTemperatureFromChannelThermometr(channelMainThermometr);
-    double auxTemperature = getTemperatureFromChannelThermometr(channelAuxThermometr);
+    if (auxThermometr != channelSensor) {
+      auto channelAuxThermometr = getChanelByChannelNumber(auxThermometr);
+      double auxTemperature = getTemperatureFromChannelThermometr(channelAuxThermometr);
 
-    int centerYPosition = y + display->getHeight() / 2 - 8;
-
-    if (auxThermometr != 0) {
       display->setFont(ArialMT_Win1250_Plain_24);
       display->drawString(x + 15, centerYPosition, getTempString(mainTemperature));
       display->drawString((x + 14) + display->getWidth() / 2, centerYPosition, getTempString(auxTemperature));

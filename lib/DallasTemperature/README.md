@@ -1,3 +1,10 @@
+[![Arduino CI](https://github.com/milesburton/Arduino-Temperature-Control-Library/workflows/Arduino%20CI/badge.svg)](https://github.com/marketplace/actions/arduino_ci)
+[![Arduino-lint](https://github.com/milesburton/Arduino-Temperature-Control-Library/actions/workflows/arduino-lint.yml/badge.svg)](https://github.com/RobTillaart/AS5600/actions/workflows/arduino-lint.yml)
+[![JSON check](https://github.com/milesburton/Arduino-Temperature-Control-Library/actions/workflows/jsoncheck.yml/badge.svg)](https://github.com/RobTillaart/AS5600/actions/workflows/jsoncheck.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/milesburton/Arduino-Temperature-Control-Library/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/milesburton/Arduino-Temperature-Control-Library.svg?maxAge=3600)](https://github.com/milesburton/Arduino-Temperature-Control-Library/releases)
+
+
 # Arduino Library for Maxim Temperature Integrated Circuits
 
 ## Usage
@@ -10,6 +17,7 @@ This library supports the following devices :
 * DS1822
 * DS1820
 * MAX31820
+* MAX31850
 
 
 You will need a pull-up resistor of about 5 KOhm between the 1-Wire data line
@@ -53,7 +61,7 @@ Rob Tillaart [rob.tillaart@gmail.com] added async modus (v3.7.0)
 
 
 Additional documentation may be found here
-https://www.milesburton.com/Dallas_Temperature_Control_Library
+https://www.milesburton.com/w/index.php/Dallas_Temperature_Control_Library
 
 # License
 

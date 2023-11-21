@@ -101,7 +101,7 @@ double DS18B20::getValue() {
   double value = TEMPERATURE_NOT_AVAILABLE;
 
   // Zmiana: Sprawdzenie dostępności konwersji przed odczytem
-  if (myBus->sensors.isConversionAvailable()) {
+if (myBus->sensors.isConversionComplete()) {
     value = myBus->sensors.getTempC(address);
     
     if (value == DEVICE_DISCONNECTED_C || value == 85.0) {

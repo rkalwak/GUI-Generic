@@ -14,29 +14,16 @@ OneWireBus::OneWireBus(uint8_t pinNumberConfig)
   supla_log(LOG_DEBUG, "OneWire(pin %d) Found %d devices:", pinNumberConfig,
             sensors.getDeviceCount());
 
-  // report parasite power requirements
-
   DeviceAddress address;
-  //char strAddr[64];
   for (int i = 0; i < sensors.getDeviceCount(); i++) {
     if (!sensors.getAddress(address, i)) {
       supla_log(LOG_DEBUG, "Unable to find address for Device %d", i);
     } else {
-      /*sprintf(
-        strAddr,
-        "{0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X}",
-        address[0],
-        address[1],
-        address[2],
-        address[3],
-        address[4],
-        address[5],
-        address[6],
-        address[7]);
-        supla_log(LOG_DEBUG, "Index %d - address %s", i, strAddr);*/
+      // Zmiana: Ustawianie rozdzielczości na 12 bitów
       sensors.setResolution(address, 12);
     }
-    delay(0);
+    // Zmiana: Dodanie krótkiego opóźnienia przed pomiarem
+    delay(100);
   }
   sensors.setWaitForConversion(true);
   sensors.requestTemperatures();
@@ -79,7 +66,7 @@ DS18B20::DS18B20(uint8_t pin, uint8_t *deviceAddress) {
     }
   }
 
-  // There is no OneWire bus created yet for this pin
+  // Brak utworzonego magistrali OneWire dla tego pinu
   if (!bus) {
     supla_log(LOG_DEBUG, "Creating OneWire bus for pin: %d", pin);
     myBus = new OneWireBus(pin);
@@ -98,7 +85,10 @@ DS18B20::DS18B20(uint8_t pin, uint8_t *deviceAddress) {
 
 void DS18B20::iterateAlways() {
   if (myBus->lastReadTime + 10000 < millis()) {
+    // Zmiana: Ustawienie waitForConversion przed pomiarami
+    myBus->sensors.setWaitForConversion(true);
     myBus->sensors.requestTemperatures();
+    myBus->sensors.setWaitForConversion(false);
     myBus->lastReadTime = millis();
   }
   if (myBus->lastReadTime + 5000 < millis() && (lastReadTime != myBus->lastReadTime)) {
@@ -109,30 +99,32 @@ void DS18B20::iterateAlways() {
 
 double DS18B20::getValue() {
   double value = TEMPERATURE_NOT_AVAILABLE;
-  if (address[0] == 0) {
-    value = myBus->sensors.getTempCByIndex(0);
-  } else {
+
+  // Zmiana: Sprawdzenie dostępności konwersji przed odczytem
+  if (myBus->sensors.isConversionAvailable()) {
     value = myBus->sensors.getTempC(address);
-  }
-
-  if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
-    value = TEMPERATURE_NOT_AVAILABLE;
-  }
-
-  if (value == TEMPERATURE_NOT_AVAILABLE) {
-    retryCounter++;
-    if (retryCounter > 3) {
-      retryCounter = 0;
-      DS18B20::oneWireBus->oneWire.reset();
-       
-    } else {
-      value = lastValidValue;
+    
+    if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
+      value = TEMPERATURE_NOT_AVAILABLE;
     }
-  } else {
-    retryCounter = 0;
-  }
-  lastValidValue = value;
 
+    if (value == TEMPERATURE_NOT_AVAILABLE) {
+      retryCounter++;
+      if (retryCounter > 3) {
+        retryCounter = 0;
+        // Zmiana: Ponowne zapytanie o temperatury z opóźnieniem
+        myBus->sensors.setWaitForConversion(true);
+        myBus->sensors.requestTemperatures();
+        myBus->sensors.setWaitForConversion(false);
+      } else {
+        value = lastValidValue;
+      }
+    } else {
+      retryCounter = 0;
+    }
+  }
+
+  lastValidValue = value;
   return value;
 }
 

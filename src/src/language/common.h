@@ -20,7 +20,6 @@
 #define S_BME280                         "BME280"
 #define S_BMP280                         "BMP280"
 #define S_DS18B20                        "DS18B20"
-#define S_MULTI_DS18B20                  "Multi DS18B20"
 #define S_DHT11                          "DHT11"
 #define S_DHT22                          "DHT22"
 #define S_SHT3X                          "SHT3x"

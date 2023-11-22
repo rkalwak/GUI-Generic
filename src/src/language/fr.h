@@ -36,7 +36,7 @@
 #define S_SENSORS_I2C                                          "LES SENSORS du i2c"
 #define S_SENSORS_SPI                                          "LES SENSORS du SPI"
 #define S_SENSORS_OTHER                                        "LES SENSORS"
-#define S_LED_BUTTON_CFG                                       "LED, BOUTON metre à jour"
+#define S_CONFIGURATION                                       "LED, BOUTON metre à jour"
 #define S_CFG_MODE                                             "CFG mode"
 #define S_QUANTITY                                             "Quantité"
 #define S_GPIO_SETTINGS_FOR_RELAYS                             "Paramètres du GPIO pour les relais"

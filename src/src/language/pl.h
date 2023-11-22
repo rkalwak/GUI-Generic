@@ -36,7 +36,7 @@
 #define S_SENSORS_I2C                                          "I2C"
 #define S_SENSORS_SPI                                          "SPI"
 #define S_SENSORS_OTHER                                        "INNE"
-#define S_LED_BUTTON_CFG                                       "KONFIGURACJA"
+#define S_CONFIGURATION                                        "Konfiguracja"
 #define S_CFG_MODE                                             "Tryb"
 #define S_QUANTITY                                             "ILOŚĆ"
 #define S_GPIO_SETTINGS_FOR_RELAYS                             "Ustawienie GPIO dla przekaźników"

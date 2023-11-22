@@ -72,7 +72,7 @@ addButton(webContentBuffer, S_CONDITIONING, PATH_CONDITIONS);
 #endif
 
 #ifdef SUPLA_CONFIG
-  addButton(webContentBuffer, S_LED_BUTTON_CFG, PATH_CONFIG);
+  addButton(webContentBuffer, S_CONFIGURATION, PATH_CONFIG);
 #endif
   addFormHeaderEnd(webContentBuffer);
   addButton(webContentBuffer, S_RETURN, "");

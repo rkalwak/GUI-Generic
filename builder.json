@@ -317,7 +317,7 @@
 			}
 		},
 		"SUPLA_THERMOSTAT": {
-			"name": "Termostat - działa tylko na https://beta-cloud.supla.org/",
+			"name": "Termostat",
 			"desc": "",
 			"defOn": false,
 			"new": true,
@@ -326,19 +326,19 @@
 				"SUPLA_LED"
 			],
 			"en": {
-				"name": "Thermostat - only works on https://beta-cloud.supla.org/",
+				"name": "Thermostat",
 				"desc": ""
 			},
 			"es": {
-				"name": "Termostato: solo funciona en https://beta-cloud.supla.org/",
+				"name": "Termostato",
 				"desc": ""
 			},
 			"de": {
-				"name": "Thermostat – funktioniert nur auf https://beta-cloud.supla.org/",
+				"name": "Thermostat",
 				"desc": ""
 			},
 			"fr": {
-				"name": "Thermostat - fonctionne uniquement sur https://beta-cloud.supla.org/",
+				"name": "Thermostat",
 				"desc": ""
 			}
 		},

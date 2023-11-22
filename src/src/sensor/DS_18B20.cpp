@@ -157,5 +157,44 @@ void DS18B20::setDeviceAddress(uint8_t *deviceAddress) {
   }
 }
 
+void findAndSaveDS18B20Addresses() {
+  uint8_t pin = ConfigESP->getGpio(FUNCTION_DS18B20);
+  uint8_t maxDevices = ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt();
+  OneWire ow(pin);
+  DallasTemperature sensors(&ow);
+
+  sensors.begin();
+
+  Serial.print("Szukanie urządzeń DS18B20...");
+
+  int deviceCount = 0;
+
+  for (int i = 0; i < maxDevices; ++i) {
+    DeviceAddress devAddr;
+
+    if (sensors.getAddress(devAddr, i)) {
+      deviceCount++;
+
+      char devAddrStr[17];
+      for (uint8_t j = 0; j < 8; j++) {
+        sprintf(devAddrStr + j * 2, "%02X", devAddr[j]);
+      }
+      devAddrStr[16] = '\0';
+
+      ConfigManager->setElement(KEY_ADDR_DS18B20, i, devAddrStr);
+
+      Serial.print("Znaleziono urządzenie na adresie: ");
+      Serial.print(devAddrStr);
+      Serial.println();
+    }
+    else {
+      break;
+    }
+  }
+
+  Serial.print("Znaleziono łącznie ");
+  Serial.print(deviceCount);
+  Serial.println(" urządzeń DS18B20.");
+}
 
 OneWireBus *DS18B20::oneWireBus = nullptr;

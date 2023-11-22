@@ -74,7 +74,7 @@ void handleSensor1Wire(int save) {
   addFormHeaderEnd(webContentBuffer);
 #endif
 
-#ifdef SUPLA_DS18B20 
+#ifdef SUPLA_DS18B20
   addFormHeader(webContentBuffer, String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_MULTI_DS18B20);
   addNumberBox(webContentBuffer, INPUT_MAX_DS18B20, S_QUANTITY, KEY_MULTI_MAX_DS18B20, MAX_DS18B20);
   if (ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() > 1) {
@@ -125,12 +125,21 @@ void handleSensor1WireSave() {
 #endif
 
 #ifdef SUPLA_DS18B20
+  int inputMaxDS18B20 = WebServer->httpServer->arg(INPUT_MAX_DS18B20).toInt();
+  int oldMaxDS18B20 = ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt();
+
+  if (strcmp(WebServer->httpServer->arg(INPUT_MAX_DS18B20).c_str(), "") != 0) {
+    ConfigManager->set(KEY_MULTI_MAX_DS18B20, WebServer->httpServer->arg(INPUT_MAX_DS18B20).c_str());
+  }
+
   if (!WebServer->saveGPIO(INPUT_MULTI_DS_GPIO, FUNCTION_DS18B20)) {
     handleSensor1Wire(6);
     return;
   }
-  if (strcmp(WebServer->httpServer->arg(INPUT_MAX_DS18B20).c_str(), "") > 0) {
-    ConfigManager->set(KEY_MULTI_MAX_DS18B20, WebServer->httpServer->arg(INPUT_MAX_DS18B20).c_str());
+  else {
+    if (strcmp(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(0).c_str(), "") == 0) {
+      findAndSaveDS18B20Addresses();
+    }
   }
 #endif
 
@@ -143,7 +152,15 @@ void handleSensor1WireSave() {
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
-      handleSensor1Wire(1);
+
+#ifdef SUPLA_DS18B20
+      if (inputMaxDS18B20 > oldMaxDS18B20) {
+        handleSensor1Wire(SaveResult::DATA_SAVED_RESTART_MODULE);
+        ConfigESP->rebootESP();
+      }
+#endif
+
+      handleSensor1Wire(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:
       handleSensor1Wire(2);
@@ -246,12 +263,10 @@ void handleSensorDs18b20Save() {
     dsName += i;
 
     ConfigManager->setElement(KEY_ADDR_DS18B20, i, WebServer->httpServer->arg(dsAddr).c_str());
-
-    if (strcmp(WebServer->httpServer->arg(dsName).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_NAME_SENSOR, i, WebServer->httpServer->arg(dsName).c_str());
+    ConfigManager->setElement(KEY_NAME_SENSOR, i, WebServer->httpServer->arg(dsName).c_str());
+    if (Supla::GUI::sensorDS[i] != nullptr) {
+      Supla::GUI::sensorDS[i]->setDeviceAddress(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i)));
     }
-
-    Supla::GUI::sensorDS[i]->setDeviceAddress(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i)));
   }
 
   switch (ConfigManager->save()) {

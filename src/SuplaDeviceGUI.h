@@ -74,7 +74,7 @@
 #include <supla/control/roller_shutter.h>
 
 #ifdef SUPLA_DS18B20
-#include <supla/sensor/DS_18B20.h>
+#include "src/sensor/DS_18B20.h"
 #endif
 #include <supla/sensor/DHT.h>
 

@@ -37,6 +37,7 @@ class DS18B20 : public Supla::Sensor::Thermometer {
   double lastValidValue;
 };
 
+void findAndSaveDS18B20Addresses();
 
 
 #endif  // SuplaSensorDS18B20_h

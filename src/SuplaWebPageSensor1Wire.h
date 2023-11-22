@@ -54,6 +54,7 @@ void handleSensor1WireSave();
 
 void handleSensorDs18b20(int save = 0);
 void handleSensorDs18b20Save();
+void findAndSaveDS18B20Addresses();
 #endif
 
 #endif

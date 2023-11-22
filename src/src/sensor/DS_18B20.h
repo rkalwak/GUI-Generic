@@ -3,11 +3,10 @@
 
 #include <Arduino.h>
 #include <DallasTemperature.h>
-#include <OneWire.h>
+#include <OneWireNg.h>
 
 #include <supla-common/log.h>
 #include <supla/sensor/thermometer.h>
-
 
 class OneWireBus {
  public:
@@ -37,5 +36,7 @@ class DS18B20 : public Supla::Sensor::Thermometer {
   int8_t retryCounter;
   double lastValidValue;
 };
+
+
 
 #endif  // SuplaSensorDS18B20_h

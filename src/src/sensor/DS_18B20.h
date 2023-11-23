@@ -7,6 +7,11 @@
 
 #include <supla-common/log.h>
 #include <supla/sensor/thermometer.h>
+enum class OperationType
+{
+  CONVERSION,
+  READ
+};
 
 class DS18B20 : public Supla::Sensor::Thermometer {
  private:
@@ -14,7 +19,9 @@ class DS18B20 : public Supla::Sensor::Thermometer {
   DallasTemperature sensors;
   double lastValidValue;
   uint8_t retryCounter;
-  unsigned long lastReadTime;
+  unsigned long lastUpdateTime;
+  OperationType lastOperationType = OperationType::CONVERSION;
+
   uint8_t address[8];
 
  public:

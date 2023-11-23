@@ -246,15 +246,16 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
                    ConfigESP->getAction(pinButton) == Supla::GUI::Action::INCREASE_TEMPERATURE) {
             button->addAction(buttonAction, client, Supla::Event::ON_HOLD);
             button->addAction(buttonAction, client, Supla::Event::ON_CLICK_1);
-            // muliclickTimeMs = 250;
-            // holdTimeMs = 250;
             button->repeatOnHoldEvery(250);
           }
           else if (ConfigESP->getAction(pinButton) == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF) {
             button->addAction(Supla::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES, client, Supla::Event::ON_CLICK_1);
-            button->addAction(Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF, client, Supla::Event::ON_HOLD);
-            // muliclickTimeMs = 250;
-            // holdTimeMs = 250;
+            if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
+              button->addAction(Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF, client, Supla::Event::ON_HOLD);
+            }
+            else {
+              button->addAction(Supla::Action::TURN_OFF, client, Supla::Event::ON_HOLD);
+            }
             button->repeatOnHoldEvery(250);
           }
           else {

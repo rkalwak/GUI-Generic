@@ -1,13 +1,16 @@
 #include "DS_18B20.h"
 #include "../../SuplaDeviceGUI.h"
 
-DS18B20::DS18B20(uint8_t pin, uint8_t *deviceAddress)
-    : oneWire(pin),
-      sensors(&oneWire),
-      lastValidValue(TEMPERATURE_NOT_AVAILABLE),
-      retryCounter(0),
-      lastUpdateTime(0),
-      lastOperationType(OperationType::CONVERSION) {
+OneWire DS18B20::sharedOneWire;
+DallasTemperature DS18B20::sharedSensors(&sharedOneWire);
+unsigned long DS18B20::lastConversionTime = 0;
+
+void DS18B20::initSharedResources(uint8_t pin) {
+  sharedOneWire.begin(pin);
+  sharedSensors.begin();
+}
+
+DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {
   if (deviceAddress == nullptr) {
     Serial.println("Device address not provided. Using device from index 0");
     address[0] = 0;
@@ -15,48 +18,37 @@ DS18B20::DS18B20(uint8_t pin, uint8_t *deviceAddress)
   else {
     memcpy(address, deviceAddress, 8);
   }
-
-  sensors.setWaitForConversion(true);
-  sensors.requestTemperatures();
-  sensors.setWaitForConversion(false);
 }
 
 void DS18B20::iterateAlways() {
-  const unsigned long interval = 5000;  // Interwał dla konwersji i odczytu
-
   unsigned long currentTime = millis();
+  unsigned long timeSinceLastConversion = currentTime - lastConversionTime;
+
+  if (timeSinceLastConversion >= 10000) {
+    sharedSensors.setWaitForConversion(true);
+    sharedSensors.requestTemperatures();
+    sharedSensors.setWaitForConversion(false);
+    lastConversionTime = currentTime;
+  }
+
   unsigned long timeSinceLastOperation = currentTime - lastUpdateTime;
 
-  if (timeSinceLastOperation >= interval) {
-    if (timeSinceLastOperation >= interval && lastOperationType == OperationType::READ) {
-      sensors.setWaitForConversion(true);
-      sensors.requestTemperatures();
-      sensors.setWaitForConversion(false);
-      lastUpdateTime = currentTime;
-      lastOperationType = OperationType::CONVERSION;
-      Serial.println("konwersja");
-    }
+  if (timeSinceLastOperation >= 5000) {
+    channel.setNewValue(getValue());
 
-    else if (timeSinceLastOperation >= interval && lastOperationType == OperationType::CONVERSION) {
-      Serial.println("odczyt");
-      channel.setNewValue(getValue());
-      lastUpdateTime = currentTime;
-      lastOperationType = OperationType::READ;
-    }
+    lastUpdateTime = currentTime;
   }
 }
+
 double DS18B20::getValue() {
   double value = TEMPERATURE_NOT_AVAILABLE;
-  if (sensors.isConversionComplete()) {
+  if (sharedSensors.isConversionComplete()) {
     if (address[0] == 0) {
-      value = sensors.getTempCByIndex(0);
+      value = sharedSensors.getTempCByIndex(0);
     }
     else {
-      value = sensors.getTempC(address);
+      value = sharedSensors.getTempC(address);
     }
-  }
-  else {
-    Serial.println("blad isConversionComplete");
   }
 
   if (value == DEVICE_DISCONNECTED_C || value == 85.0) {

@@ -7,29 +7,28 @@
 
 #include <supla-common/log.h>
 #include <supla/sensor/thermometer.h>
-enum class OperationType
-{
-  CONVERSION,
-  READ
-};
 
 class DS18B20 : public Supla::Sensor::Thermometer {
+ public:
+  DS18B20(uint8_t* deviceAddress);
+  void iterateAlways();
+  void onInit();
+  double getValue();
+
+  static void initSharedResources(uint8_t pin);
+  void setDeviceAddress(uint8_t* deviceAddress);
+
  private:
-  OneWire oneWire;
-  DallasTemperature sensors;
-  double lastValidValue;
-  uint8_t retryCounter;
-  unsigned long lastUpdateTime;
-  OperationType lastOperationType = OperationType::CONVERSION;
+  static OneWire sharedOneWire;
+  static DallasTemperature sharedSensors;
+
+  static unsigned long lastConversionTime;
 
   uint8_t address[8];
+  double lastValidValue;
+  uint8_t retryCounter;
 
- public:
-  DS18B20(uint8_t pin, uint8_t* deviceAddress = nullptr);
-  void iterateAlways();
-  double getValue();
-  void onInit();
-  void setDeviceAddress(uint8_t* deviceAddress);
+  unsigned long lastUpdateTime;
 };
 
 void findAndSaveDS18B20Addresses();

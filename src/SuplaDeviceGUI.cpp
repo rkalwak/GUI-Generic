@@ -489,8 +489,10 @@ void addDS18B20MultiThermometer(int pinNumber) {
       findAndSaveDS18B20Addresses();
     }
 
+    DS18B20::initSharedResources(pinNumber);
+
     for (int i = 0; i < maxDevices; ++i) {
-      sensorDS.push_back(new DS18B20(pinNumber, HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i))));
+      sensorDS.push_back(new DS18B20(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i))));
       supla_log(LOG_DEBUG, "Index %d - address %s", i, ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i).c_str());
 
 #ifdef SUPLA_CONDITIONS
@@ -499,7 +501,7 @@ void addDS18B20MultiThermometer(int pinNumber) {
     }
   }
   else {
-    sensorDS.push_back(new DS18B20(ConfigESP->getGpio(FUNCTION_DS18B20)));
+    sensorDS.push_back(new DS18B20(nullptr));
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_DS18B20, S_DS18B20, sensorDS[0]);

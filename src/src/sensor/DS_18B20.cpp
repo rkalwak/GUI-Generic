@@ -12,7 +12,6 @@ void DS18B20::initSharedResources(uint8_t pin) {
 
 DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {
   if (deviceAddress == nullptr) {
-    Serial.println("Device address not provided. Using device from index 0");
     address[0] = 0;
   }
   else {
@@ -43,7 +42,7 @@ void DS18B20::iterateAlways() {
 double DS18B20::getValue() {
   double value = TEMPERATURE_NOT_AVAILABLE;
   if (sharedSensors.isConversionComplete()) {
-    if (address[0] == 0) {
+    if (address[0] == 0 && ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
       value = sharedSensors.getTempCByIndex(0);
     }
     else {

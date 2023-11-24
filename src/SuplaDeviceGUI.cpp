@@ -484,12 +484,12 @@ void addDirectLinks(uint8_t nr) {
 void addDS18B20MultiThermometer(int pinNumber) {
   uint8_t maxDevices = ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt();
 
+  DS18B20::initSharedResources(pinNumber);
+
   if (maxDevices > 1) {
     if (strcmp(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(0).c_str(), "") == 0) {
       findAndSaveDS18B20Addresses();
     }
-
-    DS18B20::initSharedResources(pinNumber);
 
     for (int i = 0; i < maxDevices; ++i) {
       sensorDS.push_back(new DS18B20(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i))));

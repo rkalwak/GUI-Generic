@@ -106,7 +106,7 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
 #ifndef SUPLA_OLED
   Supla::GUI::addButtonToRelay(thermostatNumber, this, this);
 #else
-  if (!ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt() == 0) {
     Supla::GUI::addButtonToRelay(thermostatNumber, this, this);
   }
 #endif

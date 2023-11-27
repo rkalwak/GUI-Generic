@@ -62,6 +62,10 @@ void OledButtonController::initializeThermostatButtons() {
 }
 
 void OledButtonController::handleAction(int event, int action) {
+  if (holdCounter == 0 && action == OLED_NEXT_FRAME && event == Supla::Event::ON_RELEASE) {
+    return;
+  }
+
   if (!oled->isDisplayEnabled()) {
     oled->enableDisplay(true);
   }

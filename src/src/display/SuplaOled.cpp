@@ -411,7 +411,7 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
       }
 
       display->setFont(ArialMT_Win1250_Plain_10);
-      display->drawString(display->getWidth() - 46, display->getHeight() - 10, String("set"));
+      display->drawString(display->getWidth() - 47, display->getHeight() - 10, String("set"));
 
       display->setFont(ArialMT_Plain_16);
       display->drawString(display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperatureHeat).c_str());
@@ -606,6 +606,8 @@ void SuplaOled::onInit() {
     display->flipScreenVertically();
     display->setFontTableLookupFunction(&utf8win1250);
   }
+
+  enableDisplay(true);
 }
 
 void SuplaOled::setupAnimate() {

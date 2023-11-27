@@ -110,7 +110,7 @@ class SuplaOled : public Supla::ActionHandler, public Supla::Element {
   int overlaysCount = 1;
 
   unsigned long timeLastChangeOled = millis();
-  bool oledON = true;
+  bool oledON;
 
   void onInit();
   void iterateAlways();

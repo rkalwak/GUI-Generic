@@ -7,7 +7,12 @@ unsigned long DS18B20::lastConversionTime = 0;
 
 void DS18B20::initSharedResources(uint8_t pin) {
   sharedOneWire.begin(pin);
+  sharedSensors.setOneWire(&sharedOneWire);
   sharedSensors.begin();
+
+  sharedSensors.setWaitForConversion(true);
+  sharedSensors.requestTemperatures();
+  sharedSensors.setWaitForConversion(false);
 }
 
 DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {

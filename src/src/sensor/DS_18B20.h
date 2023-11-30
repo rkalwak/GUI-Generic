@@ -17,12 +17,14 @@ class DS18B20 : public Supla::Sensor::Thermometer {
 
   static void initSharedResources(uint8_t pin);
   void setDeviceAddress(uint8_t* deviceAddress);
+  static void waitForAndRequestTemperatures();
 
  private:
   static OneWire sharedOneWire;
   static DallasTemperature sharedSensors;
 
   static unsigned long lastConversionTime;
+  const unsigned long conversionInterval = 10000;
 
   uint8_t address[8];
   double lastValidValue;

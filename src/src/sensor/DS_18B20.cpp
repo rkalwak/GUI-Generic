@@ -9,6 +9,7 @@ void DS18B20::initSharedResources(uint8_t pin) {
   sharedOneWire.begin(pin);
   sharedSensors.setOneWire(&sharedOneWire);
   sharedSensors.begin();
+  sharedSensors.setResolution(12);
 
   waitForAndRequestTemperatures();
   delay(sharedSensors.millisToWaitForConversion(sharedSensors.getResolution()));
@@ -29,6 +30,7 @@ void DS18B20::iterateAlways() {
 
   if (timeSinceLastConversion >= conversionInterval) {
     waitForAndRequestTemperatures();
+
     lastConversionTime = currentTime;
   }
 
@@ -38,6 +40,7 @@ void DS18B20::iterateAlways() {
     channel.setNewValue(getValue());
 
     lastUpdateTime = currentTime;
+    lastConversionTime = currentTime;
   }
 }
 

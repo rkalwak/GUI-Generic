@@ -16,6 +16,12 @@ void DS18B20::initSharedResources(uint8_t pin) {
 }
 
 DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {
+  unsigned long currentTime = millis();
+  channel.setNewValue(getValue());
+
+  lastConversionTime = currentTime;
+  lastUpdateTime = currentTime;
+
   if (deviceAddress == nullptr) {
     address[0] = 0;
   }
@@ -36,7 +42,7 @@ void DS18B20::iterateAlways() {
 
   unsigned long timeSinceLastOperation = currentTime - lastUpdateTime;
 
-  if (timeSinceLastOperation >= conversionInterval + 750) {
+  if (timeSinceLastOperation >= conversionInterval + 900) {
     channel.setNewValue(getValue());
 
     lastUpdateTime = currentTime;
@@ -74,14 +80,6 @@ double DS18B20::getValue() {
   lastValidValue = value;
 
   return value;
-}
-
-void DS18B20::onInit() {
-  unsigned long currentTime = millis();
-  channel.setNewValue(getValue());
-
-  lastConversionTime = currentTime;
-  lastUpdateTime = currentTime;
 }
 
 void DS18B20::waitForAndRequestTemperatures() {

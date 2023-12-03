@@ -12,7 +12,6 @@ class DS18B20 : public Supla::Sensor::Thermometer {
  public:
   DS18B20(uint8_t* deviceAddress);
   void iterateAlways();
-  void onInit();
   double getValue();
 
   static void initSharedResources(uint8_t pin);

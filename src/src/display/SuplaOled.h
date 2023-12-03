@@ -51,7 +51,7 @@ String getTempString(double temperature);
 String getHumidityString(double humidity);
 String getPressureString(double pressure);
 String getDistanceString(double distance);
-int32_t getQuality();
+int getQuality();
 
 void msOverlay(OLEDDisplay* display, OLEDDisplayUiState* state);
 

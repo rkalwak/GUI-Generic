@@ -19,18 +19,41 @@
 namespace Supla {
 namespace Control {
 
-DeepSleep::DeepSleep(unsigned _supla_int_t sleepTimeSec, unsigned _supla_int_t iterateTimeSec)
-    : sleepTimeSec(sleepTimeSec), iterateTimeSec(iterateTimeSec), lastReadTime(0) {
+DeepSleep::DeepSleep(unsigned _supla_int_t sleepTimeSec) : sleepTimeSec(sleepTimeSec), lastUpdateCheckTime(millis()) {
 }
 
 void DeepSleep::iterateAlways() {
-  if (millis() - lastReadTime > 5000 && ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL &&
-      !Supla::Protocol::ProtocolLayer::IsAnyUpdatePending()) {
-    Serial.println(F("ESP to Sleep mode"));
-    lastReadTime = millis();
+  static bool updateFound = false;
+  unsigned long currentTime = millis();
 
-    delay(200);
-    ESP.deepSleep(sleepTimeSec * 1000000);
+  if (currentTime - lastUpdateCheckTime > 5000 && ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
+    Serial.println(F("Checking for updates..."));
+
+    if (Supla::Protocol::ProtocolLayer::IsAnyUpdatePending()) {
+      updateFound = true;
+      Serial.println(F("Update found"));
+    }
+
+    if (currentTime - lastUpdateCheckTime > 10000 || (updateFound && currentTime - lastUpdateCheckTime > 5000)) {
+      if (!updateFound) {
+        Serial.println(F("Update check timeout"));
+      }
+
+      Serial.println(F("Preparing for ESP deep sleep"));
+
+      WiFi.disconnect(true);
+      delay(200);
+
+      Serial.println(F("Putting ESP into deep sleep"));
+
+#ifdef ESP8266
+      ESP.deepSleep(sleepTimeSec * 1000000);
+#elif defined(ESP32)
+      esp_sleep_enable_timer_wakeup(sleepTimeSec * 1000000);
+      esp_deep_sleep_start();
+#endif
+      lastUpdateCheckTime = currentTime;
+    }
   }
 }
 

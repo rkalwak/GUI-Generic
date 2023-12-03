@@ -796,7 +796,7 @@ void setup() {
 
 #ifdef SUPLA_DEEP_SLEEP
   if (ConfigManager->get(KEY_DEEP_SLEEP_TIME)->getValueInt() > 0) {
-    new Supla::Control::DeepSleep(ConfigManager->get(KEY_DEEP_SLEEP_TIME)->getValueInt() * 60, 30);
+    new Supla::Control::DeepSleep(ConfigManager->get(KEY_DEEP_SLEEP_TIME)->getValueInt() * 60);
   }
 #endif
 

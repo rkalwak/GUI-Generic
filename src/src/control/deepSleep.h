@@ -27,7 +27,7 @@ namespace Control {
 
 class DeepSleep : public Element {
  public:
-  DeepSleep(unsigned _supla_int_t sleepTimeSec, unsigned _supla_int_t iterateTimeSec);
+  DeepSleep(unsigned _supla_int_t sleepTimeSec);
 
   void iterateAlways();
   void onInit();
@@ -35,7 +35,7 @@ class DeepSleep : public Element {
  protected:
   unsigned _supla_int_t sleepTimeSec;
   unsigned _supla_int_t iterateTimeSec;
-  unsigned long lastReadTime;
+  unsigned long lastUpdateCheckTime;
 };
 
 };  // namespace Control

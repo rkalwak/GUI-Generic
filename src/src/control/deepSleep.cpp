@@ -19,26 +19,37 @@
 namespace Supla {
 namespace Control {
 
-DeepSleep::DeepSleep(unsigned _supla_int_t sleepTimeSec) : sleepTimeSec(sleepTimeSec), lastUpdateCheckTime(millis()) {
+DeepSleep::DeepSleep(unsigned _supla_int_t sleepTimeSec) : sleepTimeSec(sleepTimeSec), lastUpdateCheckTime(0) {
 }
 
 void DeepSleep::iterateAlways() {
   static bool updateFound = false;
+  static bool shouldEnterDeepSleep = false;
   unsigned long currentTime = millis();
 
-  if (currentTime - lastUpdateCheckTime > 5000 && ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
-    Serial.println(F("Checking for updates..."));
-
-    if (Supla::Protocol::ProtocolLayer::IsAnyUpdatePending()) {
-      updateFound = true;
-      Serial.println(F("Update found"));
+  if (ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
+    if (WiFi.status() == WL_CONNECTED && lastUpdateCheckTime == 0) {
+      lastUpdateCheckTime = currentTime;
     }
-
-    if (currentTime - lastUpdateCheckTime > 10000 || (updateFound && currentTime - lastUpdateCheckTime > 5000)) {
-      if (!updateFound) {
-        Serial.println(F("Update check timeout"));
+    else {
+      if (Supla::Protocol::ProtocolLayer::IsAnyUpdatePending()) {
+        updateFound = true;
       }
 
+      if (currentTime - lastUpdateCheckTime > 20000 || (updateFound && currentTime - lastUpdateCheckTime > 10000)) {
+        if (!updateFound) {
+          Serial.println(F("ESP deep sleep - timeout"));
+        }
+        shouldEnterDeepSleep = true;
+      }
+    }
+
+    if (WiFi.status() != WL_CONNECTED && currentTime - lastUpdateCheckTime > 60000) {
+      Serial.println(F("Failed to establish WiFi connection. Sleeping for 60 seconds..."));
+      shouldEnterDeepSleep = true;
+    }
+
+    if (shouldEnterDeepSleep) {
       Serial.println(F("Preparing for ESP deep sleep"));
 
       WiFi.disconnect(true);

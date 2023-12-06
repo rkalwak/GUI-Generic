@@ -12,7 +12,6 @@ void DS18B20::initSharedResources(uint8_t pin) {
   sharedSensors.setResolution(12);
 
   waitForAndRequestTemperatures();
-  delay(sharedSensors.millisToWaitForConversion(sharedSensors.getResolution()));
 }
 
 DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {
@@ -35,14 +34,13 @@ void DS18B20::iterateAlways() {
   unsigned long timeSinceLastConversion = currentTime - lastConversionTime;
 
   if (timeSinceLastConversion >= conversionInterval) {
-    waitForAndRequestTemperatures();
-
+    sharedSensors.requestTemperatures();
     lastConversionTime = currentTime;
   }
 
   unsigned long timeSinceLastOperation = currentTime - lastUpdateTime;
 
-  if (timeSinceLastOperation >= conversionInterval + 900) {
+  if (timeSinceLastOperation >= conversionInterval + 2000) {
     channel.setNewValue(getValue());
 
     lastUpdateTime = currentTime;
@@ -59,10 +57,10 @@ double DS18B20::getValue() {
     else {
       value = sharedSensors.getTempC(address);
     }
-  }
 
-  if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
-    value = TEMPERATURE_NOT_AVAILABLE;
+    if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
+      value = TEMPERATURE_NOT_AVAILABLE;
+    }
   }
 
   if (value == TEMPERATURE_NOT_AVAILABLE) {

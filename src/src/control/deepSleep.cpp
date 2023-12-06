@@ -20,6 +20,7 @@ namespace Supla {
 namespace Control {
 
 DeepSleep::DeepSleep(unsigned _supla_int_t sleepTimeSec) : sleepTimeSec(sleepTimeSec), lastUpdateCheckTime(0) {
+  SuplaDevice.setShowUptimeInChannelState(false);
 }
 
 void DeepSleep::iterateAlways() {

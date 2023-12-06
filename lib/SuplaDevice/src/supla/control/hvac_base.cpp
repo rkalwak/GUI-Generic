@@ -45,7 +45,7 @@ HvacBase::HvacBase(Supla::Control::OutputInterface *primaryOutput,
   channel.setType(SUPLA_CHANNELTYPE_HVAC);
   channel.setFlag(SUPLA_CHANNEL_FLAG_WEEKLY_SCHEDULE);
   channel.setFlag(SUPLA_CHANNEL_FLAG_RUNTIME_CHANNEL_CONFIG_UPDATE);
-
+  channel.setFlag(SUPLA_CHANNEL_FLAG_COUNTDOWN_TIMER_SUPPORTED);
   addPrimaryOutput(primaryOutput);
   addSecondaryOutput(secondaryOutput);
 
@@ -2981,7 +2981,8 @@ bool HvacBase::applyNewRuntimeSettings(int mode,
     channel.setHvacFlagCountdownTimer(true);
   }
 
-  if (!channel.isHvacFlagWeeklySchedule() && mode != SUPLA_HVAC_MODE_OFF) {
+  if (!channel.isHvacFlagWeeklySchedule() && mode != SUPLA_HVAC_MODE_OFF &&
+      !channel.isHvacFlagCountdownTimer()) {
     // in manual mode we store last manual temperatures
     if (mode == SUPLA_HVAC_MODE_AUTO || mode == SUPLA_HVAC_MODE_COOL ||
         mode == SUPLA_HVAC_MODE_HEAT) {
@@ -3741,8 +3742,10 @@ void HvacBase::initDefaultWeeklySchedule() {
   // We define default values for HEAT, COOL, AUTO, DOMESTIC_HOT_WATER later
   memset(&weeklySchedule, 0, sizeof(weeklySchedule));
   memset(&altWeeklySchedule, 0, sizeof(altWeeklySchedule));
+  bool prevInitDone = initDone;
   if (initDone) {
     weeklyScheduleChangedOffline = 1;
+    initDone = false;
   }
 
   // first we init Program in schedule
@@ -3846,6 +3849,7 @@ void HvacBase::initDefaultWeeklySchedule() {
     }
   }
 
+  initDone = prevInitDone;
   saveWeeklySchedule();
 }
 

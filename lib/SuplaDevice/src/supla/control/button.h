@@ -35,6 +35,12 @@ class Button : public SimpleButton {
     MOTION_SENSOR
   };
 
+  enum class OnLoadConfigType {
+    LOAD_FULL_CONFIG,
+    LOAD_BUTTON_SETUP_ONLY,
+    DONT_LOAD_CONFIG
+  };
+
   explicit Button(Supla::Io *io,
                   int pin,
                   bool pullUp = false,
@@ -44,12 +50,16 @@ class Button : public SimpleButton {
   void onTimer() override;
   void onLoadConfig(SuplaDeviceClass *) override;
   void onInit() override;
-  void addAction(int action, ActionHandler &client, int event,
+  void addAction(uint16_t action, ActionHandler &client, uint16_t event,
       bool alwaysEnabled = false) override;
-  void addAction(int action, ActionHandler *client, int event,
+  void addAction(uint16_t action, ActionHandler *client, uint16_t event,
       bool alwaysEnabled = false) override;
-  void disableAction(int action, ActionHandler *client, int event) override;
-  void enableAction(int action, ActionHandler *client, int event) override;
+  void disableAction(int32_t action,
+                     ActionHandler *client,
+                     int32_t event) override;
+  void enableAction(int32_t action,
+                    ActionHandler *client,
+                    int32_t event) override;
 
   void setHoldTime(unsigned int timeMs);
   void repeatOnHoldEvery(unsigned int timeMs);
@@ -66,6 +76,7 @@ class Button : public SimpleButton {
   virtual void configureAsConfigButton(SuplaDeviceClass *sdc);
   bool disableActionsInConfigMode() override;
   void dontUseOnLoadConfig();
+  void setOnLoadConfigType(OnLoadConfigType type);
 
   uint8_t getMaxMulticlickValue();
   int8_t getButtonNumber() const override;
@@ -87,7 +98,7 @@ class Button : public SimpleButton {
   unsigned int holdSend = 0;
   ButtonType buttonType = ButtonType::MONOSTABLE;
   bool configButton = false;
-  bool useOnLoadConfig = true;
+  enum OnLoadConfigType onLoadConfigType = OnLoadConfigType::LOAD_FULL_CONFIG;
   int8_t buttonNumber = -1;
 
   static int buttonCounter;

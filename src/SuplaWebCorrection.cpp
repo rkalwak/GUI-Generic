@@ -30,8 +30,6 @@ void createWebCorrection() {
 }
 
 void handleCorrection(int save) {
-  String correction;
-
   WebServer->sendHeaderStart();
 
   webContentBuffer += SuplaSaveResult(save);
@@ -40,26 +38,29 @@ void handleCorrection(int save) {
   addForm(webContentBuffer, F("post"), PATH_CORRECTION);
 
   addFormHeader(webContentBuffer, S_CORRECTION_FOR_CH);
-  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-    if (element->getChannel()) {
-      auto channel = element->getChannel();
+  ThermHygroMeterCorrectionHandler& handler = ThermHygroMeterCorrectionHandler::getInstance();
+  auto& thermHygroMeters = handler.getThermHygroMeters();
 
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-        correction = ConfigManager->get(KEY_CORRECTION_TEMP)->getElement(channel->getChannelNumber());
+  for (auto& meter : thermHygroMeters) {
+    int channelNumber = meter->getChannel()->getChannelNumber();
 
-        addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channel->getChannelNumber()),
-                     String(S_CH_CORRECTION) + S_SPACE + channel->getChannelNumber(), emptyString, false, correction);
-      }
+    if (meter->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
+      double actualTemperatureCorrection = static_cast<double>(meter->getConfiguredTemperatureCorrection()) / 10.0;
 
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-        correction = ConfigManager->get(KEY_CORRECTION_TEMP)->getElement(channel->getChannelNumber());
-        addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channel->getChannelNumber()),
-                     String(S_CH_CORRECTION) + S_SPACE + channel->getChannelNumber() + S_SPACE + ("[1]"), emptyString, false, correction);
+      addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channelNumber),
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getTemp() + S_CELSIUS, emptyString, false,
+                   String(actualTemperatureCorrection));
+    }
 
-        correction = ConfigManager->get(KEY_CORRECTION_HUMIDITY)->getElement(channel->getChannelNumber());
-        addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_HUMIDITY, channel->getChannelNumber()),
-                     String(S_CH_CORRECTION) + S_SPACE + channel->getChannelNumber() + S_SPACE + F("[2]"), emptyString, false, correction);
-      }
+    if (meter->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+      double actualTemperatureCorrection = static_cast<double>(meter->getConfiguredTemperatureCorrection()) / 10.0;
+      addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channelNumber),
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getTemp() + S_CELSIUS, emptyString, false,
+                   String(actualTemperatureCorrection));
+
+      double actualHumidityCorrection = static_cast<double>(meter->getConfiguredHumidityCorrection()) / 10.0;
+      addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_HUMIDITY, channelNumber),
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getHumi() + "%", emptyString, false, String(actualHumidityCorrection));
     }
   }
   addFormHeaderEnd(webContentBuffer);
@@ -76,34 +77,47 @@ void handleCorrectionSave() {
     return;
   }
 
-  String correction;
+  ThermHygroMeterCorrectionHandler& handler = ThermHygroMeterCorrectionHandler::getInstance();
+  auto& thermHygroMeters = handler.getThermHygroMeters();
 
-  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-    if (element->getChannel()) {
-      auto channel = element->getChannel();
+  for (auto& meter : thermHygroMeters) {
+    int channelNumber = meter->getChannel()->getChannelNumber();
 
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-        correction = WebServer->httpServer->arg(getInput(INPUT_CORRECTION_TEMP, channel->getChannelNumber()));
-        ConfigManager->setElement(KEY_CORRECTION_TEMP, channel->getChannelNumber(), correction.c_str());
-      }
+    if (meter->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
+      int32_t temperatureCorrection = (WebServer->httpServer->arg(getInput(INPUT_CORRECTION_TEMP, channelNumber)).toDouble() * 10.0);
+      meter->applyCorrectionsAndStoreIt(temperatureCorrection, 0, true);
+    }
 
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-        correction = WebServer->httpServer->arg(getInput(INPUT_CORRECTION_TEMP, channel->getChannelNumber()));
-        ConfigManager->setElement(KEY_CORRECTION_TEMP, channel->getChannelNumber(), correction.c_str());
+    if (meter->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+      int32_t temperatureCorrection = (WebServer->httpServer->arg(getInput(INPUT_CORRECTION_TEMP, channelNumber)).toDouble() * 10.0);
+      int32_t humidityCorrection = (WebServer->httpServer->arg(getInput(INPUT_CORRECTION_HUMIDITY, channelNumber)).toDouble() * 10.0);
 
-        correction = WebServer->httpServer->arg(getInput(INPUT_CORRECTION_HUMIDITY, channel->getChannelNumber()));
-        ConfigManager->setElement(KEY_CORRECTION_HUMIDITY, channel->getChannelNumber(), correction.c_str());
-      }
+      meter->applyCorrectionsAndStoreIt(temperatureCorrection, humidityCorrection, true);
     }
   }
 
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
-      handleCorrection(5);
-      ConfigESP->rebootESP();
+      handleCorrection(SaveResult::DATA_SAVE);
       break;
     case E_CONFIG_FILE_OPEN:
-      handleCorrection(2);
+      handleCorrection(SaveResult::DATA_SAVED_RESTART_MODULE);
       break;
   }
+}
+
+ThermHygroMeterCorrectionHandler::ThermHygroMeterCorrectionHandler() {
+}
+
+void ThermHygroMeterCorrectionHandler::addThermHygroMeter(Supla::Sensor::ThermHygroMeter* newMeter) {
+  thermHygroMeters.push_back(newMeter);
+}
+
+std::vector<Supla::Sensor::ThermHygroMeter*>& ThermHygroMeterCorrectionHandler::getThermHygroMeters() {
+  return thermHygroMeters;
+}
+
+ThermHygroMeterCorrectionHandler& ThermHygroMeterCorrectionHandler::getInstance() {
+  static ThermHygroMeterCorrectionHandler handler;
+  return handler;
 }

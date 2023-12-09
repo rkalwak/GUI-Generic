@@ -350,13 +350,13 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_DIRECT_LINKS_OFF, MAX_DIRECT_LINK * MAX_DIRECT_LINKS_SIZE, false);
 #endif
 
-#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER)
-    this->addKey(KEY_CORRECTION_TEMP, 6 * MAX_DS18B20);
-    this->addKey(KEY_CORRECTION_HUMIDITY, 6 * MAX_DS18B20);
-#else
+    // #if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER)
+    //     this->addKey(KEY_CORRECTION_TEMP, 6 * MAX_DS18B20);
+    //     this->addKey(KEY_CORRECTION_HUMIDITY, 6 * MAX_DS18B20);
+    // #else
     this->addKey(KEY_CORRECTION_TEMP, 6 * MAX_DS18B20, false);
     this->addKey(KEY_CORRECTION_HUMIDITY, 6 * MAX_DS18B20, false);
-#endif
+    // #endif
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_SPI)
     this->addKey(KEY_ACTIVE_SENSOR, 16);

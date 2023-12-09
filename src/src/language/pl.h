@@ -133,8 +133,8 @@
 #endif
 
 //#### SuplaWebServer.cpp ####
-#define S_LIMIT_SWITCHES "KRAŃCÓWKI"
-#define S_CORRECTION     "KOREKTA DLA SENSORÓW"
+#define S_LIMIT_SWITCHES "Krańcówki"
+#define S_CORRECTION     "Korekta"
 
 //#### SuplaTemplateBoard.h ####
 #define S_ABSENT "BRAK"
@@ -197,7 +197,6 @@
 
 //#### SuplaWebCorrection.cpp ####
 #define S_CORRECTION_FOR_CH "Korekta dla kanałów"
-#define S_CH_CORRECTION     "Korekta kanału:"
 
 #ifdef SUPLA_RF_BRIDGE
 #define S_CODES       "kodów"

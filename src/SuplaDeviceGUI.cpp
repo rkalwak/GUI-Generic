@@ -485,6 +485,7 @@ void addDS18B20MultiThermometer(int pinNumber) {
   uint8_t maxDevices = ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt();
 
   DS18B20::initSharedResources(pinNumber);
+  ThermHygroMeterCorrectionHandler &correctionHandler = ThermHygroMeterCorrectionHandler::getInstance();
 
   if (maxDevices > 1) {
     if (strcmp(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(0).c_str(), "") == 0) {
@@ -492,7 +493,10 @@ void addDS18B20MultiThermometer(int pinNumber) {
     }
 
     for (int i = 0; i < maxDevices; ++i) {
-      sensorDS.push_back(new DS18B20(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i))));
+      auto ds = new DS18B20(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i)));
+      sensorDS.push_back(ds);
+      correctionHandler.addThermHygroMeter(ds);
+
       supla_log(LOG_DEBUG, "Index %d - address %s", i, ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i).c_str());
 
 #ifdef SUPLA_CONDITIONS
@@ -501,7 +505,10 @@ void addDS18B20MultiThermometer(int pinNumber) {
     }
   }
   else {
-    sensorDS.push_back(new DS18B20(nullptr));
+    auto ds = new DS18B20(nullptr);
+
+    sensorDS.push_back(ds);
+    correctionHandler.addThermHygroMeter(ds);
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_DS18B20, S_DS18B20, sensorDS[0]);
@@ -733,31 +740,6 @@ void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory) {
     case MEMORY_RESTORE:
       rgbw->setDefaultStateRestore();
       break;
-  }
-}
-#endif
-
-#if defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_SPI)
-void addCorrectionSensor() {
-  double correction;
-
-  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
-    if (element->getChannel()) {
-      auto channel = element->getChannel();
-
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_THERMOMETER) {
-        correction = ConfigManager->get(KEY_CORRECTION_TEMP)->getElement(channel->getChannelNumber()).toDouble();
-        Supla::Correction::add(channel->getChannelNumber(), correction);
-      }
-
-      if (channel->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-        correction = ConfigManager->get(KEY_CORRECTION_TEMP)->getElement(channel->getChannelNumber()).toDouble();
-        Supla::Correction::add(channel->getChannelNumber(), correction);
-
-        correction = ConfigManager->get(KEY_CORRECTION_HUMIDITY)->getElement(channel->getChannelNumber()).toDouble();
-        Supla::Correction::add(channel->getChannelNumber(), correction, true);
-      }
-    }
   }
 }
 #endif

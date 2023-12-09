@@ -19,6 +19,9 @@
 
 #include "SuplaDeviceGUI.h"
 
+#include <supla/sensor/therm_hygro_meter.h>
+#include <vector>
+
 #define PATH_CORRECTION           "correction"
 #define INPUT_CORRECTION_TEMP     "ict"
 #define INPUT_CORRECTION_HUMIDITY "ich"
@@ -26,5 +29,16 @@
 void createWebCorrection();
 void handleCorrection(int save = 0);
 void handleCorrectionSave();
+
+class ThermHygroMeterCorrectionHandler {
+ public:
+  static ThermHygroMeterCorrectionHandler& getInstance();
+  void addThermHygroMeter(Supla::Sensor::ThermHygroMeter* newMeter);
+  std::vector<Supla::Sensor::ThermHygroMeter*>& getThermHygroMeters();
+
+ private:
+  ThermHygroMeterCorrectionHandler();
+  std::vector<Supla::Sensor::ThermHygroMeter*> thermHygroMeters;
+};
 
 #endif  // ifndef SuplaWebCorrection_h

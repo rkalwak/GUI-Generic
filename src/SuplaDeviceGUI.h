@@ -311,10 +311,6 @@ void setRGBWButton(uint8_t nr, Supla::Control::RGBWBase *rgbw);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 
-#if defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_SPI)
-void addCorrectionSensor();
-#endif
-
 #ifdef SUPLA_HLW8012
 extern Supla::Sensor::HLW_8012 *counterHLW8012;
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL);

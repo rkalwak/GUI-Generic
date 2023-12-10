@@ -910,6 +910,9 @@ void loop() {
 
   #ifdef SUPLA_CC1101
   meter->iterateAlways();
+  #endif
+
+  #ifndef SUPLA_CC1101
   uint32_t delay_time = LOOP_INTERVAL;
   if (now - last_loop < LOOP_INTERVAL)
     delay_time = LOOP_INTERVAL - (now - last_loop);
@@ -917,4 +920,5 @@ void loop() {
   delay(delay_time);
 
   last_loop = now;
+  #endif
 }

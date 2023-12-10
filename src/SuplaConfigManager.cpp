@@ -364,7 +364,7 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_ACTIVE_SENSOR, 16, false);
 #endif
 
-#if defined(GUI_SENSOR_I2C_2)
+#if defined(GUI_SENSOR_I2C_2) || defined(GUI_SENSOR_SPI)
     this->addKey(KEY_ACTIVE_SENSOR_2, 96);
 #else
     this->addKey(KEY_ACTIVE_SENSOR_2, 96, false);
@@ -452,6 +452,11 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT, false);
     this->addKey(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, 3 * MAX_THERMOSTAT, false);
     this->addKey(KEY_THERMOSTAT_HISTERESIS, 4 * MAX_THERMOSTAT, false);
+#endif
+
+#ifdef SUPLA_CC1101
+    this->addKey(KEY_WMBUS_SENSOR_TYPE, 30);
+    this->addKey(KEY_WMBUS_SENSOR_ID, 100);
 #endif
 
     SPIFFS.end();

@@ -352,7 +352,7 @@ void handleSensorI2cSave() {
 
   key = KEY_ALTITUDE_MS5611;
   input = INPUT_ALTITUDE_MS5611;
-  if (strcmp(WebServer->httpServer->arg(INPUT_ALTITUDE_MS5611).c_str(), "") != 0) {
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->set(key, WebServer->httpServer->arg(input).c_str());
   }
 #endif

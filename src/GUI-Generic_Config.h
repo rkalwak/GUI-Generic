@@ -57,6 +57,7 @@
 // ##### SPI #####
 // #define SUPLA_MAX6675
 // #define SUPLA_MAX31855
+// #define SUPLA_CC1101
 
 // ##### Other #####
 // #define SUPLA_HC_SR04

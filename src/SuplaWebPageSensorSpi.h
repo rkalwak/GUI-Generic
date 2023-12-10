@@ -19,7 +19,7 @@
 
 #include "SuplaDeviceGUI.h"
 
-#if defined(SUPLA_MAX6675) || defined(SUPLA_MAX31855)
+#if defined(SUPLA_MAX6675) || defined(SUPLA_MAX31855) || defined (SUPLA_CC1101)
 #define GUI_SENSOR_SPI
 #endif
 
@@ -31,7 +31,51 @@
 #define INPUT_MAX31855 "imax31855"
 #define INPUT_CLK_GPIO "clk"
 #define INPUT_CS_GPIO  "cs"
-#define INPUT_D0_GPIO  "d0"
+#define INPUT_D0_GPIO  "d0" // miso
+#define INPUT_MOSI_GPIO "mosi"
+
+
+#ifdef SUPLA_CC1101
+#define INPUT_CC1101 "cc1101"
+#define INPUT_GDO0_GPIO  "gdo0"
+#define INPUT_GDO2_GPIO  "gdo2"
+#define INPUT_WMBUS_SENSOR_TYPE "s_type"
+#define INPUT_WMBUS_SENSOR_ID "s_number"
+const char* const sensors_types[] /*PROGMEM*/ = {
+    "izar", 
+    "amiplus", 
+    "apator08", 
+    "apator162", 
+    "apatoreitn", 
+    "bmeters",
+    "c5isf", 
+    "compact5",
+    "dme07",
+    "elf",
+    "evo868",
+    "fhkvdataiii",
+    "hydrocalm3",
+    "hydrodigit",
+    "hydrus",
+    "iperl",
+    "itron",
+    "izar",
+    "mkradio3",
+    "mkradio4",
+    "qheat",
+    "qwater",
+    "sharky774",
+    "topaseskr",
+    "ultrimis",
+    "unismart",
+    "vario451"
+  };
+
+enum _wmbus_config_positions
+{
+  WMBUS_CFG_SENSOR_TYPE,
+};
+#endif
 
 void createWebPageSensorSpi();
 void handleSensorSpi(int save = 0);

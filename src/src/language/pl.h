@@ -232,4 +232,9 @@
 #define S_HISTERESIS               "Histereza"
 #endif
 
+#ifdef SUPLA_CC1101
+#define S_WMBUS_SENSOR_TYPE "Sensor type"
+#define S_WMBUS_SENSOR_ID "Sensor id"
+#endif
+
 #endif  // _LANGUAGE_PL_S_H_

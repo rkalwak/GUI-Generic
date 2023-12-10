@@ -136,7 +136,7 @@ String DirectLinksConnect::getRequest() {
     else {
       break;  // Stop reading to prevent buffer overflow
     }
-    yield(); 
+    yield();
   }
 
   result[i] = '\0';  // Null-terminate the result string
@@ -152,7 +152,7 @@ void DirectLinksConnect::sendRequest() {
 void DirectLinksConnect::iterateAlways() {
   onInitNetworkConnected();
 
-  if (millis() - lastReadTime > 300000) {
+  if (millis() - lastReadTime > 60000) {
     send();
     lastReadTime = millis();
   }

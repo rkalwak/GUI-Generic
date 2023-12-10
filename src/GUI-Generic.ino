@@ -266,6 +266,7 @@ void setup() {
   if (ConfigESP->getGpio(FUNCTION_SI7021_SONOFF) != OFF_GPIO) {
     auto si7021sonoff = new Supla::Sensor::Si7021Sonoff(ConfigESP->getGpio(FUNCTION_SI7021_SONOFF));
     correctionHandler.addThermHygroMeter(si7021sonoff);
+    improvSerialComponent->disable();
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_SI7021_SONOFF, S_SI7021_SONOFF, si7021sonoff);

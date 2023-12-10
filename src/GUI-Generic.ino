@@ -671,7 +671,6 @@ void setup() {
         break;
     }
     if (vl53l0x) {
-      correctionHandler.addThermHygroMeter(vl53l0x);
       force400khz = true;
 
 #ifdef SUPLA_CONDITIONS

@@ -90,11 +90,13 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
 };  // namespace Control
 };  // namespace Supla
 
+#ifdef SUPLA_THERMOSTAT
 namespace Supla {
 namespace GUI {
-extern std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostat;
+extern std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostatArray;
 }
 }  // namespace Supla
+#endif
 
 #endif
 #endif

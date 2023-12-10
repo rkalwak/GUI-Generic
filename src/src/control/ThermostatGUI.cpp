@@ -35,7 +35,7 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
 
   new Supla::Clock;
 
-  HvacBase::setTemperatureHisteresis(histeresis * 10);
+  HvacBase::setTemperatureHisteresis(histeresis * 100.0);
 
   if (mainThermometr != HvacBase::getChannelNumber()) {
     HvacBase::setMainThermometerChannelNo(mainThermometr);
@@ -124,4 +124,13 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
 };  // namespace GUI
 };  // namespace Control
 };  // namespace Supla
+
+#ifdef SUPLA_THERMOSTAT
+namespace Supla {
+namespace GUI {
+std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostatArray;
+}
+}  // namespace Supla
+#endif
+
 #endif

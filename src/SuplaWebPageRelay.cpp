@@ -218,17 +218,28 @@ void handleRelaySaveSet() {
       ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
     }
     else {
+      auto thermostat = Supla::GUI::thermostatArray[thermostatIndex];
+
       input = INPUT_THERMOSTAT_HISTERESIS;
       String histeresis = WebServer->httpServer->arg(input).c_str();
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, histeresis.c_str());
+      if (thermostat) {
+        thermostat->setTemperatureHisteresis(static_cast<short>(histeresis.toDouble() * 100.0));
+      }
 
       input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
       uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
       ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+      if (thermostat) {
+        thermostat->setMainThermometerChannelNo(thermomeetrChannel);
+      }
 
       input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
       thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
       ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+      if (thermostat) {
+        thermostat->setAuxThermometerChannelNo(thermomeetrChannel);
+      }
     }
   }
 #endif
@@ -237,7 +248,8 @@ void handleRelaySaveSet() {
     case E_CONFIG_OK:
 
 #ifdef SUPLA_THERMOSTAT
-      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF && thermostatIndex >= 0) {
+      if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && Supla::GUI::thermostatArray[thermostatIndex] == nullptr &&
+          ConfigESP->configModeESP != Supla::DEVICE_MODE_CONFIG) {
         handleRelaySet(SaveResult::DATA_SAVED_RESTART_MODULE);
         ConfigESP->rebootESP();
       }

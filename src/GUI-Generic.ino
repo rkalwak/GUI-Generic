@@ -727,7 +727,7 @@ void setup() {
       SuplaOled *oled = new SuplaOled();
 #ifdef SUPLA_BUTTON
 #ifdef SUPLA_THERMOSTAT
-      new Supla::Control::GUI::OledButtonController(oled, Supla::GUI::thermostat);
+      new Supla::Control::GUI::OledButtonController(oled, Supla::GUI::thermostatArray);
 #else
       new Supla::Control::GUI::OledButtonController(oled);
 #endif

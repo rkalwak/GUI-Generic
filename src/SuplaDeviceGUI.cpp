@@ -97,10 +97,6 @@ void crateWebServer() {
   WebServer->begin();
 }
 
-#ifdef SUPLA_THERMOSTAT
-std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostat;
-#endif
-
 void addRelayOrThermostat(int nr) {
   if (ConfigESP->getGpio(nr, FUNCTION_RELAY) != OFF_GPIO) {
 #ifdef SUPLA_RELAY
@@ -109,7 +105,7 @@ void addRelayOrThermostat(int nr) {
     }
     else {
 #ifdef SUPLA_THERMOSTAT
-      thermostat[nr] = new Supla::Control::GUI::ThermostatGUI(nr, &SuplaDevice);
+      thermostatArray[nr] = new Supla::Control::GUI::ThermostatGUI(nr, &SuplaDevice);
       relay.push_back(nullptr);
 #endif
     }

@@ -53,10 +53,10 @@ class ThermHygroMeter : public ChannelElement {
 
   int16_t getConfiguredTemperatureCorrection();
   int16_t getConfiguredHumidityCorrection();
-    void applyCorrectionsAndStoreIt(int32_t temperatureCorrection,
+  void applyCorrectionsAndStoreIt(int32_t temperatureCorrection,
                                   int32_t humidityCorrection,
                                   bool local = false);
-                                  
+
  protected:
   int16_t readCorrectionFromIndex(int index);
   void setCorrectionAtIndex(int32_t correction, int index);

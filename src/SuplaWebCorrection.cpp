@@ -48,19 +48,20 @@ void handleCorrection(int save) {
       double actualTemperatureCorrection = static_cast<double>(meter->getConfiguredTemperatureCorrection()) / 10.0;
 
       addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channelNumber),
-                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getTemp() + S_CELSIUS, emptyString, false,
-                   String(actualTemperatureCorrection));
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + String(meter->getTemp() + actualTemperatureCorrection) + S_CELSIUS, emptyString,
+                   false, String(actualTemperatureCorrection));
     }
 
     if (meter->getChannel()->getChannelType() == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
       double actualTemperatureCorrection = static_cast<double>(meter->getConfiguredTemperatureCorrection()) / 10.0;
       addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_TEMP, channelNumber),
-                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getTemp() + S_CELSIUS, emptyString, false,
-                   String(actualTemperatureCorrection));
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + String(meter->getTemp() + actualTemperatureCorrection) + S_CELSIUS, emptyString,
+                   false, String(actualTemperatureCorrection));
 
       double actualHumidityCorrection = static_cast<double>(meter->getConfiguredHumidityCorrection()) / 10.0;
       addNumberBox(webContentBuffer, getInput(INPUT_CORRECTION_HUMIDITY, channelNumber),
-                   String(channelNumber) + S_SPACE + "-" + S_SPACE + +meter->getHumi() + "%", emptyString, false, String(actualHumidityCorrection));
+                   String(channelNumber) + S_SPACE + "-" + S_SPACE + String(meter->getHumi() + actualHumidityCorrection) + "%", emptyString, false,
+                   String(actualHumidityCorrection));
     }
   }
   addFormHeaderEnd(webContentBuffer);

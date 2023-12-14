@@ -16,6 +16,10 @@ void DS18B20::initSharedResources(uint8_t pin) {
   waitForAndRequestTemperatures();
 }
 
+void DS18B20::onInit() {
+  channel.setNewValue(getValue());
+}
+
 DS18B20::DS18B20(uint8_t *deviceAddress) : lastValidValue(TEMPERATURE_NOT_AVAILABLE), retryCounter(0), lastUpdateTime(0) {
   unsigned long currentTime = millis();
   channel.setNewValue(getValue());
@@ -87,7 +91,6 @@ void DS18B20::waitForAndRequestTemperatures() {
   sharedSensors.setWaitForConversion(true);
   sharedSensors.requestTemperatures();
   sharedSensors.setWaitForConversion(false);
-  channel.setNewValue(getValue());
 }
 
 void DS18B20::restartOneWire() {
@@ -98,6 +101,7 @@ void DS18B20::restartOneWire() {
     sharedOneWire.search(address);
   }
   waitForAndRequestTemperatures();
+  channel.setNewValue(getValue());
 }
 
 void DS18B20::setDeviceAddress(uint8_t *deviceAddress) {

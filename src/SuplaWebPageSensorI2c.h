@@ -50,13 +50,14 @@ enum _sensor
   SENSOR_SPI_MAX31855,
   SENSOR_I2C_BH1750,
   SENSOR_I2C_MAX44009,
-  SENSOR_I2C_FOR_USE_2,
+  SENSOR_I2C_FOR_USE_2
 };
 
 /*Added to support configuration of more sensors.*/
 enum _sensor2
 {
-  SENSOR_I2C_MS5611
+  SENSOR_I2C_MS5611,
+  SENSOR_SPI_CC1101
 };
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)

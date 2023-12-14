@@ -49,11 +49,14 @@
 #define S_GPIO                           "GPIO"
 
 //### PIN codes not translated ###
-#define S_D0  "D0"
+#define S_D0  "D0" //MISO
 #define S_SDA "SDA"
 #define S_SCL "SCL"
 #define S_CLK "CLK"
 #define S_CS  "CS"
+#define S_MOSI "MOSI"
+#define S_GDO0 "GDO0"
+#define S_GDO2 "GDO2"
 
 #define S_IP_AP "IP: 192.168.4.1"
 

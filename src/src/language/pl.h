@@ -197,6 +197,7 @@
 
 //#### SuplaWebCorrection.cpp ####
 #define S_CORRECTION_FOR_CH "Korekta dla kanałów"
+#define S_CH_CORRECTION  "Korekta kanału:"
 
 #ifdef SUPLA_RF_BRIDGE
 #define S_CODES       "kodów"
@@ -230,6 +231,11 @@
 #define S_MAIN_THERMOMETER_CHANNEL "Kanał termometru"
 #define S_AUX_THERMOMETER_CHANNEL  "Dod. kanał termometru"
 #define S_HISTERESIS               "Histereza"
+#endif
+
+#ifdef SUPLA_CC1101
+#define S_WMBUS_SENSOR_TYPE "Sensor type"
+#define S_WMBUS_SENSOR_ID "Sensor id"
 #endif
 
 #endif  // _LANGUAGE_PL_S_H_

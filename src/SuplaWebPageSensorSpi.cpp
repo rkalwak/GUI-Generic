@@ -41,9 +41,10 @@ void handleSensorSpi(int save) {
   addFormHeader(webContentBuffer, String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_SPI);
   addListGPIOBox(webContentBuffer, INPUT_CLK_GPIO, S_CLK, FUNCTION_CLK);
   addListGPIOBox(webContentBuffer, INPUT_CS_GPIO, S_CS, FUNCTION_CS);
-  addListGPIOBox(webContentBuffer, INPUT_D0_GPIO, S_D0, FUNCTION_D0);
+  addListGPIOBox(webContentBuffer, INPUT_D0_GPIO, S_D0, FUNCTION_D0); //MISO
 
-  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO) {
+  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO) 
+  {
 #ifdef SUPLA_MAX6675
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX6675).toInt();
     addListBox(webContentBuffer, INPUT_MAX6675, S_MAX6675, STATE_P, 2, selected);
@@ -53,8 +54,28 @@ void handleSensorSpi(int save) {
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX31855).toInt();
     addListBox(webContentBuffer, INPUT_MAX31855, S_MAX31855, STATE_P, 2, selected);
 #endif
+addFormHeaderEnd(webContentBuffer);
+
+#ifdef SUPLA_CC1101
+  
+  selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt();
+  addFormHeader(webContentBuffer);
+  addListBox(webContentBuffer, INPUT_CC1101, F("CC1101"), STATE_P, 2, selected);
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt())
+  {
+  addListGPIOBox(webContentBuffer, INPUT_MOSI_GPIO, S_MOSI, FUNCTION_MOSI);
+  addListGPIOBox(webContentBuffer, INPUT_GDO0_GPIO, S_GDO0, FUNCTION_GDO0);
+  addListGPIOBox(webContentBuffer, INPUT_GDO2_GPIO, S_GDO2, FUNCTION_GDO2);
+
+  selected = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();  
+  addListBox(webContentBuffer, INPUT_WMBUS_SENSOR_TYPE, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+
+  addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, "", 1, 8, true);
   }
   addFormHeaderEnd(webContentBuffer);
+#endif
+  }
+
   addButtonSubmit(webContentBuffer, S_SAVE);
   addFormEnd(webContentBuffer);
   addButton(webContentBuffer, S_RETURN, PATH_DEVICE_SETTINGS);
@@ -64,8 +85,15 @@ void handleSensorSpi(int save) {
 void handleSensorSpiSave() {
   String input;
 
-  if (!WebServer->saveGPIO(INPUT_CLK_GPIO, FUNCTION_CLK) || !WebServer->saveGPIO(INPUT_CS_GPIO, FUNCTION_CS) ||
-      !WebServer->saveGPIO(INPUT_D0_GPIO, FUNCTION_D0)) {
+  if (!WebServer->saveGPIO(INPUT_CLK_GPIO, FUNCTION_CLK) 
+      || !WebServer->saveGPIO(INPUT_CS_GPIO, FUNCTION_CS) 
+      || !WebServer->saveGPIO(INPUT_D0_GPIO, FUNCTION_D0)
+      #ifdef SUPLA_CC1101
+      || !WebServer->saveGPIO(INPUT_MOSI_GPIO, FUNCTION_MOSI)
+      || !WebServer->saveGPIO(INPUT_GDO0_GPIO, FUNCTION_GDO0)
+      || !WebServer->saveGPIO(INPUT_GDO2_GPIO, FUNCTION_GDO2)
+      #endif
+      ) {
     handleSensorSpi(6);
     return;
   }
@@ -82,6 +110,24 @@ void handleSensorSpiSave() {
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX31855,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
+#endif
+
+#ifdef SUPLA_CC1101
+
+  input = INPUT_CC1101;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_SPI_CC1101,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+  input = INPUT_WMBUS_SENSOR_TYPE;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_TYPE, WMBUS_CFG_SENSOR_TYPE,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+ 
+  input = INPUT_WMBUS_SENSOR_ID;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->set(KEY_WMBUS_SENSOR_ID, WebServer->httpServer->arg(input).c_str());
+  }
+
 #endif
 
   switch (ConfigManager->save()) {

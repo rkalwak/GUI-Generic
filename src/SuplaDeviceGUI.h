@@ -228,6 +228,12 @@
 #include "src/control/ThermostatGUI.h"
 #endif
 
+#ifdef SUPLA_CC1101
+#include "src/sensor/WmbusMeter.h"
+#include "src/wmbus/Drivers/drivers.h"
+#include "src/wmbus/SensorInfo.h"
+#endif
+
 #include "src/storage/SPIFFS_config.h"
 
 #define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds

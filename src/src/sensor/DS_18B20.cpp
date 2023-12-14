@@ -6,6 +6,8 @@ DallasTemperature DS18B20::sharedSensors(&sharedOneWire);
 unsigned long DS18B20::lastConversionTime = 0;
 
 void DS18B20::initSharedResources(uint8_t pin) {
+  pinMode(pin, INPUT_PULLUP);
+
   sharedOneWire.begin(pin);
   sharedSensors.setOneWire(&sharedOneWire);
   sharedSensors.begin();
@@ -66,6 +68,7 @@ double DS18B20::getValue() {
   if (value == TEMPERATURE_NOT_AVAILABLE) {
     retryCounter++;
     if (retryCounter > 3) {
+      restartOneWire();
       retryCounter = 0;
     }
     else {
@@ -84,6 +87,17 @@ void DS18B20::waitForAndRequestTemperatures() {
   sharedSensors.setWaitForConversion(true);
   sharedSensors.requestTemperatures();
   sharedSensors.setWaitForConversion(false);
+  channel.setNewValue(getValue());
+}
+
+void DS18B20::restartOneWire() {
+  supla_log(LOG_DEBUG, "Restarting OneWire...");
+
+  sharedOneWire.reset();
+  if (address[0] == 0 && ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
+    sharedOneWire.search(address);
+  }
+  waitForAndRequestTemperatures();
 }
 
 void DS18B20::setDeviceAddress(uint8_t *deviceAddress) {

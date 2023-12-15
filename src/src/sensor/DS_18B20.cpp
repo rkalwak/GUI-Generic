@@ -94,14 +94,12 @@ void DS18B20::waitForAndRequestTemperatures() {
 }
 
 void DS18B20::restartOneWire() {
-  supla_log(LOG_DEBUG, "Restarting OneWire...");
-
-  sharedOneWire.reset();
-  if (address[0] == 0 && ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
-    sharedOneWire.search(address);
+  if (ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
+    supla_log(LOG_DEBUG, "Restarting OneWire...");
+    sharedOneWire.reset();
+    waitForAndRequestTemperatures();
+    channel.setNewValue(getValue());
   }
-  waitForAndRequestTemperatures();
-  channel.setNewValue(getValue());
 }
 
 void DS18B20::setDeviceAddress(uint8_t *deviceAddress) {

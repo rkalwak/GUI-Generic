@@ -42,8 +42,9 @@ void handleSensorSpi(int save) {
   addListGPIOBox(webContentBuffer, INPUT_CLK_GPIO, S_CLK, FUNCTION_CLK);
   addListGPIOBox(webContentBuffer, INPUT_CS_GPIO, S_CS, FUNCTION_CS);
   addListGPIOBox(webContentBuffer, INPUT_D0_GPIO, S_D0, FUNCTION_D0); //MISO
+  addListGPIOBox(webContentBuffer, INPUT_MOSI_GPIO, S_MOSI, FUNCTION_MOSI);
 
-  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO) 
+  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MOSI)!= OFF_GPIO) 
   {
 #ifdef SUPLA_MAX6675
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX6675).toInt();
@@ -60,17 +61,19 @@ addFormHeaderEnd(webContentBuffer);
   
   selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt();
   addFormHeader(webContentBuffer);
-  addListBox(webContentBuffer, INPUT_CC1101, F("CC1101"), STATE_P, 2, selected);
+  addListBox(webContentBuffer, INPUT_CC1101, S_CC1101, STATE_P, 2, selected);
   if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt())
   {
-  addListGPIOBox(webContentBuffer, INPUT_MOSI_GPIO, S_MOSI, FUNCTION_MOSI);
+ 
   addListGPIOBox(webContentBuffer, INPUT_GDO0_GPIO, S_GDO0, FUNCTION_GDO0);
   addListGPIOBox(webContentBuffer, INPUT_GDO2_GPIO, S_GDO2, FUNCTION_GDO2);
 
   selected = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();  
   addListBox(webContentBuffer, INPUT_WMBUS_SENSOR_TYPE, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
-
-  addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, "", 1, 8, true);
+  std::string sensorId=ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
+  addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, sensorId.c_str(), 1, 100, true);
+  std::string sensorKey=ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
+  addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_KEY, S_WMBUS_SENSOR_KEY, sensorKey.c_str(), 1, 200, false);
   }
   addFormHeaderEnd(webContentBuffer);
 #endif
@@ -88,8 +91,9 @@ void handleSensorSpiSave() {
   if (!WebServer->saveGPIO(INPUT_CLK_GPIO, FUNCTION_CLK) 
       || !WebServer->saveGPIO(INPUT_CS_GPIO, FUNCTION_CS) 
       || !WebServer->saveGPIO(INPUT_D0_GPIO, FUNCTION_D0)
-      #ifdef SUPLA_CC1101
       || !WebServer->saveGPIO(INPUT_MOSI_GPIO, FUNCTION_MOSI)
+      #ifdef SUPLA_CC1101
+      
       || !WebServer->saveGPIO(INPUT_GDO0_GPIO, FUNCTION_GDO0)
       || !WebServer->saveGPIO(INPUT_GDO2_GPIO, FUNCTION_GDO2)
       #endif
@@ -126,6 +130,11 @@ void handleSensorSpiSave() {
   input = INPUT_WMBUS_SENSOR_ID;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->set(KEY_WMBUS_SENSOR_ID, WebServer->httpServer->arg(input).c_str());
+  }
+
+  input = INPUT_WMBUS_SENSOR_KEY;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->set(KEY_WMBUS_SENSOR_KEY, WebServer->httpServer->arg(input).c_str());
   }
 
 #endif

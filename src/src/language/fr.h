@@ -233,6 +233,7 @@
 #ifdef SUPLA_CC1101
 #define S_WMBUS_SENSOR_TYPE "Sensor type"
 #define S_WMBUS_SENSOR_ID "Sensor id"
+#define S_WMBUS_SENSOR_KEY "Sensor key"
 #endif
 
 #endif  // _LANGUAGE_FR_S_H_

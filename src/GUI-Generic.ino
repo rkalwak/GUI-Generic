@@ -330,12 +330,20 @@ void setup() {
       Serial.println(sensorType.c_str());
 
       std::string sensorId= ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
-
+      std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
       Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
-      sensorId="02719887";
-      std::vector<unsigned char> key{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
+     
+      std::vector<unsigned char> key;
+      if(sensorKey.length() >0)
+      {
+        key=std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
+      }
+      else{
+        key ={};
+        key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
+      }
+
       int mosi =ConfigESP->getGpio(FUNCTION_MOSI);
       int miso =ConfigESP->getGpio(FUNCTION_D0);
       int clk =ConfigESP->getGpio(FUNCTION_CLK);
@@ -909,7 +917,10 @@ void loop() {
   SuplaDevice.iterate();
 
   #ifdef SUPLA_CC1101
-  meter->iterateAlways();
+  if(meter !=NULL)
+  { 
+    meter->iterateAlways();
+  }
   #endif
 
   #ifndef SUPLA_CC1101

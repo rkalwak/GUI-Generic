@@ -41,6 +41,8 @@
 #define INPUT_GDO2_GPIO  "gdo2"
 #define INPUT_WMBUS_SENSOR_TYPE "s_type"
 #define INPUT_WMBUS_SENSOR_ID "s_number"
+#define INPUT_WMBUS_SENSOR_KEY "s_key"
+#define INPUT_WMBUS_SENSOR_PROP "s_prop"
 const char* const sensors_types[] /*PROGMEM*/ = {
     "izar", 
     "amiplus", 
@@ -74,6 +76,7 @@ const char* const sensors_types[] /*PROGMEM*/ = {
 enum _wmbus_config_positions
 {
   WMBUS_CFG_SENSOR_TYPE,
+  WMBUS_CFG_SENSOR_PROPERTY
 };
 #endif
 

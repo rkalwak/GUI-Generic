@@ -457,6 +457,7 @@ SuplaConfigManager::SuplaConfigManager() {
 #ifdef SUPLA_CC1101
     this->addKey(KEY_WMBUS_SENSOR_TYPE, 30);
     this->addKey(KEY_WMBUS_SENSOR_ID, 100);
+    this->addKey(KEY_WMBUS_SENSOR_KEY, 200 );
 #endif
 
     SPIFFS.end();

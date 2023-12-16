@@ -47,6 +47,7 @@
 #define S_ADE7953                        "ADE7953"
 #define S_MAX44009                       "MAX44009"
 #define S_GPIO                           "GPIO"
+#define S_CC1101                         "CC1101"
 
 //### PIN codes not translated ###
 #define S_D0  "D0" //MISO

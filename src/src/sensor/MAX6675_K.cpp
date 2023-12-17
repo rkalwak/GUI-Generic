@@ -19,15 +19,14 @@
 
 namespace Supla {
 namespace Sensor {
-MAX6675_K::MAX6675_K(uint8_t pin_CLK, uint8_t pin_CS, uint8_t pin_DO)
-    : pin_CLK(pin_CLK), pin_CS(pin_CS), pin_DO(pin_DO) {
+MAX6675_K::MAX6675_K(uint8_t pin_CLK, uint8_t pin_CS, uint8_t pin_DO) : pin_CLK(pin_CLK), pin_CS(pin_CS), pin_DO(pin_DO) {
 }
 
 double MAX6675_K::getValue() {
   uint16_t value;
 
   digitalWrite(pin_CS, LOW);
-  delay(1);
+  delayMicroseconds(10);
 
   value = spiRead();
   value <<= 8;
@@ -60,17 +59,17 @@ byte MAX6675_K::spiRead() {
 
   for (i = 7; i >= 0; i--) {
     digitalWrite(pin_CLK, LOW);
-    delay(1);
+    delayMicroseconds(10);  // Adjust the delay as needed
     if (digitalRead(pin_DO)) {
       d |= (1 << i);
     }
 
     digitalWrite(pin_CLK, HIGH);
-    delay(1);
+    delayMicroseconds(10);  // Adjust the delay as needed
   }
   return d;
 }
 
-};  // namespace Sensor
-};  // namespace Supla
+};     // namespace Sensor
+};     // namespace Supla
 #endif /*ARDUINO*/

@@ -80,6 +80,8 @@ typedef struct WMbusFrame {
 //----------------------------------------------------------------------------------
 const std::string mode_to_string(WmBusFrameMode mode);
 
+uint16_t verifyCrcBytesCmodeA_local(uint8_t* pByte, uint8_t* pPacket, uint16_t packetSize);
+
 class rf_mbus {
   public:
     rf_mbus();

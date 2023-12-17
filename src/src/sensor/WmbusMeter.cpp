@@ -157,7 +157,7 @@ namespace Supla
             Serial.print(readValue);
             Serial.println("m3");
             sensor->setNewValue((int)(readValue * 1000000));
-            sensor->iterateAlways();
+            //sensor->iterateAlways();
           }
           else
           {

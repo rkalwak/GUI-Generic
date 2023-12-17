@@ -321,35 +321,35 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt()) {
-      int indexOfSensorType =ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
+      int indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
       Serial.print("Index of sensor type:");
       Serial.println(indexOfSensorType);
 
-      std::string sensorType=sensors_types[indexOfSensorType]; 
+      std::string sensorType = sensors_types[indexOfSensorType];
       Serial.print("Sensor type:");
       Serial.println(sensorType.c_str());
 
-      std::string sensorId= ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
+      std::string sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
       Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
-     
+
       std::vector<unsigned char> key;
-      if(sensorKey.length() >0)
-      {
-        key=std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
+      if (sensorKey.length() > 0) {
+        key = std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
       }
-      else{
-        key ={};
-        key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
+      else {
+        key = {};
+        key = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
       }
 
-      int mosi =ConfigESP->getGpio(FUNCTION_MOSI);
-      int miso =ConfigESP->getGpio(FUNCTION_D0);
-      int clk =ConfigESP->getGpio(FUNCTION_CLK);
-      int cs=ConfigESP->getGpio(FUNCTION_CS);
-      int gdo0=ConfigESP->getGpio(FUNCTION_GDO0);
-      int gdo2= ConfigESP->getGpio(FUNCTION_GDO2);
+      int mosi = ConfigESP->getGpio(FUNCTION_MOSI);
+      int miso = ConfigESP->getGpio(FUNCTION_D0);
+      int clk = ConfigESP->getGpio(FUNCTION_CLK);
+      int cs = ConfigESP->getGpio(FUNCTION_CS);
+      int gdo0 = ConfigESP->getGpio(FUNCTION_GDO0);
+      int gdo2 = ConfigESP->getGpio(FUNCTION_GDO2);
       Serial.print("GPIO: ");
       Serial.print(mosi);
       Serial.print(",");
@@ -364,34 +364,33 @@ void setup() {
       Serial.print(gdo2);
       Serial.println("GPIO END");
 
-      meter = new Supla::Sensor::WmbusMeter(mosi,miso, clk, cs,gdo0, gdo2); 
-      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", key)); 
-            meter->add_driver(new Amiplus()); 
-            meter->add_driver(new Apator08());
-            meter->add_driver(new Apator162());
-            meter->add_driver(new ApatorEITN());
-            meter->add_driver(new Bmeters());
-            meter->add_driver(new C5isf());
-            meter->add_driver(new Compact5());
-            meter->add_driver(new Dme07());
-            meter->add_driver(new Elf());
-            meter->add_driver(new Evo868());
-            meter->add_driver(new FhkvdataIII());
-            meter->add_driver(new Hydrocalm3());
-            meter->add_driver(new Hydrus());
-            meter->add_driver(new Iperl());
-            meter->add_driver(new Itron());
-            meter->add_driver(new Izar());
-            meter->add_driver(new Mkradio3());
-            meter->add_driver(new Mkradio4());
-            meter->add_driver(new Qheat());
-            meter->add_driver(new Qwater());
-            meter->add_driver(new Sharky774());
-            meter->add_driver(new TopasESKR());
-            meter->add_driver(new Ultrimis());
-            meter->add_driver(new Unismart());
-            meter->add_driver(new Vario451());
-            
+      meter = new Supla::Sensor::WmbusMeter(mosi, miso, clk, cs, gdo0, gdo2);
+      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", key));
+      meter->add_driver(new Amiplus());
+      meter->add_driver(new Apator08());
+      meter->add_driver(new Apator162());
+      meter->add_driver(new ApatorEITN());
+      meter->add_driver(new Bmeters());
+      meter->add_driver(new C5isf());
+      meter->add_driver(new Compact5());
+      meter->add_driver(new Dme07());
+      meter->add_driver(new Elf());
+      meter->add_driver(new Evo868());
+      meter->add_driver(new FhkvdataIII());
+      meter->add_driver(new Hydrocalm3());
+      meter->add_driver(new Hydrus());
+      meter->add_driver(new Iperl());
+      meter->add_driver(new Itron());
+      meter->add_driver(new Izar());
+      meter->add_driver(new Mkradio3());
+      meter->add_driver(new Mkradio4());
+      meter->add_driver(new Qheat());
+      meter->add_driver(new Qwater());
+      meter->add_driver(new Sharky774());
+      meter->add_driver(new TopasESKR());
+      meter->add_driver(new Ultrimis());
+      meter->add_driver(new Unismart());
+      meter->add_driver(new Vario451());
     }
 #endif
   }
@@ -915,14 +914,6 @@ void loop() {
   const uint32_t now = millis();
   SuplaDevice.iterate();
 
-  #ifdef SUPLA_CC1101
-  if(meter !=NULL)
-  { 
-    meter->iterateAlways();
-  }
-  #endif
-
-  #ifndef SUPLA_CC1101
   uint32_t delay_time = LOOP_INTERVAL;
   if (now - last_loop < LOOP_INTERVAL)
     delay_time = LOOP_INTERVAL - (now - last_loop);
@@ -930,5 +921,4 @@ void loop() {
   delay(delay_time);
 
   last_loop = now;
-  #endif
 }

@@ -78,7 +78,7 @@ void handleSensor1Wire(int save) {
   addFormHeader(webContentBuffer, String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_DS18B20);
   addNumberBox(webContentBuffer, INPUT_MAX_DS18B20, S_QUANTITY, KEY_MULTI_MAX_DS18B20, MAX_DS18B20);
   addListGPIOBox(webContentBuffer, INPUT_MULTI_DS_GPIO, S_SENSORS_1WIRE, FUNCTION_DS18B20, 0, false, "", true);
- 
+
   if (ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() > 1) {
     addLinkBox(webContentBuffer, String(S_CONFIGURATION) + S_SPACE + S_DS18B20, PATH_MULTI_DS);
   }
@@ -154,7 +154,7 @@ void handleSensor1WireSave() {
     case E_CONFIG_OK:
 
 #ifdef SUPLA_DS18B20
-      if (inputMaxDS18B20 > oldMaxDS18B20) {
+      if (inputMaxDS18B20 > oldMaxDS18B20 && ConfigESP->configModeESP != Supla::DEVICE_MODE_CONFIG) {
         handleSensor1Wire(SaveResult::DATA_SAVED_RESTART_MODULE);
         ConfigESP->rebootESP();
       }

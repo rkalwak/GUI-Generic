@@ -47,6 +47,9 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
   virtual void onInit() override {
     HvacBase::onInit();
   };
+
+  void setThermostatType(uint8_t thermostatType);
+
   virtual bool onLoadConfig() override {
     return true;
   }

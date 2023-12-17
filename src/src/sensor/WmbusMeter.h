@@ -2,11 +2,11 @@
 #define _WmbusMeter_h
 #include <Arduino.h>
 
-#include "../lib/wmbus/rf_mbus.hpp"
-#include "../lib/wmbus/Drivers/driver.h"
-#include "../lib/wmbus/wmbus_utils.hpp"
-#include "../lib/wmbus/utils.hpp"
-#include "../lib/wmbus/SensorBase.h"
+#include <rf_mbus.hpp>
+#include <Drivers/driver.h>
+#include <wmbus_utils.hpp>
+#include <utils.hpp>
+#include <SensorBase.h>
 
 #include <stdint.h>
 #include <string>

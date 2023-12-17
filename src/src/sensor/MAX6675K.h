@@ -16,17 +16,17 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef SRC_SUPLA_SENSOR_MAX6675_K_H_
-#define SRC_SUPLA_SENSOR_MAX6675_K_H_
+#ifndef _SUPLA_SENSOR_MAX6675K_H_
+#define _SUPLA_SENSOR_MAX6675K_H_
 
 #include <Arduino.h>
 #include <supla/sensor/thermometer.h>
 
 namespace Supla {
 namespace Sensor {
-class MAX6675_K : public Thermometer {
+class MAX6675K : public Thermometer {
  public:
-  MAX6675_K(uint8_t pin_CLK, uint8_t pin_CS, uint8_t pin_DO);
+  MAX6675K(uint8_t pin_CLK, uint8_t pin_CS, uint8_t pin_DO);
   double getValue();
 
  private:
@@ -42,4 +42,4 @@ class MAX6675_K : public Thermometer {
 };  // namespace Sensor
 };  // namespace Supla
 
-#endif  // SRC_SUPLA_SENSOR_MAX6675_K_H_
+#endif  // SRC_SUPLA_SENSOR_MAX6675K_H_

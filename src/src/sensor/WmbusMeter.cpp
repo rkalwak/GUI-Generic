@@ -134,7 +134,7 @@ namespace Supla
         auto sensor = sensors_[meterIdRealString];
         bool isOk = true;
         float readValue = 0.0;
-        if (sensor->get_key().size())
+        if (sensor->get_key().size() >0)
         {
           Serial.println("Key provided, decrypting frame.");
           if (!decrypt_telegram(frame, sensor->get_key()))
@@ -196,6 +196,7 @@ namespace Supla
         Serial.println("........................................");
         Serial.println("Parsing frame.");
         parse_frame(frame);
+        Serial.println("----");
       }
     }
 

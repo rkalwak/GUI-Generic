@@ -333,6 +333,9 @@ void setup() {
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
       Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
+
+      Serial.print("Sensor key:");
+      Serial.println(sensorKey.c_str());
      
       std::vector<unsigned char> key;
       if(sensorKey.length() >0)
@@ -340,10 +343,10 @@ void setup() {
         key=std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
       }
       else{
-        key ={};
+        //key ={};
         key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
       }
-
+      key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
       int mosi =ConfigESP->getGpio(FUNCTION_MOSI);
       int miso =ConfigESP->getGpio(FUNCTION_D0);
       int clk =ConfigESP->getGpio(FUNCTION_CLK);
@@ -915,13 +918,6 @@ void setup() {
 void loop() {
   const uint32_t now = millis();
   SuplaDevice.iterate();
-
-  #ifdef SUPLA_CC1101
-  if(meter !=NULL)
-  { 
-    meter->iterateAlways();
-  }
-  #endif
 
   #ifndef SUPLA_CC1101
   uint32_t delay_time = LOOP_INTERVAL;

@@ -230,8 +230,8 @@
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
-#include "src/wmbus/Drivers/drivers.h"
-#include "src/wmbus/SensorInfo.h"
+#include "../lib/wmbus/Drivers/drivers.h"
+#include "../lib/wmbus/SensorInfo.h"
 #endif
 
 #include "src/storage/SPIFFS_config.h"

@@ -1,15 +1,16 @@
 #ifndef _WmbusMeter_h
 #define _WmbusMeter_h
-#include "Arduino.h"
-#include "src/wmbus/rf_mbus.hpp"
-#include "src/wmbus/Drivers/driver.h"
+#include <Arduino.h>
 
-#include "src/wmbus/wmbus_utils.hpp"
-#include "src/wmbus/utils.hpp"
+#include "../lib/wmbus/rf_mbus.hpp"
+#include "../lib/wmbus/Drivers/driver.h"
+#include "../lib/wmbus/wmbus_utils.hpp"
+#include "../lib/wmbus/utils.hpp"
+#include "../lib/wmbus/SensorBase.h"
+
 #include <stdint.h>
 #include <string>
 #include <vector>
-#include "src/wmbus/SensorBase.h"
 namespace Supla
 {
 	namespace Sensor

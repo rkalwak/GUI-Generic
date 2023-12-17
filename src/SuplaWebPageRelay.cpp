@@ -216,9 +216,23 @@ void handleRelaySaveSet() {
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
       ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
       ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
+
+      switch (newThermostatType) {
+        case Supla::GUI::THERMOSTAT_DOMESTIC_HOT_WATER:
+          ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, thermostatIndex, 5);
+          ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, thermostatIndex, 75);
+          break;
+        default:
+          ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, thermostatIndex, 5);
+          ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, thermostatIndex, 40);
+          break;
+      }
     }
     else {
       auto thermostat = Supla::GUI::thermostatArray[thermostatIndex];
+      if (thermostat) {
+        thermostat->setThermostatType(newThermostatType);
+      }
 
       input = INPUT_THERMOSTAT_HISTERESIS;
       String histeresis = WebServer->httpServer->arg(input).c_str();
@@ -239,6 +253,22 @@ void handleRelaySaveSet() {
       ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
       if (thermostat) {
         thermostat->setAuxThermometerChannelNo(thermomeetrChannel);
+      }
+
+      input = INPUT_THERMOSTAT_TEMPERATURE_MIN;
+      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, thermostatIndex, thermomeetrChannel);
+      if (thermostat) {
+        thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, thermomeetrChannel * 100);
+        //   thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, thermomeetrChannel * 100);
+      }
+
+      input = INPUT_THERMOSTAT_TEMPERATURE_MAX;
+      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, thermostatIndex, thermomeetrChannel);
+      if (thermostat) {
+        thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, thermomeetrChannel * 100);
+        // thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, thermomeetrChannel * 100);
       }
     }
   }
@@ -365,8 +395,14 @@ void handleRelaySet(int save) {
         selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
         addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
-        String histeresis = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
-        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, histeresis);
+        String value = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, value, true);
+
+        value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(thermostatIndex).c_str();
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MIN, "MIN", S_CELSIUS, false, value, true);
+
+        value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(thermostatIndex).c_str();
+        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MAX, "MAX", S_CELSIUS, false, value, true);
       }
     }
     addFormHeaderEnd(webContentBuffer);

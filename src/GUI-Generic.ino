@@ -599,34 +599,33 @@ void setup() {
 #ifdef SUPLA_SHT3x
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_SHT3x).toInt()) {
       Supla::Sensor::SHT3x *sht3x = nullptr;
+      Supla::Sensor::SHT3x *sht3x_1 = nullptr;
 
       switch (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_SHT3x).toInt()) {
         case SHT3x_ADDRESS_0X44:
           sht3x = new Supla::Sensor::SHT3x(0x44);
-
-#ifdef SUPLA_CONDITIONS
-          Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x);
-#endif
           break;
         case SHT3x_ADDRESS_0X45:
-          sht3x = new Supla::Sensor::SHT3x(0x45);
-
-#ifdef SUPLA_CONDITIONS
-          Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x);
-#endif
+          sht3x_1 = new Supla::Sensor::SHT3x(0x45);
           break;
         case SHT3x_ADDRESS_0X44_AND_0X45:
           sht3x = new Supla::Sensor::SHT3x(0x44);
-          Supla::Sensor::SHT3x *sht3x_1 = new Supla::Sensor::SHT3x(0x45);
-
-#ifdef SUPLA_CONDITIONS
-          Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x);
-          Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x_1, 1);
-#endif
+          sht3x_1 = new Supla::Sensor::SHT3x(0x45);
           break;
       }
+
       if (sht3x) {
+#ifdef SUPLA_CONDITIONS
+        Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x);
+#endif
         correctionHandler.addThermHygroMeter(sht3x);
+      }
+
+      if (sht3x_1) {
+#ifdef SUPLA_CONDITIONS
+        Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x_1, 1);
+#endif
+        correctionHandler.addThermHygroMeter(sht3x_1);
       }
     }
 #endif

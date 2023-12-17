@@ -112,8 +112,8 @@ namespace Supla
 
       Serial.println("Getting meter id as number.");
 
-      uint32_t meter_id = ((uint32_t)frame[7] << 24) | ((uint32_t)frame[6] << 16) |
-                          ((uint32_t)frame[5] << 8) | ((uint32_t)frame[4]);
+      // uint32_t meter_id = ((uint32_t)frame[7] << 24) | ((uint32_t)frame[6] << 16) |
+      //                     ((uint32_t)frame[5] << 8) | ((uint32_t)frame[4]);
       Serial.println("Getting meter id as string.");
       std::string meterIdString = telegram.substr(8, 8);
       char s[9]= {0,0,0,0,0,0,0,0,0};

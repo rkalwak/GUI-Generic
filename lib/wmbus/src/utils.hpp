@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include <vector>
+#include <string>
 
 //----------------------------------------------------------------------------------
 //  Function Declareration

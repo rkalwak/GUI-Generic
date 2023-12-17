@@ -18,6 +18,8 @@ const std::string mode_to_string(WmBusFrameMode mode) {
   }
 }
 
+rf_mbus::rf_mbus() {};
+
 uint8_t rf_mbus::start(bool force) {
   // waiting to long for next part of data?
   bool reinit_needed = ((millis() - sync_time_) > max_wait_time_) ? true: false;

@@ -100,7 +100,8 @@ void directLinksWebPageSave(int nr);
 #define INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL "itmtc"
 #define INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL  "itatc"
 #define INPUT_THERMOSTAT_HISTERESIS               "ith"
-
+#define INPUT_THERMOSTAT_TEMPERATURE_MIN          "ittmin"
+#define INPUT_THERMOSTAT_TEMPERATURE_MAX          "ittmax"
 #endif
 
 #endif  // SuplaWebPageRelay_h

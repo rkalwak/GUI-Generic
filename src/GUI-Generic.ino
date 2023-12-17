@@ -321,17 +321,19 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt()) {
-      int indexOfSensorType =ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
+      improvSerialComponent->disable();
+
+      int indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
       Serial.print("Index of sensor type:");
       Serial.println(indexOfSensorType);
 
-      std::string sensorType=sensors_types[indexOfSensorType]; 
+      std::string sensorType = sensors_types[indexOfSensorType];
       Serial.print("Sensor type:");
       Serial.println(sensorType.c_str());
 
-      std::string sensorId= ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
+      std::string sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
-      Serial.print("Sensor id:");
+ Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
 
       Serial.print("Sensor key:");
@@ -366,35 +368,33 @@ void setup() {
       Serial.print(",");
       Serial.print(gdo2);
       Serial.println("GPIO END");
-
-      meter = new Supla::Sensor::WmbusMeter(mosi,miso, clk, cs,gdo0, gdo2); 
-      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", key)); 
-            meter->add_driver(new Amiplus()); 
-            meter->add_driver(new Apator08());
-            meter->add_driver(new Apator162());
-            meter->add_driver(new ApatorEITN());
-            meter->add_driver(new Bmeters());
-            meter->add_driver(new C5isf());
-            meter->add_driver(new Compact5());
-            meter->add_driver(new Dme07());
-            meter->add_driver(new Elf());
-            meter->add_driver(new Evo868());
-            meter->add_driver(new FhkvdataIII());
-            meter->add_driver(new Hydrocalm3());
-            meter->add_driver(new Hydrus());
-            meter->add_driver(new Iperl());
-            meter->add_driver(new Itron());
-            meter->add_driver(new Izar());
-            meter->add_driver(new Mkradio3());
-            meter->add_driver(new Mkradio4());
-            meter->add_driver(new Qheat());
-            meter->add_driver(new Qwater());
-            meter->add_driver(new Sharky774());
-            meter->add_driver(new TopasESKR());
-            meter->add_driver(new Ultrimis());
-            meter->add_driver(new Unismart());
-            meter->add_driver(new Vario451());
-            
+      meter = new Supla::Sensor::WmbusMeter(mosi, miso, clk, cs, gdo0, gdo2);
+      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", key));
+      meter->add_driver(new Amiplus());
+      meter->add_driver(new Apator08());
+      meter->add_driver(new Apator162());
+      meter->add_driver(new ApatorEITN());
+      meter->add_driver(new Bmeters());
+      meter->add_driver(new C5isf());
+      meter->add_driver(new Compact5());
+      meter->add_driver(new Dme07());
+      meter->add_driver(new Elf());
+      meter->add_driver(new Evo868());
+      meter->add_driver(new FhkvdataIII());
+      meter->add_driver(new Hydrocalm3());
+      meter->add_driver(new Hydrus());
+      meter->add_driver(new Iperl());
+      meter->add_driver(new Itron());
+      meter->add_driver(new Izar());
+      meter->add_driver(new Mkradio3());
+      meter->add_driver(new Mkradio4());
+      meter->add_driver(new Qheat());
+      meter->add_driver(new Qwater());
+      meter->add_driver(new Sharky774());
+      meter->add_driver(new TopasESKR());
+      meter->add_driver(new Ultrimis());
+      meter->add_driver(new Unismart());
+      meter->add_driver(new Vario451());
     }
 #endif
   }
@@ -755,7 +755,6 @@ void setup() {
         break;
     }
     if (vl53l0x) {
-      correctionHandler.addThermHygroMeter(vl53l0x);
       force400khz = true;
 
 #ifdef SUPLA_CONDITIONS

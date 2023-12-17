@@ -14,9 +14,11 @@ class DS18B20 : public Supla::Sensor::Thermometer {
   void iterateAlways();
   double getValue();
 
+  void onInit();
   static void initSharedResources(uint8_t pin);
   void setDeviceAddress(uint8_t* deviceAddress);
   static void waitForAndRequestTemperatures();
+  void restartOneWire();
 
  private:
   static OneWire sharedOneWire;

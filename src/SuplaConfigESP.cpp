@@ -17,6 +17,8 @@
 #include "SuplaDeviceGUI.h"
 #include <HardwareSerial.h>
 
+#include <Arduino.h>
+
 SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 
@@ -195,7 +197,7 @@ void SuplaConfigESP::ledBlinkingStop(void) {
 }
 
 String SuplaConfigESP::getMacAddress(bool formating) {
-  byte mac[6];
+  uint8_t mac[6];
   WiFi.macAddress(mac);
   char baseMacChr[18] = {0};
 

@@ -16,8 +16,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef _SUPLA_SENSOR_MAX6675_K_H_
-#define _SUPLA_SENSOR_MAX6675_K_H_
+#ifndef SRC_SUPLA_SENSOR_MAX6675_K_H_
+#define SRC_SUPLA_SENSOR_MAX6675_K_H_
 
 #include <Arduino.h>
 #include <supla/sensor/thermometer.h>

@@ -22,7 +22,6 @@ namespace Supla
 		{
 		public:
 			WmbusMeter(uint8_t mosi = 23, uint8_t miso = 19, uint8_t clk = 18, uint8_t cs = 5, uint8_t gdo0 = 4, uint8_t gdo2 = 2);
-			WmbusMeter(int a);
 
 			void iterateAlways();
 			std::map<std::string, Driver *> drivers_{};

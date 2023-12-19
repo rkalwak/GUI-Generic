@@ -56,11 +56,14 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
   HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees
   HvacBase::addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_MIDDLE);
 
-  uint8_t temperatureMin = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(getNumber()).toInt();
-  uint8_t temperatureMax = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(getNumber()).toInt();
-  HvacBase::setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, temperatureMin * 100);
-  HvacBase::setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, temperatureMax * 100);
-
+if (strcmp(ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(getNumber()).c_str(), "") != 0) {
+    uint8_t temperatureMin = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(getNumber()).toInt();
+    HvacBase::setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, temperatureMin * 100);
+}
+if (strcmp(ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(getNumber()).c_str(), "") != 0) {
+    uint8_t temperatureMax = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(getNumber()).toInt();
+    HvacBase::setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, temperatureMax * 100);
+}
   uint8_t thermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(getNumber()).toInt();
   setThermostatType(thermostatType);
 

@@ -71,7 +71,7 @@ double DS18B20::getValue() {
   if (value == TEMPERATURE_NOT_AVAILABLE) {
     retryCounter++;
     if (retryCounter > 3) {
-      restartOneWire();
+      //restartOneWire();
       retryCounter = 0;
     }
     else {

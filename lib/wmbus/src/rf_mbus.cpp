@@ -165,11 +165,11 @@ uint16_t verifyCrcBytesCmodeA_local(uint8_t* pByte, uint8_t* pPacket, uint16_t p
 
 bool rf_mbus::init(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t gdo0, uint8_t gdo2) {
   bool retVal = false;
-  Serial.println("");
+  Serial.println("wMBus-lib: Initializing");
   this->gdo0 = gdo0;
   this->gdo2 = gdo2;
-  pinMode(this->gdo0, INPUT);
-  pinMode(this->gdo2, INPUT);
+  ::pinMode(this->gdo0, INPUT);
+  ::pinMode(this->gdo2, INPUT);
   ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
 
   ELECHOUSE_cc1101.Init();
@@ -212,7 +212,7 @@ bool rf_mbus::task() {
 
      // RX active, awaiting SYNC
     case 1:
-      if (digitalRead(this->gdo2)) {
+      if (::digitalRead(this->gdo2)) {
         RXinfo.state = 2;
         sync_time_ = millis();
       }
@@ -220,7 +220,7 @@ bool rf_mbus::task() {
 
     // awaiting pkt len to read
     case 2:
-      if (digitalRead(this->gdo0)) {
+      if (::digitalRead(this->gdo0)) {
         // Read the 3 first bytes
         ELECHOUSE_cc1101.SpiReadBurstReg(CC1101_RXFIFO, RXinfo.pByteIndex, 3);
 
@@ -232,6 +232,7 @@ bool rf_mbus::task() {
         // If T-mode preamble and sync is used, then the first data byte is either a valid 3outof6 byte or C-mode
         // signaling byte. (http://www.ti.com/lit/an/swra522d/swra522d.pdf#page=6)
         if (RXinfo.pByteIndex[0] == 0x54) {
+          Serial.println("wMBus-lib: C frame");
           RXinfo.framemode = WMBUS_C1_MODE;
           // If we have determined that it is a C-mode frame, we have to determine if it is Type A or B.
           if (RXinfo.pByteIndex[1] == 0xCD) {
@@ -272,6 +273,7 @@ bool rf_mbus::task() {
           RXinfo.state = 0;
           return false;
         } else {
+          Serial.println("wMBus-lib: T1 frame");
           RXinfo.framemode = WMBUS_T1_MODE;
           RXinfo.frametype = WMBUS_FRAMEA;
           RXinfo.lengthField = bytesDecoded[0];
@@ -280,6 +282,7 @@ bool rf_mbus::task() {
 
         // check if incoming data will fit into buffer
         if (RXinfo.length>sizeof(this->MBbytes)) {
+          Serial.print("wMBus-lib: not fitting into buffer");
           RXinfo.state = 0;
           return false;
         }
@@ -301,7 +304,7 @@ bool rf_mbus::task() {
 
     // awaiting more data to be read
     case 3:
-      if (digitalRead(this->gdo0)) {
+      if (::digitalRead(this->gdo0)) {
         // Read out the RX FIFO
         // Do not empty the FIFO (See the CC110x or 2500 Errata Note)
         uint8_t bytesInFIFO = ELECHOUSE_cc1101.SpiReadStatus(CC1101_RXBYTES) & 0x7F;        
@@ -317,7 +320,7 @@ bool rf_mbus::task() {
 
   uint8_t overfl = ELECHOUSE_cc1101.SpiReadStatus(CC1101_RXBYTES) & 0x80;
   // END OF PAKET
-  if ((!overfl) && (!digitalRead(gdo2)) && (RXinfo.state > 1)) {
+  if ((!overfl) && (!::digitalRead(gdo2)) && (RXinfo.state > 1)) {
     ELECHOUSE_cc1101.SpiReadBurstReg(CC1101_RXFIFO, RXinfo.pByteIndex, (uint8_t)RXinfo.bytesLeft);
 
     // decode
@@ -355,6 +358,7 @@ bool rf_mbus::task() {
     }
 
     if (rxStatus == PACKET_OK) {
+      Serial.println("wMBus-lib: packet ok");
       this->returnFrame.framemode = RXinfo.framemode;
       RXinfo.complete = true;
       this->returnFrame.rssi = (int8_t)ELECHOUSE_cc1101.getRssi();

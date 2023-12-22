@@ -110,10 +110,6 @@ namespace Supla
 
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'), telegram.end());
 
-      Serial.println("Getting meter id as number.");
-
-      // uint32_t meter_id = ((uint32_t)frame[7] << 24) | ((uint32_t)frame[6] << 16) |
-      //                     ((uint32_t)frame[5] << 8) | ((uint32_t)frame[4]);
       Serial.println("Getting meter id as string.");
       std::string meterIdString = telegram.substr(8, 8);
       char s[9]= {0,0,0,0,0,0,0,0,0};
@@ -156,7 +152,7 @@ namespace Supla
             Serial.print(readValue);
             Serial.println("m3");
             sensor->setNewValue((int)(readValue * 1000000));
-            //sensor->iterateAlways();
+            sensor->iterateAlways();
           }
           else
           {
@@ -174,7 +170,7 @@ namespace Supla
       else
       {
         Serial.print("Config for meter: ");
-        Serial.print(meterIdString.c_str());
+        Serial.print(meterIdRealString.c_str());
         Serial.println(" does not exist.");
       }
       return 0.0;

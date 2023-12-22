@@ -321,7 +321,6 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt()) {
-      improvSerialComponent->disable();
 
       int indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
       Serial.print("Index of sensor type:");

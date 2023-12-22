@@ -332,7 +332,7 @@ void setup() {
 
       std::string sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
- Serial.print("Sensor id:");
+      Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
 
       Serial.print("Sensor key:");
@@ -341,19 +341,19 @@ void setup() {
       std::vector<unsigned char> key;
       if(sensorKey.length() >0)
       {
-        key=std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
+        key = std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
       }
       else{
         //key ={};
-        key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
+        key = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
       }
-      key={0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; 
-      int mosi =ConfigESP->getGpio(FUNCTION_MOSI);
-      int miso =ConfigESP->getGpio(FUNCTION_D0);
-      int clk =ConfigESP->getGpio(FUNCTION_CLK);
-      int cs=ConfigESP->getGpio(FUNCTION_CS);
-      int gdo0=ConfigESP->getGpio(FUNCTION_GDO0);
-      int gdo2= ConfigESP->getGpio(FUNCTION_GDO2);
+      
+      int mosi = ConfigESP->getGpio(FUNCTION_MOSI);
+      int miso = ConfigESP->getGpio(FUNCTION_D0);
+      int clk = ConfigESP->getGpio(FUNCTION_CLK);
+      int cs = ConfigESP->getGpio(FUNCTION_CS);
+      int gdo0 = ConfigESP->getGpio(FUNCTION_GDO0);
+      int gdo2 = ConfigESP->getGpio(FUNCTION_GDO2);
       Serial.print("GPIO: ");
       Serial.print(mosi);
       Serial.print(",");

@@ -1,0 +1,26 @@
+kupiony
+MOSI 32
+MISO 19
+CLK 33
+CS 23
+GDO0 22
+GDO2 21
+
+moj:
+MOSI 23
+MISO 19
+
+CLK 18
+CS 5
+GDO0 4
+GDO2 14 zamiast 2 bo 2 to jest LED
+02719887
+
+11:30:26.773 > wMBus-lib: T1 frame
+11:32:45.774 > wMBus-lib: T1 frame
+11:33:19.581 > wMBus-lib: T1 frame
+11:33:19.581 > wMBus-lib: Processing T1 A frame
+11:33:19.581 > wMBus-lib:  Error during decoding '3 out of 6'
+11:34:16.768 > wMBus-lib: T1 frame
+11:35:20.773 > wMBus-lib: T1 frame
+11:38:00.767 > wMBus-lib: T1 frame

@@ -41,10 +41,10 @@ void handleSensorSpi(int save) {
   addFormHeader(webContentBuffer, String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_SPI);
   addListGPIOBox(webContentBuffer, INPUT_CLK_GPIO, S_CLK, FUNCTION_CLK);
   addListGPIOBox(webContentBuffer, INPUT_CS_GPIO, S_CS, FUNCTION_CS);
-  addListGPIOBox(webContentBuffer, INPUT_D0_GPIO, S_D0, FUNCTION_D0); //MISO
+  addListGPIOBox(webContentBuffer, INPUT_MISO_GPIO, S_MISO, FUNCTION_MISO); //MISO
   addListGPIOBox(webContentBuffer, INPUT_MOSI_GPIO, S_MOSI, FUNCTION_MOSI);
 
-  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MOSI)!= OFF_GPIO) 
+  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MISO) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MOSI)!= OFF_GPIO) 
   {
 #ifdef SUPLA_MAX6675
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX6675).toInt();
@@ -90,7 +90,7 @@ void handleSensorSpiSave() {
 
   if (!WebServer->saveGPIO(INPUT_CLK_GPIO, FUNCTION_CLK) 
       || !WebServer->saveGPIO(INPUT_CS_GPIO, FUNCTION_CS) 
-      || !WebServer->saveGPIO(INPUT_D0_GPIO, FUNCTION_D0)
+      || !WebServer->saveGPIO(INPUT_MISO_GPIO, FUNCTION_MISO)
       || !WebServer->saveGPIO(INPUT_MOSI_GPIO, FUNCTION_MOSI)
       #ifdef SUPLA_CC1101
       

@@ -1,0 +1,328 @@
+12:31:35.429 > File not found
+12:31:35.431 > SET DEVICE CONFIGURATION!
+12:31:35.447 > Save key: 4 Value: admin
+12:31:35.447 > Save key: 5 Value: pass
+12:31:35.462 > Save key: 6 Value: GUI Generic
+12:31:35.466 > Save key: 7 Value: svrX.supla.org
+12:31:35.469 > Save key: 8 Value: email@address.com
+12:31:35.469 > Save key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:31:35.483 > Save key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:31:35.487 > Save key: 80 Value: 1
+12:31:35.487 > Save key: 81 Value: 0
+12:31:35.487 > Save key: 102 Value: 0
+12:31:35.520 > Button[0]::setMulticlickTime: 450
+12:31:35.520 > Supla - starting initialization
+12:31:35.548 > Storage initialization
+12:31:35.552 > readStorage: 8; Read: [FF FF FF FF FF FF FF FF ]
+12:31:35.554 > Storage: missing Supla tag. Rewriting...
+12:31:35.564 > Wrote 8 bytes to storage at 0
+12:31:35.570 > Commit
+12:31:35.570 > Config incomplete: missing Wi-Fi SSID
+12:31:35.570 > LAST STATE ADDED: Missing Wi-Fi SSID
+12:31:35.582 > Config incomplete: missing Wi-Fi password
+12:31:35.587 > LAST STATE ADDED: Missing Wi-Fi password
+12:31:35.587 > Button[0] enabling IN as config button
+12:31:35.598 > Validating storage state section with current device configuration
+12:31:35.603 > Storage state section validation completed. Loading elements state...
+12:31:35.616 > Pin 0, pullUp 1, invertLogic 1, state 1
+12:31:35.620 > Config incomplete: deviceMode = CONFIG
+12:31:35.620 > GUID: EE4349FFD63E031C53A9847052691FFB
+12:31:35.634 > Device name: GUI Generic
+12:31:35.637 > Device software version: GG v7.8.3
+12:31:35.637 > Initializing network layer
+12:31:35.637 > Network AP/hostname: GUI-GENERIC-CCDBA715F118
+12:31:35.651 > Using Supla protocol version 20
+12:31:35.654 > Current status: [5] SuplaDevice initialized
+12:31:35.654 > Wi-Fi SSID missing
+12:31:35.664 > WiFi: enter config mode with SSID: "SUPLA-GUI-Generic-CCDBA715F118"
+12:31:35.670 > WiFi: WIFI_AP_STA
+12:31:35.832 > [   447][E][WiFiSTA.cpp:232] begin(): SSID too long or missing!
+12:31:35.841 > LAST STATE ADDED: Config mode
+12:31:35.846 > Current status: [40] Config mode
+12:31:35.850 > WiFi: enter config mode with SSID: "SUPLA-GUI-Generic-CCDBA715F118"
+12:31:35.854 > WiFi: WIFI_AP_STA
+12:31:35.854 > [   463][E][WiFiSTA.cpp:232] begin(): SSID too long or missing!
+12:31:40.383 > Wrote 7 bytes to storage at 0
+12:31:40.383 > Commit
+12:32:44.746 > Save key: 0 Value: �CI��>S��pRi�
+12:32:44.751 > Save key: 1 Value: ���7�9G��F�j
+12:35:55.495 > Save key: 2 Value: ssid
+12:35:55.495 > Save key: 3 Value: wifi
+12:35:55.516 > Save key: 4 Value: admin
+12:35:55.518 > Save key: 5 Value: pass
+12:35:55.518 > Save key: 6 Value: GG mój licznik
+12:35:55.518 > Save key: 7 Value: server.supla.org
+12:35:55.530 > Save key: 8 Value: mail
+12:32:44.787 > Save key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:32:44.791 > Save key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:32:44.803 > Save key: 80 Value: 1
+12:32:44.806 > Save key: 81 Value: 0
+12:32:44.807 > Save key: 102 Value: 0
+12:33:37.093 > Save key: 0 Value: �CI��>S��pRi�
+12:33:37.099 > Save key: 1 Value: ���7�9G��F�j
+12:35:55.495 > Save key: 2 Value: ssid
+12:35:55.495 > Save key: 3 Value: wifi
+12:35:55.516 > Save key: 4 Value: admin
+12:35:55.518 > Save key: 5 Value: pass
+12:35:55.518 > Save key: 6 Value: GG mój licznik
+12:35:55.518 > Save key: 7 Value: server.supla.org
+12:35:55.530 > Save key: 8 Value: mail
+12:33:37.127 > Save key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:37.143 > Save key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:33:37.144 > Save key: 29 Value: 1,15,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:37.157 > Save key: 42 Value: 1,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:37.160 > Save key: 43 Value: 1,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:37.173 > Save key: 47 Value: 1,43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:37.177 > Save key: 80 Value: 1
+12:33:37.177 > Save key: 81 Value: 0
+12:33:37.187 > Save key: 102 Value: 0
+12:33:41.702 > Save key: 0 Value: �CI��>S��pRi�
+12:33:41.705 > Save key: 1 Value: ���7�9G��F�j
+12:35:55.495 > Save key: 2 Value: ssid
+12:35:55.495 > Save key: 3 Value: wifi
+12:35:55.516 > Save key: 4 Value: admin
+12:35:55.518 > Save key: 5 Value: pass
+12:35:55.518 > Save key: 6 Value: GG mój licznik
+12:35:55.518 > Save key: 7 Value: server.supla.org
+12:35:55.530 > Save key: 8 Value: mail
+12:33:41.744 > Save key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:41.744 > Save key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:33:41.759 > Save key: 29 Value: 1,15,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:41.760 > Save key: 42 Value: 1,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:41.774 > Save key: 43 Value: 1,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:41.777 > Save key: 47 Value: 1,43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:33:41.790 > Save key: 80 Value: 1
+12:33:41.794 > Save key: 81 Value: 0
+12:33:41.794 > Save key: 102 Value: 0
+12:33:41.794 > Save key: 114 Value: ,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.830 > Save key: 0 Value: �CI��>S��pRi�
+12:35:38.835 > Save key: 1 Value: ���7�9G��F�j
+12:35:55.495 > Save key: 2 Value: ssid
+12:35:55.495 > Save key: 3 Value: wifi
+12:35:55.516 > Save key: 4 Value: admin
+12:35:55.518 > Save key: 5 Value: pass
+12:35:55.518 > Save key: 6 Value: GG mój licznik
+12:35:55.518 > Save key: 7 Value: server.supla.org
+12:35:55.530 > Save key: 8 Value: mail
+12:35:38.867 > Save key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.880 > Save key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:35:38.884 > Save key: 28 Value: 1,44,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.894 > Save key: 29 Value: 1,15,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.901 > Save key: 38 Value: 1,45,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.911 > Save key: 42 Value: 1,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.917 > Save key: 43 Value: 1,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.917 > Save key: 47 Value: 1,43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.934 > Save key: 80 Value: 1
+12:35:38.935 > Save key: 81 Value: 0
+12:35:38.935 > Save key: 102 Value: 0
+12:35:38.935 > Save key: 114 Value: ,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.950 > Save key: 119 Value: 3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:38.965 > Save key: 120 Value: 02719887
+12:35:38.967 > Save key: 121 Value: 00000000000000000000000000000000
+12:35:55.012 > *�P�TU
+U�
+��U�U�TE���\
+12:35:55.012 > QUꢪ�U�J���u��\j��T�J�R�J�u�uT�T��U���-QBU��j��EJ�R�Zq��R�Zq�uT�Zq���R�Zq��WխQ(���խQ(Eե�I�JR�T�U�UZ�Eu����(U�UV+��Q��T�\EԱQ�UV+UUTTT�i���U�u��Q��T�\EQE��jZEEj��Pq*           *QQ�TQ�Config read
+12:35:55.495 > Key: 0 Value: �CI��>S��pRi�
+12:35:55.495 > Key: 1 Value: ���7�9G��F�j
+12:35:55.495 > Key: 2 Value: ssid
+12:35:55.495 > Key: 3 Value: wifi
+12:35:55.516 > Key: 4 Value: admin
+12:35:55.518 > Key: 5 Value: pass
+12:35:55.518 > Key: 6 Value: GG mój licznik
+12:35:55.518 > Key: 7 Value: server.supla.org
+12:35:55.530 > Key: 8 Value: mail
+12:35:55.535 > Key: 9 Value:
+12:35:55.535 > Key: 10 Value:
+12:35:55.535 > Key: 11 Value:
+12:35:55.535 > Key: 12 Value:
+12:35:55.535 > Key: 13 Value:
+12:35:55.545 > Key: 14 Value:
+12:35:55.548 > Key: 15 Value: 
+12:35:55.550 > Key: 16 Value:
+12:35:55.551 > Key: 17 Value:
+12:35:55.551 > Key: 18 Value:
+12:35:55.551 > Key: 19 Value:
+12:35:55.551 > Key: 20 Value:
+12:35:55.562 > Key: 21 Value:
+12:35:55.564 > Key: 22 Value:
+12:35:55.566 > Key: 23 Value:
+12:35:55.567 > Key: 24 Value: ,,,,,,,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.567 > Key: 25 Value:
+12:35:55.578 > Key: 26 Value: ,,0,,,,,,,,,,,,,,,1,,,,,,,,,,,,,,,,,
+12:35:55.584 > Key: 27 Value:
+12:35:55.584 > Key: 28 Value: 1,44,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.584 > Key: 29 Value: 1,15,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.601 > Key: 30 Value:
+12:35:55.601 > Key: 31 Value:
+12:35:55.601 > Key: 32 Value:
+12:35:55.601 > Key: 33 Value:
+12:35:55.601 > Key: 34 Value:
+12:35:55.612 > Key: 35 Value:
+12:35:55.616 > Key: 36 Value: 
+12:35:55.617 > Key: 37 Value:
+12:35:55.617 > Key: 38 Value: 1,45,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.617 > Key: 39 Value:
+12:35:55.629 > Key: 40 Value:
+12:35:55.631 > Key: 41 Value: 
+12:35:55.633 > Key: 42 Value: 1,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.635 > Key: 43 Value: 1,16,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.647 > Key: 44 Value: 
+12:35:55.649 > Key: 45 Value:
+12:35:55.650 > Key: 46 Value:
+12:35:55.650 > Key: 47 Value: 1,43,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.662 > Key: 48 Value:
+12:35:55.663 > Key: 49 Value: 
+12:35:55.667 > Key: 50 Value:
+12:35:55.667 > Key: 51 Value:
+12:35:55.667 > Key: 52 Value:
+12:35:55.667 > Key: 53 Value:
+12:35:55.667 > Key: 54 Value:
+12:35:55.667 > Key: 55 Value:
+12:35:55.679 > Key: 56 Value:
+12:35:55.682 > Key: 57 Value: 
+12:35:55.684 > Key: 58 Value:
+12:35:55.684 > Key: 59 Value:
+12:35:55.684 > Key: 60 Value:
+12:35:55.684 > Key: 61 Value:
+12:35:55.684 > Key: 62 Value:
+12:35:55.695 > Key: 63 Value:
+12:35:55.697 > Key: 64 Value:
+12:35:55.700 > Key: 65 Value:
+12:35:55.700 > Key: 66 Value:
+12:35:55.700 > Key: 67 Value:
+12:35:55.700 > Key: 68 Value:
+12:35:55.700 > Key: 69 Value:
+12:35:55.700 > Key: 70 Value:
+12:35:55.713 > Key: 71 Value:
+12:35:55.716 > Key: 72 Value: 
+12:35:55.717 > Key: 73 Value:
+12:35:55.717 > Key: 74 Value:
+12:35:55.717 > Key: 75 Value:
+12:35:55.717 > Key: 76 Value:
+12:35:55.717 > Key: 77 Value:
+12:35:55.729 > Key: 78 Value:
+12:35:55.731 > Key: 79 Value: 
+12:35:55.734 > Key: 80 Value: 1
+12:35:55.734 > Key: 81 Value: 0
+12:35:55.734 > Key: 82 Value:
+12:35:55.734 > Key: 83 Value:
+12:35:55.734 > Key: 84 Value:
+12:35:55.745 > Key: 85 Value:
+12:35:55.748 > Key: 86 Value: 
+12:35:55.750 > Key: 87 Value:
+12:35:55.750 > Key: 88 Value:
+12:35:55.750 > Key: 89 Value:
+12:35:55.750 > Key: 90 Value:
+12:35:55.750 > Key: 91 Value:
+12:35:55.750 > Key: 92 Value:
+12:35:55.764 > Key: 93 Value:
+12:35:55.767 > Key: 94 Value:
+12:35:55.767 > Key: 95 Value:
+12:35:55.767 > Key: 96 Value:
+12:35:55.767 > Key: 97 Value:
+12:35:55.767 > Key: 98 Value:
+12:35:55.767 > Key: 99 Value:
+12:35:55.779 > Key: 100 Value:
+12:35:55.782 > Key: 101 Value:
+12:35:55.784 > Key: 102 Value: 0
+12:35:55.784 > Key: 103 Value:
+12:35:55.784 > Key: 104 Value:
+12:35:55.784 > Key: 105 Value:
+12:35:55.784 > Key: 106 Value:
+12:35:55.796 > Key: 107 Value:
+12:35:55.799 > Key: 108 Value:
+12:35:55.800 > Key: 109 Value:
+12:35:55.800 > Key: 110 Value:
+12:35:55.800 > Key: 111 Value:
+12:35:55.800 > Key: 112 Value:
+12:35:55.800 > Key: 113 Value:
+12:35:55.813 > Key: 114 Value: ,1,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.828 > Key: 115 Value:
+12:35:55.831 > Key: 116 Value: 
+12:35:55.833 > Key: 117 Value:
+12:35:55.834 > Key: 118 Value:
+12:35:55.834 > Key: 119 Value: 3,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+12:35:55.834 > Key: 120 Value: 02719887
+12:35:55.848 > Key: 121 Value: 00000000000000000000000000000000
+12:35:55.851 > Button[0]::setMulticlickTime: 450
+12:35:55.851 > Index of sensor type:3
+12:35:55.862 > Sensor type:apator162
+12:35:55.866 > Sensor id:02719887
+12:35:55.868 > GPIO: 23,19,18,5,4,14GPIO END
+12:35:55.868 >
+12:35:55.868 > wMBus-lib: CC1101 version '20'
+12:35:55.882 > wMBus-lib: CC1101 initialized
+12:35:55.884 > Receiver started.
+12:35:55.884 > Supla - starting initialization
+12:35:55.901 > Storage initialization
+12:35:55.901 > readStorage: 8; Read: [3 0 0 FF FF FF FF 0 ]
+12:35:55.912 > Storage: missing Supla tag. Rewriting...
+12:35:55.917 > Wrote 8 bytes to storage at 0
+12:35:55.917 > Commit
+12:35:55.917 > Button[0] enabling IN as config button
+12:35:55.930 > Validating storage state section with current device configuration
+12:35:55.934 > Storage state section validation completed. Loading elements state...
+12:35:55.949 > Pin 0, pullUp 1, invertLogic 1, state 1
+12:35:55.951 > GUID: EE4349FFD63E031C53A9847052691FFB
+12:35:55.951 > Device name: GG mój licznik
+12:35:55.965 > Device software version: GG v7.8.3
+12:35:55.968 > Initializing network layer
+12:35:55.968 > Network AP/hostname: GG-MJ-LICZNIK-CCDBA715F118
+12:35:55.979 > Using Supla protocol version 20
+12:35:55.983 > Current status: [5] SuplaDevice initialized
+12:35:55.984 > Enter normal mode
+12:35:55.984 > WiFi: establishing connection with SSID: "ssid"
+12:35:58.032 > Connected BSSID: 32:DE:4B:9D:F1:BC
+12:35:58.038 > local IP: 192.168.0.122
+12:35:58.041 > subnetMask: 255.255.255.0
+12:35:58.044 > gatewayIP: 192.168.0.1
+12:35:58.047 > Signal strength (RSSI): -65 dBm
+12:35:58.101 > Establishing NOT encrypted connection with: server.supla.org (port: 2015)
+12:35:58.165 > Connected to Supla Server
+12:35:58.168 > Initializing SRPC
+12:35:58.168 > LAST STATE ADDED: Register in progress
+12:35:58.168 > Current status: [10] Register in progress
+12:35:58.182 > CH #0, type: 5010, FuncList: 0x0, default: 330, flags: 0x10000, value: [00 00 00 00 00 00 00 00]
+12:35:58.196 > Send: [53 55 50 4C 41 14 01 00 00 00 45 00 00 00 61 02 00 00 72 61 66 61 6C 65 6B 6B 61 6C 77 61 6B 40 77 70 2E 70 6C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A0 C4 E5 8B 37 1D 08 E8 39 47 91 DE 46 DC 6A 04 EE 43 49 FF D6 3E 03 1C 53 A9 84 70 52 69 1F FB 47 47 20 6D C3 B3 6A 20 6C 69 63 7A 6E 69 6B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+12:35:58.334 > Send: [53 55 50 4C 41 ]
+12:35:58.437 > Recv: [53 55 50 4C 41 14 01 00 00 00 46 00 00 00 07 00 00 00 03 00 00 00 78 15 01 53 55 50 4C 41 ]
+12:35:58.451 > Device registered (activity timeout 120 s, server version: 21, server min version: 1)
+12:35:58.461 > LAST STATE ADDED: Registered and ready
+12:35:58.464 > Current status: [17] Registered and ready
+12:35:58.464 > Changing activity timeout to 30
+12:35:58.464 > Send: [53 55 50 4C 41 14 02 00 00 00 D2 00 00 00 01 00 00 00 1E ]
+12:35:58.485 > Send: [53 55 50 4C 41 ]
+12:35:58.532 > Recv: [53 55 50 4C 41 14 02 00 00 00 DC 00 00 00 03 00 00 00 1E 0A F0 53 55 50 4C 41 ]
+12:35:58.535 > Activity timeout set to 30 s
+12:36:00.457 > Wrote 7 bytes to storage at 0
+12:36:00.462 > Commit
+12:36:23.465 > Send: [53 55 50 4C 41 14 03 00 00 00 28 00 00 00 10 00 00 00 20 01 00 00 00 00 00 00 DE 5C 01 00 00 00 00 00 ]
+12:36:23.490 > Send: [53 55 50 4C 41 ]
+12:36:23.652 > Recv: [53 55 50 4C 41 14 03 00 00 00 32 00 00 00 10 00 00 00 36 DD 7E 65 00 00 00 00 03 C6 0B 00 00 00 00 00 53 55 50 4C 41 ]
+12:36:48.468 > Send: [53 55 50 4C 41 14 04 00 00 00 28 00 00 00 10 00 00 00 39 01 00 00 00 00 00 00 31 70 01 00 00 00 00 00 ]
+12:36:48.483 > Send: [53 55 50 4C 41 ]
+...
+
+
+
+COnfig mode:
+
+12:47:10.914 > CALCFG CMD received: senderId 0, ch -1, cmd 9000, suauth 1, datatype 0, datasize 0,
+12:47:10.926 > CALCFG ENTER CFGMODE received
+12:47:10.930 > Send: [53 55 50 4C 41 14 09 00 00 00 D6 01 00 00 14 00 00 00 00 00 00 00 FF FF FF FF 28 23 00 00 02 00 00 00 00 00 00 00 ]
+12:47:10.937 > Send: [53 55 50 4C 41 ]
+12:47:10.951 > Deinitializing SRPC
+12:47:10.955 > WiFi: enter config mode with SSID: "SUPLA-GUI-Generic-CCDBA715F118"
+12:47:10.955 > WiFi: WIFI_MODE_AP
+12:47:10.967 > LAST STATE ADDED: Config modeWiFi Station disconnected
+12:47:10.972 >
+12:47:10.972 > Current status: [40] Config mode
+12:49:10.295 > wMBus-lib: Processing T1 A frame
+12:49:10.300 > wMBus-lib:  Error during decoding '3 out of 6'
+12:52:10.945 > Config mode 5 min timeout. Reset device
+12:52:10.949 > LAST STATE ADDED: Software reset
+12:52:10.949 > Current status: [41] Software reset
+12:52:10.949 > Resetting in 0.5s...
+12:52:10.949 > E (470684) wifi_init_default: esp_wifi_get_mac failed with 12289
+12:52:11.449 > See you soon!

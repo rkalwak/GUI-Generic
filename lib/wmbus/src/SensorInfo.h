@@ -13,8 +13,8 @@ namespace Supla
         class SensorInfo : public SensorBase, public ChannelElement
         {
         public:
-            SensorInfo(std::string meter_id, std::string type, std::string property_to_send, std::vector<unsigned char> key)
-                : SensorBase(meter_id, type, property_to_send, key)
+            SensorInfo(std::string meter_id, std::string type, std::string property_to_send, std::string keyString)
+                : SensorBase(meter_id, type, property_to_send, keyString)
             {
                 channel.setType(SUPLA_CHANNELTYPE_IMPULSE_COUNTER);
                 channel.setDefault(SUPLA_CHANNELFNC_IC_WATER_METER);

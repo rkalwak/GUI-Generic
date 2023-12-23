@@ -3,8 +3,7 @@
 namespace Supla
 {
   namespace Sensor
-  {
-    
+  {   
     WmbusMeter::WmbusMeter(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t gdo0, uint8_t gdo2)
     {
       bool isInitialized = receiver.init(mosi, miso, clk, cs, gdo0, gdo2);
@@ -197,3 +196,5 @@ namespace Supla
 
   };
 };
+
+Supla::Sensor::WmbusMeter *meter;

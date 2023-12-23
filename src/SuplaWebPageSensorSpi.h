@@ -73,6 +73,33 @@ const char* const sensors_types[] /*PROGMEM*/ = {
     "vario451"
   };
 
+  const char* const sensors_properties[] /*PROGMEM*/ = {
+    "total_water_m3",
+    "total_energy_consumption_kwh",
+    "current_power_consumption_kw",
+    "total_energy_production_kwh",
+    "current_power_production_kw",
+    "voltage_at_phase_1_v",
+    "voltage_at_phase_2_v", 
+    "voltage_at_phase_3_v", 
+    "current_hca",
+    "previous_hca", 
+    "temp_room_avg_c",
+    "total_heating_kwh",
+    "flow_temperature_c", 
+    "return_temperature_c",
+    "current_heating_kwh",
+    "previous_heating_kwh",
+    "total_gas_m3",
+    "total_heating_gj", 
+    "last_month_total_water_m3", 
+    "current_month_total_water_l",
+    "transmit_period_s", 
+    "remaining_battery_life_y", 
+    "current_alarms", 
+    "previous_alarms"
+  };
+
 enum _wmbus_config_positions
 {
   WMBUS_CFG_SENSOR_TYPE,

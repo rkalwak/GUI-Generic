@@ -336,6 +336,14 @@ void setup() {
 
       Serial.print("Sensor key:");
       Serial.println(sensorKey.c_str());
+
+      int indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_PROPERTY).toInt();
+      Serial.print("Index of sensor property:");
+      Serial.println(indexOfSensorProperty);
+
+      std::string sensorProperty = sensors_properties[indexOfSensorProperty];
+      Serial.print("Sensor property:");
+      Serial.println(sensorProperty.c_str());
            
       int mosi = ConfigESP->getGpio(FUNCTION_MOSI);
       int miso = ConfigESP->getGpio(FUNCTION_MISO);
@@ -357,7 +365,7 @@ void setup() {
       Serial.print(gdo2);
       Serial.println("GPIO END");
       meter = new Supla::Sensor::WmbusMeter(mosi, miso, clk, cs, gdo0, gdo2);
-      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", sensorKey));
+      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
       meter->add_driver(new Amiplus());
       meter->add_driver(new Apator08());
       meter->add_driver(new Apator162());

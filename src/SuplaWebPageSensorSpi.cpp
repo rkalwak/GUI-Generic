@@ -79,6 +79,8 @@ void handleSensorSpi(int save) {
       addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, sensorId.c_str(), 1, 100, true);
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
       addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_KEY, S_WMBUS_SENSOR_KEY, sensorKey.c_str(), 1, 200, false);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_PROPERTY).toInt();  
+      addListBox(webContentBuffer, INPUT_WMBUS_SENSOR_PROP, S_WMBUS_SENSOR_PROP, sensors_properties, 24, selected);
     }
   }
   addFormHeaderEnd(webContentBuffer);
@@ -138,6 +140,11 @@ void handleSensorSpiSave() {
   input = INPUT_WMBUS_SENSOR_KEY;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->set(KEY_WMBUS_SENSOR_KEY, WebServer->httpServer->arg(input).c_str());
+  }
+
+  input = INPUT_WMBUS_SENSOR_PROP;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_TYPE, WMBUS_CFG_SENSOR_PROPERTY, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
 #endif

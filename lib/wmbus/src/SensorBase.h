@@ -35,7 +35,7 @@ namespace Supla
       std::vector<unsigned char> _key;
       std::string _type;
       std::string _meter_id;
-      std::string _property_to_send;
+      std::string _property_to_send= "total_water_m3";
 
      private:
       std::vector<unsigned char> hexToBytes(const std::string& hex) {

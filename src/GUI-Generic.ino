@@ -344,27 +344,7 @@ void setup() {
       std::string sensorProperty = sensors_properties[indexOfSensorProperty];
       Serial.print("Sensor property:");
       Serial.println(sensorProperty.c_str());
-           
-      int mosi = ConfigESP->getGpio(FUNCTION_MOSI);
-      int miso = ConfigESP->getGpio(FUNCTION_MISO);
-      int clk = ConfigESP->getGpio(FUNCTION_CLK);
-      int cs = ConfigESP->getGpio(FUNCTION_CS);
-      int gdo0 = ConfigESP->getGpio(FUNCTION_GDO0);
-      int gdo2 = ConfigESP->getGpio(FUNCTION_GDO2);
-      Serial.print("GPIO: ");
-      Serial.print(mosi);
-      Serial.print(",");
-      Serial.print(miso);
-      Serial.print(",");
-      Serial.print(clk);
-      Serial.print(",");
-      Serial.print(cs);
-      Serial.print(",");
-      Serial.print(gdo0);
-      Serial.print(",");
-      Serial.print(gdo2);
-      Serial.println("GPIO END");
-      meter = new Supla::Sensor::WmbusMeter(mosi, miso, clk, cs, gdo0, gdo2);
+      meter = new Supla::Sensor::WmbusMeter(ConfigESP->getGpio(FUNCTION_MOSI), ConfigESP->getGpio(FUNCTION_MISO), ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_GDO0), ConfigESP->getGpio(FUNCTION_GDO2));
       meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
       meter->add_driver(new Amiplus());
       meter->add_driver(new Apator08());

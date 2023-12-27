@@ -6,10 +6,23 @@ namespace Supla
   {   
     WmbusMeter::WmbusMeter(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t gdo0, uint8_t gdo2)
     {
+      Serial.print("wMBus-lib: Initializing with GPIO: ");
+      Serial.print(mosi);
+      Serial.print(",");
+      Serial.print(miso);
+      Serial.print(",");
+      Serial.print(clk);
+      Serial.print(",");
+      Serial.print(cs);
+      Serial.print(",");
+      Serial.print(gdo0);
+      Serial.print(",");
+      Serial.print(gdo2);
+      Serial.println(" GPIO END");
       bool isInitialized = receiver.init(mosi, miso, clk, cs, gdo0, gdo2);
       if (isInitialized)
       {
-        Serial.println("Receiver started.");
+        Serial.println("wMBus-lib: Receiver started.");
       }
     };
 
@@ -79,7 +92,7 @@ namespace Supla
       }
       else
       {
-        Serial.println("CI unknown");
+        Serial.println("wMBus-lib: CI unknown");
       }
 
       pos = telegram.begin() + offset;
@@ -101,15 +114,15 @@ namespace Supla
 
     float WmbusMeter::parse_frame(std::vector<unsigned char> &frame)
     {
-      Serial.println("Formatting as string.");
+      Serial.println("wMBus-lib: Formatting as string.");
 
       std::string telegram = format_hex_pretty(frame);
 
-      Serial.println("Removing helping characters.");
+      Serial.println("wMBus-lib: Removing helping characters.");
 
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'), telegram.end());
 
-      Serial.println("Getting meter id as string.");
+      Serial.println("wMBus-lib: Getting meter id.");
       std::string meterIdString = telegram.substr(8, 8);
       char s[9]= {0,0,0,0,0,0,0,0,0};
       s[0]=meterIdString[6];
@@ -124,13 +137,13 @@ namespace Supla
 
       if(sensors_.count(meterIdRealString) > 0)
       {
-        Serial.println("Getting sensor config.");
+        Serial.println("wMBus-lib: Getting sensor config.");
         auto sensor = sensors_[meterIdRealString];
         bool isOk = true;
         float readValue = 0.0;
         if (sensor->get_key().size() >0)
         {
-          Serial.println("Key provided, decrypting frame.");
+          Serial.println("wMBus-lib: Key provided, decrypting frame.");
           if (!decrypt_telegram(frame, sensor->get_key()))
           {
             isOk = false;
@@ -140,7 +153,7 @@ namespace Supla
         {
           if(this->drivers_.count(sensor->get_type()))
           {
-            Serial.println("Getting driver.");
+            Serial.println("wMBus-lib: Getting driver.");
             auto driver = this->drivers_[sensor->get_type()];
             auto mapValues = driver->get_values(frame);
             readValue = mapValues[sensor->get_property_to_send()];
@@ -155,42 +168,38 @@ namespace Supla
           }
           else
           {
-            Serial.print("Driver for sensor: ");
+            Serial.print("wMBus-lib: Driver for sensor: ");
             Serial.print(sensor->get_type().c_str());
             Serial.println(" does not exist.");
           }
         }
         else
         {
-          Serial.println("Failed to decrypt telegram.");
+          Serial.println("wMBus-lib: Failed to decrypt telegram.");
         }
         return readValue;
       }
       else
       {
-        Serial.print("Config for meter: ");
+        Serial.print("wMBus-lib: Config for meter: ");
         Serial.print(meterIdRealString.c_str());
         Serial.println(" does not exist.");
       }
       return 0.0;
     }
 
-    void WmbusMeter::iterateAlways()
+    void WmbusMeter::onFastTimer()
     {
       if (receiver.task())
       {
-        Serial.println("Found.");
+        Serial.println("wMBus-lib: Found telegram.");
         dumpHex(receiver.MBpacket, packetLength);
-
-        Serial.println("Getting frame.");
-
         WMbusFrame mbus_data = receiver.get_frame();
         std::vector<unsigned char> frame = mbus_data.frame;
-
-        Serial.println("........................................");
-        Serial.println("Parsing frame.");
+        Serial.println("----------------");
+        Serial.println("wMBus-lib: Parsing frame.");
         parse_frame(frame);
-        Serial.println("----");
+        Serial.println("----------------");
       }
     }
 

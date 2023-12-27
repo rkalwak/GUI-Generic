@@ -43,7 +43,7 @@
 #define INPUT_WMBUS_SENSOR_ID "s_number"
 #define INPUT_WMBUS_SENSOR_KEY "s_key"
 #define INPUT_WMBUS_SENSOR_PROP "s_prop"
-const char* const sensors_types[] /*PROGMEM*/ = {
+const char* const sensors_types[] PROGMEM = {
     "izar", 
     "amiplus", 
     "apator08", 
@@ -73,7 +73,7 @@ const char* const sensors_types[] /*PROGMEM*/ = {
     "vario451"
   };
 
-  const char* const sensors_properties[] /*PROGMEM*/ = {
+  const char* const sensors_properties[] PROGMEM = {
     "total_water_m3",
     "total_energy_consumption_kwh",
     "current_power_consumption_kw",

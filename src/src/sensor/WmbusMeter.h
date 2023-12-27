@@ -17,7 +17,7 @@ class WmbusMeter : public Element {
  public:
   WmbusMeter(uint8_t mosi = 23, uint8_t miso = 19, uint8_t clk = 18, uint8_t cs = 5, uint8_t gdo0 = 4, uint8_t gdo2 = 2);
 
-  void iterateAlways() override;
+  void onFastTimer() override;
   std::map<std::string, Driver *> drivers_{};
   std::map<std::string, SensorBase *> sensors_{};
   void add_driver(Driver *driver);

@@ -40,7 +40,6 @@ extern "C" {
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
-Supla::Sensor::WmbusMeter *meter;
 #endif
 
 #include "src/boneIO/boneIO.h"
@@ -298,11 +297,11 @@ void setup() {
 #endif
 
 #ifdef GUI_SENSOR_SPI
-  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_D0) != OFF_GPIO) {
+  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MISO) != OFF_GPIO) {
 #ifdef SUPLA_MAX6675
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX6675).toInt()) {
       auto thermocouple =
-          new Supla::Sensor::MAX6675_K(ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_D0));
+          new Supla::Sensor::MAX6675_K(ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_MISO));
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_MAX6675, S_MAX6675, thermocouple);
 #endif
@@ -312,7 +311,7 @@ void setup() {
 #ifdef SUPLA_MAX31855
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_SPI_MAX31855).toInt()) {
       auto thermocouple =
-          new Supla::Sensor::MAX31855(ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_D0));
+          new Supla::Sensor::MAX31855(ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_MISO));
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_MAX31855, S_MAX31855, thermocouple);
 #endif
@@ -321,7 +320,6 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt()) {
-      improvSerialComponent->disable();
 
       int indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
       Serial.print("Index of sensor type:");
@@ -336,38 +334,18 @@ void setup() {
       Serial.print("Sensor id:");
       Serial.println(sensorId.c_str());
 
-      std::vector<unsigned char> key;
-      if (sensorKey.length() > 0) {
-        key = std::vector<unsigned char>(sensorKey.begin(), sensorKey.end());
-      }
-      else {
-        key = {};
-        key = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-      }
+      Serial.print("Sensor key:");
+      Serial.println(sensorKey.c_str());
 
-      int mosi = ConfigESP->getGpio(FUNCTION_MOSI);
-      int miso = ConfigESP->getGpio(FUNCTION_D0);
-      int clk = ConfigESP->getGpio(FUNCTION_CLK);
-      int cs = ConfigESP->getGpio(FUNCTION_CS);
-      int gdo0 = ConfigESP->getGpio(FUNCTION_GDO0);
-      int gdo2 = ConfigESP->getGpio(FUNCTION_GDO2);
-      Serial.print("GPIO: ");
-      Serial.print(mosi);
-      Serial.print(",");
-      Serial.print(miso);
-      Serial.print(",");
-      Serial.print(clk);
-      Serial.print(",");
-      Serial.print(cs);
-      Serial.print(",");
-      Serial.print(gdo0);
-      Serial.print(",");
-      Serial.print(gdo2);
-      Serial.println("GPIO END");
+      int indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_PROPERTY).toInt();
+      Serial.print("Index of sensor property:");
+      Serial.println(indexOfSensorProperty);
 
-      meter = new Supla::Sensor::WmbusMeter(mosi, miso, clk, cs, gdo0, gdo2);
-      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, "total_water_m3", key));
+      std::string sensorProperty = sensors_properties[indexOfSensorProperty];
+      Serial.print("Sensor property:");
+      Serial.println(sensorProperty.c_str());
+      meter = new Supla::Sensor::WmbusMeter(ConfigESP->getGpio(FUNCTION_MOSI), ConfigESP->getGpio(FUNCTION_MISO), ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_GDO0), ConfigESP->getGpio(FUNCTION_GDO2));
+      meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
       meter->add_driver(new Amiplus());
       meter->add_driver(new Apator08());
       meter->add_driver(new Apator162());
@@ -916,6 +894,7 @@ void loop() {
   const uint32_t now = millis();
   SuplaDevice.iterate();
 
+  #ifndef SUPLA_CC1101
   uint32_t delay_time = LOOP_INTERVAL;
   if (now - last_loop < LOOP_INTERVAL)
     delay_time = LOOP_INTERVAL - (now - last_loop);
@@ -923,4 +902,5 @@ void loop() {
   delay(delay_time);
 
   last_loop = now;
+  #endif
 }

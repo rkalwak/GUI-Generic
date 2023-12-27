@@ -31,7 +31,7 @@
 #define INPUT_MAX31855 "imax31855"
 #define INPUT_CLK_GPIO "clk"
 #define INPUT_CS_GPIO  "cs"
-#define INPUT_D0_GPIO  "d0" // miso
+#define INPUT_MISO_GPIO  "d0"
 #define INPUT_MOSI_GPIO "mosi"
 
 
@@ -43,7 +43,7 @@
 #define INPUT_WMBUS_SENSOR_ID "s_number"
 #define INPUT_WMBUS_SENSOR_KEY "s_key"
 #define INPUT_WMBUS_SENSOR_PROP "s_prop"
-const char* const sensors_types[] /*PROGMEM*/ = {
+const char* const sensors_types[] PROGMEM = {
     "izar", 
     "amiplus", 
     "apator08", 
@@ -71,6 +71,33 @@ const char* const sensors_types[] /*PROGMEM*/ = {
     "ultrimis",
     "unismart",
     "vario451"
+  };
+
+  const char* const sensors_properties[] PROGMEM = {
+    "total_water_m3",
+    "total_energy_consumption_kwh",
+    "current_power_consumption_kw",
+    "total_energy_production_kwh",
+    "current_power_production_kw",
+    "voltage_at_phase_1_v",
+    "voltage_at_phase_2_v", 
+    "voltage_at_phase_3_v", 
+    "current_hca",
+    "previous_hca", 
+    "temp_room_avg_c",
+    "total_heating_kwh",
+    "flow_temperature_c", 
+    "return_temperature_c",
+    "current_heating_kwh",
+    "previous_heating_kwh",
+    "total_gas_m3",
+    "total_heating_gj", 
+    "last_month_total_water_m3", 
+    "current_month_total_water_l",
+    "transmit_period_s", 
+    "remaining_battery_life_y", 
+    "current_alarms", 
+    "previous_alarms"
   };
 
 enum _wmbus_config_positions

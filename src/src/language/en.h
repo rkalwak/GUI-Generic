@@ -233,6 +233,7 @@
 #define S_WMBUS_SENSOR_TYPE "Sensor type"
 #define S_WMBUS_SENSOR_ID "Sensor id"
 #define S_WMBUS_SENSOR_KEY "Sensor key"
+#define S_WMBUS_SENSOR_PROP "Sensor property"
 #endif
 
 #endif  // _LANGUAGE_EN_S_H_

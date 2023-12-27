@@ -4,7 +4,7 @@
 
 #ifndef _RF_MBUS_H
 #define _RF_MBUS_H
-
+#include <Arduino.h>
 #include <stdint.h>
 #include <string>
 #include <vector>

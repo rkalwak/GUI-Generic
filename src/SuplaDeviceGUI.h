@@ -228,6 +228,10 @@
 #include "src/control/ThermostatGUI.h"
 #endif
 
+#ifdef SUPLA_AHTX0
+#include "src/sensor/AHTX0.h"
+#endif
+
 #include "src/storage/SPIFFS_config.h"
 
 #define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds

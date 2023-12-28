@@ -27,7 +27,7 @@
 #endif
 
 /* Another one to support more sensors settings.*/
-#if defined(SUPLA_MS5611)
+#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0)
 #define GUI_SENSOR_I2C_2
 #endif
 
@@ -56,7 +56,8 @@ enum _sensor
 /*Added to support configuration of more sensors.*/
 enum _sensor2
 {
-  SENSOR_I2C_MS5611
+  SENSOR_I2C_MS5611,
+  SENSOR_I2C_AHTX0
 };
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
@@ -162,6 +163,10 @@ void webPageI2CScanner(TwoWire* wire);
 
 #ifdef SUPLA_SHT_AUTODETECT
 #define INPUT_SUPLA_SHT_AUTODETECT "issa"
+#endif
+
+#ifdef SUPLA_AHTX0
+#define INPUT_AHTX0 "aht"
 #endif
 
 #endif

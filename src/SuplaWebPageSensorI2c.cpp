@@ -156,6 +156,13 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd(webContentBuffer);
 #endif
 
+#ifdef SUPLA_AHTX0
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_AHTX0).toInt();
+    addFormHeader(webContentBuffer);
+    addListBox(webContentBuffer, INPUT_AHTX0, F("AHTX0"), STATE_P, 2, selected);
+    addFormHeaderEnd(webContentBuffer);
+#endif
+
 #ifdef SUPLA_OLED
     addFormHeader(webContentBuffer);
 
@@ -448,6 +455,14 @@ ConfigESP->setBrightnessLevelOLED(value);
       Supla::GUI::couterADE7953->setCounter(WebServer->httpServer->arg(INPUT_ADE7953_COUNTER_VALUE).toFloat() * 100 * 1000);
       Supla::Storage::ScheduleSave(1000);
     }
+  }
+#endif
+
+#ifdef SUPLA_AHTX0
+  key = KEY_ACTIVE_SENSOR_2;
+  input = INPUT_AHTX0;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 

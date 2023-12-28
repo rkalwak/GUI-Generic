@@ -103,7 +103,7 @@
 #include <supla/sensor/Si7021.h>
 #endif
 #ifdef SUPLA_MAX6675
-#include <supla/sensor/MAX6675_K.h>
+#include "src/sensor/MAX6675K.h"
 #endif
 #ifdef SUPLA_MAX31855
 #include <supla/sensor/MAX31855.h>

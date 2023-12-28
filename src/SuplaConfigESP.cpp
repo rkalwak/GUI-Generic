@@ -23,7 +23,7 @@ SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 
   if (ConfigManager->isDeviceConfigured()) {
-    commonReset("SET DEVICE CONFIGURATION!", ResetType::NO_RESET);
+    commonReset("SET DEVICE CONFIGURATION!", ResetType::RESET_DEVICE_DATA);
 
     if (strcmp(ConfigManager->get(KEY_SUPLA_GUID)->getValue(), "") == 0 || strcmp(ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), "") == 0) {
       ConfigManager->setGUIDandAUTHKEY();

@@ -186,8 +186,8 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_SUPLA_EMAIL, DEFAULT_EMAIL, MAX_EMAIL);
 
     this->addKey(KEY_CFG_MODE, 2);
-    this->addKey(KEY_ENABLE_GUI, "1", 1);
-    this->addKey(KEY_ENABLE_SSL, "0", 1);
+    this->addKey(KEY_ENABLE_GUI, 1);
+    this->addKey(KEY_ENABLE_SSL, 1);
 
     this->addKey(KEY_BOARD, 2);
 

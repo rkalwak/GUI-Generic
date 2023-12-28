@@ -56,23 +56,22 @@ void DS18B20::iterateAlways() {
 
 double DS18B20::getValue() {
   double value = TEMPERATURE_NOT_AVAILABLE;
-  if (sharedSensors.isConversionComplete()) {
-    if (address[0] == 0 && ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
-      value = sharedSensors.getTempCByIndex(0);
-    }
-    else {
-      value = sharedSensors.getTempC(address);
-    }
 
-    if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
-      value = TEMPERATURE_NOT_AVAILABLE;
-    }
+  if (address[0] == 0 && ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt() == 1) {
+    value = sharedSensors.getTempCByIndex(0);
+  }
+  else {
+    value = sharedSensors.getTempC(address);
+  }
+
+  if (value == DEVICE_DISCONNECTED_C || value == 85.0) {
+    value = TEMPERATURE_NOT_AVAILABLE;
   }
 
   if (value == TEMPERATURE_NOT_AVAILABLE) {
     retryCounter++;
     if (retryCounter > 3) {
-      restartOneWire();
+      //restartOneWire();
       retryCounter = 0;
     }
     else {
@@ -82,6 +81,7 @@ double DS18B20::getValue() {
   else {
     retryCounter = 0;
   }
+
   lastValidValue = value;
 
   return value;

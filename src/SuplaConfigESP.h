@@ -72,7 +72,6 @@ typedef struct {
 
 enum ResetType
 {
-  NO_RESET,
   RESET_DEVICE_DATA,
   RESET_FACTORY_DATA
 };

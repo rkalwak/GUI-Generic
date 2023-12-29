@@ -22,7 +22,7 @@ void createWebPageHome() {
       return;
     }
 
-    if (strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "1") == 0) {
+    if (strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "1") == 0 || strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "2") == 0) {
       handlePageHome(SaveResult::RESTART_MODULE);
       ConfigESP->rebootESP();
       return;

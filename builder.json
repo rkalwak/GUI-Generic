@@ -914,7 +914,7 @@
 				"name": "Capteur AHT10/20",
 				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs AHT10/20."
 			}
-		},
+		}
 	},
 	"SPI": {
 		"SUPLA_MAX6675": {

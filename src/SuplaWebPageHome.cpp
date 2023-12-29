@@ -22,10 +22,12 @@ void createWebPageHome() {
       return;
     }
 
-    if (strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "1") == 0 || strcmp(WebServer->httpServer->arg(PATH_REBOT).c_str(), "2") == 0) {
-      handlePageHome(SaveResult::RESTART_MODULE);
+    const char* rebotArg = WebServer->httpServer->arg(PATH_REBOT).c_str();
+    if (strcmp(rebotArg, "") != 0) {
+      if (strcmp(rebotArg, "3") == 0) {
+        handlePageHome(SaveResult::RESTART_MODULE);
+      }
       ConfigESP->rebootESP();
-      return;
     }
 
     if (WebServer->httpServer->method() == HTTP_GET)

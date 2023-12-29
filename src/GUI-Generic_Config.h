@@ -53,7 +53,8 @@
 // #define SUPLA_VL53L0X
 // #define SUPLA_HDC1080
 // #define SUPLA_LCD_HD44780
-
+// #define SUPLA_MS5611
+// #define SUPLA_AHTX0
 // ##### SPI #####
 // #define SUPLA_MAX6675
 // #define SUPLA_MAX31855

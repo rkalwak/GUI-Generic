@@ -47,7 +47,7 @@ uint32_t last_loop{0};
 void setup() {
   uint8_t nr, gpio;
 
-  Serial.begin(74880);
+  Serial.begin(115200);
   eeprom.setStateSavePeriod(5000);
 
   ConfigManager = new SuplaConfigManager();
@@ -56,7 +56,7 @@ void setup() {
   ImprovSerialComponent *improvSerialComponent = new ImprovSerialComponent();
   improvSerialComponent->enable();
 
-#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER)
+#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER) || defined(GUI_SENSOR_I2C_2)
   ThermHygroMeterCorrectionHandler &correctionHandler = ThermHygroMeterCorrectionHandler::getInstance();
 #endif
 
@@ -716,6 +716,17 @@ void setup() {
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_MAX44009, S_MAX44009, max4409);
+#endif
+    }
+#endif
+
+#ifdef SUPLA_AHTX0
+    if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_AHTX0).toInt()) {
+      auto aht = new Supla::Sensor::AHTX0();
+      correctionHandler.addThermHygroMeter(aht);
+
+#ifdef SUPLA_CONDITIONS
+      Supla::GUI::Conditions::addConditionsSensor(SENSOR_AHTX0, S_AHTX0, aht);
 #endif
     }
 #endif

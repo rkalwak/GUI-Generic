@@ -26,7 +26,7 @@ class WmbusMeter : public Element {
   float parse_frame(std::vector<unsigned char> &frame);
 
  private:
-  float readValue = 0.0;
+  float lastReadValue = 0.0;
   int packetLength = 192;
   rf_mbus receiver;
 };

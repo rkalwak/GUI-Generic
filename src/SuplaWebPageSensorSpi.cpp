@@ -76,7 +76,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_TYPE).toInt();
       addListBox(webContentBuffer, INPUT_WMBUS_SENSOR_TYPE, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
       std::string sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getValue();
-      addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, sensorId.c_str(), 1, 100, true);
+      addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_ID, S_WMBUS_SENSOR_ID, sensorId.c_str(), 1, 100, false);
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getValue();
       addTextBox(webContentBuffer, INPUT_WMBUS_SENSOR_KEY, S_WMBUS_SENSOR_KEY, sensorKey.c_str(), 1, 200, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR_TYPE)->getElement(WMBUS_CFG_SENSOR_PROPERTY).toInt();  

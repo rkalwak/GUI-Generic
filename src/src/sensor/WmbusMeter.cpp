@@ -135,10 +135,11 @@ namespace Supla
       s[7]=meterIdString[1];
       std::string meterIdRealString = s;
 
-      if(sensors_.count(meterIdRealString) > 0)
+      // either we have sensors defined or we have just one without ID (like Izar)
+      if(sensors_.count(meterIdRealString) > 0 || (sensors_.size() == 1 && sensors_.begin()->second->get_meter_id() == "" ))
       {
         Serial.println("wMBus-lib: Getting sensor config.");
-        auto sensor = sensors_[meterIdRealString];
+        auto sensor = (sensors_.size() == 1 && sensors_.begin()->second->get_meter_id() == "" )? sensors_.begin()->second : sensors_[meterIdRealString];
         bool isOk = true;
         float readValue = 0.0;
         if (sensor->get_key().size() >0)
@@ -163,8 +164,16 @@ namespace Supla
             Serial.println(meterIdString.c_str());
             Serial.print(readValue);
             Serial.println("m3");
-            sensor->setNewValue((int)(readValue * 1000000));
-            sensor->iterateAlways();
+            if(fabs(readValue - lastReadValue) > 0.01f)
+            {
+              sensor->setNewValue((unsigned _supla_int64_t)(readValue * 1000));
+              sensor->iterateAlways();
+              lastReadValue = readValue;
+            }
+            else
+            {
+              Serial.println("Value is lower than previous one, ignoring.");
+            }
           }
           else
           {

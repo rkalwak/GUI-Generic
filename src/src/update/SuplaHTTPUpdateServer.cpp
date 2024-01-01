@@ -114,7 +114,7 @@ void HTTPUpdateServer::handleFirmwareUp() {
       }
     }
     if (strcasecmp_P(sCommand.c_str(), PATH_UPDATE_HENDLE_2STEP) == 0) {
-      update = new UpdateURL(String(HOST_BUILDER) + "files/GUI-GenericUploader.bin.gz");
+      update = new UpdateURL(String(HOST_BUILDER) + "files/GUI-GenericUploader.bin");
     }
 
     if (update) {
@@ -222,7 +222,7 @@ void HTTPUpdateServer::autoUpdate2Step() {
 
   EEPROM.end();
 
-  UpdateURL* update = new UpdateURL(String(HOST_BUILDER) + "files/AutoUploader.bin.gz");
+  UpdateURL* update = new UpdateURL(String(HOST_BUILDER) + "files/AutoUploader.bin");
 
   if (update) {
     switch (update->update()) {

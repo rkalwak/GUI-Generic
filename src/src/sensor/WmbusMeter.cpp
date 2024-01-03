@@ -18,7 +18,7 @@ namespace Supla
       Serial.print(gdo0);
       Serial.print(",");
       Serial.print(gdo2);
-      Serial.println(" GPIO END");
+      Serial.println(" GPIO");
       bool isInitialized = receiver.init(mosi, miso, clk, cs, gdo0, gdo2);
       if (isInitialized)
       {
@@ -34,6 +34,15 @@ namespace Supla
     void WmbusMeter::add_sensor(SensorBase *sensor)
     {
       this->sensors_[sensor->get_meter_id()] = sensor;
+      Serial.println("------");
+      Serial.print("Type:");
+      Serial.println(sensor->get_type().c_str());
+      Serial.print("Id:");
+      Serial.println(sensor->get_meter_id().c_str());
+      Serial.print("Key:");
+      Serial.println(sensor->get_key_string().c_str());
+      Serial.print("Property:");
+      Serial.println(sensor->get_property_to_send().c_str());
     }
 
     bool WmbusMeter::decrypt_telegram(std::vector<unsigned char> &telegram, std::vector<unsigned char> key)

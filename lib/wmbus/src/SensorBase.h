@@ -13,6 +13,7 @@ namespace Supla
       SensorBase(std::string meter_id, std::string type, std::string property_to_send, std::string keyString)
           : _type(type), _meter_id(meter_id), _property_to_send(property_to_send) {
         _key = hexToBytes(keyString);
+        _keyString = keyString;
       };
 
       std::string get_type() {
@@ -27,6 +28,10 @@ namespace Supla
       std::vector<unsigned char> get_key() {
         return this->_key;
       };
+      std::string get_key_string() {
+        return this->_keyString;
+      };
+
       void virtual setNewValue(int value){};
       void virtual iterateAlways(){};
 
@@ -36,6 +41,7 @@ namespace Supla
       std::string _type;
       std::string _meter_id;
       std::string _property_to_send= "total_water_m3";
+      std::string _keyString;
 
      private:
       std::vector<unsigned char> hexToBytes(const std::string& hex) {

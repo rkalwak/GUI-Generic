@@ -39,12 +39,22 @@
 #define INPUT_CC1101 "cc1101"
 #define INPUT_GDO0_GPIO  "gdo0"
 #define INPUT_GDO2_GPIO  "gdo2"
-#define INPUT_WMBUS_SENSOR_TYPE "s_type"
-#define INPUT_WMBUS_SENSOR_ID "s_number"
-#define INPUT_WMBUS_SENSOR_KEY "s_key"
-#define INPUT_WMBUS_SENSOR_PROP "s_prop"
+#define INPUT_WMBUS_SENSOR_TYPE1 "s_type1"
+#define INPUT_WMBUS_SENSOR_TYPE2 "s_type2"
+#define INPUT_WMBUS_SENSOR_TYPE3 "s_type3"
+#define INPUT_WMBUS_SENSOR_ID1 "s_id1"
+#define INPUT_WMBUS_SENSOR_ID2 "s_id2"
+#define INPUT_WMBUS_SENSOR_ID3 "s_id3"
+#define INPUT_WMBUS_SENSOR_KEY1 "s_key1"
+#define INPUT_WMBUS_SENSOR_KEY2 "s_key2"
+#define INPUT_WMBUS_SENSOR_KEY3 "s_key3"
+#define INPUT_WMBUS_SENSOR_PROP1 "s_prop1"
+#define INPUT_WMBUS_SENSOR_PROP2 "s_prop2"
+#define INPUT_WMBUS_SENSOR_PROP3 "s_prop3"
+#define INPUT_WMBUS_SENSOR_ENABLED1 "s_enabled1"
+#define INPUT_WMBUS_SENSOR_ENABLED2 "s_enabled2"
+#define INPUT_WMBUS_SENSOR_ENABLED3 "s_enabled3"
 const char* const sensors_types[] PROGMEM = {
-    "izar", 
     "amiplus", 
     "apator08", 
     "apator162", 
@@ -102,8 +112,15 @@ const char* const sensors_types[] PROGMEM = {
 
 enum _wmbus_config_positions
 {
-  WMBUS_CFG_SENSOR_TYPE,
-  WMBUS_CFG_SENSOR_PROPERTY
+  WMBUS_CFG_SENSOR_TYPE1,
+  WMBUS_CFG_SENSOR_PROPERTY1,
+  WMBUS_CFG_SENSOR_ENABLED1,
+  WMBUS_CFG_SENSOR_TYPE2,
+  WMBUS_CFG_SENSOR_PROPERTY2,
+  WMBUS_CFG_SENSOR_ENABLED2,
+  WMBUS_CFG_SENSOR_TYPE3,
+  WMBUS_CFG_SENSOR_PROPERTY3,
+  WMBUS_CFG_SENSOR_ENABLED3
 };
 #endif
 

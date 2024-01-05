@@ -50,7 +50,7 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
   }
 
   // Configure thermostat parameters
-  HvacBase::setTemperatureHisteresisMin(20);    // 0.2 degree
+  HvacBase::setTemperatureHisteresisMin(10);    // 0.1 degree
   HvacBase::setTemperatureHisteresisMax(4000);  // 10 degree
   HvacBase::setTemperatureAutoOffsetMin(200);   // 2 degrees
   HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees

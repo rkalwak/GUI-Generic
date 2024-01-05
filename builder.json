@@ -1,5 +1,5 @@
 {
-	"version": "5.0.0",
+	"version": "6.0.0",
 	"compiler": {
 		"gglib": ["EspSoftwareSerial"]
 	},
@@ -892,6 +892,27 @@
 			"fr": {
 				"name": "Capteur MAX44009",
 				"desc": "Paramètres de l´appareil->I2C. Capteur d'intensité lumineuse MAX44009."
+			}
+		},
+		"SUPLA_AHTX0": {
+			"name": "Sensor AHT10/20",
+			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę sensorów AHT10/20.",
+			"defOn": false,
+			"en": {
+				"name": "AHT10/20 sensor",
+				"desc": "Device settings->I2C. It enables the support of AHT10/20 sensors."
+			},
+			"es": {
+				"name": "Sensor AHT10/20",
+				"desc": "Configuración del dispositivo->I2C. Habilita el soporte de sensores AHT10/20."
+			},
+			"de": {
+				"name": "AHT10/20 Sensor",
+				"desc": "Geräteeinstellungen->I2C. Es ermöglicht die Unterstützung von AHT10/20-Sensoren."
+			},
+			"fr": {
+				"name": "Capteur AHT10/20",
+				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs AHT10/20."
 			}
 		}
 	},

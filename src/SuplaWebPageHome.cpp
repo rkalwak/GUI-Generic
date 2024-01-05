@@ -22,9 +22,9 @@ void createWebPageHome() {
       return;
     }
 
-    const char* rebotArg = WebServer->httpServer->arg(PATH_REBOT).c_str();
-    if (strcmp(rebotArg, "") != 0) {
-      if (strcmp(rebotArg, "3") == 0) {
+    const String rebotArg = WebServer->httpServer->arg(PATH_REBOT);
+    if (!rebotArg.isEmpty()) {
+      if (rebotArg.equals("3")) {
         handlePageHome(SaveResult::RESTART_MODULE);
       }
       ConfigESP->rebootESP();

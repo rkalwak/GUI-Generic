@@ -30,6 +30,10 @@ boneIO::boneIO() {
   // Serial.println("Scanner I2C Wire");
   // I2CScanner(&Wire);
 
+  // Turn off the buzzer connected to GPIO_NUM_2
+  pinMode(GPIO_NUM_2, OUTPUT);
+  noTone(GPIO_NUM_2);
+
 #ifdef USE_MCP_OUTPUT
   auto *EX_OUTPUT_1 = new Supla::Control::ExpanderMCP23017(&Wire, 0x21);
   auto *EX_OUTPUT_2 = new Supla::Control::ExpanderMCP23017(&Wire, 0x20);

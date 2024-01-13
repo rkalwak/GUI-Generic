@@ -379,17 +379,11 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 
     double setpointTemperature = 0;
     uint8_t thermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
-    switch (thermostatType) {
-      case Supla::GUI::THERMOSTAT_HEAT:
-        setpointTemperature = channel->getHvacSetpointTemperatureHeat() / 100.0;
-        break;
-
-      case Supla::GUI::THERMOSTAT_COOL:
-        setpointTemperature = channel->getHvacSetpointTemperatureCool() / 100.0;
-        break;
-
-      default:
-        break;
+    if (thermostatType == Supla::GUI::THERMOSTAT_COOL) {
+      setpointTemperature = channel->getHvacSetpointTemperatureCool() / 100.0;
+    }
+    else {
+      setpointTemperature = channel->getHvacSetpointTemperatureHeat() / 100.0;
     }
 
     display->setColor(WHITE);

@@ -24,6 +24,7 @@ SuplaConfigESP::SuplaConfigESP() {
     if (strcmp(ConfigManager->get(KEY_SUPLA_GUID)->getValue(), "") == 0 || strcmp(ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), "") == 0) {
       commonReset("SET FIRST DEVICE CONFIGURATION!", ResetType::RESET_FACTORY_DATA);
       ConfigManager->setGUIDandAUTHKEY();
+      ConfigManager->save();
     }
     else {
       commonReset("SET DEVICE CONFIGURATION!", ResetType::RESET_NO_ERASE_DATA);

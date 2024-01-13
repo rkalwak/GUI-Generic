@@ -814,7 +814,7 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
     ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
 #endif
 #else
-    if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
+    if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO && resetType == RESET_FACTORY_DATA) {
       ConfigESP->setGpio(2, FUNCTION_CFG_LED);
       ConfigESP->setLevel(2, LOW);
     }

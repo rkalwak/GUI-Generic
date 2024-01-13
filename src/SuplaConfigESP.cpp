@@ -21,10 +21,12 @@ SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 
   if (ConfigManager->isDeviceConfigured()) {
-    commonReset("SET DEVICE CONFIGURATION!", ResetType::RESET_DEVICE_DATA);
-
     if (strcmp(ConfigManager->get(KEY_SUPLA_GUID)->getValue(), "") == 0 || strcmp(ConfigManager->get(KEY_SUPLA_AUTHKEY)->getValue(), "") == 0) {
+      commonReset("SET FIRST DEVICE CONFIGURATION!", ResetType::RESET_FACTORY_DATA);
       ConfigManager->setGUIDandAUTHKEY();
+    }
+    else {
+      commonReset("SET DEVICE CONFIGURATION!", ResetType::RESET_NO_ERASE_DATA);
     }
 
     configModeInit();
@@ -785,13 +787,38 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 
   Serial.println(resetMessage);
 
-  if (resetType == RESET_FACTORY_DATA) {
+  if (resetType == RESET_FACTORY_DATA || RESET_DEVICE_DATA) {
     clearEEPROM();
-    ConfigManager->deleteAllValues();
-  }
-  else if (resetType == RESET_DEVICE_DATA) {
-    clearEEPROM();
-    ConfigManager->deleteDeviceValues();
+    if (resetType == RESET_FACTORY_DATA) {
+      ConfigManager->deleteAllValues();
+    }
+    else if (resetType == RESET_DEVICE_DATA) {
+      ConfigManager->deleteDeviceValues();
+    }
+
+#ifdef TEMPLATE_BOARD_JSON
+    if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
+      Supla::TanplateBoard::addTemplateBoard();
+    }
+#elif defined(TEMPLATE_BOARD_OLD)
+    if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
+      chooseTemplateBoard(getDefaultTamplateBoard());
+    }
+#endif
+
+#ifdef SUPLA_BONEIO
+    ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
+#ifdef USE_MCP_OUTPUT
+    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
+#else
+    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
+#endif
+#else
+    if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
+      ConfigESP->setGpio(2, FUNCTION_CFG_LED);
+      ConfigESP->setLevel(2, LOW);
+    }
+#endif
   }
 
   KeyValuePair keysToUpdate[] = {
@@ -815,30 +842,6 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
   if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO) {
     ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
   }
-
-  if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
-    ConfigESP->setGpio(2, FUNCTION_CFG_LED);
-    ConfigESP->setLevel(2, LOW);
-  }
-
-#ifdef SUPLA_BONEIO
-  ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
-#ifdef USE_MCP_OUTPUT
-  ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
-#else
-  ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
-#endif
-#endif
-
-#ifdef TEMPLATE_BOARD_JSON
-  if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
-    Supla::TanplateBoard::addTemplateBoard();
-  }
-#elif defined(TEMPLATE_BOARD_OLD)
-  if (strcmp(ConfigManager->get(KEY_BOARD)->getValue(), "") == 0) {
-    chooseTemplateBoard(getDefaultTamplateBoard());
-  }
-#endif
 
   ConfigManager->save();
 

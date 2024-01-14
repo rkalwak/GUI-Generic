@@ -376,7 +376,15 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
 
     auto channelMainThermometr = getChanelByChannelNumber(mainThermometr);
     double mainTemperature = getTemperatureFromChannelThermometr(channelMainThermometr);
-    double setpointTemperatureHeat = channel->getHvacSetpointTemperatureHeat() / 100.0;
+
+    double setpointTemperature = 0;
+    uint8_t thermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
+    if (thermostatType == Supla::GUI::THERMOSTAT_COOL) {
+      setpointTemperature = channel->getHvacSetpointTemperatureCool() / 100.0;
+    }
+    else {
+      setpointTemperature = channel->getHvacSetpointTemperatureHeat() / 100.0;
+    }
 
     display->setColor(WHITE);
     display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -414,7 +422,7 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
       display->drawString(display->getWidth() - 47, display->getHeight() - 10, String("set"));
 
       display->setFont(ArialMT_Plain_16);
-      display->drawString(display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperatureHeat).c_str());
+      display->drawString(display->getWidth() - 30, display->getHeight() - 15, getTempString(setpointTemperature).c_str());
     }
 
     String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);

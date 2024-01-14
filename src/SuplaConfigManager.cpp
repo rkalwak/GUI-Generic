@@ -463,6 +463,10 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_WMBUS_SENSOR, 30);
     this->addKey(KEY_WMBUS_SENSOR_ID, 100);
     this->addKey(KEY_WMBUS_SENSOR_KEY, 200);
+#else
+    this->addKey(KEY_WMBUS_SENSOR, 30, false);
+    this->addKey(KEY_WMBUS_SENSOR_ID, 100, false);
+    this->addKey(KEY_WMBUS_SENSOR_KEY, 200, false);
 #endif
 
     SPIFFS.end();

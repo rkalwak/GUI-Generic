@@ -79,6 +79,7 @@ boneIO::boneIO() {
 #endif
 
   auto buttonCfg = new Supla::Control::Button(EX_INPUT_3, P07, false, true);
+  buttonCfg->disableActionsInConfigMode();
   buttonCfg->configureAsConfigButton(&SuplaDevice);
 
   auto ssd1306 = new Supla::Display::SSD1306(0x3c, GPIO_NUM_17, GPIO_NUM_33, GEOMETRY_128_64, I2C_ONE, 100000);
@@ -150,7 +151,9 @@ boneIO::createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutte
   auto closeButton = new Supla::Control::Button(closeButtonPin.io, closeButtonPin.pin, false, true);
 
   openButton->addAction(Supla::OPEN_OR_STOP, shutter, Supla::ON_PRESS);
+  openButton->dontUseOnLoadConfig();
   closeButton->addAction(Supla::CLOSE_OR_STOP, shutter, Supla::ON_PRESS);
+  closeButton->dontUseOnLoadConfig();
 
   return {shutter, openButton, closeButton};
 }
@@ -172,6 +175,7 @@ RelayButtonPair boneIO::createRelayChannel(DevicePin relayPin, DevicePin buttonP
   }
 
   auto button = new Supla::Control::Button(buttonPin.io, buttonPin.pin, false, true);
+  button->dontUseOnLoadConfig();
   button->addAction(Supla::TOGGLE, relay, Supla::ON_PRESS);
   return {relay, button};
 }

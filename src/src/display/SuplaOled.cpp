@@ -181,15 +181,17 @@ void displayUiSuplaStatus(OLEDDisplay* display) {
 }
 
 void displayUiSuplaClock(OLEDDisplay* display) {
-  char clockBuff[6];
-  auto suplaClock = SuplaDevice.getClock();
+  if (display->getWidth() > 64) {
+    char clockBuff[6];
+    auto suplaClock = SuplaDevice.getClock();
 
-  if (suplaClock->isReady()) {
-    sprintf_P(clockBuff, PSTR("%02d:%02d"), suplaClock->getHour(), suplaClock->getMin());
-    display->setColor(WHITE);
-    display->setFont(ArialMT_Plain_10);
-    display->setTextAlignment(TEXT_ALIGN_LEFT);
-    display->drawString(0, display->getHeight() - 10, String(clockBuff));
+    if (suplaClock->isReady()) {
+      sprintf_P(clockBuff, PSTR("%02d:%02d"), suplaClock->getHour(), suplaClock->getMin());
+      display->setColor(WHITE);
+      display->setFont(ArialMT_Plain_10);
+      display->setTextAlignment(TEXT_ALIGN_LEFT);
+      display->drawString(0, display->getHeight() - 10, String(clockBuff));
+    }
   }
 }
 

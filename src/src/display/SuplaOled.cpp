@@ -408,7 +408,20 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
     if (channel->getHvacMode() != SUPLA_HVAC_MODE_OFF) {
       if (channel->getHvacIsOn()) {
         display->setColor(WHITE);
-        display->fillCircle(x + 4, y + 20 + shiftWhenAddedRelay, 4);
+        int16_t x0 = 0, y0 = 10;
+        int16_t x1 = 10, y1 = 10;
+        int16_t x2 = 5, y2 = 5;
+
+        if (thermostatType == Supla::GUI::THERMOSTAT_COOL) {
+          y0 = 0;
+          y1 = 0;
+        }
+
+        y0 += shiftWhenAddedRelay;
+        y1 += shiftWhenAddedRelay;
+        y2 += shiftWhenAddedRelay;
+
+        display->fillTriangle(x0, y0, x1, y1, x2, y2);
       }
 
       if (channel->isHvacFlagWeeklySchedule()) {

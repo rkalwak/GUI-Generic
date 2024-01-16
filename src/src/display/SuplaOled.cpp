@@ -417,9 +417,9 @@ void displayThermostat(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t 
           y1 = 0;
         }
 
-        y0 += shiftWhenAddedRelay;
-        y1 += shiftWhenAddedRelay;
-        y2 += shiftWhenAddedRelay;
+        y0 += shiftWhenAddedRelay + 13;
+        y1 += shiftWhenAddedRelay + 13;
+        y2 += shiftWhenAddedRelay + 13;
 
         display->fillTriangle(x0, y0, x1, y1, x2, y2);
       }

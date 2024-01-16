@@ -84,8 +84,8 @@ void SuplaConfigESP::addConfigESP(int _pinNumberConfig, int _pinLedConfig) {
 
     Supla::Control::Button *buttonConfig = new Supla::Control::Button(pinNumberConfig, pullUp, invertLogic);
     buttonConfig->setMulticlickTime(450);
-    //buttonConfig->dontUseOnLoadConfig();
-    buttonConfig->addAction(Supla::TURN_ON, *ConfigESP, Supla::ON_CLICK_1);
+    buttonConfig->dontUseOnLoadConfig();
+    buttonConfig->addAction(CONFIG_MODE_RESET, *ConfigESP, Supla::ON_CLICK_1);
 
     if (modeConfigButton == CONFIG_MODE_10_ON_PRESSES) {
       buttonConfig->addAction(CONFIG_MODE_10_ON_PRESSES, *ConfigESP, Supla::ON_CLICK_10);
@@ -99,20 +99,13 @@ void SuplaConfigESP::addConfigESP(int _pinNumberConfig, int _pinLedConfig) {
 
 void SuplaConfigESP::handleAction(int event, int action) {
   if (action == CONFIG_MODE_10_ON_PRESSES) {
-    if (event == Supla::ON_CLICK_10) {
-      configModeInit();
-    }
+    configModeInit();
   }
-  if (action == CONFIG_MODE_5SEK_HOLD) {
-    if (event == Supla::ON_HOLD) {
-      configModeInit();
-    }
+  else if (action == CONFIG_MODE_5SEK_HOLD) {
+    configModeInit();
   }
-
-  if (configModeESP == Supla::DEVICE_MODE_CONFIG && (action == CONFIG_MODE_10_ON_PRESSES || action == CONFIG_MODE_5SEK_HOLD)) {
-    if (event == Supla::ON_CLICK_1) {
-      rebootESP();
-    }
+  else if (configModeESP == Supla::DEVICE_MODE_CONFIG && action == CONFIG_MODE_RESET) {
+    rebootESP();
   }
 }
 

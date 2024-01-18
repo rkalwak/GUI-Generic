@@ -195,6 +195,8 @@
 
 #ifdef SUPLA_WT32_ETH01_LAN8720
 #include "src/network/SuplaGuiWt32_eth01.h"
+#elif defined(SUPLA_ETH01_LAN8720)
+#include "src/network/SuplaGuiEth01.h"
 #endif
 
 #ifdef SUPLA_ADE7953
@@ -365,6 +367,8 @@ extern Supla::Control::ConfigExpander *Expander;
 
 #ifdef SUPLA_WT32_ETH01_LAN8720
 extern Supla::WT32_ETH01 *eth;
+#elif defined(SUPLA_ETH01_LAN8720)
+extern Supla::GUI_ETH01 *eth;
 #else
 extern Supla::GUIESPWifi *wifi;
 #endif

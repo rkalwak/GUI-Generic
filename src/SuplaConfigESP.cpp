@@ -117,16 +117,20 @@ void SuplaConfigESP::rebootESP() {
 }
 
 void SuplaConfigESP::configModeInit() {
-  configModeESP = Supla::DEVICE_MODE_CONFIG;
-  ledBlinking(100);
+  if (configModeESP != Supla::DEVICE_MODE_CONFIG) {
+    configModeESP = Supla::DEVICE_MODE_CONFIG;
+    ledBlinking(100);
 
-  Supla::Network::SetConfigMode();
+#ifndef SUPLA_WT32_ETH01_LAN8720
+    Supla::GUI::enableConnectionSSL(false);
+    Supla::GUI::setupConnection();
+#endif
 
-  Supla::GUI::enableConnectionSSL(false);
-  Supla::GUI::setupConnection();
+    Supla::Network::SetConfigMode();
 
-  if (getCountChannels() > 0) {
-    SuplaDevice.enterConfigMode();
+    // if (getCountChannels() > 0) {
+    //   SuplaDevice.enterConfigMode();
+    // }
   }
 }
 
@@ -815,6 +819,10 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
       ConfigESP->setGpio(2, FUNCTION_CFG_LED);
       ConfigESP->setLevel(2, LOW);
     }
+
+    if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO) {
+      ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
+    }
 #endif
   }
 
@@ -834,10 +842,6 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
     if (strcmp(ConfigManager->get(kvp.key)->getValue(), "") == 0) {
       ConfigManager->set(kvp.key, kvp.defaultValue);
     }
-  }
-
-  if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO) {
-    ConfigESP->setGpio(0, FUNCTION_CFG_BUTTON);
   }
 
   ConfigManager->save();

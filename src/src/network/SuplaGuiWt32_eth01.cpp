@@ -56,20 +56,11 @@ void GUI_WT32_ETH01::setup() {
         WiFiEvent_t::ARDUINO_EVENT_ETH_DISCONNECTED);  // ESP core 2.0.2
     (void)(event_disconnected);
   }
-  else {
-    if (mode == Supla::DEVICE_MODE_CONFIG) {
-      WiFi.mode(WIFI_MODE_AP);
-    }
 
-    Serial.println(F("WiFi: resetting WiFi connection"));
-    DisconnectProtocols();
-    WiFi.disconnect();
-  }
+  Serial.println(F("establishing Lan connection"));
+  ETH.begin(ETH_ADDRESS, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
 
   if (mode == Supla::DEVICE_MODE_CONFIG) {
-    SUPLA_LOG_INFO("WiFi: enter config mode with SSID: \"%s\"", hostname);
-    WiFi.mode(WIFI_MODE_AP);
-
     uint8_t mac[6] = {};
     WiFi.macAddress(mac);
     char macStr[12 + 6] = {};
@@ -79,14 +70,13 @@ void GUI_WT32_ETH01::setup() {
     cstr.reserve(32);
     cstr += macStr;
 
+    SUPLA_LOG_INFO("WiFi: enter config mode with SSID: \"%s\"", cstr.c_str());
+    WiFi.mode(WIFI_MODE_AP);
+
     WiFi.softAP(cstr.c_str(), "", 6);
 
     Supla::GUI::crateWebServer();
   }
-
-  Serial.println(F("establishing Lan connection"));
-  ETH.begin(ETH_ADDRESS, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
-
   if (ConfigManager->get(KEY_ENABLE_GUI)->getValueInt())
     Supla::GUI::crateWebServer();
 

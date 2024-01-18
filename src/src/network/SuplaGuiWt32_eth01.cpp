@@ -77,8 +77,9 @@ void GUI_WT32_ETH01::setup() {
 
     Supla::GUI::crateWebServer();
   }
-  if (ConfigManager->get(KEY_ENABLE_GUI)->getValueInt())
+  else if (ConfigManager->get(KEY_ENABLE_GUI)->getValueInt()) {
     Supla::GUI::crateWebServer();
+  }
 
   delay(0);
 }

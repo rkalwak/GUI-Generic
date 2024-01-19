@@ -132,7 +132,7 @@ void displayUiRelayState(OLEDDisplay* display) {
   display->setFont(ArialMT_Win1250_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-  size_t maxIterations = 7;  // Maksymalna liczba iteracji
+  size_t maxIterations = 8;
   size_t relaySize = Supla::GUI::relay.size();
 
   for (size_t i = 0; i < relaySize && i < maxIterations; i++) {
@@ -148,6 +148,9 @@ void displayUiRelayState(OLEDDisplay* display) {
         display->drawString(x + 2, y, String(i + 1));
       }
       x += 15;
+    }
+    else {
+      maxIterations++;
     }
   }
   // display->setColor(WHITE);

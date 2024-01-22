@@ -174,9 +174,7 @@ void handleSensorSpiSave() {
   }
 
   input = INPUT_WMBUS_SENSOR_KEY1;
-  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 0, WebServer->httpServer->arg(input).c_str());
-  }
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 0, WebServer->httpServer->arg(input).c_str());
 
   input = INPUT_WMBUS_SENSOR_PROP1;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -193,14 +191,10 @@ void handleSensorSpiSave() {
     }
   
     input = INPUT_WMBUS_SENSOR_ID2;
-    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 1, WebServer->httpServer->arg(input).c_str());
-    }
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 1, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_KEY2;
-    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 1, WebServer->httpServer->arg(input).c_str());
-    }
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 1, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_PROP2;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -222,14 +216,10 @@ void handleSensorSpiSave() {
     }
   
     input = INPUT_WMBUS_SENSOR_ID3;
-    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 2, WebServer->httpServer->arg(input).c_str());
-    }
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 2, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_KEY3;
-    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 2, WebServer->httpServer->arg(input).c_str());
-    }
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 2, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_PROP3;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {

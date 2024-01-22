@@ -232,6 +232,7 @@
 #include "src/sensor/WmbusMeter.h"
 #include <Drivers/drivers.h>
 #include <SensorInfo.h>
+#endif
 
 #ifdef SUPLA_AHTX0
 #include "src/sensor/AHTX0.h"

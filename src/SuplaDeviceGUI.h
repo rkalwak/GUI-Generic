@@ -149,6 +149,10 @@
 #include <supla/sensor/AnalogReadingMap.h>
 #endif
 
+#ifdef SUPLA_ANALOG_READING_KPOP
+#include "src/sensor/AnalogReading.h"
+#endif
+
 #ifdef SUPLA_VL53L0X
 #include <supla/sensor/VL_53L0X.h>
 #endif
@@ -173,7 +177,7 @@
 #endif
 
 #ifdef SUPLA_BH1750
-#include <supla/sensor/BH1750.h>
+#include <supla/sensor/BH_1750.h>
 #endif
 
 #ifdef SUPLA_MS5611
@@ -344,6 +348,10 @@ extern Supla::Sensor::MPX_5XXX *mpx;
 
 #ifdef SUPLA_ANALOG_READING_MAP
 extern Supla::Sensor::AnalogRedingMap **analog;
+#endif
+
+#ifdef SUPLA_ANALOG_READING_KPOP
+extern Supla::Sensor::AnalogReding **analog;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM

@@ -184,27 +184,8 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
   // Pefrorm dry run of write state to validate stored state section with
   // current device configuration
-  if (Supla::Storage::PrepareState(true)) {
-    SUPLA_LOG_DEBUG(
-        "Validating storage state section with current device configuration");
-    for (auto element = Supla::Element::begin(); element != nullptr;
-         element = element->next()) {
-      element->onSaveState();
-      delay(0);
-    }
-    // If state storage validation was successful, perform read state
-    if (Supla::Storage::FinalizeSaveState()) {
-      SUPLA_LOG_INFO(
-          "Storage state section validation completed. Loading elements "
-          "state...");
-      // Iterate all elements and load state
-      Supla::Storage::PrepareState();
-      for (auto element = Supla::Element::begin(); element != nullptr;
-           element = element->next()) {
-        element->onLoadState();
-        delay(0);
-      }
-    }
+  if (Supla::Storage::IsStateStorageValid()) {
+    Supla::Storage::LoadStateStorage();
   }
 
   // Initialize elements
@@ -360,9 +341,6 @@ void SuplaDeviceClass::iterate(void) {
   }
 
   uint32_t _millis = millis();
-//  if (_millis == lastIterateTime) {
-//    return;
-//  }
 
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
@@ -844,14 +822,7 @@ void SuplaDeviceClass::saveStateToStorage() {
   if (triggerResetToFacotrySettings) {
     return;
   }
-
-  Supla::Storage::PrepareState();
-  for (auto element = Supla::Element::begin(); element != nullptr;
-       element = element->next()) {
-    element->onSaveState();
-    delay(0);
-  }
-  Supla::Storage::FinalizeSaveState();
+  Supla::Storage::WriteStateStorage();
 }
 
 int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
@@ -873,19 +844,31 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
     srcName = Supla::Channel::reg_dev.Name;
   }
 
-  int nameLength = strlen(srcName);
-
-  if (nameLength + appendixSize > 31) {
-    nameLength = 31 - appendixSize;
-  }
-
-  if (nameLength == 0) {
-    setName("SUPLA-DEVICE");
-    nameLength = strlen(srcName);
-  }
+  int srcNameLength = strlen(srcName);
+  int targetNameLength = srcNameLength;
 
   int destIdx = 0;
-  for (int i = 0; i < nameLength; i++) {
+  int i = 0;
+
+  if (strncmp(srcName, "OH!", 3) == 0) {
+    strncpy(name, "SUPLA-", 7);
+    destIdx = 6;
+    i = 3;
+    targetNameLength += 3;
+  }
+
+  int skipBytes = 0;
+
+  if (targetNameLength + appendixSize > 31) {
+    skipBytes = (targetNameLength + appendixSize) - 31;
+  }
+
+  if (srcNameLength == 0) {
+    setName("SUPLA-DEVICE");
+    srcNameLength = strlen(srcName);
+  }
+
+  for (; i < srcNameLength - skipBytes; i++) {
     if (srcName[i] < 32) {
       continue;
     } else if (srcName[i] < 48) {
@@ -901,12 +884,27 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
     } else if (srcName[i] < 123) {
       name[destIdx++] = srcName[i] - 32;  // capitalize small chars
     }
+    if (destIdx == 1) {
+      if (name[0] == '-') {
+        if (skipBytes) {
+          skipBytes--;
+        }
+        destIdx--;
+      }
+    } else if (name[destIdx - 2] == '-' && name[destIdx - 1] == '-') {
+      if (skipBytes) {
+        skipBytes--;
+      }
+      destIdx--;
+    }
   }
 
   if (macSize > 0) {
     uint8_t mac[6] = {};
     if (Supla::Network::GetMacAddr(mac)) {
-      name[destIdx++] = '-';
+      if (name[destIdx - 1] != '-') {
+        name[destIdx++] = '-';
+      }
       destIdx +=
           generateHexString(mac + (6 - macSize), &(name[destIdx]), macSize);
     }
@@ -914,6 +912,7 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
 
   name[destIdx++] = 0;
   strncpy(buf, name, 32);
+  buf[31] = 0;
 
   return destIdx;
 }
@@ -936,7 +935,7 @@ void SuplaDeviceClass::scheduleSoftRestart(int timeout) {
 
 void SuplaDeviceClass::addLastStateLog(const char *msg) {
   if (lastStateLogEnabled && lastStateLogger) {
-    lastStateLogger->log(msg);
+    lastStateLogger->log(msg, uptime.getUptime());
   }
 }
 

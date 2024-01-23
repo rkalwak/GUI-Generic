@@ -320,29 +320,27 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_CC1101).toInt()) {
-
       int indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE1).toInt();
       std::string sensorType = sensors_types[indexOfSensorType];
       std::string sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(0).c_str();
       std::string sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(0).c_str();
       int indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY1).toInt();
       std::string sensorProperty = sensors_properties[indexOfSensorProperty];
-      meter = new Supla::Sensor::WmbusMeter(ConfigESP->getGpio(FUNCTION_MOSI), ConfigESP->getGpio(FUNCTION_MISO), ConfigESP->getGpio(FUNCTION_CLK), ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_GDO0), ConfigESP->getGpio(FUNCTION_GDO2));
+      meter = new Supla::Sensor::WmbusMeter(ConfigESP->getGpio(FUNCTION_MOSI), ConfigESP->getGpio(FUNCTION_MISO), ConfigESP->getGpio(FUNCTION_CLK),
+                                            ConfigESP->getGpio(FUNCTION_CS), ConfigESP->getGpio(FUNCTION_GDO0), ConfigESP->getGpio(FUNCTION_GDO2));
       Serial.println("wMBus-lib: Registered sensors:");
       meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
-      if(ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED2).toInt()==1)
-      {
-          indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE2).toInt();
-          sensorType = sensors_types[indexOfSensorType];
-          sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(1).c_str();
-          sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(1).c_str();
-          indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY2).toInt();
-          sensorProperty = sensors_properties[indexOfSensorProperty];
-          meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED2).toInt() == 1) {
+        indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE2).toInt();
+        sensorType = sensors_types[indexOfSensorType];
+        sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(1).c_str();
+        sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(1).c_str();
+        indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY2).toInt();
+        sensorProperty = sensors_properties[indexOfSensorProperty];
+        meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
       }
 
-      if(ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED3).toInt()==1)
-      {
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED3).toInt() == 1) {
         indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE3).toInt();
         sensorType = sensors_types[indexOfSensorType];
         sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(2).c_str();
@@ -435,6 +433,35 @@ void setup() {
     gpio = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
     if (gpio != OFF_GPIO) {
       Supla::GUI::analog[nr] = new Supla::Sensor::AnalogRedingMap(gpio);
+#ifdef SUPLA_CONDITIONS
+      Supla::GUI::Conditions::addConditionsSensor(SENSOR_ANALOG_READING_MAP, S_ANALOG_READING_MAP, Supla::GUI::analog[nr], nr);
+#endif
+    }
+  }
+#endif
+#endif
+
+#ifdef SUPLA_ANALOG_READING_KPOP
+#ifdef ARDUINO_ARCH_ESP8266
+  Supla::GUI::analog = new Supla::Sensor::AnalogReding *[ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt()];
+  gpio = ConfigESP->getGpio(FUNCTION_ANALOG_READING);
+
+  if (gpio != OFF_GPIO) {
+    for (nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
+      Supla::GUI::analog[nr] = new Supla::Sensor::AnalogReding(gpio);
+#ifdef SUPLA_CONDITIONS
+      Supla::GUI::Conditions::addConditionsSensor(SENSOR_ANALOG_READING_MAP, S_ANALOG_READING_MAP, Supla::GUI::analog[nr], nr);
+#endif
+    }
+  }
+#endif
+#ifdef ARDUINO_ARCH_ESP32
+  Supla::GUI::analog = new Supla::Sensor::AnalogReding *[ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt()];
+
+  for (nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
+    gpio = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
+    if (gpio != OFF_GPIO) {
+      Supla::GUI::analog[nr] = new Supla::Sensor::AnalogReding(gpio);
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_ANALOG_READING_MAP, S_ANALOG_READING_MAP, Supla::GUI::analog[nr], nr);
 #endif
@@ -757,7 +784,7 @@ void setup() {
 
 #ifdef SUPLA_BH1750
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_BH1750).toInt()) {
-      auto bh1750 = new Supla::Sensor::BH1750();
+      auto bh1750 = new Supla::Sensor::BH_1750();
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_BH1750, S_BH1750, bh1750);
@@ -910,7 +937,7 @@ void loop() {
   const uint32_t now = millis();
   SuplaDevice.iterate();
 
-  #ifndef SUPLA_CC1101
+#ifndef SUPLA_CC1101
   uint32_t delay_time = LOOP_INTERVAL;
   if (now - last_loop < LOOP_INTERVAL)
     delay_time = LOOP_INTERVAL - (now - last_loop);
@@ -918,5 +945,5 @@ void loop() {
   delay(delay_time);
 
   last_loop = now;
-  #endif
+#endif
 }

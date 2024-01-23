@@ -406,7 +406,7 @@ SuplaConfigManager::SuplaConfigManager() {
     this->addKey(KEY_RF_BRIDGE_REPEAT, MAX_BRIDGE_RF * 2, false);
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
+#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
     this->addKey(KEY_MAX_ANALOG_READING, "1", 2);
 #else
     this->addKey(KEY_MAX_ANALOG_READING, 2, false);

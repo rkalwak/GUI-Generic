@@ -804,6 +804,10 @@ Supla::Sensor::MPX_5XXX *mpx = nullptr;
 Supla::Sensor::AnalogRedingMap **analog = nullptr;
 #endif
 
+#ifdef SUPLA_ANALOG_READING_KPOP
+Supla::Sensor::AnalogReding **analog = nullptr;
+#endif
+
 #ifdef SUPLA_MODBUS_SDM
 Supla::Sensor::SDM630 *smd;
 #endif

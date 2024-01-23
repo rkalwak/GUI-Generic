@@ -52,8 +52,6 @@ ThermostatGUI::ThermostatGUI(uint8_t thermostatNumber, SuplaDeviceClass *sdc)
   // Configure thermostat parameters
   HvacBase::setTemperatureHisteresisMin(10);    // 0.1 degree
   HvacBase::setTemperatureHisteresisMax(4000);  // 10 degree
-  HvacBase::setTemperatureAutoOffsetMin(200);   // 2 degrees
-  HvacBase::setTemperatureAutoOffsetMax(1000);  // 10 degrees
   HvacBase::addAvailableAlgorithm(SUPLA_HVAC_ALGORITHM_ON_OFF_SETPOINT_MIDDLE);
 
   if (strcmp(ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(getNumber()).c_str(), "") != 0) {
@@ -117,7 +115,7 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
         }
         break;
       }
-      case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO: {
+      case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL: {
         ConfigManager->setElement(KEY_THERMOSTAT_TYPE, getNumber(), Supla::GUI::THERMOSTAT_AUTO);
         break;
       }
@@ -143,7 +141,7 @@ void ThermostatGUI::setThermostatType(uint8_t thermostatType) {
       break;
 
     case Supla::GUI::THERMOSTAT_AUTO:
-      HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO);
+      HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL);
       break;
 
     case Supla::GUI::THERMOSTAT_DOMESTIC_HOT_WATER:

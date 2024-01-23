@@ -36,7 +36,7 @@ void createWebPageSensorAnalog() {
     }
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
+#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
     if (WebServer->httpServer->arg(ARG_PARM_URL) == PATH_ANALOG_READING_MAP_MIN) {
       int nr = WebServer->httpServer->arg(URL_ARG_NR).toInt();
       Supla::GUI::analog[nr]->calibrateMinValue();
@@ -90,7 +90,7 @@ void handleSensorAnalog(int save) {
   addFormHeaderEnd(webContentBuffer);
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
+#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
   String input;
 #ifdef ARDUINO_ARCH_ESP8266
   addFormHeader(webContentBuffer, String(S_GPIO_SETTINGS_FOR) + S_SPACE + "pomiaru Analog");
@@ -207,7 +207,7 @@ void handleSensorAnalogSave() {
 
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
+#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
   String input;
 #ifdef ARDUINO_ARCH_ESP8266
   if (!WebServer->saveGPIO(INPUT_ANALOG_READING_MAP, FUNCTION_ANALOG_READING)) {
@@ -254,7 +254,11 @@ void handleSensorAnalogSave() {
     else {
       if (ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING) != OFF_GPIO) {
         if (Supla::GUI::analog == NULL) {
+#ifdef SUPLA_ANALOG_READING_MAP
           Supla::GUI::analog[nr] = new Supla::Sensor::AnalogRedingMap(ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING));
+#elif SUPLA_ANALOG_READING_KPOP
+          Supla::GUI::analog[nr] = new Supla::Sensor::AnalogReding(ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING));
+#endif
         }
 
         input = INPUT_ANALOG_READING_MAP_MIN;

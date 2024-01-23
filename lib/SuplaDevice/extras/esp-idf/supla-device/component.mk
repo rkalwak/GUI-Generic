@@ -33,6 +33,9 @@ COMPONENT_OBJS := \
 	\
   ../../../src/supla/storage/storage.o \
   ../../../src/supla/storage/config.o \
+  ../../../src/supla/storage/simple_state.o \
+  ../../../src/supla/storage/state_storage_interface.o \
+	../../../src/supla/storage/state_wear_leveling_byte.o \
 	\
   ../../../src/supla/network/network.o \
   ../../../src/supla/network/netif_wifi.o \
@@ -115,6 +118,10 @@ COMPONENT_OBJS := \
   ../../../src/supla/sensor/therm_hygro_meter.o \
   ../../../src/supla/sensor/therm_hygro_press_meter.o \
   ../../../src/supla/sensor/thermometer.o \
+	../../../src/supla/sensor/general_purpose_channel_base.o \
+	../../../src/supla/sensor/general_purpose_measurement.o \
+	../../../src/supla/sensor/general_purpose_meter.o \
+	../../../src/supla/sensor/memory_variable_driver.o \
   ../../../src/supla/sensor/virtual_binary.o \
   ../../../src/supla/sensor/distance.o \
   ../../../src/supla/sensor/HC_SR04.o \

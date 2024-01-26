@@ -172,10 +172,10 @@ void handleSensorI2c(int save) {
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
       String name, sensorName, input;
 
-// #ifdef SUPLA_BUTTON
-//       selected = ConfigESP->getNumberButtonAdditional(BUTTON_OLED);
-//       addListNumbersBox(webContentBuffer, INPUT_BUTTON_OLED, S_BUTTON, ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(), selected);
-// #endif
+#ifdef SUPLA_BUTTON
+      selected = ConfigESP->getNumberButtonAdditional(BUTTON_OLED);
+      addListNumbersBox(webContentBuffer, INPUT_BUTTON_OLED, S_BUTTON, ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(), selected);
+#endif
 
       addNumberBox(webContentBuffer, INPUT_OLED_ANIMATION, S_SCREEN_TIME, KEY_OLED_ANIMATION, 99);
       addNumberBox(webContentBuffer, INPUT_OLED_BRIGHTNESS_TIME, S_BACKLIGHT_S, KEY_OLED_BACK_LIGHT_TIME, 99);
@@ -379,12 +379,12 @@ void handleSensorI2cSave() {
     ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_OLED,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
-// #ifdef SUPLA_BUTTON
-//   input = INPUT_BUTTON_OLED;
-//   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-//     ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_OLED,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
-//   }
-// #endif
+#ifdef SUPLA_BUTTON
+  input = INPUT_BUTTON_OLED;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_OLED,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
 
   input = INPUT_OLED_ANIMATION;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0)

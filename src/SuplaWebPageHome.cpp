@@ -25,9 +25,11 @@ void createWebPageHome() {
     const String rebotArg = WebServer->httpServer->arg(PATH_REBOT);
     if (!rebotArg.isEmpty()) {
       if (rebotArg.equals("3")) {
+        WebServer->httpServer->sendHeader("Location", PATH_START, true);
+        WebServer->httpServer->send(302, "text/plane", "");
         handlePageHome(SaveResult::RESTART_MODULE);
+        ConfigESP->rebootESP();
       }
-      ConfigESP->rebootESP();
     }
 
     if (WebServer->httpServer->method() == HTTP_GET)

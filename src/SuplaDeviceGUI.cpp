@@ -261,7 +261,7 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
       }
 
 #ifdef SUPLA_ACTION_TRIGGER
-      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(pinButton), element, muliclickTimeMs, holdTimeMs);
+      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(pinButton), element);
 #endif
     }
     delay(0);
@@ -272,16 +272,11 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 #ifdef SUPLA_ACTION_TRIGGER
 ActionTrigger *actionTrigger = nullptr;
 
-void addActionTriggerRelatedChannel(
-    uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element, int muliclickTimeMs, int holdTimeMs) {
+void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element) {
   auto at = new Supla::Control::ActionTrigger();
 
-  if (muliclickTimeMs == 0) {
-    muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
-  }
-  if (holdTimeMs == 0) {
-    holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
-  }
+  int muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
+  int holdTimeMs = ConfigManager->get(KEY_AT_HOLD_TIME)->getValueFloat() * 1000;
 
   if (eventButton == Supla::ON_CHANGE) {
     button->setMulticlickTime(muliclickTimeMs, true);

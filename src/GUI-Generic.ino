@@ -60,7 +60,7 @@ void setup() {
   ImprovSerialComponent *improvSerialComponent = new ImprovSerialComponent();
   improvSerialComponent->enable();
 
-#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER) || defined(GUI_SENSOR_I2C_2)
+#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER) || defined(GUI_SENSOR_I2C_2) || defined(GUI_SENSOR_ANALOG)
   ThermHygroMeterCorrectionHandler &correctionHandler = ThermHygroMeterCorrectionHandler::getInstance();
 #endif
 

@@ -24,6 +24,13 @@
 #include "SuplaConfigManager.h"
 #include "SuplaDeviceGUI.h"
 
+#define CONFIG_MAX_SIZE 1024  // Change this to your desired max size
+
+namespace Supla {
+const char ConfigFileName[] = "/supla-dev.cfg";
+const char CustomCAFileName[] = "/custom_ca.pem";
+};  // namespace Supla
+
 ConfigOption::ConfigOption(uint8_t key, const char *value, int maxLength, bool loadKey)
     : _key(key), _value(nullptr), _maxLength(maxLength), _loadKey(loadKey) {
   if (maxLength > 0) {
@@ -839,7 +846,115 @@ void SuplaConfigManager::setGUIDandAUTHKEY() {
 }
 
 bool SuplaConfigManager::init() {
-  return true;
+  if (SPIFFSbegin()) {
+    if (SPIFFS.exists(Supla::ConfigFileName)) {
+      File cfg = SPIFFS.open(Supla::ConfigFileName, "r");
+      if (!cfg) {
+        SUPLA_LOG_ERROR("SuplaConfigManager: failed to open config file");
+        SPIFFS.end();
+        return false;
+      }
+
+      int fileSize = cfg.size();
+
+      SUPLA_LOG_DEBUG("SuplaConfigManager: config file size %d", fileSize);
+      if (fileSize > CONFIG_MAX_SIZE) {
+        SUPLA_LOG_ERROR("SuplaConfigManager: config file is too big");
+        cfg.close();
+        SPIFFS.end();
+        return false;
+      }
+
+      uint8_t *buf = new uint8_t[CONFIG_MAX_SIZE];
+      if (buf == nullptr) {
+        SUPLA_LOG_ERROR("SuplaConfigManager: failed to allocate memory");
+        cfg.close();
+        SPIFFS.end();
+        return false;
+      }
+
+      memset(buf, 0, CONFIG_MAX_SIZE);
+      int bytesRead = cfg.read(buf, fileSize);
+
+      cfg.close();
+      SPIFFS.end();
+      if (bytesRead != fileSize) {
+        SUPLA_LOG_DEBUG("SuplaConfigManager: read bytes %d, while file is %d bytes", bytesRead, fileSize);
+        delete[] buf;
+        return false;
+      }
+
+      SUPLA_LOG_DEBUG("SuplaConfigManager: initializing storage from file...");
+      auto result = initFromMemory(buf, fileSize);
+      SUPLA_LOG_DEBUG("SuplaConfigManager: init result %d", result);
+      delete[] buf;
+      return result;
+    }
+    else {
+      SUPLA_LOG_DEBUG("SuplaConfigManager: config file missing");
+    }
+    SPIFFS.end();
+    return true;
+  }
+  return false;
+}
+
+void SuplaConfigManager::commit() {
+  uint8_t *buf = new uint8_t[CONFIG_MAX_SIZE];
+  if (buf == nullptr) {
+    SUPLA_LOG_ERROR("SuplaConfigManager: failed to allocate memory");
+    return;
+  }
+
+  memset(buf, 0, CONFIG_MAX_SIZE);
+
+  size_t dataSize = serializeToMemory(buf, CONFIG_MAX_SIZE);
+
+  if (!SPIFFSbegin()) {
+    return;
+  }
+
+  File cfg = SPIFFS.open(Supla::ConfigFileName, "w");
+  if (!cfg) {
+    SUPLA_LOG_ERROR("SuplaConfigManager: failed to open config file for write");
+    SPIFFS.end();
+    return;
+  }
+
+  cfg.write(buf, dataSize);
+  cfg.close();
+  delete[] buf;
+  SPIFFS.end();
+}
+
+void SuplaConfigManager::removeAll() {
+  SUPLA_LOG_DEBUG("SuplaConfigManager remove all called");
+
+  if (SPIFFSbegin()) {
+    SPIFFS.remove(Supla::CustomCAFileName);
+
+    File suplaDir = SPIFFS.open("/supla", "r");
+    if (suplaDir && suplaDir.isDirectory()) {
+      File file = suplaDir.openNextFile();
+      while (file) {
+        if (!file.isDirectory()) {
+          SUPLA_LOG_DEBUG("SuplaConfigManager: removing file /supla/%s", file.name());
+          char path[200] = {};
+          snprintf(path, sizeof(path), "/supla/%s", file.name());
+          file.close();
+          if (!SPIFFS.remove(path)) {
+            SUPLA_LOG_ERROR("SuplaConfigManager: failed to remove file");
+          }
+        }
+        file = suplaDir.openNextFile();
+      }
+    }
+    else {
+      SUPLA_LOG_DEBUG("SuplaConfigManager: failed to open supla directory");
+    }
+
+    SPIFFS.end();
+  }
 }
 
 bool SuplaConfigManager::setSuplaServer(const char *server) {

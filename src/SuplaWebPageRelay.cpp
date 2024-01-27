@@ -206,12 +206,11 @@ void handleRelaySaveSet() {
 #ifdef SUPLA_THERMOSTAT
   auto thermostatIndex = nr_relay.toInt();
   uint8_t oldThermostatType = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
-
   input = INPUT_THERMOSTAT_TYPE;
   uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
 
-  if (thermostatIndex >= 0) {
+  if (thermostatIndex >= 0 && thermostatIndex < MAX_THERMOSTAT) {
     if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
       ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
@@ -228,7 +227,7 @@ void handleRelaySaveSet() {
           break;
       }
     }
-    else {
+    else if (newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
       auto thermostat = Supla::GUI::thermostatArray[thermostatIndex];
       if (thermostat) {
         thermostat->setThermostatType(newThermostatType);
@@ -383,29 +382,31 @@ void handleRelaySet(int save) {
 #ifdef SUPLA_THERMOSTAT
     auto thermostatIndex = nr_relay.toInt();
 
-    addFormHeader(webContentBuffer, S_THERMOSTAT);
-    selected = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
-    addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
+    if (thermostatIndex >= 0 && thermostatIndex < MAX_THERMOSTAT) {
+      addFormHeader(webContentBuffer, S_THERMOSTAT);
+      selected = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
+      addListBox(webContentBuffer, INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);
 
-    if (selected != Supla::GUI::THERMOSTAT_OFF) {
-      if (thermostatIndex >= 0) {
-        selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
+      if (selected != Supla::GUI::THERMOSTAT_OFF) {
+        if (thermostatIndex >= 0) {
+          selected = ConfigManager->get(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, S_MAIN_THERMOMETER_CHANNEL, selected);
 
-        selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
-        addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
+          selected = ConfigManager->get(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL)->getElement(thermostatIndex).toInt();
+          addListNumbersSensorBox(webContentBuffer, INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL, S_AUX_THERMOMETER_CHANNEL, selected);
 
-        String value = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
-        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, value, true);
+          String value = ConfigManager->get(KEY_THERMOSTAT_HISTERESIS)->getElement(thermostatIndex).c_str();
+          addNumberBox(webContentBuffer, INPUT_THERMOSTAT_HISTERESIS, S_HISTERESIS, S_CELSIUS, false, value, true);
 
-        value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(thermostatIndex).c_str();
-        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MIN, "MIN", S_CELSIUS, false, value, true);
+          value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MIN)->getElement(thermostatIndex).c_str();
+          addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MIN, "MIN", S_CELSIUS, false, value, true);
 
-        value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(thermostatIndex).c_str();
-        addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MAX, "MAX", S_CELSIUS, false, value, true);
+          value = ConfigManager->get(KEY_THERMOSTAT_TEMPERATURE_MAX)->getElement(thermostatIndex).c_str();
+          addNumberBox(webContentBuffer, INPUT_THERMOSTAT_TEMPERATURE_MAX, "MAX", S_CELSIUS, false, value, true);
+        }
       }
+      addFormHeaderEnd(webContentBuffer);
     }
-    addFormHeaderEnd(webContentBuffer);
 #endif
 
 #if defined(SUPLA_DIRECT_LINKS)

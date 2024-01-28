@@ -14,7 +14,6 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifdef SUPLA_GUI_CORRECTION
 #ifndef SuplaWebCorrection_h
 #define SuplaWebCorrection_h
 
@@ -41,5 +40,5 @@ class ThermHygroMeterCorrectionHandler {
   ThermHygroMeterCorrectionHandler();
   std::vector<Supla::Sensor::ThermHygroMeter*> thermHygroMeters;
 };
-#endif
+
 #endif  // ifndef SuplaWebCorrection_h

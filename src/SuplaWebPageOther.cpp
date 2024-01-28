@@ -689,7 +689,7 @@ void receiveCodeRFBridge() {
                 "Protocol: " + String(mySwitch.getReceivedProtocol()) + " Pulse Length: " + String(mySwitch.getReceivedDelay()) + "<br>";
         mySwitch.resetAvailable();
       }
-      yield();
+       delay(0);
     }
   }
 

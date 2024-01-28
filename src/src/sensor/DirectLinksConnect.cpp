@@ -122,7 +122,7 @@ String DirectLinksConnect::getRequest() {
       Serial.println(F("Direct links - Headers received"));
       break;
     }
-    yield();
+    delay(0);
   }
 
   const int bufferSize = 1200;
@@ -136,7 +136,7 @@ String DirectLinksConnect::getRequest() {
     else {
       break;  // Stop reading to prevent buffer overflow
     }
-    yield();
+    delay(0);
   }
 
   result[i] = '\0';  // Null-terminate the result string

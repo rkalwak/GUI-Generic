@@ -472,6 +472,7 @@ void addDS18B20MultiThermometer(int pinNumber) {
   uint8_t maxDevices = ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt();
 
   DS18B20::initSharedResources(pinNumber);
+  ThermHygroMeterCorrectionHandler &correctionHandler = ThermHygroMeterCorrectionHandler::getInstance();
 
   if (maxDevices > 1) {
     if (strcmp(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(0).c_str(), "") == 0) {
@@ -481,6 +482,7 @@ void addDS18B20MultiThermometer(int pinNumber) {
     for (int i = 0; i < maxDevices; ++i) {
       auto ds = new DS18B20(HexToBytes(ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i)));
       sensorDS.push_back(ds);
+      correctionHandler.addThermHygroMeter(ds);
 
       supla_log(LOG_DEBUG, "Index %d - address %s", i, ConfigManager->get(KEY_ADDR_DS18B20)->getElement(i).c_str());
 
@@ -493,6 +495,7 @@ void addDS18B20MultiThermometer(int pinNumber) {
     auto ds = new DS18B20(nullptr);
 
     sensorDS.push_back(ds);
+    correctionHandler.addThermHygroMeter(ds);
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_DS18B20, S_DS18B20, sensorDS[0]);

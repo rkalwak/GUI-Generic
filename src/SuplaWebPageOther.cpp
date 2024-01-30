@@ -383,7 +383,7 @@ void handleOtherSave() {
     String input = INPUT_BUTTON_RGBW;
     input += nr;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-      ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_RGBW + nr,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+      ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_RGBW + nr, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
     }
 
     uint8_t redPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_RED);
@@ -677,11 +677,9 @@ void handleCounterCalibrateSave() {
 
 void receiveCodeRFBridge() {
   String code;
-
   if (WebServer->httpServer->arg(ARG_PARM_URL) == "read") {
     RCSwitch mySwitch;
     mySwitch.enableReceive(ConfigESP->getGpio(FUNCTION_RF_BRIDGE_RECEIVE));
-
     unsigned long timeout = millis();
     while ((millis() - timeout) < 5000) {
       if (mySwitch.available()) {
@@ -689,25 +687,26 @@ void receiveCodeRFBridge() {
                 "Protocol: " + String(mySwitch.getReceivedProtocol()) + " Pulse Length: " + String(mySwitch.getReceivedDelay()) + "<br>";
         mySwitch.resetAvailable();
       }
-       delay(0);
+      yield();
     }
   }
+}
 
-  addFormHeader(webContentBuffer, String(S_SETTING_FOR) + S_SPACE + S_CODES);
-  webContentBuffer += F("<p style='color:#000;'>");
-  if (!code.isEmpty()) {
-    webContentBuffer += code;
-  }
-  else {
-    webContentBuffer += "<br>";
-    webContentBuffer += String(S_NO) + S_SPACE + S_CODES;
-    webContentBuffer += "<br>";
-  }
-  webContentBuffer += F("</p>");
-  addButton(webContentBuffer, S_READ, getParameterRequest(PATH_BRIDGE, ARG_PARM_URL, "read"));
-  addFormHeaderEnd(webContentBuffer);
+addFormHeader(webContentBuffer, String(S_SETTING_FOR) + S_SPACE + S_CODES);
+webContentBuffer += F("<p style='color:#000;'>");
+if (!code.isEmpty()) {
+  webContentBuffer += code;
+}
+else {
+  webContentBuffer += "<br>";
+  webContentBuffer += String(S_NO) + S_SPACE + S_CODES;
+  webContentBuffer += "<br>";
+}
+webContentBuffer += F("</p>");
+addButton(webContentBuffer, S_READ, getParameterRequest(PATH_BRIDGE, ARG_PARM_URL, "read"));
+addFormHeaderEnd(webContentBuffer);
 
-  addButton(webContentBuffer, S_RETURN, PATH_OTHER);
-  WebServer->sendContent();
+addButton(webContentBuffer, S_RETURN, PATH_OTHER);
+WebServer->sendContent();
 }
 #endif

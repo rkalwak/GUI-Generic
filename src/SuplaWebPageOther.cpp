@@ -690,7 +690,6 @@ void receiveCodeRFBridge() {
       yield();
     }
   }
-}
 
 addFormHeader(webContentBuffer, String(S_SETTING_FOR) + S_SPACE + S_CODES);
 webContentBuffer += F("<p style='color:#000;'>");

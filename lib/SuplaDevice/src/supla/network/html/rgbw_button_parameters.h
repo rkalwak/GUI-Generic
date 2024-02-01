@@ -31,9 +31,7 @@ class RgbwButtonParameters : public SelectInputParameter {
  public:
   // if id is -1, it is applied to all rgbw elements
   // otherwise it should be channel number
-  explicit RgbwButtonParameters(int id = -1, const char *label = nullptr);
-
- protected:
+  explicit RgbwButtonParameters(int id = -1);
 };
 
 };  // namespace Html

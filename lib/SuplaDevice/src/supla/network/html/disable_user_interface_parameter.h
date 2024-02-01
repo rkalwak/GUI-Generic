@@ -26,8 +26,6 @@ namespace Supla {
 namespace Html {
 
 const char DisableUserInterfaceCfgTag[] = "disable_ui";
-const char MinTempUICfgTag[] = "min_temp_ui";
-const char MaxTempUICfgTag[] = "max_temp_ui";
 
 class DisableUserInterfaceParameter : public HtmlElement {
  public:
@@ -38,7 +36,7 @@ class DisableUserInterfaceParameter : public HtmlElement {
   void onProcessingEnd() override;
 
  private:
-  bool change = false;
+  bool checkboxFound = false;
 };
 
 };  // namespace Html

@@ -57,13 +57,7 @@ enum HADeviceClass {
   HADeviceClass_PowerFactor,
   HADeviceClass_Power,
   HADeviceClass_ReactivePower,
-  HADeviceClass_Voltage,
-  HADeviceClass_Outlet,
-  HADeviceClass_Gate,
-  HADeviceClass_Door,
-  HADeviceClass_Garage,
-  HADeviceClass_Moisture,
-  HADeviceClass_Window
+  HADeviceClass_Voltage
 };
 
 class Mqtt : public ProtocolLayer {
@@ -94,8 +88,6 @@ class Mqtt : public ProtocolLayer {
                bool payload,
                int qos = -1,
                int retain = -1);
-  void publishOnOff(const char *topic, bool payload, int qos, int retain);
-  void publishOpenClosed(const char *topic, bool payload, int qos, int retain);
   void publishDouble(const char *topic,
                double payload,
                int qos = -1,
@@ -113,7 +105,6 @@ class Mqtt : public ProtocolLayer {
   void subscribe(const char *topic, int qos = -1);
   bool isUpdatePending() override;
   bool isRegisteredAndReady() override;
-  void notifyConfigChange(int channelNumber) override;
 
   void sendActionTrigger(uint8_t channelNumber, uint32_t actionId) override;
   void sendChannelValueChanged(uint8_t channelNumber, char *value,
@@ -122,21 +113,6 @@ class Mqtt : public ProtocolLayer {
     TSuplaChannelExtendedValue *value) override;
 
   bool processData(const char *topic, const char *payload);
-  void processRelayRequest(const char *topic,
-                           const char *payload,
-                           Supla::Element *element);
-  void processRGBWRequest(const char *topic,
-                          const char *payload,
-                          Supla::Element *element);
-  void processRGBRequest(const char *topic,
-                         const char *payload,
-                         Supla::Element *element);
-  void processDimmerRequest(const char *topic,
-                            const char *payload,
-                            Supla::Element *element);
-  void processHVACRequest(const char *topic,
-                          const char *payload,
-                          Supla::Element *element);
 
  protected:
   void generateClientId(char result[MQTT_CLIENTID_MAX_SIZE]);
@@ -145,15 +121,12 @@ class Mqtt : public ProtocolLayer {
   void publishDeviceStatus(bool onRegistration = false);
   void publishHADiscovery(int channel);
   void publishHADiscoveryRelay(Supla::Element *);
-  void publishHADiscoveryRelayImpulse(Supla::Element *);
   void publishHADiscoveryThermometer(Supla::Element *);
   void publishHADiscoveryHumidity(Supla::Element *);
   void publishHADiscoveryActionTrigger(Supla::Element *);
   void publishHADiscoveryEM(Supla::Element *);
   void publishHADiscoveryRGB(Supla::Element *);
   void publishHADiscoveryDimmer(Supla::Element *);
-  void publishHADiscoveryHVAC(Supla::Element *);
-  void publishHADiscoveryBinarySensor(Supla::Element *);
 
   // parameterName has to be ASCII string with small caps and underscores
   // between words i.e. "total_forward_active_energy".
@@ -173,11 +146,7 @@ class Mqtt : public ProtocolLayer {
   const char *getStateClassStr(Supla::Protocol::HAStateClass stateClass);
   const char *getDeviceClassStr(Supla::Protocol::HADeviceClass deviceClass);
 
-  const char *getRelayChannelName(int channelFunction) const;
-  const char *getBinarySensorChannelName(int channelFunction) const;
-
   bool isPayloadOn(const char *);
-  bool isOpenClosedBinarySensorFunction(int channelFunction) const;
 
   char server[SUPLA_SERVER_NAME_MAXSIZE] = {};
   int32_t port = -1;
@@ -203,7 +172,6 @@ class Mqtt : public ProtocolLayer {
   // It is important to call publishDeviceStatus first, then to call
   // publishHADiscoveryActionTrigger for each AT channel.
   int buttonNumber = 0;
-  uint8_t configChangedBit[8] = {};
 };
 }  // namespace Protocol
 }  // namespace Supla

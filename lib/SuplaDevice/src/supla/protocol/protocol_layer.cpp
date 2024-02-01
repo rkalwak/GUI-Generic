@@ -157,9 +157,5 @@ void ProtocolLayer::sendRemainingTimeValue(uint8_t channelNumber,
   (void)(useSecondsInsteadOfMs);
 }
 
-void ProtocolLayer::notifyConfigChange(int channelNumber) {
-  (void)(channelNumber);
-}
-
 }  // namespace Protocol
 }  // namespace Supla

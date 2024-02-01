@@ -67,8 +67,6 @@ void ImpulseCounter::onInit() {
   } else {
     Supla::Io::pinMode(channel.getChannelNumber(), impulsePin, INPUT, io);
   }
-  prevState =
-      Supla::Io::digitalRead(channel.getChannelNumber(), impulsePin, io);
 }
 
 unsigned _supla_int64_t ImpulseCounter::getCounter() {

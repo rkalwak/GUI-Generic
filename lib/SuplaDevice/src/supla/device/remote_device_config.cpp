@@ -56,11 +56,11 @@ void RemoteDeviceConfig::RegisterConfigField(uint64_t fieldBit) {
 }
 
 void RemoteDeviceConfig::SetHomeScreenContentAvailable(uint64_t allValues) {
-  if (allValues != homeScreenContentAvailable) {
-    homeScreenContentAvailable = allValues;
-    SUPLA_LOG_INFO("RemoteDeviceConfig: SetHomeScreenContentAvailable 0x%08llx",
+  SUPLA_LOG_INFO("RemoteDeviceConfig: SetHomeScreenContentAvailable 0x%08llx",
+                 allValues);
+  homeScreenContentAvailable = allValues;
+  SUPLA_LOG_INFO("RemoteDeviceConfig: SetHomeScreenContentAvailable 0x%08llx",
                  homeScreenContentAvailable);
-  }
 }
 
 enum Supla::HomeScreenContent RemoteDeviceConfig::HomeScreenContentBitToEnum(
@@ -142,60 +142,8 @@ void RemoteDeviceConfig::processConfig(TSDS_SetDeviceConfig *config) {
     return;
   }
 
-  // check size first
-  uint32_t dataIndex = 0;
+  int dataIndex = 0;
   uint64_t fieldBit = 1;
-  while (dataIndex < config->ConfigSize && fieldBit) {
-    if (fieldBit & config->Fields) {
-      switch (fieldBit) {
-        case SUPLA_DEVICE_CONFIG_FIELD_STATUS_LED: {
-          dataIndex += sizeof(TDeviceConfig_StatusLed);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_SCREEN_BRIGHTNESS: {
-          dataIndex += sizeof(TDeviceConfig_ScreenBrightness);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_BUTTON_VOLUME: {
-          dataIndex += sizeof(TDeviceConfig_ButtonVolume);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_DISABLE_USER_INTERFACE: {
-          dataIndex += sizeof(TDeviceConfig_DisableUserInterface);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_AUTOMATIC_TIME_SYNC: {
-          dataIndex += sizeof(TDeviceConfig_AutomaticTimeSync);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_OFF_DELAY: {
-          dataIndex += sizeof(TDeviceConfig_HomeScreenOffDelay);
-          break;
-        }
-        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_CONTENT: {
-          dataIndex += sizeof(TDeviceConfig_HomeScreenContent);
-          break;
-        }
-        default: {
-          SUPLA_LOG_WARNING("RemoteDeviceConfig: unknown field 0x%08llx",
-                            fieldBit);
-          resultCode = SUPLA_CONFIG_RESULT_TYPE_NOT_SUPPORTED;
-          return;
-        }
-      }
-    }
-    fieldBit <<= 1;
-  }
-  if (dataIndex != config->ConfigSize) {
-    SUPLA_LOG_WARNING(
-        "RemoteDeviceConfig: precheck failed - invalid ConfigSize");
-    resultCode = SUPLA_CONFIG_RESULT_DATA_ERROR;
-    return;
-  }
-
-  // actual parsing of DeviceConfig
-  dataIndex = 0;
-  fieldBit = 1;
   while (dataIndex < config->ConfigSize) {
     if (fieldBit & config->Fields) {
       switch (fieldBit) {
@@ -273,9 +221,9 @@ void RemoteDeviceConfig::processConfig(TSDS_SetDeviceConfig *config) {
           dataIndex += sizeof(TDeviceConfig_AutomaticTimeSync);
           break;
         }
-        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_OFF_DELAY: {
-          SUPLA_LOG_DEBUG("Processing HomeScreenOffDelay config");
-          if (dataIndex + sizeof(TDeviceConfig_HomeScreenOffDelay) >
+        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_DELAY: {
+          SUPLA_LOG_DEBUG("Processing HomeScreenDelay config");
+          if (dataIndex + sizeof(TDeviceConfig_HomeScreenDelay) >
               config->ConfigSize) {
             SUPLA_LOG_WARNING("RemoteDeviceConfig: invalid ConfigSize");
             resultCode = SUPLA_CONFIG_RESULT_DATA_ERROR;
@@ -283,9 +231,9 @@ void RemoteDeviceConfig::processConfig(TSDS_SetDeviceConfig *config) {
           }
           processHomeScreenDelayConfig(
               fieldBit,
-              reinterpret_cast<TDeviceConfig_HomeScreenOffDelay *>(
+              reinterpret_cast<TDeviceConfig_HomeScreenDelay *>(
                   config->Config + dataIndex));
-          dataIndex += sizeof(TDeviceConfig_HomeScreenOffDelay);
+          dataIndex += sizeof(TDeviceConfig_HomeScreenDelay);
           break;
         }
         case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_CONTENT: {
@@ -349,7 +297,6 @@ void RemoteDeviceConfig::processScreenBrightnessConfig(uint64_t fieldBit,
     TDeviceConfig_ScreenBrightness *config) {
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
-    bool change = false;
     int32_t currentValue = -1;
     int32_t newValue = -1;
     cfg->getInt32(Supla::Html::ScreenBrightnessCfgTag, &currentValue);
@@ -367,32 +314,8 @@ void RemoteDeviceConfig::processScreenBrightnessConfig(uint64_t fieldBit,
     if (newValue != currentValue) {
       SUPLA_LOG_INFO("Setting ScreenBrightness to %d", newValue);
       cfg->setInt32(Supla::Html::ScreenBrightnessCfgTag, newValue);
-      change = true;
-    }
-
-    int32_t currentAdjustmentForAutomaticValue = 0;
-    int32_t newAdjustmentForAutomaticValue = 0;
-    cfg->getInt32(
-        Supla::Html::ScreenAdjustmentForAutomaticCfgTag,
-        &currentAdjustmentForAutomaticValue);
-
-    newAdjustmentForAutomaticValue = config->AdjustmentForAutomatic;
-    if (newAdjustmentForAutomaticValue > 100) {
-      newAdjustmentForAutomaticValue = 100;
-    }
-    if (newAdjustmentForAutomaticValue < -100) {
-      newAdjustmentForAutomaticValue = -100;
-    }
-    if (newAdjustmentForAutomaticValue != currentAdjustmentForAutomaticValue) {
-      SUPLA_LOG_INFO("Setting AdjustmentForAutomatic to %d",
-                     newAdjustmentForAutomaticValue);
-      cfg->setInt32(Supla::Html::ScreenAdjustmentForAutomaticCfgTag,
-                    newAdjustmentForAutomaticValue);
-      change = true;
-    }
-
-    if (change) {
       cfg->saveWithDelay(1000);
+
       Supla::Element::NotifyElementsAboutConfigChange(fieldBit);
     }
   }
@@ -454,7 +377,7 @@ void RemoteDeviceConfig::processHomeScreenContentConfig(uint64_t fieldBit,
 }
 
 void RemoteDeviceConfig::processHomeScreenDelayConfig(uint64_t fieldBit,
-    TDeviceConfig_HomeScreenOffDelay *config) {
+    TDeviceConfig_HomeScreenDelay *config) {
   auto cfg = Supla::Storage::ConfigInstance();
   if (config == nullptr || cfg == nullptr) {
     return;
@@ -468,10 +391,9 @@ void RemoteDeviceConfig::processHomeScreenDelayConfig(uint64_t fieldBit,
     value = 65535;
   }
 
-  if (value != config->HomeScreenOffDelayS) {
-    SUPLA_LOG_INFO("Setting HomeScreenOffDelay to %d",
-                   config->HomeScreenOffDelayS);
-    cfg->setInt32(Supla::Html::ScreenDelayCfgTag, config->HomeScreenOffDelayS);
+  if (value != config->HomeScreenDelayS) {
+    SUPLA_LOG_INFO("Setting HomeScreenDelay to %d", value);
+    cfg->setInt32(Supla::Html::ScreenDelayCfgTag, value);
     cfg->saveWithDelay(1000);
     Supla::Element::NotifyElementsAboutConfigChange(fieldBit);
   }
@@ -498,38 +420,16 @@ void RemoteDeviceConfig::processDisableUserInterfaceConfig(uint64_t fieldBit,
     TDeviceConfig_DisableUserInterface *config) {
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
-    bool change = false;
     uint8_t value = 0;
-    int32_t minTempUI = 0;
-    int32_t maxTempUI = 0;
     cfg->getUInt8(Supla::Html::DisableUserInterfaceCfgTag, &value);
-    cfg->getInt32(Supla::Html::MinTempUICfgTag, &minTempUI);
-    cfg->getInt32(Supla::Html::MaxTempUICfgTag, &maxTempUI);
     if (value != config->DisableUserInterface &&
-        config->DisableUserInterface <= 2) {
+        config->DisableUserInterface <= 1) {
       SUPLA_LOG_INFO("Setting DisableUserInterface to %d",
                      config->DisableUserInterface);
       cfg->setUInt8(Supla::Html::DisableUserInterfaceCfgTag,
                     config->DisableUserInterface);
-      change = true;
-    }
-    if (minTempUI != config->minAllowedTemperatureSetpointFromLocalUI) {
-      SUPLA_LOG_INFO("Setting minAllowedTemperatureSetpointFromLocalUI to %d",
-                     config->minAllowedTemperatureSetpointFromLocalUI);
-      cfg->setInt32(Supla::Html::MinTempUICfgTag,
-                    config->minAllowedTemperatureSetpointFromLocalUI);
-      change = true;
-    }
-    if (maxTempUI != config->maxAllowedTemperatureSetpointFromLocalUI) {
-      SUPLA_LOG_INFO("Setting maxAllowedTemperatureSetpointFromLocalUI to %d",
-                     config->maxAllowedTemperatureSetpointFromLocalUI);
-      cfg->setInt32(Supla::Html::MaxTempUICfgTag,
-                    config->maxAllowedTemperatureSetpointFromLocalUI);
-      change = true;
-    }
-
-    if (change) {
       cfg->saveWithDelay(1000);
+
       Supla::Element::NotifyElementsAboutConfigChange(fieldBit);
     }
   }
@@ -571,18 +471,6 @@ void RemoteDeviceConfig::fillScreenBrightnessConfig(
           "Setting ScreenBrightness to %d (0x%X)", value, value);
       config->ScreenBrightness = value;
     }
-
-    int32_t adjustmentForAutomaticValue = 0;
-    cfg->getInt32(Supla::Html::ScreenAdjustmentForAutomaticCfgTag,
-                  &adjustmentForAutomaticValue);
-    if (adjustmentForAutomaticValue > 100) {
-      adjustmentForAutomaticValue = 100;
-    }
-    if (adjustmentForAutomaticValue < -100) {
-      adjustmentForAutomaticValue = -100;
-    }
-    config->AdjustmentForAutomatic =
-        static_cast<signed char>(adjustmentForAutomaticValue);
   }
 }
 
@@ -610,19 +498,16 @@ void RemoteDeviceConfig::fillHomeScreenContentConfig(
     return;
   }
   int8_t value = 0;
-
   cfg->getInt8(Supla::HomeScreenContentTag, &value);
+  SUPLA_LOG_DEBUG("Setting HomeScreenContent to %d (0x%02X)", value, value);
   config->HomeScreenContent = HomeScreenIntToBit(value);
-  SUPLA_LOG_DEBUG("Setting HomeScreenContent to %d (0x%02X)",
-                  config->HomeScreenContent,
-                  config->HomeScreenContent);
   SUPLA_LOG_DEBUG("Setting ModesAvailabe to 0x%04X",
                   homeScreenContentAvailable);
   config->ContentAvailable = homeScreenContentAvailable;
 }
 
 void RemoteDeviceConfig::fillHomeScreenDelayConfig(
-    TDeviceConfig_HomeScreenOffDelay *config) const {
+    TDeviceConfig_HomeScreenDelay *config) const {
   if (config == nullptr) {
     return;
   }
@@ -638,8 +523,8 @@ void RemoteDeviceConfig::fillHomeScreenDelayConfig(
     }
     uint16_t delayS = value;
     SUPLA_LOG_DEBUG(
-        "Setting HomeScreenOffDelay to %d (0x%02X)", delayS, delayS);
-    config->HomeScreenOffDelayS = delayS;
+        "Setting HomeScreenDelay to %d (0x%02X)", delayS, delayS);
+    config->HomeScreenDelayS = delayS;
   }
 }
 
@@ -667,32 +552,10 @@ void RemoteDeviceConfig::fillDisableUserInterfaceConfig(
     return;
   }
   uint8_t value = 0;
-  int32_t minTempUI = 0;
-  int32_t maxTempUI = 0;
   cfg->getUInt8(Supla::Html::DisableUserInterfaceCfgTag, &value);
-  cfg->getInt32(Supla::Html::MinTempUICfgTag, &minTempUI);
-  cfg->getInt32(Supla::Html::MaxTempUICfgTag, &maxTempUI);
-  if (value > 2) {
-    value = 2;
+  if (value > 1) {
+    value = 1;
   }
-  if (minTempUI < INT16_MIN) {
-    minTempUI = INT16_MIN;
-  }
-  if (minTempUI > INT16_MAX) {
-    minTempUI = INT16_MAX;
-  }
-  if (maxTempUI < INT16_MIN) {
-    maxTempUI = INT16_MIN;
-  }
-  if (maxTempUI > INT16_MAX) {
-    maxTempUI = INT16_MAX;
-  }
-  SUPLA_LOG_DEBUG("Setting minAllowedTemperatureSetpointFromLocalUI to %d",
-                  minTempUI);
-  config->minAllowedTemperatureSetpointFromLocalUI = minTempUI;
-  SUPLA_LOG_DEBUG("Setting maxAllowedTemperatureSetpointFromLocalUI to %d",
-                  maxTempUI);
-  config->maxAllowedTemperatureSetpointFromLocalUI = maxTempUI;
   SUPLA_LOG_DEBUG("Setting DisableUserInterface to %d", value);
   config->DisableUserInterface = value;
 }
@@ -785,17 +648,17 @@ bool RemoteDeviceConfig::fillFullSetDeviceConfig(
           dataIndex += sizeof(TDeviceConfig_AutomaticTimeSync);
           break;
         }
-        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_OFF_DELAY: {
-          SUPLA_LOG_DEBUG("Adding HomeScreenOffDelay config field");
-          if (dataIndex + sizeof(TDeviceConfig_HomeScreenOffDelay) >
+        case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_DELAY: {
+          SUPLA_LOG_DEBUG("Adding HomeScreenDelay config field");
+          if (dataIndex + sizeof(TDeviceConfig_HomeScreenDelay) >
               SUPLA_DEVICE_CONFIG_MAXSIZE) {
             SUPLA_LOG_ERROR("RemoteDeviceConfig: ConfigSize too big");
             return false;
           }
           fillHomeScreenDelayConfig(
-              reinterpret_cast<TDeviceConfig_HomeScreenOffDelay *>(
+              reinterpret_cast<TDeviceConfig_HomeScreenDelay *>(
                   config->Config + dataIndex));
-          dataIndex += sizeof(TDeviceConfig_HomeScreenOffDelay);
+          dataIndex += sizeof(TDeviceConfig_HomeScreenDelay);
           break;
         }
         case SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_CONTENT: {

@@ -18,8 +18,6 @@
 #define SRC_SUPLA_CONTROL_BUTTON_H_
 
 #include <stdint.h>
-#include <supla/action_handler.h>
-#include "action_trigger.h"
 #include "simple_button.h"
 
 class SuplaDeviceClass;
@@ -27,19 +25,12 @@ class SuplaDeviceClass;
 namespace Supla {
 namespace Control {
 
-class Button : public SimpleButton, public ActionHandler {
+class Button : public SimpleButton {
  public:
-  friend class ActionTrigger;
   enum class ButtonType {
     MONOSTABLE,
     BISTABLE,
     MOTION_SENSOR
-  };
-
-  enum class OnLoadConfigType {
-    LOAD_FULL_CONFIG,
-    LOAD_BUTTON_SETUP_ONLY,
-    DONT_LOAD_CONFIG
   };
 
   explicit Button(Supla::Io *io,
@@ -51,19 +42,17 @@ class Button : public SimpleButton, public ActionHandler {
   void onTimer() override;
   void onLoadConfig(SuplaDeviceClass *) override;
   void onInit() override;
-  void addAction(uint16_t action, ActionHandler &client, uint16_t event,
+  void addAction(int action, ActionHandler &client, int event,
       bool alwaysEnabled = false) override;
-  void addAction(uint16_t action, ActionHandler *client, uint16_t event,
+  void addAction(int action, ActionHandler *client, int event,
       bool alwaysEnabled = false) override;
-  void disableAction(int32_t action,
-                     ActionHandler *client,
-                     int32_t event) override;
-  void enableAction(int32_t action,
-                    ActionHandler *client,
-                    int32_t event) override;
+  void disableAction(int action, ActionHandler *client, int event) override;
+  void enableAction(int action, ActionHandler *client, int event) override;
 
   void setHoldTime(unsigned int timeMs);
   void repeatOnHoldEvery(unsigned int timeMs);
+  void disableRepeatOnHold();
+  void enableRepeatOnHold();
 
   // setting of bistableButton is for backward compatiblity.
   // Use setButtonType instaed.
@@ -77,23 +66,13 @@ class Button : public SimpleButton, public ActionHandler {
   virtual void configureAsConfigButton(SuplaDeviceClass *sdc);
   bool disableActionsInConfigMode() override;
   void dontUseOnLoadConfig();
-  void setOnLoadConfigType(OnLoadConfigType type);
 
   uint8_t getMaxMulticlickValue();
   int8_t getButtonNumber() const override;
   void setButtonNumber(int8_t number);
 
-  void handleAction(int event, int action) override;
-
-  void disableButton();
-  void enableButton();
-
  protected:
   void evaluateMaxMulticlickValue();
-  // disbles repeating "on hold" if repeat time is lower than threshold
-  // threshold 0 disables always
-  void disableRepeatOnHold(uint32_t threshold = 0);
-  void enableRepeatOnHold();
   unsigned int holdTimeMs = 0;
   unsigned int repeatOnHoldMs = 0;
   bool repeatOnHoldEnabled = false;
@@ -104,9 +83,8 @@ class Button : public SimpleButton, public ActionHandler {
   unsigned int holdSend = 0;
   ButtonType buttonType = ButtonType::MONOSTABLE;
   bool configButton = false;
-  enum OnLoadConfigType onLoadConfigType = OnLoadConfigType::LOAD_FULL_CONFIG;
+  bool useOnLoadConfig = true;
   int8_t buttonNumber = -1;
-  bool disabled = false;
 
   static int buttonCounter;
 };

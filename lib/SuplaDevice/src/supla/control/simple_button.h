@@ -39,7 +39,7 @@ class ButtonState {
   ButtonState(int pin, bool pullUp, bool invertLogic);
   enum StateResults update();
   enum StateResults getLastState() const;
-  void init(int buttonNumber);
+  void init();
 
   void setSwNoiseFilterDelay(unsigned int newDelayMs);
   void setDebounceDelay(unsigned int newDelayMs);
@@ -54,7 +54,7 @@ class ButtonState {
   unsigned int swNoiseFilterDelayMs = 20;
   int pin = -1;
   int8_t newStatusCandidate = 0;
-  int8_t prevState = -1;
+  int8_t prevState = 0;
   bool pullUp = false;
   bool invertLogic = false;
   Supla::Io *io = nullptr;

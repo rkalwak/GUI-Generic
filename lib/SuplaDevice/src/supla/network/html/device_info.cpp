@@ -64,9 +64,6 @@ void DeviceInfo::send(Supla::WebSender *sender) {
     sender->send(buf);
   }
   sender->send("</span>");
-  sender->send("<span><br>Uptime: ");
-  sender->send(sdc->uptime.getUptime());
-  sender->send(" s</span>");
 }
 };  // namespace Html
 };  // namespace Supla

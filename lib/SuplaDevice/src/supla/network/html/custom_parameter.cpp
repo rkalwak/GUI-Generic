@@ -28,12 +28,12 @@
 
 #include "button_multiclick_parameters.h"
 
-using Supla::Html::CustomParameter;
+namespace Supla {
 
-CustomParameter::CustomParameter(const char* paramTag,
-                                 const char* paramLabel,
-                                 int32_t defaultValue)
-    : HtmlElement(HTML_SECTION_FORM), parameterValue(defaultValue) {
+namespace Html {
+
+CustomParameter::CustomParameter(const char *paramTag, const char *paramLabel)
+    : HtmlElement(HTML_SECTION_FORM) {
   int size = strlen(paramTag);
   if (size < 500) {
     tag = new char[size + 1];
@@ -103,3 +103,7 @@ void CustomParameter::setParameterValue(const int32_t newValue) {
     cfg->saveWithDelay(1000);
   }
 }
+
+};  // namespace Html
+};  // namespace Supla
+

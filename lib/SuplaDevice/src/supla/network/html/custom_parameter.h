@@ -34,9 +34,7 @@ namespace Html {
 
 class CustomParameter : public HtmlElement {
  public:
-  CustomParameter(const char *paramTag,
-                  const char *paramLabel,
-                  int32_t defaultValue = 0);
+  CustomParameter(const char *paramTag, const char *paramLabel);
   virtual ~CustomParameter();
   void send(Supla::WebSender* sender) override;
   bool handleResponse(const char* key, const char* value) override;

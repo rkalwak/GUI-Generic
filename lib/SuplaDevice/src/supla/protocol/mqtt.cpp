@@ -32,7 +32,6 @@
 #include <supla/element.h>
 #include <supla/protocol/mqtt_topic.h>
 #include <supla/sensor/electricity_meter.h>
-#include <supla/control/hvac_base.h>
 
 using Supla::Protocol::Mqtt;
 
@@ -296,31 +295,6 @@ void Supla::Protocol::Mqtt::publishBool(const char *topic,
   publish(topic, buf, qos, retain);
 }
 
-// payload true -> on
-// payload false -> off
-void Supla::Protocol::Mqtt::publishOnOff(const char *topic,
-                                         bool payload,
-                                         int qos,
-                                         int retain) {
-  char buf[6] = {};
-  snprintf(buf, sizeof(buf), "%s", payload ? "ON" : "OFF");
-  publish(topic, buf, qos, retain);
-}
-
-// For open/closed we send opposite payload to HA, because of different state
-// interpretation used.
-// payload true -> closed
-// payload false -> open
-void Supla::Protocol::Mqtt::publishOpenClosed(const char *topic,
-                                         bool payload,
-                                         int qos,
-                                         int retain) {
-  char buf[7] = {};
-  snprintf(buf, sizeof(buf), "%s", payload ? "closed" : "open");
-  publish(topic, buf, qos, retain);
-}
-
-
 void Supla::Protocol::Mqtt::publishDouble(const char *topic,
                                     double payload,
                                     int qos,
@@ -341,6 +315,7 @@ void Mqtt::publishColor(const char *topic,
   snprintf(buf, sizeof(buf), "%d,%d,%d", red, green, blue);
   publish(topic, buf, qos, retain);
 }
+
 
 void Supla::Protocol::Mqtt::subscribe(const char *topic, int qos) {
   if (prefix == nullptr) {
@@ -383,19 +358,7 @@ void Supla::Protocol::Mqtt::publishChannelState(int channel) {
   switch (ch->getChannelType()) {
     case SUPLA_CHANNELTYPE_RELAY: {
       // publish relay state
-      switch (ch->getDefaultFunction()) {
-        case SUPLA_CHANNELFNC_CONTROLLINGTHEGATE:
-        case SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR:
-        case SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK:
-        case SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK: {
-          publish((topic / "on").c_str(), "closed", -1, 1);
-          break;
-        }
-        default: {
-          publishBool((topic / "on").c_str(), ch->getValueBool(), -1, 1);
-          break;
-        }
-      }
+      publishBool((topic / "on").c_str(), ch->getValueBool(), -1, 1);
       break;
     }
     case SUPLA_CHANNELTYPE_THERMOMETER: {
@@ -476,116 +439,10 @@ void Supla::Protocol::Mqtt::publishChannelState(int channel) {
       break;
     }
 
-    case SUPLA_CHANNELTYPE_HVAC: {
-      if (ch->isHvacFlagHeating()) {
-        publish((topic / "action").c_str(), "heating", -1, 1);
-      } else if (ch->isHvacFlagCooling()) {
-        publish((topic / "action").c_str(), "cooling", -1, 1);
-      } else if (ch->getHvacMode() == SUPLA_HVAC_MODE_OFF ||
-          ch->getHvacMode() == SUPLA_HVAC_MODE_NOT_SET) {
-        publish((topic / "action").c_str(), "off", -1, 1);
-      } else {
-        publish((topic / "action").c_str(), "idle", -1, 1);
-      }
-      if (ch->isHvacFlagWeeklySchedule()) {
-        publish((topic / "mode").c_str(), "auto", -1, 1);
-      } else {
-        switch (ch->getHvacMode()) {
-          case SUPLA_HVAC_MODE_HEAT: {
-            publish((topic / "mode").c_str(), "heat", -1, 1);
-            break;
-          }
-          case SUPLA_HVAC_MODE_COOL: {
-            publish((topic / "mode").c_str(), "cool", -1, 1);
-            break;
-          }
-          case SUPLA_HVAC_MODE_HEAT_COOL: {
-            publish((topic / "mode").c_str(), "heat_cool", -1, 1);
-            break;
-          }
-          case SUPLA_HVAC_MODE_OFF:
-          case SUPLA_HVAC_MODE_NOT_SET:
-          default: {
-            publish((topic / "mode").c_str(), "off", -1, 1);
-            break;
-          }
-        }
-      }
-      if (ch->getDefaultFunction() ==
-          SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL) {
-        publish((topic / "temperature_setpoint").c_str(), "", -1, 1);
-        int16_t setpointHeat = ch->getHvacSetpointTemperatureHeat();
-        if (setpointHeat > INT16_MIN) {
-          publishDouble((topic / "temperature_setpoint_heat").c_str(),
-                        static_cast<double>(setpointHeat) / 100.0,
-                        -1,
-                        1,
-                        2);
-        } else {
-          publish((topic / "temperature_setpoint_heat").c_str(), "", -1, 1);
-        }
-        int16_t setpointCool = ch->getHvacSetpointTemperatureCool();
-        if (setpointCool > INT16_MIN) {
-          publishDouble((topic / "temperature_setpoint_cool").c_str(),
-                        static_cast<double>(setpointCool) / 100.0,
-                        -1,
-                        1,
-                        2);
-        } else {
-          publish((topic / "temperature_setpoint_cool").c_str(), "", -1, 1);
-        }
-      } else {
-        int16_t tempreatureSetpoint = ch->getHvacSetpointTemperatureHeat();
-        if (ch->getDefaultFunction() == SUPLA_CHANNELFNC_HVAC_THERMOSTAT &&
-            ch->getHvacFlagCoolSubfunction() ==
-                HvacCoolSubfunctionFlag::CoolSubfunction) {
-          tempreatureSetpoint = ch->getHvacSetpointTemperatureCool();
-        }
-        publish((topic / "temperature_setpoint_heat").c_str(), "", -1, 1);
-        publish((topic / "temperature_setpoint_cool").c_str(), "", -1, 1);
-        publishDouble((topic / "temperature_setpoint").c_str(),
-                      static_cast<double>(tempreatureSetpoint) / 100.0,
-                      -1,
-                      1,
-                      2);
-      }
-      break;
-    }
-
-    case SUPLA_CHANNELTYPE_BINARYSENSOR: {
-      // publish binary sensor state
-      if (isOpenClosedBinarySensorFunction(ch->getDefaultFunction())) {
-        publishOpenClosed((topic).c_str(), ch->getValueBool(), -1, 1);
-      } else {
-        publishOnOff((topic).c_str(), ch->getValueBool(), -1, 1);
-      }
-      break;
-    }
     default:
       SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
           ch->getChannelType());
       break;
-  }
-}
-
-bool Mqtt::isOpenClosedBinarySensorFunction(int channelFunction) const {
-  switch (channelFunction) {
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATEWAY:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATE:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GARAGEDOOR:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_DOOR:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROLLERSHUTTER:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROOFWINDOW:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_WINDOW: {
-      return true;
-    }
-    case SUPLA_CHANNELFNC_NOLIQUIDSENSOR:
-    case SUPLA_CHANNELFNC_HOTELCARDSENSOR:
-    case SUPLA_CHANNELFNC_ALARMARMAMENTSENSOR:
-    case SUPLA_CHANNELFNC_MAILSENSOR:
-    default: {
-      return false;
-    }
   }
 }
 
@@ -764,13 +621,6 @@ void Supla::Protocol::Mqtt::subscribeChannel(int channel) {
       subscribe((topic / "set" / "color").c_str());
       break;
     }
-    case SUPLA_CHANNELTYPE_HVAC: {
-      subscribe((topic / "execute_action").c_str());
-      subscribe((topic / "set" / "temperature_setpoint").c_str());
-      subscribe((topic / "set" / "temperature_setpoint_heat").c_str());
-      subscribe((topic / "set" / "temperature_setpoint_cool").c_str());
-      break;
-    }
 
     default:
       SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
@@ -834,26 +684,151 @@ bool Supla::Protocol::Mqtt::processData(const char *topic,
     SUPLA_LOG_DEBUG("Mqtt: failed to load channel object");
     return false;
   }
+
+  TSD_SuplaChannelNewValue newValue = {};
+  element->fillSuplaChannelNewValue(&newValue);
+
   switch (ch->getChannelType()) {
     // Relay
     case SUPLA_CHANNELTYPE_RELAY: {
-      processRelayRequest(part, payload, element);
+      if (strcmp(part, "set/on") == 0) {
+        if (isPayloadOn(payload)) {
+          newValue.value[0] = 1;
+        } else {
+          newValue.value[0] = 0;
+        }
+        element->handleNewValueFromServer(&newValue);
+      } else if (strcmp(part, "execute_action") == 0) {
+        if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
+          newValue.value[0] = 1;
+          element->handleNewValueFromServer(&newValue);
+        } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
+          newValue.value[0] = 0;
+          element->handleNewValueFromServer(&newValue);
+        } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
+          newValue.value[0] = ch->getValueBool() ? 0 : 1;
+          element->handleNewValueFromServer(&newValue);
+        } else {
+          SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
+        }
+      } else {
+        SUPLA_LOG_DEBUG("Mqtt: received unsupported topic %s", part);
+      }
       break;
     }
+
     case SUPLA_CHANNELTYPE_DIMMER: {
-      processDimmerRequest(part, payload, element);
+      if (strcmp(part, "set/brightness") == 0) {
+        int brightness = stringToInt(payload);
+        if (brightness >= 0 && brightness <= 100) {
+          newValue.value[0] = brightness;
+          newValue.value[6] = RGBW_COMMAND_SET_BRIGHTNESS_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      } else if (strcmp(part, "execute_action") == 0) {
+        if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_ON_DIMMER;
+          element->handleNewValueFromServer(&newValue);
+        } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_OFF_DIMMER;
+          element->handleNewValueFromServer(&newValue);
+        } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TOGGLE_DIMMER;
+        } else {
+          SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
+          break;
+        }
+        element->handleNewValueFromServer(&newValue);
+      }
       break;
     }
     case SUPLA_CHANNELTYPE_RGBLEDCONTROLLER: {
-      processRGBWRequest(part, payload, element);
+      if (strcmp(part, "set/color_brightness") == 0) {
+        int brightness = stringToInt(payload);
+        if (brightness >= 0 && brightness <= 100) {
+          newValue.value[1] = brightness;
+          newValue.value[6] = RGBW_COMMAND_SET_COLOR_BRIGHTNESS_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      } else if (strcmp(part, "execute_action") == 0) {
+        if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_ON_RGB;
+        } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_OFF_RGB;
+        } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TOGGLE_RGB;
+        } else {
+          SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
+          break;
+        }
+        element->handleNewValueFromServer(&newValue);
+      } else if (strcmp(part, "set/color") == 0) {
+        SUPLA_LOG_DEBUG("PAYLOAD %s", payload);
+        uint8_t red = 0;
+        uint8_t green = 0;
+        uint8_t blue = 0;
+        if (stringToColor(payload, &red, &green, &blue)) {
+          newValue.value[2] = blue;
+          newValue.value[3] = green;
+          newValue.value[4] = red;
+          newValue.value[6] = RGBW_COMMAND_SET_RGB_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      }
       break;
     }
     case SUPLA_CHANNELTYPE_DIMMERANDRGBLED: {
-      processRGBWRequest(part, payload, element);
-      break;
-    }
-    case SUPLA_CHANNELTYPE_HVAC: {
-      processHVACRequest(part, payload, element);
+      if (strcmp(part, "set/color_brightness") == 0) {
+        int brightness = stringToInt(payload);
+        if (brightness >= 0 && brightness <= 100) {
+          newValue.value[1] = brightness;
+          newValue.value[6] = RGBW_COMMAND_SET_COLOR_BRIGHTNESS_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      } else if (strcmp(part, "set/brightness") == 0) {
+        int brightness = stringToInt(payload);
+        if (brightness >= 0 && brightness <= 100) {
+          newValue.value[0] = brightness;
+          newValue.value[6] = RGBW_COMMAND_SET_BRIGHTNESS_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      } else if (strcmp(part, "execute_action/rgb") == 0) {
+        if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_ON_RGB;
+        } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_OFF_RGB;
+        } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TOGGLE_RGB;
+        } else {
+          SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
+          break;
+        }
+        element->handleNewValueFromServer(&newValue);
+      } else if (strcmp(part, "execute_action/dimmer") == 0) {
+        if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_ON_DIMMER;
+        } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TURN_OFF_DIMMER;
+        } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
+          newValue.value[6] = RGBW_COMMAND_TOGGLE_DIMMER;
+        } else {
+          SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
+          break;
+        }
+        element->handleNewValueFromServer(&newValue);
+      } else if (strcmp(part, "set/color") == 0) {
+        SUPLA_LOG_DEBUG("PAYLOAD %s", payload);
+        uint8_t red = 0;
+        uint8_t green = 0;
+        uint8_t blue = 0;
+        if (stringToColor(payload, &red, &green, &blue)) {
+          newValue.value[2] = blue;
+          newValue.value[3] = green;
+          newValue.value[4] = red;
+          newValue.value[6] = RGBW_COMMAND_SET_RGB_WITHOUT_TURN_ON;
+          element->handleNewValueFromServer(&newValue);
+        }
+      }
       break;
     }
     // TODO(klew): add here more channel types
@@ -942,232 +917,11 @@ void Supla::Protocol::Mqtt::publishHADiscovery(int channel) {
       publishHADiscoveryRGB(element);
       break;
     }
-    case SUPLA_CHANNELTYPE_HVAC: {
-      publishHADiscoveryHVAC(element);
-      break;
-    }
-    case SUPLA_CHANNELTYPE_BINARYSENSOR: {
-      publishHADiscoveryBinarySensor(element);
-      break;
-    }
-
-    // TODO(klew): add more channels here
     default:
       SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
           ch->getChannelType());
       break;
   }
-}
-
-void Mqtt::publishHADiscoveryBinarySensor(Supla::Element *element) {
-  if (element == nullptr) {
-    return;
-  }
-
-  auto ch = element->getChannel();
-  if (ch == nullptr) {
-    return;
-  }
-
-  char objectId[30] = {};
-  generateObjectId(objectId, element->getChannelNumber(), 0);
-
-  auto chFunction = ch->getDefaultFunction();
-  HADeviceClass deviceClass = HADeviceClass_None;
-  switch (chFunction) {
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATEWAY:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_DOOR: {
-      deviceClass = HADeviceClass_Door;
-      break;
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATE:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GARAGEDOOR: {
-      deviceClass = HADeviceClass_Garage;
-      break;
-    }
-    case SUPLA_CHANNELFNC_NOLIQUIDSENSOR: {
-      deviceClass = HADeviceClass_Moisture;
-      break;
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROLLERSHUTTER:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROOFWINDOW:
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_WINDOW: {
-      deviceClass = HADeviceClass_Window;
-      break;
-    }
-    case SUPLA_CHANNELFNC_HOTELCARDSENSOR:
-    case SUPLA_CHANNELFNC_ALARMARMAMENTSENSOR:
-    case SUPLA_CHANNELFNC_MAILSENSOR:
-    default: {
-      deviceClass = HADeviceClass_None;
-      break;
-    }
-  }
-
-  MqttTopic topic = getHADiscoveryTopic("binary_sensor", objectId);
-
-  const char cfg[] =
-      "{"
-      "\"avty_t\":\"%s/state/connected\","
-      "\"pl_avail\":\"true\","
-      "\"pl_not_avail\":\"false\","
-      "\"~\":\"%s/channels/%i\","
-      "\"dev\":{"
-        "\"ids\":\"%s\","
-        "\"mf\":\"%s\","
-        "\"name\":\"%s\","
-        "\"sw\":\"%s\""
-      "},"
-      "\"name\":\"#%i %s\","
-      "\"uniq_id\":\"supla_%s\","
-      "\"qos\":0,"
-      "\"ret\":false,"
-      "\"opt\":false,"
-      "\"stat_t\":\"~/state\""
-      "%s"  // dev_cla
-      "%s"  // payload_on and payload_off for open/closed functions
-      "}";
-
-  char c = '\0';
-
-  size_t bufferSize = 0;
-  char *payload = {};
-
-  for (int i = 0; i < 2; i++) {
-    bufferSize =
-        snprintf(i ? payload : &c, i ? bufferSize : 1,
-            cfg,
-            prefix,
-            prefix,
-            ch->getChannelNumber(),
-            hostname,
-            getManufacturer(Supla::Channel::reg_dev.ManufacturerID),
-            Supla::Channel::reg_dev.Name,
-            Supla::Channel::reg_dev.SoftVer,
-            element->getChannelNumber(),
-            getBinarySensorChannelName(chFunction),
-            objectId,
-            getDeviceClassStr(deviceClass),
-            isOpenClosedBinarySensorFunction(chFunction) ?
-              ",\"payload_on\":\"open\",\"payload_off\":\"closed\"" : ""
-            )
-        + 1;
-
-    if (i == 0) {
-      payload = new char[bufferSize];
-      if (payload == nullptr) {
-        return;
-      }
-    }
-  }
-
-  publish(topic.c_str(), payload, -1, 1, true);
-
-  delete[] payload;
-}
-
-void Mqtt::publishHADiscoveryRelayImpulse(Supla::Element *element) {
-  if (element == nullptr) {
-    return;
-  }
-
-  auto ch = element->getChannel();
-  if (ch == nullptr) {
-    return;
-  }
-
-  char objectId[30] = {};
-  generateObjectId(objectId, element->getChannelNumber(), 0);
-
-  MqttTopic topic;
-  auto chFunction = ch->getDefaultFunction();
-  HADeviceClass deviceClass = HADeviceClass_None;
-  switch (chFunction) {
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATE: {
-      deviceClass = HADeviceClass_Gate;
-      topic = getHADiscoveryTopic("cover", objectId);
-      break;
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR: {
-      deviceClass = HADeviceClass_Garage;
-      topic = getHADiscoveryTopic("cover", objectId);
-      break;
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK: {
-      deviceClass = HADeviceClass_Door;
-      topic = getHADiscoveryTopic("cover", objectId);
-      break;
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK: {
-      deviceClass = HADeviceClass_Door;
-      topic = getHADiscoveryTopic("cover", objectId);
-      break;
-    }
-    default: {
-      SUPLA_LOG_WARNING("Mqtt: channel function %d not supported",
-          chFunction);
-      return;
-    }
-  }
-
-  const char cfg[] =
-      "{"
-      "\"avty_t\":\"%s/state/connected\","
-      "\"pl_avail\":\"true\","
-      "\"pl_not_avail\":\"false\","
-      "\"~\":\"%s/channels/%i\","
-      "\"dev\":{"
-        "\"ids\":\"%s\","
-        "\"mf\":\"%s\","
-        "\"name\":\"%s\","
-        "\"sw\":\"%s\""
-      "},"
-      "\"name\":\"#%i %s\","
-      "\"uniq_id\":\"supla_%s\","
-      "\"qos\":0,"
-      "\"ret\":false,"
-      "\"opt\":false,"
-      "\"stat_t\":\"~/state/on\","
-      "\"cmd_t\":\"~/set/on\","
-      "\"payload_open\":\"true\","
-      "\"payload_close\":null,"  // button disabled in HA
-      "\"payload_stop\":null"    // button disabled in HA
-      "%s"  // dev_cla
-      "}";
-
-  char c = '\0';
-
-  size_t bufferSize = 0;
-  char *payload = {};
-
-  for (int i = 0; i < 2; i++) {
-    bufferSize =
-        snprintf(i ? payload : &c, i ? bufferSize : 1,
-            cfg,
-            prefix,
-            prefix,
-            ch->getChannelNumber(),
-            hostname,
-            getManufacturer(Supla::Channel::reg_dev.ManufacturerID),
-            Supla::Channel::reg_dev.Name,
-            Supla::Channel::reg_dev.SoftVer,
-            element->getChannelNumber(),
-            getRelayChannelName(chFunction),
-            objectId,
-            getDeviceClassStr(deviceClass))
-        + 1;
-
-    if (i == 0) {
-      payload = new char[bufferSize];
-      if (payload == nullptr) {
-        return;
-      }
-    }
-  }
-
-  publish(topic.c_str(), payload, -1, 1, true);
-
-  delete[] payload;
 }
 
 void Supla::Protocol::Mqtt::publishHADiscoveryRelay(Supla::Element *element) {
@@ -1180,29 +934,16 @@ void Supla::Protocol::Mqtt::publishHADiscoveryRelay(Supla::Element *element) {
     return;
   }
 
+  bool lightType = true;
+
+  if (ch->getDefaultFunction() == SUPLA_CHANNELFNC_POWERSWITCH) {
+    lightType = false;
+  }
+
   char objectId[30] = {};
   generateObjectId(objectId, element->getChannelNumber(), 0);
 
-  MqttTopic topic;
-  auto chFunction = ch->getDefaultFunction();
-  HADeviceClass deviceClass = HADeviceClass_None;
-  switch (chFunction) {
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATE:
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR:
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK:
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK: {
-      publishHADiscoveryRelayImpulse(element);
-      return;
-    }
-    case SUPLA_CHANNELFNC_POWERSWITCH: {
-      topic = getHADiscoveryTopic("switch", objectId);
-      break;
-    }
-    default: {
-      topic = getHADiscoveryTopic("light", objectId);
-      break;
-    }
-  }
+  auto topic = getHADiscoveryTopic(lightType ? "light" : "switch", objectId);
 
   const char cfg[] =
       "{"
@@ -1216,7 +957,7 @@ void Supla::Protocol::Mqtt::publishHADiscoveryRelay(Supla::Element *element) {
         "\"name\":\"%s\","
         "\"sw\":\"%s\""
       "},"
-      "\"name\":\"#%i %s\","
+      "\"name\":\"#%i %s switch\","
       "\"uniq_id\":\"supla_%s\","
       "\"qos\":0,"
       "\"ret\":false,"
@@ -1225,7 +966,6 @@ void Supla::Protocol::Mqtt::publishHADiscoveryRelay(Supla::Element *element) {
       "\"cmd_t\":\"~/set/on\","
       "\"pl_on\":\"true\","
       "\"pl_off\":\"false\""
-      "%s"  // dev_cla
       "}";
 
   char c = '\0';
@@ -1245,9 +985,8 @@ void Supla::Protocol::Mqtt::publishHADiscoveryRelay(Supla::Element *element) {
             Supla::Channel::reg_dev.Name,
             Supla::Channel::reg_dev.SoftVer,
             element->getChannelNumber(),
-            getRelayChannelName(chFunction),
-            objectId,
-            getDeviceClassStr(deviceClass))
+            lightType ? "Light" : "Power",
+            objectId)
         + 1;
 
     if (i == 0) {
@@ -1943,19 +1682,6 @@ const char *Supla::Protocol::Mqtt::getDeviceClassStr(
       return ",\"dev_cla\":\"power\"";
     case HADeviceClass_ReactivePower:
       return ",\"dev_cla\":\"reactive_power\"";
-    case HADeviceClass_Outlet:
-      return ",\"dev_cla\":\"outlet\"";
-    case HADeviceClass_Gate:
-      return ",\"dev_cla\":\"gate\"";
-    case HADeviceClass_Door:
-      return ",\"dev_cla\":\"door\"";
-    case HADeviceClass_Garage:
-      return ",\"dev_cla\":\"garage\"";
-    case HADeviceClass_Moisture:
-      return ",\"dev_cla\":\"moisture\"";
-    case HADeviceClass_Window:
-      return ",\"dev_cla\":\"window\"";
-
     case HADeviceClass_None:
     default:
       return "";
@@ -2123,451 +1849,4 @@ void Mqtt::publishHADiscoveryDimmer(Supla::Element *element) {
   publish(topic.c_str(), payload, -1, 1, true);
 
   delete[] payload;
-}
-
-void Mqtt::processRelayRequest(const char *part,
-                               const char *payload,
-                               Supla::Element *element) {
-  TSD_SuplaChannelNewValue newValue = {};
-  element->fillSuplaChannelNewValue(&newValue);
-
-  if (strcmp(part, "set/on") == 0) {
-    if (isPayloadOn(payload)) {
-      newValue.value[0] = 1;
-    } else {
-      newValue.value[0] = 0;
-    }
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(part, "execute_action") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      newValue.value[0] = 1;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
-      newValue.value[0] = 0;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      newValue.value[0] = element->getChannel()->getValueBool() ? 0 : 1;
-      element->handleNewValueFromServer(&newValue);
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-    }
-  } else {
-    SUPLA_LOG_DEBUG("Mqtt: received unsupported topic %s", part);
-  }
-}
-
-void Mqtt::processRGBWRequest(const char *part,
-                              const char *payload,
-                              Supla::Element *element) {
-  TSD_SuplaChannelNewValue newValue = {};
-  element->fillSuplaChannelNewValue(&newValue);
-
-  if (strcmp(part, "set/color_brightness") == 0) {
-    int brightness = stringToInt(payload);
-    if (brightness >= 0 && brightness <= 100) {
-      newValue.value[1] = brightness;
-      newValue.value[6] = RGBW_COMMAND_SET_COLOR_BRIGHTNESS_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  } else if (strcmp(part, "set/brightness") == 0) {
-    int brightness = stringToInt(payload);
-    if (brightness >= 0 && brightness <= 100) {
-      newValue.value[0] = brightness;
-      newValue.value[6] = RGBW_COMMAND_SET_BRIGHTNESS_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  } else if (strcmp(part, "execute_action/rgb") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_ON_RGB;
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_OFF_RGB;
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TOGGLE_RGB;
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-      return;
-    }
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(part, "execute_action/dimmer") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_ON_DIMMER;
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_OFF_DIMMER;
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TOGGLE_DIMMER;
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-      return;
-    }
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(part, "set/color") == 0) {
-    SUPLA_LOG_DEBUG("PAYLOAD %s", payload);
-    uint8_t red = 0;
-    uint8_t green = 0;
-    uint8_t blue = 0;
-    if (stringToColor(payload, &red, &green, &blue)) {
-      newValue.value[2] = blue;
-      newValue.value[3] = green;
-      newValue.value[4] = red;
-      newValue.value[6] = RGBW_COMMAND_SET_RGB_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  }
-}
-
-void Mqtt::processRGBRequest(const char *part,
-                             const char *payload,
-                             Supla::Element *element) {
-  TSD_SuplaChannelNewValue newValue = {};
-  element->fillSuplaChannelNewValue(&newValue);
-
-  if (strcmp(part, "set/color_brightness") == 0) {
-    int brightness = stringToInt(payload);
-    if (brightness >= 0 && brightness <= 100) {
-      newValue.value[1] = brightness;
-      newValue.value[6] = RGBW_COMMAND_SET_COLOR_BRIGHTNESS_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  } else if (strcmp(part, "execute_action") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_ON_RGB;
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_OFF_RGB;
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TOGGLE_RGB;
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-      return;
-    }
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(part, "set/color") == 0) {
-    SUPLA_LOG_DEBUG("PAYLOAD %s", payload);
-    uint8_t red = 0;
-    uint8_t green = 0;
-    uint8_t blue = 0;
-    if (stringToColor(payload, &red, &green, &blue)) {
-      newValue.value[2] = blue;
-      newValue.value[3] = green;
-      newValue.value[4] = red;
-      newValue.value[6] = RGBW_COMMAND_SET_RGB_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  }
-}
-
-void Mqtt::processDimmerRequest(const char *part,
-                                const char *payload,
-                                Supla::Element *element) {
-  TSD_SuplaChannelNewValue newValue = {};
-  element->fillSuplaChannelNewValue(&newValue);
-
-  if (strcmp(part, "set/brightness") == 0) {
-    int brightness = stringToInt(payload);
-    if (brightness >= 0 && brightness <= 100) {
-      newValue.value[0] = brightness;
-      newValue.value[6] = RGBW_COMMAND_SET_BRIGHTNESS_WITHOUT_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    }
-  } else if (strcmp(part, "execute_action") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_ON_DIMMER;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TURN_OFF_DIMMER;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      newValue.value[6] = RGBW_COMMAND_TOGGLE_DIMMER;
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-      return;
-    }
-    element->handleNewValueFromServer(&newValue);
-  }
-}
-
-void Mqtt::publishHADiscoveryHVAC(Supla::Element *element) {
-  if (element == nullptr) {
-    return;
-  }
-
-  auto hvac = reinterpret_cast<Supla::Control::HvacBase *>(element);
-
-  auto ch = element->getChannel();
-  if (ch == nullptr) {
-    return;
-  }
-
-  char objectId[30] = {};
-  generateObjectId(objectId, element->getChannelNumber(), 0);
-
-  // generate topics for related thermometer and hygrometer channels
-  char temperatureTopic[100] = "None";
-  char humidityTopic[100] = "None";
-  auto tempChannelNo = hvac->getMainThermometerChannelNo();
-  if (tempChannelNo != element->getChannelNumber()) {
-    snprintf(temperatureTopic,
-             sizeof(temperatureTopic),
-             "%s/channels/%i/state/temperature",
-             prefix, tempChannelNo);
-
-    auto thermometerEl =
-        Supla::Element::getElementByChannelNumber(tempChannelNo);
-    if (thermometerEl != nullptr &&
-        thermometerEl->getChannel()->getChannelType() ==
-            SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
-      snprintf(humidityTopic,
-          sizeof(humidityTopic),
-          "%s/channels/%i/state/humidity",
-          prefix, tempChannelNo);
-    }
-  }
-
-  auto topic = getHADiscoveryTopic("climate", objectId);
-  int16_t tempMin = hvac->getTemperatureRoomMin();
-  int16_t tempMax = hvac->getTemperatureRoomMax();
-
-  const char cfg[] =
-      "{"
-      "\"avty_t\":\"%s/state/connected\","
-      "\"pl_avail\":\"true\","
-      "\"pl_not_avail\":\"false\","
-      "\"~\":\"%s/channels/%i\","
-      "\"dev\":{"
-        "\"ids\":\"%s\","
-        "\"mf\":\"%s\","
-        "\"name\":\"%s\","
-        "\"sw\":\"%s\""
-      "},"
-      "\"name\":\"#%i Thermostat\","
-      "\"uniq_id\":\"supla_%s\","
-      "\"qos\":0,"
-      "\"ret\":false,"
-      "\"opt\":false,"
-      "\"action_topic\":\"~/state/action\","   // off, heating, cooling, drying,
-                                               // idle, fan.
-      "\"current_temperature_topic\":\"%s\","  // link to temperature sensor
-      "\"current_humidity_topic\":\"%s\","  // link to humidity sensor
-      "\"max_temp\":\"%.2f\","
-      "\"min_temp\":\"%.2f\","
-      "\"modes\":["
-        "\"off\","
-        "\"auto\","  // auto == weekly schedule
-        "%s"  // remaining supported modes (depends on function)
-        "],"
-      "\"mode_stat_t\":\"~/state/mode\","
-      "\"mode_command_topic\":\"~/execute_action\","
-      "\"power_command_topic\":\"~/execute_action\","
-      "\"payload_off\":\"turn_off\","
-      "\"payload_on\":\"turn_on\","
-      "\"temperature_unit\":\"C\","
-      "\"temp_step\":\"0.1\","
-      "%s"  // tempearture setpoints
-      "}";
-
-  char c = '\0';
-
-  size_t bufferSize = 0;
-  char *payload = {};
-
-  for (int i = 0; i < 2; i++) {
-    bufferSize =
-        snprintf(
-            i ? payload : &c,
-            i ? bufferSize : 1,
-            cfg,
-            prefix,
-            prefix,
-            ch->getChannelNumber(),
-            hostname,
-            getManufacturer(Supla::Channel::reg_dev.ManufacturerID),
-            Supla::Channel::reg_dev.Name,
-            Supla::Channel::reg_dev.SoftVer,
-            element->getChannelNumber(),
-            objectId,
-            temperatureTopic,
-            humidityTopic,
-            static_cast<double>(tempMax) / 100.0,
-            static_cast<double>(tempMin) / 100.0,
-            (hvac->getChannelFunction() ==
-                     SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL
-                 ? "\"heat\",\"cool\",\"heat_cool\""
-                 : (hvac->isCoolingSubfunction() ? "\"cool\"" : "\"heat\"")),
-            (hvac->getChannelFunction() ==
-                     SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL
-                 ? "\"temperature_high_command_topic\":\""
-                   "~/set/temperature_setpoint_cool/\","
-                   "\"temperature_high_state_topic\":\""
-                   "~/state/temperature_setpoint_cool/\","
-                   "\"temperature_low_command_topic\":\""
-                   "~/set/temperature_setpoint_heat/\","
-                   "\"temperature_low_state_topic\":\""
-                   "~/state/temperature_setpoint_heat/\""
-                 : "\"temperature_command_topic\":\""
-                   "~/set/temperature_setpoint\","
-                   "\"temperature_state_topic\":\""
-                   "~/state/temperature_setpoint\"")) +
-        1;
-
-    if (i == 0) {
-      payload = new char[bufferSize];
-      if (payload == nullptr) {
-        return;
-      }
-    }
-  }
-
-  publish(topic.c_str(), payload, -1, 1, true);
-
-  delete[] payload;
-}
-
-void Mqtt::processHVACRequest(const char *topic,
-                              const char *payload,
-                              Supla::Element *element) {
-  TSD_SuplaChannelNewValue newValue = {};
-  element->fillSuplaChannelNewValue(&newValue);
-  THVACValue *hvacValue = reinterpret_cast<THVACValue *>(newValue.value);
-
-  if (strcmp(topic, "set/temperature_setpoint_heat") == 0) {
-    int32_t value = floatStringToInt(payload, 2);
-    if (value < INT16_MIN || value > INT16_MAX) {
-      return;
-    }
-    hvacValue->SetpointTemperatureHeat = value;
-    hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(topic, "set/temperature_setpoint_cool") == 0) {
-    int32_t value = floatStringToInt(payload, 2);
-    if (value < INT16_MIN || value > INT16_MAX) {
-      return;
-    }
-    hvacValue->SetpointTemperatureCool = value;
-    hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(topic, "set/temperature_setpoint") == 0) {
-    int32_t value = floatStringToInt(payload, 2);
-    if (value < INT16_MIN || value > INT16_MAX) {
-      return;
-    }
-    if (element && element->getChannel() &&
-        element->getChannel()->getHvacFlagCoolSubfunction() ==
-            HvacCoolSubfunctionFlag::CoolSubfunction) {
-      hvacValue->SetpointTemperatureCool = value;
-      hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_COOL_SET;
-      element->handleNewValueFromServer(&newValue);
-      return;
-    }
-    hvacValue->SetpointTemperatureHeat = value;
-    hvacValue->Flags |= SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET;
-    element->handleNewValueFromServer(&newValue);
-  } else if (strcmp(topic, "execute_action") == 0) {
-    if (strncmpInsensitive(payload, "turn_on", 8) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_CMD_TURN_ON;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "turn_off", 9) == 0 ||
-        strncmpInsensitive(payload, "off", 4) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_OFF;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "toggle", 7) == 0) {
-      if (element && element->getChannel() &&
-          element->getChannel()->getHvacIsOn() != 0) {
-        hvacValue->Mode = SUPLA_HVAC_MODE_OFF;
-      } else {
-        hvacValue->Mode = SUPLA_HVAC_MODE_CMD_TURN_ON;
-      }
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "auto", 5) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_CMD_WEEKLY_SCHEDULE;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "heat", 5) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_HEAT;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "cool", 5) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_COOL;
-      element->handleNewValueFromServer(&newValue);
-    } else if (strncmpInsensitive(payload, "heat_cool", 10) == 0) {
-      hvacValue->Mode = SUPLA_HVAC_MODE_HEAT_COOL;
-      element->handleNewValueFromServer(&newValue);
-    } else {
-      SUPLA_LOG_DEBUG("Mqtt: unsupported action %s", payload);
-    }
-  } else {
-    SUPLA_LOG_DEBUG("Mqtt: received unsupported topic %s", topic);
-  }
-}
-
-void Mqtt::notifyConfigChange(int channelNumber) {
-  if (channelNumber >= 0 && channelNumber < 255) {
-    // set bit on configChangedBit[8]:
-    configChangedBit[channelNumber / 8] |= (1 << (channelNumber % 8));
-  }
-}
-
-const char *Mqtt::getRelayChannelName(int channelFunction) const {
-  switch (channelFunction) {
-    case SUPLA_CHANNELFNC_POWERSWITCH: {
-      return "Power switch";
-    }
-    case SUPLA_CHANNELFNC_LIGHTSWITCH: {
-      return "Light switch";
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATE: {
-      return "Gate";
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK: {
-      return "Door lock";
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR: {
-      return "Garage door";
-    }
-    case SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK: {
-      return "Gateway lock";
-    }
-    default: {
-      return "Relay";
-    }
-  }
-}
-
-const char *Mqtt::getBinarySensorChannelName(int channelFunction) const {
-  switch (channelFunction) {
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATEWAY: {
-      return "Gateway sensor";
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_DOOR: {
-      return "Door sensor";
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATE: {
-      return "Gate sensor";
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_GARAGEDOOR: {
-      return "Garage door sensor";
-    }
-    case SUPLA_CHANNELFNC_NOLIQUIDSENSOR: {
-      return "Liquid sensor";
-      break;
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROLLERSHUTTER: {
-      return "Roller shutter sensor";
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROOFWINDOW: {
-      return "Roof window sensor";
-    }
-    case SUPLA_CHANNELFNC_OPENINGSENSOR_WINDOW: {
-      return "Window sensor";
-      break;
-    }
-    case SUPLA_CHANNELFNC_HOTELCARDSENSOR: {
-      return "Hotel card sensor";
-    }
-    case SUPLA_CHANNELFNC_ALARMARMAMENTSENSOR: {
-      return "Alarm armament sensor";
-    }
-    case SUPLA_CHANNELFNC_MAILSENSOR: {
-      return "Mail sensor";
-    }
-    default: {
-      return "Binary sensor";
-    }
-  }
 }

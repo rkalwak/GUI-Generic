@@ -53,15 +53,10 @@ void Button::onInit() {
 }
 
 void Button::onTimer() {
-  if (disabled) {
-    return;
-  }
-
   uint32_t timeDelta = millis() - lastStateChangeMs;
   bool stateChanged = false;
   int stateResult = state.update();
   if (stateResult == TO_PRESSED) {
-    SUPLA_LOG_VERBOSE("Button[%d] pressed", getButtonNumber());
     stateChanged = true;
     runAction(ON_PRESS);
     runAction(ON_CHANGE);
@@ -70,7 +65,6 @@ void Button::onTimer() {
       runAction(CONDITIONAL_ON_CHANGE);
     }
   } else if (stateResult == TO_RELEASED) {
-    SUPLA_LOG_VERBOSE("Button[%d] released", getButtonNumber());
     stateChanged = true;
     runAction(ON_RELEASE);
     runAction(ON_CHANGE);
@@ -95,7 +89,7 @@ void Button::onTimer() {
     if (isMonostable() && stateResult == PRESSED) {
       if (clickCounter <= 1 && holdTimeMs > 0 &&
           timeDelta > (holdTimeMs + holdSend * repeatOnHoldMs) &&
-          (repeatOnHoldEnabled || holdSend == 0)) {
+          (!repeatOnHoldEnabled ? !holdSend : true)) {
         runAction(ON_HOLD);
         ++holdSend;
       }
@@ -191,22 +185,18 @@ void Button::onTimer() {
   }
 }
 
-void Button::addAction(uint16_t action, ActionHandler *client, uint16_t event,
+void Button::addAction(int action, ActionHandler *client, int event,
       bool alwaysEnabled) {
   SimpleButton::addAction(action, client, event, alwaysEnabled);
   evaluateMaxMulticlickValue();
 }
 
-void Button::disableAction(int32_t action,
-                           ActionHandler *client,
-                           int32_t event) {
+void Button::disableAction(int action, ActionHandler *client, int event) {
   SimpleButton::disableAction(action, client, event);
   evaluateMaxMulticlickValue();
 }
 
-void Button::enableAction(int32_t action,
-                          ActionHandler *client,
-                          int32_t event) {
+void Button::enableAction(int action, ActionHandler *client, int event) {
   SimpleButton::enableAction(action, client, event);
   evaluateMaxMulticlickValue();
 }
@@ -279,7 +269,7 @@ void Button::evaluateMaxMulticlickValue() {
   }
 }
 
-void Button::addAction(uint16_t action, ActionHandler &client, uint16_t event,
+void Button::addAction(int action, ActionHandler &client, int event,
       bool alwaysEnabled) {
   Button::addAction(action, &client, event, alwaysEnabled);
 }
@@ -292,7 +282,8 @@ void Button::setHoldTime(unsigned int timeMs) {
   SUPLA_LOG_DEBUG("Button[%d]::setHoldTime: %u", getButtonNumber(), holdTimeMs);
 }
 
-void Button::setMulticlickTime(unsigned int timeMs, bool bistableButton) {
+void Button::setMulticlickTime(unsigned int timeMs,
+                                               bool bistableButton) {
   multiclickTimeMs = timeMs;
   if (bistableButton) {
     buttonType = ButtonType::BISTABLE;
@@ -306,7 +297,7 @@ void Button::setMulticlickTime(unsigned int timeMs, bool bistableButton) {
 
 void Button::repeatOnHoldEvery(unsigned int timeMs) {
   repeatOnHoldMs = timeMs;
-  repeatOnHoldEnabled = (timeMs > 0);
+  repeatOnHoldEnabled = true;
 }
 
 bool Button::isBistable() const {
@@ -321,7 +312,7 @@ bool Button::isMotionSensor() const {
 }
 
 void Button::onLoadConfig(SuplaDeviceClass *sdc) {
-  if (onLoadConfigType == OnLoadConfigType::DONT_LOAD_CONFIG) {
+  if (!useOnLoadConfig) {
     SUPLA_LOG_DEBUG("Button[%d]::onLoadConfig: skip", getButtonNumber());
     return;
   }
@@ -353,8 +344,8 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
 
     uint32_t multiclickTimeMsValue = 0;
     if (cfg->getUInt32(Supla::Html::BtnMulticlickTag, &multiclickTimeMsValue)) {
-      if (multiclickTimeMsValue < 200) {
-        multiclickTimeMsValue = 200;
+      if (multiclickTimeMsValue < 300) {
+        multiclickTimeMsValue = 300;
       }
       if (multiclickTimeMsValue > 10000) {
         multiclickTimeMsValue = 10000;
@@ -367,8 +358,8 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
 
     uint32_t holdTimeMsValue = CFG_MODE_ON_HOLD_TIME;
     if (cfg->getUInt32(Supla::Html::BtnHoldTag, &holdTimeMsValue)) {
-      if (holdTimeMsValue < 200) {
-        holdTimeMsValue = 200;
+      if (holdTimeMsValue < 300) {
+        holdTimeMsValue = 300;
       }
       if (holdTimeMsValue > 10000) {
         holdTimeMsValue = 10000;
@@ -379,26 +370,24 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
       saveConfig = true;
     }
 
-    if (onLoadConfigType == OnLoadConfigType::LOAD_FULL_CONFIG) {
-      int32_t useInputAsConfigButtonValue = 0;
-      Supla::Config::generateKey(
-          key, getButtonNumber(), Supla::Html::BtnConfigTag);
-      if (!cfg->getInt32(key, &useInputAsConfigButtonValue)) {
-        cfg->getInt32(Supla::Html::BtnConfigTag, &useInputAsConfigButtonValue);
-      }
+    int32_t useInputAsConfigButtonValue = 0;
+    Supla::Config::generateKey(
+        key, getButtonNumber(), Supla::Html::BtnConfigTag);
+    if (!cfg->getInt32(key, &useInputAsConfigButtonValue)) {
+      cfg->getInt32(Supla::Html::BtnConfigTag, &useInputAsConfigButtonValue);
+    }
 
-      if (useInputAsConfigButtonValue == 0) {
-        // ON is "0", which is default value
-        SUPLA_LOG_DEBUG("Button[%d] enabling IN as config button",
-            getButtonNumber());
-        configButton = true;
-        addAction(Supla::ENTER_CONFIG_MODE_OR_RESET_TO_FACTORY,
-                  sdc,
-                  Supla::ON_CLICK_10,
-                  true);
-        addAction(
-            Supla::LEAVE_CONFIG_MODE_AND_RESET, sdc, Supla::ON_CLICK_1, true);
-      }
+    if (useInputAsConfigButtonValue == 0) {
+      // ON is "0", which is default value
+      SUPLA_LOG_DEBUG("Button[%d] enabling IN as config button",
+                      getButtonNumber());
+      configButton = true;
+      addAction(Supla::ENTER_CONFIG_MODE_OR_RESET_TO_FACTORY,
+                sdc,
+                Supla::ON_CLICK_10,
+                true);
+      addAction(
+          Supla::LEAVE_CONFIG_MODE_AND_RESET, sdc, Supla::ON_CLICK_1, true);
     }
 
     if (saveConfig) {
@@ -410,7 +399,7 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
 void Button::configureAsConfigButton(SuplaDeviceClass *sdc) {
   SUPLA_LOG_DEBUG("Button[%d]::configureAsConfigButton", getButtonNumber());
   configButton = true;
-  dontUseOnLoadConfig();
+  useOnLoadConfig = false;
   setHoldTime(CFG_MODE_ON_HOLD_TIME);
   setMulticlickTime(300, isBistable());
   addAction(Supla::ENTER_CONFIG_MODE_OR_RESET_TO_FACTORY,
@@ -443,53 +432,13 @@ void Button::setButtonNumber(int8_t btnNumber) {
 }
 
 void Button::dontUseOnLoadConfig() {
-  onLoadConfigType = OnLoadConfigType::DONT_LOAD_CONFIG;
+  useOnLoadConfig = false;
 }
 
-void Button::setOnLoadConfigType(OnLoadConfigType type) {
-  onLoadConfigType = type;
-}
-
-void Button::disableRepeatOnHold(uint32_t threshold) {
-  if (threshold == 0 || repeatOnHoldMs < threshold) {
-    repeatOnHoldEnabled = false;
-  }
+void Button::disableRepeatOnHold() {
+  repeatOnHoldEnabled = false;
 }
 
 void Button::enableRepeatOnHold() {
-  repeatOnHoldEnabled = (repeatOnHoldMs > 0);
-}
-
-void Button::disableButton() {
-  SUPLA_LOG_DEBUG("Button[%d]: disabling button", getButtonNumber());
-  disabled = true;
-}
-
-void Button::enableButton() {
-  SUPLA_LOG_DEBUG("Button[%d]: enabling button", getButtonNumber());
-  disabled = false;
-}
-
-void Button::handleAction(int event, int action) {
-  (void)(event);
-  switch (action) {
-    case Supla::TURN_ON:
-    case Supla::ENABLE: {
-      enableButton();
-      break;
-    }
-    case Supla::TURN_OFF:
-    case Supla::DISABLE: {
-      disableButton();
-      break;
-    }
-    case Supla::TOGGLE: {
-      if (disabled) {
-        enableButton();
-      } else {
-        disableButton();
-      }
-      break;
-    }
-  }
+  repeatOnHoldEnabled = true;
 }

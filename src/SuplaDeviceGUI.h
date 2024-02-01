@@ -54,7 +54,6 @@
 #include "SuplaWebPageDownload.h"
 #include "SuplaWebPageUpload.h"
 #include "SuplaWebPageTools.h"
-#include "SuplaWebCorrection.h"
 
 #include "Markup.h"
 #include "SuplaConditions.h"

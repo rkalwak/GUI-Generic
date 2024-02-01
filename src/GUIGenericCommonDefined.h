@@ -27,7 +27,7 @@
 #define GUI_SENSOR_I2C_EXPENDER
 #endif
 
-#ifndef DEBUG_MODE
+#ifndef SUPLA_DEBUG_MODE
 #define supla_lib_config_h_  // silences unnecessary debug messages "should be disabled by default"
 #endif
 

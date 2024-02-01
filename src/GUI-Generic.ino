@@ -897,7 +897,7 @@ void setup() {
   delete Supla::GUI::actionTrigger;
 #endif
 
-#ifdef DEBUG_MODE
+#ifdef SUPLA_DEBUG_MODE
   new Supla::Sensor::EspFreeHeap();
 #endif
 

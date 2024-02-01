@@ -146,7 +146,7 @@ void SuplaWebServer::sendHeaderEnd() {
     httpServer->client().stop();
     chunkedSendHeader = false;
 
-#ifdef DEBUG_MODE
+#ifdef SUPLA_DEBUG_MODE
     checkRAM();
 #endif
   }

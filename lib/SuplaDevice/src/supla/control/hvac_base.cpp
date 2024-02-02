@@ -180,7 +180,7 @@ bool HvacBase::iterateConnected() {
     return result;
   }
 
-  if (configFinishedReceived) {
+  if (configFinishedReceived && serverChannelFunctionValid) {
     if (channelConfigChangedOffline == 1) {
       for (auto proto = Supla::Protocol::ProtocolLayer::first();
            proto != nullptr;
@@ -537,6 +537,8 @@ void HvacBase::iterateAlways() {
     if (!processWeeklySchedule()) {
       return;
     }
+  } else {
+    channel.setHvacFlagWeeklyScheduleTemporalOverride(false);
   }
 
   if (!checkThermometersStatusForCurrentMode(t1, t2)) {
@@ -546,6 +548,7 @@ void HvacBase::iterateAlways() {
         "HVAC[%d]: invalid temperature readout - check if your thermometer is "
         "correctly connected and configured", getChannelNumber());
     channel.setHvacFlagThermometerError(true);
+    channel.setHvacFlagForcedOffBySensor(false);
     return;
   }
   channel.setHvacFlagThermometerError(false);
@@ -683,6 +686,17 @@ bool HvacBase::isDrySupported() const {
 uint8_t HvacBase::handleChannelConfig(TSD_ChannelConfig *newConfig,
                                       bool local) {
   SUPLA_LOG_DEBUG("HVAC: processing channel config");
+  if (newConfig == nullptr) {
+    return SUPLA_CONFIG_RESULT_DATA_ERROR;
+  }
+
+  auto channelFunction = newConfig->Func;
+  if (!isFunctionSupported(channelFunction)) {
+    serverChannelFunctionValid = false;
+    return SUPLA_CONFIG_RESULT_FUNCTION_NOT_SUPPORTED;
+  }
+  serverChannelFunctionValid = true;
+
   if (channelConfigChangedOffline && !local) {
     SUPLA_LOG_INFO(
         "Ignoring config for channel %d (local config changed offline)",
@@ -691,17 +705,8 @@ uint8_t HvacBase::handleChannelConfig(TSD_ChannelConfig *newConfig,
     return SUPLA_CONFIG_RESULT_TRUE;
   }
 
-  if (newConfig == nullptr) {
-    return SUPLA_CONFIG_RESULT_DATA_ERROR;
-  }
-
   if (newConfig->ConfigType != SUPLA_CONFIG_TYPE_DEFAULT) {
     return SUPLA_CONFIG_RESULT_TYPE_NOT_SUPPORTED;
-  }
-
-  auto channelFunction = newConfig->Func;
-  if (!isFunctionSupported(channelFunction)) {
-    return SUPLA_CONFIG_RESULT_FUNCTION_NOT_SUPPORTED;
   }
 
   bool isFunctionChanged =
@@ -2094,12 +2099,16 @@ void HvacBase::saveConfig() {
 
     generateKey(key, "cfg_chng");
     if (channelConfigChangedOffline) {
-     cfg->setUInt8(key, 1);
+      cfg->setUInt8(key, 1);
     } else {
       cfg->setUInt8(key, 0);
     }
 
     cfg->saveWithDelay(5000);
+  }
+  for (auto proto = Supla::Protocol::ProtocolLayer::first();
+      proto != nullptr; proto = proto->next()) {
+    proto->notifyConfigChange(getChannelNumber());
   }
 }
 
@@ -2749,7 +2758,7 @@ void HvacBase::setTargetMode(int mode, bool keepScheduleOn) {
         lastWorkingMode.Mode = SUPLA_HVAC_MODE_CMD_WEEKLY_SCHEDULE;
       }
       channel.setHvacMode(mode);
-      setOutput(0, true);
+      setOutput(0, false);
     } else if (mode == SUPLA_HVAC_MODE_CMD_TURN_ON) {
       if (channel.getHvacMode() == SUPLA_HVAC_MODE_OFF ||
           !isModeSupported(channel.getHvacMode())) {
@@ -2788,7 +2797,7 @@ bool HvacBase::checkAntifreezeProtection(_supla_int16_t t) {
 
     auto outputValue = evaluateHeatOutputValue(t, tFreeze);
     if (outputValue > 0) {
-      setOutput(outputValue, true);
+      setOutput(outputValue, false);
       return true;
     }
   }
@@ -2807,38 +2816,56 @@ bool HvacBase::checkOverheatProtection(_supla_int16_t t) {
 
     auto outputValue = evaluateCoolOutputValue(t, tOverheat);
     if (outputValue < 0) {
-      setOutput(outputValue, true);
+      setOutput(outputValue, false);
       return true;
     }
   }
   return false;
 }
 
-bool HvacBase::checkAuxProtection(_supla_int16_t t) {
+bool HvacBase::isAuxProtectionEnabled() const {
   if (!isAuxMinMaxSetpointEnabled()) {
     return false;
   }
-
   auto type = getAuxThermometerType();
+  if (type == SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET ||
+      type == SUPLA_HVAC_AUX_THERMOMETER_TYPE_DISABLED) {
+    return false;
+  }
+  auto tAuxMin = getTemperatureAuxMinSetpoint();
+  auto tAuxMax = getTemperatureAuxMaxSetpoint();
+  if (!isSensorTempValid(tAuxMin) && !isSensorTempValid(tAuxMax)) {
+    return false;
+  }
 
-  if (type != SUPLA_HVAC_AUX_THERMOMETER_TYPE_NOT_SET &&
-      type != SUPLA_HVAC_AUX_THERMOMETER_TYPE_DISABLED) {
-    auto tAuxMin = getTemperatureAuxMinSetpoint();
-    auto tAuxMax = getTemperatureAuxMaxSetpoint();
-    if (isSensorTempValid(tAuxMin)) {
-      auto outputValue = evaluateHeatOutputValue(t, tAuxMin);
-      if (outputValue > 0) {
-        setOutput(outputValue, true);
-        return true;
-      }
+  return true;
+}
+
+bool HvacBase::checkAuxProtection(_supla_int16_t t) {
+  if (!isAuxProtectionEnabled()) {
+    return false;
+  }
+
+  if (channel.getHvacMode() == SUPLA_HVAC_MODE_OFF ||
+      channel.getHvacMode() == SUPLA_HVAC_MODE_NOT_SET) {
+    return false;
+  }
+
+  auto tAuxMin = getTemperatureAuxMinSetpoint();
+  auto tAuxMax = getTemperatureAuxMaxSetpoint();
+  if (isSensorTempValid(tAuxMin)) {
+    auto outputValue = evaluateHeatOutputValue(t, tAuxMin);
+    if (outputValue > 0) {
+      setOutput(outputValue, false);
+      return true;
     }
+  }
 
-    if (isSensorTempValid(tAuxMax)) {
-      auto outputValue = evaluateCoolOutputValue(t, tAuxMax);
-      if (outputValue < 0) {
-        setOutput(outputValue, true);
-        return true;
-      }
+  if (isSensorTempValid(tAuxMax)) {
+    auto outputValue = evaluateCoolOutputValue(t, tAuxMax);
+    if (outputValue < 0) {
+      setOutput(outputValue, false);
+      return true;
     }
   }
   return false;
@@ -3252,6 +3279,10 @@ bool HvacBase::checkThermometersStatusForCurrentMode(
     if (!isSensorTempValid(t1) || !isSensorTempValid(t2)) {
       return false;
     }
+  }
+
+  if (isAuxProtectionEnabled() && !isSensorTempValid(t2)) {
+    return false;
   }
 
   return true;
@@ -4004,4 +4035,9 @@ void HvacBase::updateTimerValue() {
         senderId,
         true);
   }
+}
+
+void HvacBase::clearWaitingFlags() {
+  lastConfigChangeTimestampMs = 0;
+  lastIterateTimestampMs = 0;
 }

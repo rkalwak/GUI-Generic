@@ -36,8 +36,8 @@ enum TestStage {
 };
 
 enum TestActionType {
-  TestAction_CfgButtonOnPress = 0,
-  TestAction_DeviceStatusChange = 1
+  TestAction_CfgButtonOnPress = 11000,
+  TestAction_DeviceStatusChange = 11101
 };
 
 namespace Device {
@@ -51,7 +51,7 @@ class FactoryTest : public Supla::ActionHandler, public Supla::Element {
   void iterateAlways() override;
   void handleAction(int event, int action) override;
 
-  virtual int16_t getManufacurerId();
+  virtual int16_t getManufacturerId();
   virtual void waitForConfigButtonPress();
   virtual bool checkTestStep();
 
@@ -65,6 +65,9 @@ class FactoryTest : public Supla::ActionHandler, public Supla::Element {
   uint32_t initTimestamp = 0;
   Supla::TestStage testStage = Supla::TestStage_None;
   int testStep = 0;
+  // fill fail reason for devices that can show it during the test
+  // Use values >= 100 for device specific failures
+  int failReason = 0;
 };
 
 }  // namespace Device

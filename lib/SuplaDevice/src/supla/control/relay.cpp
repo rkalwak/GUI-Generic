@@ -58,7 +58,7 @@ void Relay::onRegistered(
   Supla::Element::onRegistered(suplaSrpc);
   channel.requestChannelConfig();
 
-  timerUpdateTimestamp = 0;
+  timerUpdateTimestamp = 1;
 }
 
 uint8_t Relay::handleChannelConfig(TSD_ChannelConfig *result,
@@ -118,6 +118,7 @@ void Relay::onInit() {
   }
 
   if (attachedButton) {
+    attachedButton->onInit();  // make sure button was initialized
     if (attachedButton->isMonostable()) {
       attachedButton->addAction(
           Supla::TOGGLE, this, Supla::CONDITIONAL_ON_PRESS);

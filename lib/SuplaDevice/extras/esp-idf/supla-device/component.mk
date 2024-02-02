@@ -52,11 +52,14 @@ COMPONENT_OBJS := \
   ../../../src/supla/network/html/channel_correction.o \
   ../../../src/supla/network/html/hide_show_container.o \
   ../../../src/supla/network/html/div.o \
+  ../../../src/supla/network/html/h2_tag.o \
+  ../../../src/supla/network/html/h3_tag.o \
   ../../../src/supla/network/html/button_action_trigger_config.o \
   ../../../src/supla/network/html/text_cmd_input_parameter.o \
   ../../../src/supla/network/html/select_cmd_input_parameter.o \
   ../../../src/supla/network/html/volume_parameters.o \
   ../../../src/supla/network/html/screen_delay_parameters.o \
+  ../../../src/supla/network/html/screen_brightness_parameters.o \
   ../../../src/supla/network/client.o \
   ../../../src/supla/network/ip_address.o \
   \

@@ -753,10 +753,14 @@ void SuplaDeviceClass::enterConfigMode() {
 
 void SuplaDeviceClass::softRestart() {
   status(STATUS_SOFTWARE_RESET, "Software reset");
-  saveStateToStorage();
-  auto cfg = Supla::Storage::ConfigInstance();
-  if (cfg) {
-    cfg->commit();
+
+  if (!triggerResetToFacotrySettings) {
+    // skip writing to storage if reset is because of factory reset
+    saveStateToStorage();
+    auto cfg = Supla::Storage::ConfigInstance();
+    if (cfg) {
+      cfg->commit();
+    }
   }
   deviceMode = Supla::DEVICE_MODE_NORMAL;
 
@@ -784,7 +788,7 @@ void SuplaDeviceClass::enterNormalMode() {
   Supla::Network::SetNormalMode();
 }
 
-void SuplaDeviceClass::setManufacurerId(_supla_int16_t id) {
+void SuplaDeviceClass::setManufacturerId(_supla_int16_t id) {
   Supla::Channel::reg_dev.ManufacturerID = id;
 }
 
@@ -811,6 +815,22 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
         requestCfgMode(Supla::Device::WithTimeout);
         return SUPLA_CALCFG_RESULT_DONE;
       }
+      case SUPLA_CALCFG_CMD_SET_TIME: {
+        SUPLA_LOG_INFO("CALCFG SET TIME received");
+        if (request->DataType != 0 &&
+            request->DataSize != sizeof(TSDC_UserLocalTimeResult)) {
+          SUPLA_LOG_WARNING("SET TIME invalid size %d", request->DataSize);
+          return SUPLA_CALCFG_RESULT_FALSE;
+        }
+        auto clock = getClock();
+        if (clock) {
+          clock->parseLocaltimeFromServer(
+              reinterpret_cast<TSDC_UserLocalTimeResult *>(request->Data));
+          return SUPLA_CALCFG_RESULT_DONE;
+        } else {
+          return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+        }
+      }
       default:
         break;
     }
@@ -819,6 +839,10 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
 }
 
 void SuplaDeviceClass::saveStateToStorage() {
+  if (triggerResetToFacotrySettings) {
+    return;
+  }
+
   Supla::Storage::PrepareState();
   for (auto element = Supla::Element::begin(); element != nullptr;
        element = element->next()) {
@@ -957,8 +981,7 @@ void SuplaDeviceClass::handleAction(int event, int action) {
       if (deviceMode != Supla::DEVICE_MODE_CONFIG) {
         requestCfgMode(Supla::Device::WithoutTimeout);
       } else if (millis() - enterConfigModeTimestamp > 2000) {
-        resetToFactorySettings();
-        scheduleSoftRestart(0);
+        triggerResetToFacotrySettings = true;
       }
       break;
     }

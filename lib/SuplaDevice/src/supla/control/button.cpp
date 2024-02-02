@@ -89,7 +89,7 @@ void Button::onTimer() {
     if (isMonostable() && stateResult == PRESSED) {
       if (clickCounter <= 1 && holdTimeMs > 0 &&
           timeDelta > (holdTimeMs + holdSend * repeatOnHoldMs) &&
-          (!repeatOnHoldEnabled ? !holdSend : true)) {
+          (repeatOnHoldEnabled || holdSend == 0)) {
         runAction(ON_HOLD);
         ++holdSend;
       }
@@ -282,8 +282,7 @@ void Button::setHoldTime(unsigned int timeMs) {
   SUPLA_LOG_DEBUG("Button[%d]::setHoldTime: %u", getButtonNumber(), holdTimeMs);
 }
 
-void Button::setMulticlickTime(unsigned int timeMs,
-                                               bool bistableButton) {
+void Button::setMulticlickTime(unsigned int timeMs, bool bistableButton) {
   multiclickTimeMs = timeMs;
   if (bistableButton) {
     buttonType = ButtonType::BISTABLE;
@@ -297,7 +296,7 @@ void Button::setMulticlickTime(unsigned int timeMs,
 
 void Button::repeatOnHoldEvery(unsigned int timeMs) {
   repeatOnHoldMs = timeMs;
-  repeatOnHoldEnabled = true;
+  repeatOnHoldEnabled = (timeMs > 0);
 }
 
 bool Button::isBistable() const {
@@ -344,8 +343,8 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
 
     uint32_t multiclickTimeMsValue = 0;
     if (cfg->getUInt32(Supla::Html::BtnMulticlickTag, &multiclickTimeMsValue)) {
-      if (multiclickTimeMsValue < 300) {
-        multiclickTimeMsValue = 300;
+      if (multiclickTimeMsValue < 200) {
+        multiclickTimeMsValue = 200;
       }
       if (multiclickTimeMsValue > 10000) {
         multiclickTimeMsValue = 10000;
@@ -358,8 +357,8 @@ void Button::onLoadConfig(SuplaDeviceClass *sdc) {
 
     uint32_t holdTimeMsValue = CFG_MODE_ON_HOLD_TIME;
     if (cfg->getUInt32(Supla::Html::BtnHoldTag, &holdTimeMsValue)) {
-      if (holdTimeMsValue < 300) {
-        holdTimeMsValue = 300;
+      if (holdTimeMsValue < 200) {
+        holdTimeMsValue = 200;
       }
       if (holdTimeMsValue > 10000) {
         holdTimeMsValue = 10000;
@@ -435,10 +434,12 @@ void Button::dontUseOnLoadConfig() {
   useOnLoadConfig = false;
 }
 
-void Button::disableRepeatOnHold() {
-  repeatOnHoldEnabled = false;
+void Button::disableRepeatOnHold(uint32_t threshold) {
+  if (threshold == 0 || repeatOnHoldMs < threshold) {
+    repeatOnHoldEnabled = false;
+  }
 }
 
 void Button::enableRepeatOnHold() {
-  repeatOnHoldEnabled = true;
+  repeatOnHoldEnabled = (repeatOnHoldMs > 0);
 }

@@ -115,10 +115,10 @@ void ThermostatGUI::notifyConfigChange(int channelNumber) {
         }
         break;
       }
-      case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL: {
-        ConfigManager->setElement(KEY_THERMOSTAT_TYPE, getNumber(), Supla::GUI::THERMOSTAT_AUTO);
-        break;
-      }
+      // case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL: {
+      //   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, getNumber(), Supla::GUI::THERMOSTAT_AUTO);
+      //   break;
+      // }
     }
 
     ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, getNumber(), static_cast<int>(HvacBase::getMainThermometerChannelNo()));
@@ -140,9 +140,9 @@ void ThermostatGUI::setThermostatType(uint8_t thermostatType) {
       HvacBase::setDefaultSubfunction(SUPLA_HVAC_SUBFUNCTION_COOL);
       break;
 
-    case Supla::GUI::THERMOSTAT_AUTO:
-      HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL);
-      break;
+    // case Supla::GUI::THERMOSTAT_AUTO:
+    //   HvacBase::getChannel()->setDefaultFunction(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL);
+    //   break;
 
     case Supla::GUI::THERMOSTAT_DOMESTIC_HOT_WATER:
       HvacBase::enableDomesticHotWaterFunctionSupport();

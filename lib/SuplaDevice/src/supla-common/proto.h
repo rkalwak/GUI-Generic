@@ -563,7 +563,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 // type: TDeviceConfig_AutomaticTimeSync
 #define SUPLA_DEVICE_CONFIG_FIELD_AUTOMATIC_TIME_SYNC (1ULL << 4)  // v. >= 21
 // type: TDeviceConfig_HomeScreenDelay
-#define SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_DELAY (1ULL << 5)  // v. >= 21
+#define SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_OFF_DELAY (1ULL << 5)  // v. >= 21
 // type: TDeviceConfig_HomeScreenContent
 #define SUPLA_DEVICE_CONFIG_FIELD_HOME_SCREEN_CONTENT (1ULL << 6)  // v. >= 21
 
@@ -582,8 +582,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
   0x0040                                                   // ver. >= 12
                                                            // DEPRECATED
 #define SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS 0x0080  // ver. >= 17
-#define SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED \
-  0x0100  // ver. >= 21
+#define SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED 0x0100  // ver. >= 21
 // Free bits for future use:  0x0200, 0x0400, 0x0800
 #define SUPLA_CHANNEL_FLAG_RS_AUTO_CALIBRATION 0x1000    // ver. >= 15
 #define SUPLA_CHANNEL_FLAG_CALCFG_RESET_COUNTERS 0x2000  // ver. >= 15
@@ -1306,7 +1305,9 @@ typedef struct {
 #define ACTION_REVEAL_PARTIALLY 50
 #define ACTION_SHUT_PARTIALLY 51
 #define ACTION_TURN_ON 60
+#define ACTION_TURN_ON_WITH_DURATION 61
 #define ACTION_TURN_OFF 70
+#define ACTION_TURN_OFF_WITH_DURATION 71
 #define ACTION_SET_RGBW_PARAMETERS 80
 #define ACTION_OPEN_CLOSE 90
 #define ACTION_STOP 100
@@ -1317,7 +1318,11 @@ typedef struct {
 #define ACTION_ENABLE 200
 #define ACTION_DISABLE 210
 #define ACTION_SEND 220
-#define ACTION_SET_HVAC_PARAMETERS 230
+#define ACTION_HVAC_SET_PARAMETERS 230
+#define ACTION_HVAC_SWITCH_TO_PROGRAM_MODE 231
+#define ACTION_HVAC_SWITCH_TO_MANUAL_MODE 232
+#define ACTION_HVAC_SET_TEMPERATURES 233
+#define ACTION_HVAC_SET_TEMPERATURE 234
 #define ACTION_READ 1000
 #define ACTION_SET 2000
 #define ACTION_EXECUTE 3000
@@ -1347,7 +1352,7 @@ typedef struct {
   _supla_int16_t
       SetpointTemperatureHeat;  // * 0.01 Celcius degree - used for heating
   _supla_int16_t
-      SetpointTemperatureCool;    // * 0.01 - Celcius degree used for cooling
+      SetpointTemperatureCool;    // * 0.01 - Celcius degree used for coolingx
   unsigned _supla_int16_t Flags;  // SUPLA_HVAC_VALUE_FLAG_
 } TAction_HVAC_Parameters;
 
@@ -1966,8 +1971,8 @@ typedef struct {
   char R;
   char onOff;
   char command;  // RGBW_COMMAND_, requires
-                 // SUPLA_CHANNEL_FLAG_RGBW_SET_LEVEL_WITHOUT_SWITCHING_ON
-} TRGBW_Value;  // v. >= 10
+                 // SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED v. >= 21
+} TRGBW_Value;   // v. >= 10
 
 #define SUPLA_RELAY_FLAG_OVERCURRENT_RELAY_OFF 0x1
 
@@ -2424,6 +2429,7 @@ typedef struct {
 typedef struct {
   unsigned char ScreenBrightness;  // 0-100%
   unsigned char Automatic;         // 0 - false; 1 - true
+  signed char AdjustmentForAutomatic;  // -100 to 100
 } TDeviceConfig_ScreenBrightness;  // v. >= 21
 
 typedef struct {
@@ -2433,6 +2439,10 @@ typedef struct {
 typedef struct {
   unsigned char DisableUserInterface;  // 0 - false (local UI enabled)
                                        // 1 - true (local UI disabled)
+                                       // 2 - partial
+  // min/max allowed parameters are mandatory for "partial" variant
+  unsigned _supla_int16_t minAllowedTemperatureSetpointFromLocalUI;
+  unsigned _supla_int16_t maxAllowedTemperatureSetpointFromLocalUI;
 } TDeviceConfig_DisableUserInterface;  // v. >= 21
 
 typedef struct {
@@ -2441,13 +2451,13 @@ typedef struct {
 } TDeviceConfig_AutomaticTimeSync;  // v. >= 21
 
 typedef struct {
-  unsigned _supla_int16_t HomeScreenDelayS;  // delay in seconds
-                                             // 0 - disabled
-} TDeviceConfig_HomeScreenDelay;             // v. >= 21
+  unsigned _supla_int16_t HomeScreenOffDelayS;  // delay in seconds
+                                                // 0 - disabled
+} TDeviceConfig_HomeScreenOffDelay;             // v. >= 21
 
 #define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_NONE (1ULL << 0)
 #define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_TEMPERATURE (1ULL << 1)
-#define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_HUMIDITY (1ULL << 2)
+#define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_TEMPERATURE_AND_HUMIDITY (1ULL << 2)
 #define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_TIME (1ULL << 3)
 #define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_TIME_DATE (1ULL << 4)
 #define SUPLA_DEVCFG_HOME_SCREEN_CONTENT_TEMPERATURE_TIME (1ULL << 5)
@@ -2760,7 +2770,12 @@ typedef struct {
   unsigned char TemperatureSetpointChangeSwitchesToManualMode;  // 0 - off,
                                                                 // 1 - on (def)
   unsigned char AuxMinMaxSetpointEnabled;  // 0 - off (default), 1 - on
-  unsigned char Reserved[49];
+  // For AUTO thermostats we have two outpus. They can either use
+  // shared output for heating/cooling action and second output for heat vs
+  // cool mode selection, or they can use separate outputs - one for heating
+  // and one for cooling
+  unsigned char AutoUseSeparateHeatCoolOutputs;  // 0 - off (default), 1 - on
+  unsigned char Reserved[48];
   THVACTemperatureCfg Temperatures;
 } TChannelConfig_HVAC;  // v. >= 21
 

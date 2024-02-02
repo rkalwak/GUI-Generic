@@ -1388,24 +1388,24 @@
 			}
 		},
 		"SUPLA_DISABLE_LOGS": {
-			"name": "Wszystkie logi",
+			"name": "Wyłączenie wszystkich logów",
 			"desc": "Opcja pozwala na wyłączenie wszystkich komunikatów logowania wyświetlanych na interfejsie UART. Wyłączenie tej funkcji skutkuje mniejszym rozmiarem binarki. (SUPLA_DISABLE_LOGS)",
 			"defOn": true,
 			"en": {
-				"name": "Additional Logs",
-				"desc": "This option allows for the disabling of all logging messages displayed on the UART interface. Disabling this feature results in a smaller binary size.(SUPLA_DISABLE_LOGS)"
+				"name": "Disable All Logs",
+				"desc": "This option allows for the disabling of all logging messages displayed on the UART interface. Disabling this feature results in a smaller binary size. (SUPLA_DISABLE_LOGS)"
 			},
 			"es": {
-				"name": "Registros Adicionales",
-				"desc": "Esta opción permite desactivar todos los mensajes de registro que se muestran en la interfaz UART. Desactivar esta función resulta en un tamaño binario más pequeño.(SUPLA_DISABLE_LOGS)"
+				"name": "Desactivar todos los registros",
+				"desc": "Esta opción permite desactivar todos los mensajes de registro que se muestran en la interfaz UART. Desactivar esta función resulta en un tamaño binario más pequeño. (SUPLA_DISABLE_LOGS)"
 			},
 			"de": {
-				"name": "Zusätzliche Protokolle",
-				"desc": "Diese Option ermöglicht das Deaktivieren aller Protokollnachrichten, die auf der UART-Schnittstelle angezeigt werden. Das Deaktivieren dieser Funktion führt zu einer kleineren Binärgröße.(SUPLA_DISABLE_LOGS)"
+				"name": "Alle Protokolle deaktivieren",
+				"desc": "Diese Option ermöglicht das Deaktivieren aller Protokollnachrichten, die auf der UART-Schnittstelle angezeigt werden. Das Deaktivieren dieser Funktion führt zu einer kleineren Binärgröße. (SUPLA_DISABLE_LOGS)"
 			},
 			"fr": {
-				"name": "Logs Additionnels",
-				"desc": "Cette option permet de désactiver tous les messages de journalisation affichés sur l'interface UART. La désactivation de cette fonction entraîne une taille binaire plus petite.(SUPLA_DISABLE_LOGS)"
+				"name": "Désactiver tous les journaux",
+				"desc": "Cette option permet de désactiver tous les messages de journalisation affichés sur l'interface UART. La désactivation de cette fonction entraîne une taille binaire plus petite. (SUPLA_DISABLE_LOGS)"
 			}
 		},
 		"SUPLA_COMM_DEBUG": {

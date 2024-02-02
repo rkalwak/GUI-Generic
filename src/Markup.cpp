@@ -644,7 +644,7 @@ const String SuplaJavaScript(const String& java_return) {
 const String SuplaSaveResult(int save) {
   String saveresult = "";
   if (save == SaveResult::DATA_SAVED_RESTART_MODULE || save == SaveResult::RESTART_MODULE) {
-    saveresult += "<meta http-equiv=\"refresh\" content=\"2\">\n";
+    saveresult += "<meta http-equiv=\"refresh\" content=\"2;url=/\">\n";
   }
 
   saveresult += F("<div id=\"msg\" class=\"c\">");

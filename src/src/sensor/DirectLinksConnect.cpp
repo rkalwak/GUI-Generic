@@ -111,9 +111,16 @@ void DirectLinksConnect::send() {
   }
 }
 
-String DirectLinksConnect::getRequest() {
-  String request = String("GET /direct/") + _url + " HTTP/1.1\r\n" + "Host: " + _host + "\r\n" + "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                   "Connection: close\r\n\r\n";
+const char *DirectLinksConnect::getRequest() {
+  static char result[1024];
+  char request[256];
+
+  snprintf(request, sizeof(request),
+           "GET /direct/%s HTTP/1.1\r\n"
+           "Host: %s\r\n"
+           "User-Agent: BuildFailureDetectorESP8266\r\n"
+           "Connection: close\r\n\r\n",
+           _url, _host);
 
   client->print(request);
 
@@ -122,28 +129,25 @@ String DirectLinksConnect::getRequest() {
       Serial.println(F("Direct links - Headers received"));
       break;
     }
-    yield();
+    delay(0);
   }
 
-  const int bufferSize = 1200;
-  char result[bufferSize];
-  int i = 0;
+  size_t i = 0;
 
   while (client->connected() || client->available()) {
-    if (i < bufferSize - 1) {  // Avoid buffer overflow
+    if (i < sizeof(result) - 1) {  // Avoid buffer overflow
       result[i++] = (char)client->read();
     }
     else {
       break;  // Stop reading to prevent buffer overflow
     }
-    yield();
+    delay(0);
   }
 
   result[i] = '\0';  // Null-terminate the result string
-
   Serial.println(result);
 
-  return String(result);
+  return result;
 }
 
 void DirectLinksConnect::sendRequest() {

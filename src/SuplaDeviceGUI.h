@@ -111,7 +111,7 @@
 #include <supla/sensor/impulse_counter.h>
 #include <supla/control/internal_pin_output.h>
 #endif
-#ifdef DEBUG_MODE
+#ifdef SUPLA_DEBUG_MODE
 #include <supla/sensor/esp_free_heap.h>
 #endif
 #ifdef SUPLA_HLW8012

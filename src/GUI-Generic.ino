@@ -60,10 +60,6 @@ void setup() {
   ImprovSerialComponent *improvSerialComponent = new ImprovSerialComponent();
   improvSerialComponent->enable();
 
-#if defined(GUI_SENSOR_SPI) || defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_1WIRE) || defined(GUI_SENSOR_OTHER) || defined(GUI_SENSOR_I2C_2) || defined(GUI_SENSOR_ANALOG)
-  ThermHygroMeterCorrectionHandler &correctionHandler = ThermHygroMeterCorrectionHandler::getInstance();
-#endif
-
 #ifdef SUPLA_BONEIO
   new Supla::boneIO();
 #endif
@@ -244,7 +240,6 @@ void setup() {
   for (nr = 0; nr < ConfigManager->get(KEY_MAX_DHT11)->getValueInt(); nr++) {
     if (ConfigESP->getGpio(nr, FUNCTION_DHT11) != OFF_GPIO) {
       auto dht11 = new Supla::Sensor::DHT(ConfigESP->getGpio(nr, FUNCTION_DHT11), DHT11);
-      correctionHandler.addThermHygroMeter(dht11);
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_DHT11, S_DHT11, dht11, nr);
@@ -257,7 +252,6 @@ void setup() {
   for (nr = 0; nr < ConfigManager->get(KEY_MAX_DHT22)->getValueInt(); nr++) {
     if (ConfigESP->getGpio(nr, FUNCTION_DHT22) != OFF_GPIO) {
       auto dht22 = new Supla::Sensor::DHT(ConfigESP->getGpio(nr, FUNCTION_DHT22), DHT22);
-      correctionHandler.addThermHygroMeter(dht22);
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_DHT22, S_DHT22, dht22, nr);
@@ -269,7 +263,6 @@ void setup() {
 #ifdef SUPLA_SI7021_SONOFF
   if (ConfigESP->getGpio(FUNCTION_SI7021_SONOFF) != OFF_GPIO) {
     auto si7021sonoff = new Supla::Sensor::Si7021Sonoff(ConfigESP->getGpio(FUNCTION_SI7021_SONOFF));
-    correctionHandler.addThermHygroMeter(si7021sonoff);
     improvSerialComponent->disable();
 
 #ifdef SUPLA_CONDITIONS
@@ -383,7 +376,6 @@ void setup() {
 #ifdef SUPLA_NTC_10K
   if (ConfigESP->getGpio(FUNCTION_NTC_10K) != OFF_GPIO) {
     auto ntc10k = new Supla::Sensor::NTC10K(ConfigESP->getGpio(FUNCTION_NTC_10K));
-    correctionHandler.addThermHygroMeter(ntc10k);
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_NTC_10K, S_NTC_10K, ntc10k);
@@ -648,9 +640,6 @@ void setup() {
 #endif
           break;
       }
-      if (bme280) {
-        correctionHandler.addThermHygroMeter(bme280);
-      }
     }
 #endif
 
@@ -683,9 +672,6 @@ void setup() {
 #endif
           break;
       }
-      if (bmp280) {
-        correctionHandler.addThermHygroMeter(bmp280);
-      }
     }
 #endif
 
@@ -711,14 +697,12 @@ void setup() {
 #ifdef SUPLA_CONDITIONS
         Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x);
 #endif
-        correctionHandler.addThermHygroMeter(sht3x);
       }
 
       if (sht3x_1) {
 #ifdef SUPLA_CONDITIONS
         Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, sht3x_1, 1);
 #endif
-        correctionHandler.addThermHygroMeter(sht3x_1);
       }
     }
 #endif
@@ -727,7 +711,6 @@ void setup() {
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_SHT3x).toInt()) {
       Supla::Sensor::SHTAutoDetect *shtAutoDetect = new Supla::Sensor::SHTAutoDetect();
 
-      correctionHandler.addThermHygroMeter(shtAutoDetect);
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_SHT3x, S_SHT3X, shtAutoDetect);
 #endif
@@ -737,7 +720,6 @@ void setup() {
 #ifdef SUPLA_SI7021
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_SI7021).toInt()) {
       auto si7021 = new Supla::Sensor::Si7021();
-      correctionHandler.addThermHygroMeter(si7021);
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_SI7021, S_SI702, si7021);
@@ -816,7 +798,6 @@ void setup() {
 #ifdef SUPLA_AHTX0
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_AHTX0).toInt()) {
       auto aht = new Supla::Sensor::AHTX0();
-      correctionHandler.addThermHygroMeter(aht);
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_AHTX0, S_AHTX0, aht);
@@ -916,7 +897,7 @@ void setup() {
   delete Supla::GUI::actionTrigger;
 #endif
 
-#ifdef DEBUG_MODE
+#ifdef SUPLA_DEBUG_MODE
   new Supla::Sensor::EspFreeHeap();
 #endif
 

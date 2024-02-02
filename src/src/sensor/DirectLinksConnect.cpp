@@ -112,15 +112,23 @@ void DirectLinksConnect::send() {
 }
 
 const char *DirectLinksConnect::getRequest() {
-  static char result[1024];
+  static char result[1088];
   char request[256];
 
-  snprintf(request, sizeof(request),
-           "GET /direct/%s HTTP/1.1\r\n"
-           "Host: %s\r\n"
-           "User-Agent: BuildFailureDetectorESP8266\r\n"
-           "Connection: close\r\n\r\n",
-           _url, _host);
+  if (snprintf(request, sizeof(request),
+               "GET /direct/%s HTTP/1.1\r\n"
+               "Host: %s\r\n"
+               "User-Agent: BuildFailureDetectorESP8266\r\n"
+               "Connection: close\r\n\r\n",
+               _url, _host) >= sizeof(request)) {
+    Serial.println(F("Error: URL or host too long"));
+    return nullptr;
+  }
+
+  if (!client || !client->connected()) {
+    Serial.println(F("Error: Client not connected"));
+    return nullptr;
+  }
 
   client->print(request);
 
@@ -135,8 +143,13 @@ const char *DirectLinksConnect::getRequest() {
   size_t i = 0;
 
   while (client->connected() || client->available()) {
+    char c = client->read();
     if (i < sizeof(result) - 1) {  // Avoid buffer overflow
-      result[i++] = (char)client->read();
+      result[i++] = c;
+      // Check for the end of response
+      if (c == '}' && client->peek() == -1) {
+        break;
+      }
     }
     else {
       break;  // Stop reading to prevent buffer overflow

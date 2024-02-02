@@ -399,9 +399,6 @@ int Storage::updateStorage(unsigned int offset,
 
   if (memcmp(currentData, buf, size)) {
     delete[] currentData;
-    if (stateStorage != nullptr) {
-      stateStorage->notifyUpdate();
-    }
     return writeStorage(offset, buf, size);
   }
   delete[] currentData;

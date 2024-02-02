@@ -126,8 +126,6 @@ int ImpulseCounter::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
       if (!request->SuperUserAuthorized) {
         return SUPLA_CALCFG_RESULT_UNAUTHORIZED;
       }
-      SUPLA_LOG_INFO("ImpulseCounter[%d] - CALCFG reset counter received",
-                     channel.getChannelNumber());
       setCounter(0);
       return SUPLA_CALCFG_RESULT_DONE;
     }

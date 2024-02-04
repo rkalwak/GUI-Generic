@@ -154,7 +154,7 @@ const char *DirectLinksConnect::getRequest() {
     else {
       break;  // Stop reading to prevent buffer overflow
     }
-    delay(0);
+    delay(10);
   }
 
   result[i] = '\0';  // Null-terminate the result string

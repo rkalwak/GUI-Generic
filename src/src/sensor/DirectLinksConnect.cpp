@@ -115,12 +115,12 @@ const char *DirectLinksConnect::getRequest() {
   static char result[1088];
   char request[256];
 
-  if (snprintf(request, sizeof(request),
-               "GET /direct/%s HTTP/1.1\r\n"
-               "Host: %s\r\n"
-               "User-Agent: BuildFailureDetectorESP8266\r\n"
-               "Connection: close\r\n\r\n",
-               _url, _host) >= sizeof(request)) {
+  if (static_cast<unsigned int>(snprintf(request, sizeof(request),
+                                         "GET /direct/%s HTTP/1.1\r\n"
+                                         "Host: %s\r\n"
+                                         "User-Agent: BuildFailureDetectorESP8266\r\n"
+                                         "Connection: close\r\n\r\n",
+                                         _url, _host)) >= sizeof(request)) {
     Serial.println(F("Error: URL or host too long"));
     return nullptr;
   }
@@ -154,7 +154,7 @@ const char *DirectLinksConnect::getRequest() {
     else {
       break;  // Stop reading to prevent buffer overflow
     }
-    delay(10);
+    delay(0);
   }
 
   result[i] = '\0';  // Null-terminate the result string

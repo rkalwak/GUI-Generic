@@ -599,76 +599,68 @@ String getParameterRequest(const String& url, const String& param, const String&
 }
 
 void SuplaJavaScript(const String& java_return) {
-  String java_script =
+  WebServer->sendContent(
       F("<script type='text/javascript'>setTimeout(function(){var element=document.getElementById('msg');if(element != "
-        "null){element.style.visibility='hidden';var url = window.location.pathname + window.location.search; if(url != '/");
-  java_script += java_return;
-  java_script += F("'){location.href='");
-  java_script += java_return;
-  java_script += F("'};}},4000);");
-  java_script += F("iwindow.top.location != window.location{window.top.location.href = window.location.href;}</script>\n");
-  WebServer->sendContent(java_script);
+        "null){element.style.visibility='hidden';var url = window.location.pathname + window.location.search; if(url != '/"));
+  WebServer->sendContent(java_return);
+  WebServer->sendContent(F("'){location.href='"));
+  WebServer->sendContent(java_return);
+  WebServer->sendContent(F("'};}},4000);if(window.top.location != window.location){window.top.location.href = window.location.href;}</script>\n"));
 }
 
 // TODO: @krycha88 Usunąć z SuplaSaveResult nieużywany status WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING```
 void SuplaSaveResult(int save) {
-  String saveresult = "";
   if (save == SaveResult::DATA_SAVED_RESTART_MODULE || save == SaveResult::RESTART_MODULE) {
-    saveresult += "<meta http-equiv=\"refresh\" content=\"2;url=/\">\n";
+    WebServer->sendContent("<meta http-equiv=\"refresh\" content=\"2;url=/\">\n");
   }
 
-  saveresult += F("<div id=\"msg\" class=\"c\">");
+  WebServer->sendContent(F("<div id=\"msg\" class=\"c\">"));
 
   switch (save) {
     case SaveResult::DATA_SAVE:
-      saveresult += S_DATA_SAVED;
+      WebServer->sendContent(S_DATA_SAVED);
       break;
     case SaveResult::RESTART_MODULE:
-      saveresult += S_RESTART_MODULE;
+      WebServer->sendContent(S_RESTART_MODULE);
       break;
     case SaveResult::DATA_ERASED_RESTART_DEVICE:
-      saveresult += S_DATA_ERASED_RESTART_DEVICE;  // do usunięcia
+      WebServer->sendContent(S_DATA_ERASED_RESTART_DEVICE);
       break;
-    case SaveResult::WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING:  // do usunięcia
-      saveresult += S_WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING;
+    case SaveResult::WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING:
+      WebServer->sendContent(S_WRITE_ERROR_UNABLE_TO_READ_FILE_FS_PARTITION_MISSING);
       break;
     case SaveResult::DATA_SAVED_RESTART_MODULE:
-      saveresult += S_DATA_SAVED_RESTART_MODULE;
+      WebServer->sendContent(S_DATA_SAVED_RESTART_MODULE);
       break;
     case SaveResult::WRITE_ERROR_BAD_DATA:
-      saveresult += S_WRITE_ERROR_BAD_DATA;
+      WebServer->sendContent(S_WRITE_ERROR_BAD_DATA);
       break;
     case SaveResult::DATA_SAVE_MODE_CONFIG:
-      saveresult += F("data saved");
+      WebServer->sendContent(F("data saved"));
       break;
     case SaveResult::UPDATE_SUCCESS:
-      saveresult += F("Aktualizacja zakończona.");
+      WebServer->sendContent(F("Aktualizacja zakończona."));
       break;
     case SaveResult::UPDATE_ERROR:
-      saveresult += F("Błąd aktualizacji.");
+      WebServer->sendContent(F("Błąd aktualizacji."));
       break;
     case SaveResult::UPDATE_WAIT:
-      saveresult += F("Zostanie wygenerowana nowa wersja. Spróbuj ponownie za 5min.");
+      WebServer->sendContent(F("Zostanie wygenerowana nowa wersja. Spróbuj ponownie za 5min."));
       break;
     case SaveResult::UPDATE_NO_UPDATES:
-      saveresult += F("Brak aktualizacji.");
+      WebServer->sendContent(F("Brak aktualizacji."));
       break;
     case SaveResult::UPDATE_TOO_LESS_SPACE:
-      saveresult += F("Wykonaj aktualizację 2 etapową.");
+      WebServer->sendContent(F("Wykonaj aktualizację 2 etapową."));
       break;
     case SaveResult::UPDATE_NEW_VERSION:
-      saveresult += F("Dostępna nowa wersja.");
+      WebServer->sendContent(F("Dostępna nowa wersja."));
       break;
     case SaveResult::UPDATE_2STEP:
-      saveresult += F("Aktualizacja 2 etapowa.");
+      WebServer->sendContent(F("Aktualizacja 2 etapowa."));
       break;
-
     default:
-      saveresult = emptyString;
-      return;
       break;
   }
-
-  saveresult += F("</div>");
-  WebServer->sendContent(saveresult);
+  WebServer->sendContent(F("</div>"));
 }

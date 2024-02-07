@@ -601,7 +601,8 @@ String getParameterRequest(const String& url, const String& param, const String&
 void SuplaJavaScript(const String& java_return) {
   WebServer->sendContent(
       F("<script type='text/javascript'>setTimeout(function(){var element=document.getElementById('msg');if(element != "
-        "null){element.style.visibility='hidden';var url = window.location.pathname + window.location.search; if(url != '/"));
+        "null && element.innerHTML.trim() !== ''){element.style.visibility='hidden';var url = window.location.pathname + window.location.search; "
+        "if(url != '/"));
   WebServer->sendContent(java_return);
   WebServer->sendContent(F("'){location.href='"));
   WebServer->sendContent(java_return);

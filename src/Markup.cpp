@@ -249,84 +249,75 @@ void addListGPIOBox(const String& input_id, const String& name, uint8_t function
 
   gpio = ConfigESP->getGpio(nr, function);
 
-  if (underline) {
-    WebServer->sendContent(F("<i>"));
-  }
-  else {
-    WebServer->sendContent(F("<i style='border-bottom:none !important;'>"));
-  }
-  WebServer->sendContent(F("<label>"));
+  String content;
+
+  content += underline ? F("<i>") : F("<i style='border-bottom:none !important;'>");
+  content += F("<label>");
 
   if (!url.isEmpty() && gpio != OFF_GPIO) {
-    WebServer->sendContent(F("<a href='"));
-    WebServer->sendContent(PATH_START);
-    WebServer->sendContent(url);
-    WebServer->sendContent(String(nr).c_str());
-    WebServer->sendContent(F("'>"));
+    content += F("<a href='");
+    content += PATH_START;
+    content += url;
+    content += String(nr);
+    content += F("'>");
 
     if (!no_number) {
-      WebServer->sendContent(String(nr + 1).c_str());
-      WebServer->sendContent(F("."));
+      content += String(nr + 1);
+      content += F(".");
     }
 
-    WebServer->sendContent(F(" "));
-    WebServer->sendContent(name);
-    WebServer->sendContent(ICON_EDIT);
-    WebServer->sendContent(F("</a>"));
+    content += F(" ");
+    content += name;
+    content += ICON_EDIT;
+    content += F("</a>");
   }
   else {
     if (!no_number) {
-      WebServer->sendContent(String(nr + 1).c_str());
-      WebServer->sendContent(F("."));
+      content += String(nr + 1);
+      content += F(".");
     }
 
-    WebServer->sendContent(F(" "));
-    WebServer->sendContent(name);
+    content += F(" ");
+    content += name;
   }
 
-  WebServer->sendContent(F("</label>"));
-
-  WebServer->sendContent(F("<select name='"));
-  WebServer->sendContent(input_id);
-  WebServer->sendContent(String(nr).c_str());
-  WebServer->sendContent(F("'>"));
+  content += F("</label>");
+  content += F("<select name='");
+  content += input_id;
+  content += String(nr);
+  content += F("'>");
 
   if (function == FUNCTION_RELAY && nr < MAX_VIRTUAL_RELAY)
-    addGPIOOptionValue(GPIO_VIRTUAL_RELAY, gpio, String(S_SPACE) + "VIRTUAL");
+    addGPIOOptionValue(GPIO_VIRTUAL_RELAY, gpio, String(S_SPACE) + "VIRTUAL", content);
 
 #ifdef ARDUINO_ARCH_ESP8266
-  for (uint8_t suported = 0; suported <= OFF_GPIO; suported++)
-    if (ConfigESP->checkBusyGpio(suported, function) || suported == gpio)
-      addGPIOOptionValue(suported, gpio, FPSTR(GPIO_P[suported]));
+  for (uint8_t supported = 0; supported <= OFF_GPIO; supported++)
+    if (ConfigESP->checkBusyGpio(supported, function) || supported == gpio)
+      addGPIOOptionValue(supported, gpio, FPSTR(GPIO_P[supported]), content);
 
 #elif ARDUINO_ARCH_ESP32
 
-  for (uint8_t suported = 0; suported <= OFF_GPIO; suported++)
-    if ((ConfigESP->checkBusyGpio(suported, function) || suported == gpio))
-      addGPIOOptionValue(suported, gpio, FPSTR(GPIO_P[suported]));
+  for (uint8_t supported = 0; supported <= OFF_GPIO; supported++)
+    if ((ConfigESP->checkBusyGpio(supported, function) || supported == gpio))
+      addGPIOOptionValue(supported, gpio, FPSTR(GPIO_P[supported]), content);
 
 #endif
+  content += F("</select>");
+  content += F("</i>");
 
-  WebServer->sendContent(F("</select>"));
-
-  WebServer->sendContent(F("</i>"));
+  WebServer->sendContent(content);
 }
 
-void addGPIOOptionValue(uint8_t gpio, uint8_t selectedGpio, const String& name) {
-  WebServer->sendContent(F("<option value='"));
-  WebServer->sendContent(String(gpio).c_str());
-  WebServer->sendContent(F("'"));
+void addGPIOOptionValue(uint8_t gpio, uint8_t selectedGpio, const String& name, String& content) {
+  content += F("<option value='");
+  content += String(gpio);
+  content += F("'");
 
   if (gpio == selectedGpio) {
-    WebServer->sendContent(F(" selected"));
+    content += F(" selected");
   }
-  if (gpio == OFF_GPIO) {
-    WebServer->sendContent(F(">"));
-  }
-  else {
-    WebServer->sendContent(F("> GPIO"));
-  }
-  WebServer->sendContent(name);
+  content += (gpio == OFF_GPIO) ? F(">\n") : F("> GPIO");
+  content += name;
 }
 
 #ifdef GUI_SENSOR_I2C_EXPENDER
@@ -393,76 +384,90 @@ void addListExpanderGPIOBox(const String& input_id, const String& name, uint8_t 
 
 void addListExpanderGPIO(
     const String& input_id, const String& name, uint8_t function, uint8_t nr, const char* const* array_P, uint8_t size, const String& url) {
-  WebServer->sendContent(F("<i><label><a href='"));
-  WebServer->sendContent(PATH_START);
-  WebServer->sendContent(url);
-  WebServer->sendContent(F("'>"));
-  WebServer->sendContent(nr + 1);
-  WebServer->sendContent(F(". "));
-  WebServer->sendContent(name);
-  WebServer->sendContent(F("</a>"));
-  WebServer->sendContent(F("</label><select name='"));
-  WebServer->sendContent(input_id);
-  WebServer->sendContent(F("mcp"));
-  WebServer->sendContent(nr);
-  WebServer->sendContent(F("'>"));
+  String content;
+
+  content += F("<i><label><a href='");
+  content += PATH_START;
+  content += url;
+  content += F("'>");
+  content += nr + 1;
+  content += F(". ");
+  content += name;
+  content += F("</a>");
+  content += F("</label><select name='");
+  content += input_id;
+  content += F("mcp");
+  content += nr;
+  content += F("'>");
 
   uint8_t selected = Expander->getGpioExpander(nr, function);
 
-  for (uint8_t suported = 0; suported < size; suported++) {
-    if (!String(FPSTR(array_P[suported])).isEmpty()) {
-      if (Expander->checkBusyGpioExpander(suported, nr, function) || selected == suported) {
-        WebServer->sendContent(F("<option value='"));
-        WebServer->sendContent(suported);
-        WebServer->sendContent(F("'"));
-        if (selected == suported) {
-          WebServer->sendContent(F(" selected"));
+  for (uint8_t supported = 0; supported < size; supported++) {
+    if (!String(FPSTR(array_P[supported])).isEmpty()) {
+      if (Expander->checkBusyGpioExpander(supported, nr, function) || selected == supported) {
+        content += F("<option value='");
+        content += supported;
+        content += F("'");
+        if (selected == supported) {
+          content += F(" selected");
         }
-        WebServer->sendContent(F(">"));
-        WebServer->sendContent_P(array_P[suported]);
+        content += F(">");
+        content += FPSTR(array_P[supported]);
       }
     }
   }
 
-  WebServer->sendContent(F("</select></i>"));
+  content += F("</select></i>");
+
+  WebServer->sendContent(content);
 }
 #endif
 
 void addListBox(const String& input_id, const String& name, const char* const* array_P, uint8_t size, uint8_t selected, uint8_t nr, bool underline) {
+  String content;
+
   if (underline) {
-    WebServer->sendContent(F("<i>"));
+    content += F("<i>");
   }
   else {
-    WebServer->sendContent(F("<i style='border-bottom:none !important;'>"));
+    content += F("<i style='border-bottom:none !important;'>");
   }
 
-  WebServer->sendContent(F("<label>"));
-  if (nr != 0) {
-    WebServer->sendContent(String(nr).c_str());
-    WebServer->sendContent(F(". "));
-  }
-  WebServer->sendContent(name);
-  WebServer->sendContent(F("</label><select name='"));
-  WebServer->sendContent(input_id);
-  if (nr != 0) {
-    WebServer->sendContent(String(nr).c_str());
-  }
-  WebServer->sendContent(F("'>"));
+  content += F("<label>");
 
-  for (uint8_t suported = 0; suported < size; suported++) {
-    if (!String(FPSTR(array_P[suported])).isEmpty()) {
-      WebServer->sendContent(F("<option value='"));
-      WebServer->sendContent(String(suported).c_str());
-      WebServer->sendContent(F("'"));
-      if (selected == suported) {
-        WebServer->sendContent(F(" selected"));
+  if (nr != 0) {
+    content += String(nr);
+    content += F(". ");
+  }
+
+  content += name;
+  content += F("</label><select name='");
+  content += input_id;
+
+  if (nr != 0) {
+    content += String(nr);
+  }
+
+  content += F("'>");
+
+  for (uint8_t supported = 0; supported < size; supported++) {
+    if (!String(FPSTR(array_P[supported])).isEmpty()) {
+      content += F("<option value='");
+      content += String(supported);
+      content += F("'");
+
+      if (selected == supported) {
+        content += F(" selected");
       }
-      WebServer->sendContent(F(">"));
-      WebServer->sendContent(array_P[suported]);
+
+      content += F(">");
+      content += FPSTR(array_P[supported]);
     }
   }
 
-  WebServer->sendContent(F("</select></i>"));
+  content += F("</select></i>");
+
+  WebServer->sendContent(content);
 }
 
 void addListNumbersBox(const String& input_id, const String& name, uint8_t size, uint8_t selected) {
@@ -532,38 +537,43 @@ void addListNumbersSensorBox(const String& input_id, const String& name, uint8_t
 
 void addListLinkBox(
     const String& input_id, const String& name, const char* const* array_P, uint8_t size, uint8_t selected, const String& url, uint8_t nr) {
-  WebServer->sendContent(F("<i><label><a href='"));
-  WebServer->sendContent(PATH_START);
-  WebServer->sendContent(url);
-  WebServer->sendContent(F("'>"));
+  String content;
+
+  content += F("<i><label><a href='");
+  content += PATH_START;
+  content += url;
+  content += F("'>");
 
   if (nr != 0) {
-    WebServer->sendContent(String(nr).c_str());
-    WebServer->sendContent(F(". "));
+    content += String(nr);
+    content += F(". ");
   }
-  WebServer->sendContent(name);
-  WebServer->sendContent(F("</a>"));
-  WebServer->sendContent(F("</label><select name='"));
-  WebServer->sendContent(input_id);
-  if (nr != 0) {
-    WebServer->sendContent(String(nr).c_str());
-  }
-  WebServer->sendContent(F("'>"));
+  content += name;
+  content += F("</a>");
+  content += F("</label><select name='");
+  content += input_id;
 
-  for (uint8_t suported = 0; suported < size; suported++) {
-    if (!String(FPSTR(array_P[suported])).isEmpty()) {
-      WebServer->sendContent(F("<option value='"));
-      WebServer->sendContent(String(suported).c_str());
-      WebServer->sendContent(F("'"));
-      if (selected == suported) {
-        WebServer->sendContent(F(" selected"));
+  if (nr != 0) {
+    content += String(nr);
+  }
+  content += F("'>");
+
+  for (uint8_t supported = 0; supported < size; supported++) {
+    if (!String(FPSTR(array_P[supported])).isEmpty()) {
+      content += F("<option value='");
+      content += String(supported);
+      content += F("'");
+      if (selected == supported) {
+        content += F(" selected");
       }
-      WebServer->sendContent(F(">"));
-      WebServer->sendContent(array_P[suported]);
+      content += F(">");
+      content += FPSTR(array_P[supported]);
     }
   }
 
-  WebServer->sendContent(F("</select></i>"));
+  content += F("</select></i>");
+
+  WebServer->sendContent(content);
 }
 
 void addButton(const String& name, const String& url) {

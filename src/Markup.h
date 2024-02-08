@@ -84,7 +84,7 @@ void addListGPIOBox(
 void addListNumbersSensorBox(const String& input_id, const String& name, uint8_t selected);
 void addListNumbersBox(const String& input_id, const String& name, uint8_t size, uint8_t selected);
 
-void addGPIOOptionValue(uint8_t gpio, uint8_t selectedGpio, const String& name);
+void addGPIOOptionValue(uint8_t gpio, uint8_t selectedGpio, const String& name, String& content);
 
 #ifdef GUI_SENSOR_I2C_EXPENDER
 void addListExpanderBox(const String& input_id, const String& name, uint8_t function, uint8_t nr, const String& url);

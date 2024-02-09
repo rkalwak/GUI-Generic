@@ -23,9 +23,6 @@ bool decrypt_TPL_AES_CBC_IV(std::vector<unsigned char> &frame, std::vector<unsig
 std::string str_snprintf(const char *fmt, size_t len, ...);
 std::string to_string(int value);
 char format_hex_pretty_char(uint8_t v);
-std::string format_hex_pretty(const uint16_t *data, size_t length);
-std::string format_hex_pretty(const uint8_t *data, size_t lengt);
-std::string format_hex_pretty(std::vector<unsigned char> data);
 void phex(uint8_t *str, int len = 16, int start = 0);
 void printHexString(uint8_t *str, int len = 16, int start = 0);
 

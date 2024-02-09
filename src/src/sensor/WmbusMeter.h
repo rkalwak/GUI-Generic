@@ -4,7 +4,7 @@
 
 #include <rf_mbus.hpp>
 #include <Drivers/driver.h>
-#include <utils.hpp>
+#include <DriversWmbusMeters/utils.h>
 #include <SensorBase.h>
 
 #include <stdint.h>

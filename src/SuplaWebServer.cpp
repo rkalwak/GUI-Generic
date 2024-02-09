@@ -82,9 +82,7 @@ void SuplaWebServer::createWebServer() {
 
 void SuplaWebServer::sendHeaderStart() {
   if (!chunkedSendHeader) {
-#ifdef SUPLA_DEBUG_MODE
     printFreeMemory("SendHeaderGUI");
-#endif
     chunkedSendHeader = true;
     char buf[512] = {};
     char freeHeapStr[10];

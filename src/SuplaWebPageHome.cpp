@@ -22,13 +22,14 @@ void createWebPageHome() {
       return;
     }
 
-    const char* rebotArg = WebServer->httpServer->arg(F(PATH_REBOT)).c_str();
-    if (strcmp(rebotArg, "") != 0) {
-      if (strcmp(rebotArg, "3") == 0) {
+    String rebotArg = WebServer->httpServer->arg(PATH_REBOT);
+
+    if (!rebotArg.isEmpty()) {
+      if (rebotArg == "3") {
         handlePageHome(SaveResult::RESTART_MODULE);
       }
 
-      if (strcmp(rebotArg, "1") == 0 || strcmp(rebotArg, "2") == 0 || strcmp(rebotArg, "3") == 0) {
+      if (rebotArg == "1" || rebotArg == "2" || rebotArg == "3") {
         ConfigESP->rebootESP();
       }
     }

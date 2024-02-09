@@ -1412,6 +1412,9 @@
 			"name": "Logi związane z komunikacją",
 			"desc": "Rejestruje dodatkowe informacje diagnostyczne związane z komunikacją (SUPLA_COMM_DEBUG).",
 			"defOn": false,
+			"depRel": [
+				"SUPLA_DISABLE_LOGS"
+			],
 			"en": {
 				"name": "Comm Debug",
 				"desc": "Logs additional diagnostic information related to communication (SUPLA_COMM_DEBUG)."

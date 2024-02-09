@@ -1391,6 +1391,9 @@
 			"name": "Wyłączenie wszystkich logów",
 			"desc": "Opcja pozwala na wyłączenie wszystkich komunikatów logowania wyświetlanych na interfejsie UART. Wyłączenie tej funkcji skutkuje mniejszym rozmiarem binarki. (SUPLA_DISABLE_LOGS)",
 			"defOn": true,
+			"depRel": [
+				"SUPLA_COMM_DEBUG"
+			],
 			"en": {
 				"name": "Disable All Logs",
 				"desc": "This option allows for the disabling of all logging messages displayed on the UART interface. Disabling this feature results in a smaller binary size. (SUPLA_DISABLE_LOGS)"

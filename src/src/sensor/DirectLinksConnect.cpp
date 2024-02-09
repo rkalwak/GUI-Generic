@@ -110,9 +110,7 @@ void DirectLinksConnect::send() {
     delete client;
     client = nullptr;
   }
-#ifdef SUPLA_DEBUG_MODE
   printFreeMemory("DirectLinksConnect");
-#endif
 }
 
 const char *DirectLinksConnect::getRequest() {

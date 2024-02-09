@@ -88,34 +88,10 @@ int getCountChannels() {
   return count;
 }
 
-uint32_t lowestRAM = 0;
-uint32_t lowestFreeStack = 0;
-
-// void checkRAM() {
-//   uint32_t freeRAM = ESP.getFreeHeap();
-//   Serial.print(F("freeRAM: "));
-//   Serial.println(freeRAM);
-//   if (freeRAM <= lowestRAM) {
-//     lowestRAM = freeRAM;
-//   }
-// #ifdef ARDUINO_ARCH_ESP8266
-//   uint32_t freeStack = ESP.getFreeContStack();
-//   Serial.print(F("freeStack: "));
-//   Serial.println(freeStack);
-//   if (freeStack <= lowestFreeStack) {
-//     lowestFreeStack = freeStack;
-//   }
-// #endif
-// }
-
-void printFreeMemory(const char* location) {
+void printFreeMemory(const char *location) {
   size_t freeMemory = ESP.getFreeHeap();
 
-  Serial.print("Free memory at ");
-  Serial.print(location);
-  Serial.print(": ");
-  Serial.print(freeMemory);
-  Serial.println(" bytes");
+  SUPLA_LOG_DEBUG("Free memory at %s: %u bytes", location, freeMemory);
 }
 
 const String getAPName() {

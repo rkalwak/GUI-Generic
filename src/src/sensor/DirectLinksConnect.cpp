@@ -16,6 +16,7 @@
 
 #include <Arduino.h>
 #include "DirectLinksConnect.h"
+#include "../../GUIGenericCommon.h"
 
 namespace Supla {
 namespace Sensor {
@@ -109,6 +110,9 @@ void DirectLinksConnect::send() {
     delete client;
     client = nullptr;
   }
+#ifdef SUPLA_DEBUG_MODE
+  printFreeMemory("DirectLinksConnect");
+#endif
 }
 
 const char *DirectLinksConnect::getRequest() {

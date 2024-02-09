@@ -82,7 +82,9 @@ void SuplaWebServer::createWebServer() {
 
 void SuplaWebServer::sendHeaderStart() {
   if (!chunkedSendHeader) {
-    // printFreeMemory();
+#ifdef SUPLA_DEBUG_MODE
+    printFreeMemory("SendHeaderGUI");
+#endif
     chunkedSendHeader = true;
     char buf[512] = {};
     char freeHeapStr[10];
@@ -162,16 +164,7 @@ void SuplaWebServer::sendHeaderEnd() {
     httpServer->client().flush();
     httpServer->client().stop();
     chunkedSendHeader = false;
-    //printFreeMemory();
   }
-}
-
-void printFreeMemory() {
-  size_t freeMemory = ESP.getFreeHeap();
-
-  Serial.print("Free memory: ");
-  Serial.print(freeMemory);
-  Serial.println(" bytes");
 }
 
 void SuplaWebServer::handleNotFound() {

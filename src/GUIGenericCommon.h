@@ -35,5 +35,6 @@ uint8_t getCountSensorChannels();
 uint8_t getCountActiveThermostat();
 int getCountChannels();
 const String getAPName();
+void printFreeMemory(const char* location = "");
 
 #endif  // GUI_GENERIC_COMMON_H

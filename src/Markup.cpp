@@ -268,7 +268,7 @@ void addListGPIOBox(const String& input_id, const String& name, uint8_t function
 
     content += F(" ");
     content += name;
-    content += ICON_EDIT;
+    //content += ICON_EDIT;
     content += F("</a>");
   }
   else {

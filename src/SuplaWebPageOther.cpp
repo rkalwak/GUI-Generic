@@ -677,6 +677,7 @@ void handleCounterCalibrateSave() {
 #include <RCSwitch.h>
 
 void receiveCodeRFBridge() {
+  WebServer->sendHeaderStart();
   String code;
   if (WebServer->httpServer->arg(ARG_PARM_URL) == "read") {
     RCSwitch mySwitch;
@@ -707,5 +708,6 @@ void receiveCodeRFBridge() {
   addFormHeaderEnd();
 
   addButton(S_RETURN, PATH_OTHER);
+  WebServer->sendHeaderEnd();
 }
 #endif

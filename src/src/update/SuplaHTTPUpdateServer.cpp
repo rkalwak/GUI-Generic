@@ -64,8 +64,6 @@ void HTTPUpdateServer::handleFirmwareUp() {
   if (!WebServer->isLoggedIn())
     return;
 
-  WebServer->sendHeaderStart();
-
   String sCommand = WebServer->httpServer->arg(ARG_PARM_URL);
 
   if (!sCommand.isEmpty()) {
@@ -158,7 +156,6 @@ void HTTPUpdateServer::handleFirmwareUp() {
   else {
     suplaWebPageUpddate();
   }
-  WebServer->sendHeaderEnd();
 }
 
 void HTTPUpdateServer::suplaWebPageUpddate(int save, const String& location) {
@@ -261,7 +258,6 @@ void HTTPUpdateServer::updateManual() {
   if (!WebServer->isLoggedIn()) {
     return;
   }
-  WebServer->sendHeaderStart();
 
   // handler for the file upload, get's the sketch bytes, and writes
   // them through the Update object
@@ -322,7 +318,6 @@ void HTTPUpdateServer::updateManual() {
       Serial.println(F("Update was aborted"));
   }
   delay(0);
-  WebServer->sendHeaderEnd();
 }
 #elif ARDUINO_ARCH_ESP32
 
@@ -330,7 +325,6 @@ void HTTPUpdateServer::updateManual() {
   if (!WebServer->isLoggedIn()) {
     return;
   }
-  WebServer->sendHeaderStart();
   HTTPUpload& upload = WebServer->httpServer->upload();
   if (upload.status == UPLOAD_FILE_START) {
     Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -354,6 +348,5 @@ void HTTPUpdateServer::updateManual() {
     }
   }
   delay(0);
-  WebServer->sendHeaderEnd();
 }
 #endif

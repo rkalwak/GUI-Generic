@@ -124,7 +124,7 @@ void SuplaWebServer::sendHeaderStart() {
     WebServer->sendContent(F("<span>"));
     WebServer->sendContent(F("Free Mem: "));
     WebServer->sendContent(freeHeapStr);
-    WebServer->sendContent(F("KB<br>Mode: "));
+    WebServer->sendContent(F("kB<br>Mode: "));
 
     if (ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
       WebServer->sendContent(F("NORMAL"));
@@ -137,10 +137,28 @@ void SuplaWebServer::sendHeaderStart() {
 }
 
 void SuplaWebServer::sendContent(const String& content) {
-  if (chunkedSendHeader) {
-    if (!content.isEmpty()) {
+  if (chunkedSendHeader && !content.isEmpty()) {
+    size_t contentLength = content.length();
+
+    if (contentLength >= MAX_BUFFER_SIZE) {
+      sendContentBuffer();
       httpServer->sendContent(content);
     }
+    else {
+      if (bufferIndex + contentLength >= MAX_BUFFER_SIZE) {
+        sendContentBuffer();
+      }
+      content.toCharArray(contentBuffer + bufferIndex, contentLength + 1);
+      bufferIndex += contentLength;
+    }
+  }
+}
+
+void SuplaWebServer::sendContentBuffer() {
+  if (chunkedSendHeader && bufferIndex > 0) {
+    httpServer->sendContent(contentBuffer);
+    contentBuffer[0] = '\0';
+    bufferIndex = 0;
   }
 }
 
@@ -148,11 +166,15 @@ void SuplaWebServer::sendContent(double content) {
   this->sendContent(String(content).c_str());
 };
 
+void SuplaWebServer::sendContent(int content) {
+  this->sendContent(String(content).c_str());
+};
+
 void SuplaWebServer::sendHeaderEnd() {
   if (chunkedSendHeader) {
-    // sendHeader();
     addButton(S_RESTART, getParameterRequest("", PATH_REBOT, "3"));
     addButton(S_TOOLS, PATH_TOOLS);
+    sendContentBuffer();
     httpServer->sendContent_P(HTTP_DIV_END);
     httpServer->chunkedResponseFinalize();
 

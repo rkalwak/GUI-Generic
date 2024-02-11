@@ -999,6 +999,7 @@ string ciType(int ci_field)
 
 void Telegram::addExplanationAndIncrementPos(vector<uchar>::iterator& pos, int len, KindOfData k, Understanding u, const char* fmt, ...)
 {
+/*
     char buf[1024];
     buf[1023] = 0;
 
@@ -1010,11 +1011,13 @@ void Telegram::addExplanationAndIncrementPos(vector<uchar>::iterator& pos, int l
     Explanation e(parsed.size(), len, buf, k, u);
     explanations.push_back(e);
     parsed.insert(parsed.end(), pos, pos + len);
+*/
     pos += len;
 }
 
 void Telegram::setExplanation(vector<uchar>::iterator& pos, int len, KindOfData k, Understanding u, const char* fmt, ...)
 {
+/*
     char buf[1024];
     buf[1023] = 0;
 
@@ -1025,6 +1028,7 @@ void Telegram::setExplanation(vector<uchar>::iterator& pos, int len, KindOfData 
 
     Explanation e(distance(frame.begin(), pos), len, buf, k, u);
     explanations.push_back(e);
+*/
 }
 
 void Telegram::addMoreExplanation(int pos, string json)
@@ -1034,6 +1038,7 @@ void Telegram::addMoreExplanation(int pos, string json)
 
 void Telegram::addMoreExplanation(int pos, const char* fmt, ...)
 {
+/*
     char buf[1024];
 
     buf[1023] = 0;
@@ -1058,10 +1063,12 @@ void Telegram::addMoreExplanation(int pos, const char* fmt, ...)
     if (!found) {
         debug("(wmbus) warning: cannot find offset %d to add more explanation \"%s\"\n", pos, buf);
     }
+*/
 }
 
 void Telegram::addSpecialExplanation(int offset, int len, KindOfData k, Understanding u, const char* fmt, ...)
 {
+/*
     char buf[1024];
     buf[1023] = 0;
 
@@ -1071,6 +1078,7 @@ void Telegram::addSpecialExplanation(int offset, int len, KindOfData k, Understa
     va_end(args);
 
     explanations.push_back({ offset, len, buf, k, u });
+*/
 }
 
 bool expectedMore(int line)

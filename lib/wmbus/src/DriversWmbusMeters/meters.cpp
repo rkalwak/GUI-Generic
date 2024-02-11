@@ -198,14 +198,7 @@ MeterCommonImplementation::MeterCommonImplementation(MeterInfo& mi,
     {
         hex2bin(mi.key, &meter_keys_.confidentiality_key);
     }
-    for (auto s : mi.shells)
-    {
-        addShellMeterUpdated(s);
-    }
-    for (auto s : mi.meter_shells)
-    {
-        addShellMeterAdded(s);
-    }
+
     for (auto j : mi.extra_constant_fields)
     {
         addExtraConstantField(j);
@@ -213,16 +206,6 @@ MeterCommonImplementation::MeterCommonImplementation(MeterInfo& mi,
 
     link_modes_.unionLinkModeSet(di.linkModes());
     force_mfct_index_ = di.forceMfctIndex();
-}
-
-void MeterCommonImplementation::addShellMeterAdded(string cmdline)
-{
-    shell_cmdlines_added_.push_back(cmdline);
-}
-
-void MeterCommonImplementation::addShellMeterUpdated(string cmdline)
-{
-    shell_cmdlines_updated_.push_back(cmdline);
 }
 
 void MeterCommonImplementation::addExtraConstantField(string ecf)
@@ -275,15 +258,6 @@ void MeterCommonImplementation::addExtraCalculatedField(string ecf)
     );
 }
 
-vector<string>& MeterCommonImplementation::shellCmdlinesMeterAdded()
-{
-    return shell_cmdlines_added_;
-}
-
-vector<string>& MeterCommonImplementation::shellCmdlinesMeterUpdated()
-{
-    return shell_cmdlines_updated_;
-}
 
 vector<string>& MeterCommonImplementation::meterExtraConstantFields()
 {
@@ -542,11 +516,6 @@ string MeterCommonImplementation::name()
     return name_;
 }
 
-void MeterCommonImplementation::onUpdate(function<void(Telegram*, Meter*)> cb)
-{
-    on_update_.push_back(cb);
-}
-
 int MeterCommonImplementation::numUpdates()
 {
     return num_updates_;
@@ -638,58 +607,6 @@ bool MeterCommonImplementation::isTelegramForMeter(Telegram* t, Meter* meter, Me
         return false;
     }
 
-    bool valid_driver = isMeterDriverValid(driver_name, t->dll_mfct, t->dll_type, t->dll_version);
-    if (!valid_driver && t->tpl_id_found)
-    {
-        valid_driver = isMeterDriverValid(driver_name, t->tpl_mfct, t->tpl_type, t->tpl_version);
-    }
-
-    if (!valid_driver)
-    {
-        // Are we using the right driver? Perhaps not since
-        // this particular driver, mfct, media, version combo
-        // is not registered in the METER_DETECTION list in meters.h
-
-        /*
-        if (used_wildcard)
-        {
-            // The match for the id was not exact, thus the user is listening using a wildcard
-            // to many meters and some received matched meter telegrams are not from the right meter type,
-            // ie their driver does not match. Lets just ignore telegrams that probably cannot be decoded properly.
-            verbose("(meter) ignoring telegram from %s since it matched a wildcard id rule but driver (%s) does not match.\n",
-                    t->idsc.c_str(), driver_name.c_str());
-            return false;
-            }*/
-
-            // The match was exact, ie the user has actually specified 12345678 and foo as driver even
-            // though they do not match. Lets warn and then proceed. It is common that a user tries a
-            // new version of a meter with the old driver, thus it might not be a real error.
-        if (isVerboseEnabled() || isDebugEnabled())
-        {
-            string possible_drivers = t->autoDetectPossibleDrivers();
-            if (t->beingAnalyzed() == false && driver_name != "auto")
-            {
-                warning("(meter) %s: meter detection did not match the selected driver %s! correct driver is: %s\n"
-                    "(meter) Not printing this warning again for id: %02x%02x%02x%02x mfct: (%s) %s (0x%02x) type: %s (0x%02x) ver: 0x%02x\n",
-                    name.c_str(),
-                    driver_name.c_str(),
-                    possible_drivers.c_str(),
-                    t->dll_id_b[3], t->dll_id_b[2], t->dll_id_b[1], t->dll_id_b[0],
-                    manufacturerFlag(t->dll_mfct).c_str(),
-                    manufacturer(t->dll_mfct).c_str(),
-                    t->dll_mfct,
-                    mediaType(t->dll_type, t->dll_mfct).c_str(), t->dll_type,
-                    t->dll_version);
-
-                if (possible_drivers == "unknown!")
-                {
-                    warning("(meter) please consider opening an issue at https://github.com/wmbusmeters/wmbusmeters/\n");
-                    warning("(meter) to add support for this unknown mfct,media,version combination\n");
-                }
-            }
-        }
-    }
-
     debug("(meter) %s: yes for me\n", name.c_str());
     return true;
 }
@@ -709,22 +626,6 @@ void MeterCommonImplementation::setIndex(int i)
     index_ = i;
 }
 
-string MeterCommonImplementation::bus()
-{
-    return bus_;
-}
-
-void MeterCommonImplementation::triggerUpdate(Telegram* t)
-{
-    // Check if processContent has discarded this telegram.
-    if (t->discard) return;
-
-    datetime_of_poll_ = time(NULL);
-    datetime_of_update_ = t->about.timestamp ? t->about.timestamp : datetime_of_poll_;
-    num_updates_++;
-    for (auto& cb : on_update_) if (cb) cb(t, this);
-    t->handled = true;
-}
 
 string findField(string key, vector<string>* extra_constant_fields)
 {
@@ -862,35 +763,6 @@ bool checkConstantField(string* buf, string field, char c, vector<string>* extra
     return false;
 }
 
-string concatFields(Meter* m, Telegram* t, char c, vector<FieldInfo>& prints, bool human_readable,
-    vector<string>* selected_fields, vector<string>* extra_constant_fields)
-{
-    if (selected_fields == NULL || selected_fields->size() == 0)
-    {
-        selected_fields = &m->selectedFields();
-    }
-
-    string buf = "";
-
-    for (string field : *selected_fields)
-    {
-        bool handled = checkCommonField(&buf, field, m, t, c, human_readable);
-        if (handled) continue;
-
-        handled = checkPrintableField(&buf, field, m, t, c, prints, human_readable);
-        if (handled) continue;
-
-        handled = checkConstantField(&buf, field, c, extra_constant_fields);
-        if (handled) continue;
-
-        if (!handled)
-        {
-            buf += "?" + field + "?" + c;
-        }
-    }
-    if (buf.back() == c) buf.pop_back();
-    return buf;
-}
 
 bool MeterCommonImplementation::handleTelegram(AboutTelegram& about, vector<uchar> input_frame,
     bool simulated, string* ids, bool* id_match, Telegram* out_analyzed)
@@ -956,8 +828,6 @@ bool MeterCommonImplementation::handleTelegram(AboutTelegram& about, vector<ucha
         snprintf(log_prefix, 255, "(%s)", driverName().str().c_str());
         t.explainParse(log_prefix, 0);
     }
-
-    triggerUpdate(&t);
 
     if (out_analyzed != NULL) *out_analyzed = t;
     return true;
@@ -1503,13 +1373,6 @@ bool MeterInfo::parse(string n, string d, string i, string k)
         }
     }
 
-    if (!link_modes_checked)
-    {
-        // No explicit link mode set, set to the default link modes
-        // that the meter can transmit on.
-        // link_modes = toMeterLinkModeSet(driver);
-    }
-
     return true;
 }
 
@@ -1593,239 +1456,6 @@ string FieldInfo::generateFieldNameWithUnit(DVEntry* dve)
     string var = field_name_->apply(dve);
 
     return var + "_" + display_unit_s;
-}
-
-void MeterCommonImplementation::createMeterEnv(string* id,
-    vector<string>* envs,
-    vector<string>* extra_constant_fields)
-{
-    envs->push_back(string("METER_ID=" + *id));
-    envs->push_back(string("METER_NAME=") + name());
-    envs->push_back(string("METER_TYPE=") + driverName().str());
-
-    // If the configuration has supplied json_address=Roodroad 123
-    // then the env variable METER_address will available and have the content "Roodroad 123"
-    for (string add_json : meterExtraConstantFields())
-    {
-        envs->push_back(string("METER_") + add_json);
-    }
-    for (string extra_field : *extra_constant_fields)
-    {
-        envs->push_back(string("METER_") + extra_field);
-    }
-}
-
-void MeterCommonImplementation::printMeter(Telegram* t,
-    string* human_readable,
-    string* fields, char separator,
-    string* json,
-    vector<string>* envs,
-    vector<string>* extra_constant_fields,
-    vector<string>* selected_fields,
-    bool pretty_print_json)
-{
-    *human_readable = concatFields(this, t, '\t', field_infos_, true, selected_fields, extra_constant_fields);
-    *fields = concatFields(this, t, separator, field_infos_, false, selected_fields, extra_constant_fields);
-
-    string media;
-    if (t->tpl_id_found)
-    {
-        media = mediaTypeJSON(t->tpl_type, t->tpl_mfct);
-    }
-    else if (t->ell_id_found)
-    {
-        media = mediaTypeJSON(t->ell_type, t->ell_mfct);
-    }
-    else
-    {
-        media = mediaTypeJSON(t->dll_type, t->dll_mfct);
-    }
-
-    string id = "";
-    if (t->ids.size() > 0)
-    {
-        id = t->ids.back();
-    }
-
-    string indent = "";
-    string newline = "";
-
-    if (pretty_print_json)
-    {
-        indent = "    ";
-        newline = "\n";
-    }
-
-    string s;
-    s += "{" + newline;
-    s += indent + "\"media\":\"" + media + "\"," + newline;
-    s += indent + "\"meter\":\"" + driverName().str() + "\"," + newline;
-    s += indent + "\"name\":\"" + name() + "\"," + newline;
-    s += indent + "\"id\":\"" + id + "\"," + newline;
-
-    // Iterate over the meter field infos...
-     std::map<FieldInfo*, set<DVEntry*>> founds; // Multiple dventries can match to a single field info.
-    set<string> found_vnames;
-
-    for (auto& p : numeric_values_)
-    {
-        string vname = p.first.first;
-        NumericField& nf = p.second;
-        if (nf.field_info->printProperties().hasHIDE()) continue;
-
-        string out = nf.field_info->renderJson(this, &nf.dv_entry);
-        s += indent + out + "," + newline;
-    }
-
-    for (auto& p : string_values_)
-    {
-        string vname = p.first;
-        StringField& sf = p.second;
-
-        if (sf.field_info->printProperties().hasHIDE()) continue;
-        if (sf.field_info->printProperties().hasSTATUS())
-        {
-            string in = getStatusField(sf.field_info);
-            string out = tostrprintf("\"%s\":\"%s\"", vname.c_str(), in.c_str());
-            s += indent + out + "," + newline;
-        }
-        else
-        {
-            if (sf.value == "null")
-            {
-                // The string "null" translates to actual json null.
-                string out = tostrprintf("\"%s\":null", vname.c_str());
-                s += indent + out + "," + newline;
-            }
-            else
-            {
-                string out = tostrprintf("\"%s\":\"%s\"", vname.c_str(), sf.value.c_str());
-                s += indent + out + "," + newline;
-            }
-        }
-    }
-    /*
-    for (FieldInfo& fi : field_infos_)
-    {
-        if (fi.printProperties().hasHIDE()) continue;
-
-        // The field should be printed in the json. (Most usually should.)
-        for (auto& i : t->dv_entries)
-        {
-            // Check each telegram dv entry.
-            DVEntry *dve = &i.second.second;
-            // Has the entry been matches to this field, then print it as json.
-            if (dve->hasFieldInfo(&fi))
-            {
-                assert(founds[&fi].count(dve) == 0);
-
-                founds[&fi].insert(dve);
-                string field_name = fi.generateFieldNameNoUnit(dve);
-                found_vnames.insert(field_name);
-            }
-        }
-    }
-
-    for (FieldInfo& fi : field_infos_)
-    {
-        if (fi.printProperties().hasHIDE()) continue;
-
-        if (founds.count(&fi) != 0)
-        {
-            // This field info has matched against some dventries.
-            for (DVEntry *dve : founds[&fi])
-            {
-                debug("(meters) render field %s(%s %s)[%d] with dventry @%d key %s data %s\n",
-                      fi.vname().c_str(), toString(fi.xuantity()), unitToStringLowerCase(fi.displayUnit()).c_str(), fi.index(),
-                      dve->offset,
-                      dve->dif_vif_key.str().c_str(),
-                      dve->value.c_str());
-                string out = fi.renderJson(this, dve);
-                debug("(meters)             %s\n", out.c_str());
-                s += indent+out+","+newline;
-            }
-        }
-        else
-        {
-            // Ok, no value found in received telegram.
-            // Print field anyway if it is required,
-            // or if a value has been received before and this field has not been received using a different rule.
-            // Why this complicated rule?
-            // E.g. the minmoess mbus seems to use storage 1 for target_m3 but the wmbus version uses storage 8.
-            // I.e. we have two rules that store into target_m3, this check will prevent target_m3 from being printed twice.
-            if (fi.printProperties().hasREQUIRED() ||
-                (hasValue(&fi) && (
-                    found_vnames.count(fi.vname()) == 0 ||
-                    fi.hasFormula()))) // TODO! Fix so a new field total_l does not overwrite total_m3 in mem.
-            {
-                // No telegram entries found, but this field should be printed anyway.
-                // It will be printed with any value received from a previous telegram.
-                // Or if no value has been received, null.
-                debug("(meters) render field %s(%s)[%d] without dventry\n",
-                      fi.vname().c_str(), toString(fi.xuantity()), fi.index());
-                string out = fi.renderJson(this, NULL);
-                debug("(meters)             %s\n", out.c_str());
-                s += indent+out+","+newline;
-            }
-        }
-    }
-    */
-    s += indent + "\"timestamp\":\"" + datetimeOfUpdateRobot() + "\"";
-
-    if (t->about.device != "")
-    {
-        s += "," + newline;
-        s += indent + "\"device\":\"" + t->about.device + "\"," + newline;
-        s += indent + "\"rssi_dbm\":" + std::to_string(t->about.rssi_dbm);
-    }
-    for (string extra_field : meterExtraConstantFields())
-    {
-        s += "," + newline;
-        s += indent + makeQuotedJson(extra_field);
-    }
-    for (string extra_field : *extra_constant_fields)
-    {
-        s += "," + newline;
-        s += indent + makeQuotedJson(extra_field);
-    }
-    s += newline;
-    s += "}";
-    *json = s;
-
-    createMeterEnv(&id, envs, extra_constant_fields);
-
-    envs->push_back(string("METER_JSON=") + *json);
-    envs->push_back(string("METER_MEDIA=") + media);
-    envs->push_back(string("METER_TIMESTAMP=") + datetimeOfUpdateRobot());
-    envs->push_back(string("METER_TIMESTAMP_UTC=") + datetimeOfUpdateRobot());
-    envs->push_back(string("METER_TIMESTAMP_UT=") + unixTimestampOfUpdate());
-    envs->push_back(string("METER_TIMESTAMP_LT=") + datetimeOfUpdateHumanReadable());
-
-    for (FieldInfo& fi : field_infos_)
-    {
-        if (fi.printProperties().hasHIDE()) continue;
-
-        string display_unit_s = unitToStringUpperCase(fi.displayUnit());
-        string var = fi.vname();
-        std::transform(var.begin(), var.end(), var.begin(), ::toupper);
-        if (fi.xuantity() == Quantity::Text)
-        {
-            string envvar = "METER_" + var + "=" + getStringValue(&fi);
-            envs->push_back(envvar);
-        }
-        else
-        {
-            string envvar = "METER_" + var + "_" + display_unit_s + "=" + valueToString(getNumericValue(&fi, fi.displayUnit()), fi.displayUnit());
-            envs->push_back(envvar);
-        }
-    }
-
-    if (t->about.device != "")
-    {
-        envs->push_back(string("METER_DEVICE=") + t->about.device);
-        envs->push_back(string("METER_RSSI_DBM=") + std::to_string(t->about.rssi_dbm));
-    }
-
 }
 
 void MeterCommonImplementation::setExpectedTPLSecurityMode(TPLSecurityMode tsm)

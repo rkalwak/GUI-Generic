@@ -286,10 +286,6 @@ std::string vifUnit(int vif); // E.g. m3 c kwh kw MJ MJh
 bool isCloseEnough(int media1, int media2);
 LinkModeInfo* getLinkModeInfo(LinkMode lm);
 LinkModeInfo* getLinkModeInfoFromBit(int bit);
-std::string tostringFromELLSN(int sn);
-std::string tostringFromTPLConfig(int cfg);
-std::string tostringFromAFLFC(int fc);
-std::string tostringFromAFLMC(int mc);
 bool decrypt_ELL_AES_CTR(Telegram* t, std::vector<uchar>& frame, std::vector<uchar>::iterator& pos, std::vector<uchar>& aeskey);
 bool decrypt_TPL_AES_CBC_IV(Telegram* t, std::vector<uchar>& frame, std::vector<uchar>::iterator& pos, std::vector<uchar>& aeskey,
     int* num_encrypted_bytes,

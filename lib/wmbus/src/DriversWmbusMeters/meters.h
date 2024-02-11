@@ -278,8 +278,6 @@ struct FieldInfo
     // total_at_month_2 (for the dventry with storage nr 2.)
     string generateFieldNameWithUnit(DVEntry* dve);
     string generateFieldNameNoUnit(DVEntry* dve);
-    // Check if the meter object stores a value for this field.
-    bool hasValue(Meter* m);
 
     Translate::Lookup& lookup() { return lookup_; }
 
@@ -317,16 +315,12 @@ private:
     bool valid_field_name_{};
 };
 
-struct BusManager;
-
 struct Meter
 {
     // Meters are instantiated on the fly from a template, when a telegram arrives
     // and no exact meter exists. Index 1 is the first meter created etc.
     virtual int index() = 0;
     virtual void setIndex(int i) = 0;
-    // Use this bus to send messages to the meter.
-    virtual string bus() = 0;
     // This meter listens to these ids.
     virtual vector<string>& ids() = 0;
     // Comma separated ids.
@@ -352,22 +346,7 @@ struct Meter
     virtual void setStringValue(string vname, std::string v, DVEntry* dve = NULL) = 0;
     virtual std::string getStringValue(FieldInfo* fi) = 0;
     virtual std::string decodeTPLStatusByte(uchar sts) = 0;
-
-    virtual void onUpdate(std::function<void(Telegram* t, Meter*)> cb) = 0;
     virtual int numUpdates() = 0;
-
-    virtual void createMeterEnv(string* id,
-        vector<string>* envs,
-        vector<string>* more_json) = 0;
-    virtual void printMeter(Telegram* t,
-        string* human_readable,
-        string* fields, char separator,
-        string* json,
-        vector<string>* envs,
-        vector<string>* more_json,
-        vector<string>* selected_fields,
-        bool pretty_print_json) = 0;
-
     // The handleTelegram expects an input_frame where the DLL crcs have been removed.
     // Returns true of this meter handled this telegram!
     // Sets id_match to true, if there was an id match, even though the telegram could not be properly handled.
@@ -376,10 +355,6 @@ struct Meter
     virtual MeterKeys* meterKeys() = 0;
 
     virtual void addExtraCalculatedField(std::string ecf) = 0;
-    virtual void addShellMeterAdded(std::string cmdline) = 0;
-    virtual void addShellMeterUpdated(std::string cmdline) = 0;
-    virtual vector<string>& shellCmdlinesMeterAdded() = 0;
-    virtual vector<string>& shellCmdlinesMeterUpdated() = 0;
 
     virtual FieldInfo* findFieldInfo(string vname, Quantity xuantity) = 0;
     virtual string renderJsonOnlyDefaultUnit(string vname, Quantity xuantity) = 0;
@@ -389,32 +364,10 @@ struct Meter
     virtual ~Meter() = default;
 };
 
-struct MeterManager
-{
-    virtual void addMeterTemplate(MeterInfo& mi) = 0;
-    virtual void addMeter(shared_ptr<Meter> meter) = 0;
-    virtual void triggerMeterAdded(shared_ptr<Meter> meter) = 0;
-    virtual Meter* lastAddedMeter() = 0;
-    virtual void removeAllMeters() = 0;
-    virtual void forEachMeter(std::function<void(Meter*)> cb) = 0;
-    virtual bool handleTelegram(AboutTelegram& about, vector<uchar> data, bool simulated) = 0;
-    virtual bool hasAllMetersReceivedATelegram() = 0;
-    virtual bool hasMeters() = 0;
-    virtual void onTelegram(function<bool(AboutTelegram&, vector<uchar>)> cb) = 0;
-    virtual void whenMeterAdded(std::function<void(shared_ptr<Meter>)> cb) = 0;
-    virtual void whenMeterUpdated(std::function<void(Telegram* t, Meter*)> cb) = 0;
-    virtual void analyzeEnabled(bool b, OutputFormat f, string force_driver, string key, bool verbose, int profile) = 0;
-    virtual void analyzeTelegram(AboutTelegram& about, vector<uchar>& input_frame, bool simulated) = 0;
-
-    virtual ~MeterManager() = default;
-};
-
-shared_ptr<MeterManager> createMeterManager(bool daemon);
 
 const char* toString(MeterType type);
 MeterType toMeterType(std::string type);
 string toString(DriverInfo& driver);
-LinkModeSet toMeterLinkModeSet(const string& driver);
 
 struct Configuration;
 struct MeterInfo;

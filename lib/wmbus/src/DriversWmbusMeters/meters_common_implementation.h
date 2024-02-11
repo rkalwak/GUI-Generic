@@ -62,7 +62,6 @@ struct MeterCommonImplementation : public virtual Meter
 {
     int index();
     void setIndex(int i);
-    string bus();
     vector<string>& ids();
     string idsc();
     vector<FieldInfo>& fieldInfos();
@@ -79,7 +78,6 @@ struct MeterCommonImplementation : public virtual Meter
     string unixTimestampOfUpdate();
     void addExtraCalculatedField(std::string ef);
 
-    void onUpdate(function<void(Telegram*, Meter*)> cb);
     int numUpdates();
 
     static bool isTelegramForMeter(Telegram* t, Meter* meter, MeterInfo* mi);
@@ -92,14 +90,9 @@ struct MeterCommonImplementation : public virtual Meter
 
 protected:
 
-    void triggerUpdate(Telegram* t);
     void setExpectedELLSecurityMode(ELLSecurityMode dsm);
     void setExpectedTPLSecurityMode(TPLSecurityMode tsm);
-    void addShellMeterAdded(std::string cmdline);
-    void addShellMeterUpdated(std::string cmdline);
     void addExtraConstantField(std::string ecf);
-    std::vector<std::string>& shellCmdlinesMeterAdded();
-    std::vector<std::string>& shellCmdlinesMeterUpdated();
     std::vector<std::string>& meterExtraConstantFields();
     void setMeterType(MeterType mt);
     void addLinkMode(LinkMode lm);
@@ -161,20 +154,6 @@ protected:
 
     bool handleTelegram(AboutTelegram& about, vector<uchar> frame,
         bool simulated, string* id, bool* id_match, Telegram* out_analyzed = NULL);
-    void createMeterEnv(string* id,
-        vector<string>* envs,
-        vector<string>* more_json); // Add this json "key"="value" strings.
-    void printMeter(Telegram* t,
-        string* human_readable,
-        string* fields, char separator,
-        string* json,
-        vector<string>* envs,
-        vector<string>* more_json, // Add this json "key"="value" strings.
-        vector<string>* selected_fields, // Only print these fields.
-        bool pretty_print); // Insert newlines and indentation.
-    // Json fields include all values except timestamp_ut, timestamp_utc, timestamp_lt
-    // since Json is assumed to be decoded by a program and the current timestamp which is the
-    // same as timestamp_utc, can always be decoded/recoded into local time or a unix timestamp.
 
     FieldInfo* findFieldInfo(string vname, Quantity xuantity);
     string renderJsonOnlyDefaultUnit(string vname, Quantity xuantity);
@@ -215,7 +194,6 @@ private:
     int index_{};
     MeterType type_{};
     DriverName driver_name_;
-    string bus_{};
     MeterKeys meter_keys_{};
     ELLSecurityMode expected_ell_sec_mode_{};
     TPLSecurityMode expected_tpl_sec_mode_{};

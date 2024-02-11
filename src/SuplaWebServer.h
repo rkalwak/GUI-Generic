@@ -36,7 +36,7 @@
 #define ARG_PARM_URL    "url"
 #define ARG_PARM_NUMBER "number"
 
-#define PATH_START     "/"
+#define PATH_START "/"
 
 #ifdef GUI_SENSOR_I2C_EXPENDER
 #define INPUT_ADRESS_MCP23017 "iam"
@@ -49,7 +49,9 @@ class SuplaWebServer : public Supla::Element {
   void begin();
   void sendHeaderStart();
   void sendContent(const String& content);
+  void sendContentBuffer();
   void sendContent(double content);
+  void sendContent(int content);
   void sendHeaderEnd();
 
 #ifdef ARDUINO_ARCH_ESP8266
@@ -73,10 +75,12 @@ class SuplaWebServer : public Supla::Element {
   void createWebServer();
   void handleNotFound();
 
+  static const int MAX_BUFFER_SIZE = 32;
+  char contentBuffer[MAX_BUFFER_SIZE];
+  size_t bufferIndex = 0;
   bool chunkedSendHeader = false;
   bool isRunningWebServer = false;
 };
-void printFreeMemory();
 
 #if defined(ESP8266)
 #include <md5.h>

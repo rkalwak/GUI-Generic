@@ -15,68 +15,68 @@
 //   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // */
 
-// #ifndef _analog_reding_map_kpop_h
-// #define _analog_reding_map_kpop_h
+#ifndef _analog_reding_map_kpop_h
+#define _analog_reding_map_kpop_h
 
-// #include <Arduino.h>
-// #include <supla/sensor/general_purpose_measurement.h>
-// #include <supla/storage/storage.h>
+#include <Arduino.h>
+#include "general_purpose_measurement.h"
+#include <supla/storage/storage.h>
 
-// #ifdef ARDUINO_ARCH_ESP32
-// #include <driver/adc.h>
-// #include <esp_adc_cal.h>
-// #endif
+#ifdef ARDUINO_ARCH_ESP32
+#include <driver/adc.h>
+#include <esp_adc_cal.h>
+#endif
 
-// namespace Supla {
-// namespace Sensor {
+namespace Supla {
+namespace Sensor {
 
-// #define NO_OF_SAMPLES 10
+#define NO_OF_SAMPLES 10
 
-// class AnalogReding : public GeneralPurposeMeasurement {
-//  public:
-//   AnalogReding(uint8_t pin);
+class AnalogReding : public GeneralPurposeMeasurement {
+ public:
+  AnalogReding(uint8_t pin);
 
-//   void onInit();
+  void onInit();
 
-// #ifdef ARDUINO_ARCH_ESP32
-//   adc1_channel_t get_adc1_chanel(uint8_t pin);
-// #endif
+#ifdef ARDUINO_ARCH_ESP32
+  adc1_channel_t get_adc1_chanel(uint8_t pin);
+#endif
 
-//   uint16_t readValuesFromDevice();
-//   virtual double getValue();
+  uint16_t readValuesFromDevice();
+  virtual double getValue();
 
-//   void iterateAlways();
+  void iterateAlways();
 
-//   void onSaveState();
-//   void onLoadState();
+  void onSaveState();
+  void onLoadState();
 
-//   double mapDouble(double x, double in_min, double in_max, double out_min, double out_max);
+  double mapDouble(double x, double in_min, double in_max, double out_min, double out_max);
 
-//   void calibrateMinValue();
-//   void calibrateMaxValue();
+  void calibrateMinValue();
+  void calibrateMaxValue();
 
-//   void setMinValue(float value);
-//   float getMinValue();
+  void setMinValue(float value);
+  float getMinValue();
 
-//   void setMaxValue(float value);
-//   float getMaxValue();
+  void setMaxValue(float value);
+  float getMaxValue();
 
-//   void setMinDesiredValue(float value);
-//   float getMinDesiredValue();
+  void setMinDesiredValue(float value);
+  float getMinDesiredValue();
 
-//   void setMaxDesiredValue(float value);
-//   float getMaxDesiredValue();
+  void setMaxDesiredValue(float value);
+  float getMaxDesiredValue();
 
-//  protected:
-//   uint8_t pin;
+ protected:
+  uint8_t pin;
 
-//   float min;
-//   float max;
-//   float minDesired;
-//   float maxDesired;
-// };
+  float min;
+  float max;
+  float minDesired;
+  float maxDesired;
+};
 
-// };  // namespace Sensor
-// };  // namespace Supla
+};  // namespace Sensor
+};  // namespace Supla
 
-// #endif
+#endif

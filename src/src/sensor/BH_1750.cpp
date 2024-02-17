@@ -18,11 +18,15 @@
 namespace Supla {
 namespace Sensor {
 BH_1750::BH_1750(int8_t address) {
+  setDefaultUnitAfterValue("klx");
+  setDefaultValueDivider(1000000);  // in 0.001 units
+  setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+
   myBH1750 = new BH1750_WE(address);
 }
 
 double BH_1750::getValue() {
-  return myBH1750->getLux() / 1000;
+  return myBH1750->getLux();
 }
 
 void BH_1750::onInit() {

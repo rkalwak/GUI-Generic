@@ -133,7 +133,7 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_BH1750
+#ifdef SUPLA_BH1750_KPOP
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_BH1750).toInt();
     addFormHeader();
     addListBox(INPUT_BH1750, F("BH1750"), STATE_P, 2, selected);
@@ -342,7 +342,7 @@ void handleSensorI2cSave() {
   }
 #endif
 
-#ifdef SUPLA_BH1750
+#ifdef SUPLA_BH1750_KPOP
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_BH1750;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {

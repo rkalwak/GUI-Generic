@@ -15,15 +15,14 @@
 */
 #ifndef _bh1750_h
 #define _bh1750_h
-#include <BH1750_WE.h>
-
 #include <Arduino.h>
+#include <BH1750_WE.h>
 #include <Wire.h>
-#include <supla/sensor/thermometer.h>
+#include <supla/sensor/general_purpose_measurement.h>
 
 namespace Supla {
 namespace Sensor {
-class BH_1750 : public Thermometer {
+class BH_1750 : public GeneralPurposeMeasurement {
  public:
   BH_1750(int8_t address = 0x23);
   double getValue();

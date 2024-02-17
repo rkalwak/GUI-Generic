@@ -742,7 +742,7 @@ void setup() {
     }
 #endif
 
-#ifdef SUPLA_BH1750
+#ifdef SUPLA_BH1750_KPOP
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_BH1750).toInt()) {
       auto bh1750 = new Supla::Sensor::BH_1750();
 

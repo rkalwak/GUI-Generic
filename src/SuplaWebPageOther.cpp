@@ -147,7 +147,7 @@ void handleOther(int save) {
 #endif
 
 #ifdef SUPLA_HC_SR04
-  addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_HC_SR04);
+  addFormHeader(S_GPIO_SETTINGS_FOR S_SPACE S_HC_SR04);
   addListGPIOBox(INPUT_TRIG_GPIO, F("TRIG"), FUNCTION_TRIG);
   addListGPIOBox(INPUT_ECHO_GPIO, F("ECHO"), FUNCTION_ECHO);
   addNumberBox(INPUT_HC_SR04_MAX_SENSOR_READ, S_DEPTH_CM, S_SENSOR_READING_DISTANCE, false,
@@ -156,7 +156,7 @@ void handleOther(int save) {
 #endif
 
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
-  addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_VINDRIKTNING_IKEA);
+  addFormHeader(S_GPIO_SETTINGS_FOR S_SPACE S_VINDRIKTNING_IKEA);
   addListGPIOBox(INPUT_VINDRIKTNING_IKEA_RX, S_RX, FUNCTION_VINDRIKTNING_IKEA);
   addFormHeaderEnd();
 #endif

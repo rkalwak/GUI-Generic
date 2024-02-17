@@ -175,8 +175,8 @@
 #include "src/display/SuplaLCD.h"
 #endif
 
-#ifdef SUPLA_BH1750
-#include <supla/sensor/BH_1750.h>
+#ifdef SUPLA_BH1750_KPOP
+#include "src/sensor/BH_1750.h"
 #endif
 
 #ifdef SUPLA_MS5611

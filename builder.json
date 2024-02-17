@@ -831,7 +831,7 @@
 				"desc": "Paramètres de l´appareil->I2C. Il permet le fonctionnement d´un écran LCD HD44780."
 			}
 		},
-		"SUPLA_BH1750": {
+		"SUPLA_BH1750_KPOP": {
 			"name": "Sensor BH1750",
 			"desc": "Ustawienia urządzenia->I2C. Czujnik natężenia światła BH1750",
 			"defOn": false,

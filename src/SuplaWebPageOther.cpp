@@ -677,37 +677,45 @@ void handleCounterCalibrateSave() {
 #include <RCSwitch.h>
 
 void receiveCodeRFBridge() {
+  bool codesReceived = false;
   WebServer->sendHeaderStart();
-  String code;
+
+  addFormHeader(S_SETTING_FOR S_SPACE S_CODES);
+  WebServer->sendContent(F("<p style='color:#000;'>"));
+
   if (WebServer->httpServer->arg(ARG_PARM_URL) == "read") {
     RCSwitch mySwitch;
     mySwitch.enableReceive(ConfigESP->getGpio(FUNCTION_RF_BRIDGE_RECEIVE));
     unsigned long timeout = millis();
+
     while ((millis() - timeout) < 5000) {
       if (mySwitch.available()) {
-        code += "Received " + String(mySwitch.getReceivedValue()) + " Length: " + String(mySwitch.getReceivedBitlength()) + "bit " +
-                "Protocol: " + String(mySwitch.getReceivedProtocol()) + " Pulse Length: " + String(mySwitch.getReceivedDelay()) + "<br>";
+        WebServer->sendContent(F("<i><label>Received "));
+        WebServer->sendContent(String(mySwitch.getReceivedValue()));
+        WebServer->sendContent(F(" Length: "));
+        WebServer->sendContent(String(mySwitch.getReceivedBitlength()));
+        WebServer->sendContent(F("bit Protocol: "));
+        WebServer->sendContent(String(mySwitch.getReceivedProtocol()));
+        WebServer->sendContent(F(" Pulse Length: "));
+        WebServer->sendContent(String(mySwitch.getReceivedDelay()));
+        WebServer->sendContent(F("</label></i>"));
         mySwitch.resetAvailable();
+        codesReceived = true;
       }
       yield();
     }
   }
 
-  addFormHeader(String(S_SETTING_FOR) + S_SPACE + S_CODES);
-  F("<p style='color:#000;'>");
-  if (!code.isEmpty()) {
-    code;
+  if (!codesReceived) {
+    WebServer->sendContent(S_NO S_SPACE S_CODES);
   }
-  else {
-    "<br>";
-    String(S_NO) + S_SPACE + S_CODES;
-    "<br>";
-  }
-  F("</p>");
-  addButton(S_READ, getParameterRequest(PATH_BRIDGE, ARG_PARM_URL, "read"));
+
+  WebServer->sendContent(F("</p>"));
   addFormHeaderEnd();
 
+  addButton(S_READ, getParameterRequest(PATH_BRIDGE, ARG_PARM_URL, F("read")));
   addButton(S_RETURN, PATH_OTHER);
   WebServer->sendHeaderEnd();
 }
+
 #endif

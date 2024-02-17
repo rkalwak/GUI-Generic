@@ -3,8 +3,8 @@
 #include <Arduino.h>
 
 #include <rf_mbus.hpp>
-#include <Drivers/driver.h>
 #include <DriversWmbusMeters/utils.h>
+#include <DriversWmbusMeters/meters_common_implementation.h>
 #include <SensorBase.h>
 
 #include <stdint.h>
@@ -18,11 +18,8 @@ class WmbusMeter : public Element {
   WmbusMeter(uint8_t mosi = 23, uint8_t miso = 19, uint8_t clk = 18, uint8_t cs = 5, uint8_t gdo0 = 4, uint8_t gdo2 = 2);
 
   void onFastTimer() override;
-  std::map<std::string, Driver *> drivers_{};
   std::map<std::string, SensorBase *> sensors_{};
-  void add_driver(Driver *driver);
   void add_sensor(SensorBase *sensor);
-  bool decrypt_telegram(std::vector<unsigned char> &telegram, std::vector<unsigned char> key);
   float parse_frame(std::vector<unsigned char> &frame);
 
  private:

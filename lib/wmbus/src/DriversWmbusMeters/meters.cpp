@@ -29,7 +29,7 @@
 #include<time.h>
 #include "dvparser.h"
 #include "types.h"
-
+#include "Arduino.h"
 
  std::map<string, DriverInfo>* registered_drivers_ = NULL;
 vector<DriverInfo*>* registered_drivers_list_ = NULL;
@@ -37,11 +37,11 @@ vector<DriverInfo*>* registered_drivers_list_ = NULL;
 void verifyDriverLookupCreated()
 {
     if (registered_drivers_ == NULL)
-    {
+    { Serial.println("registered_drivers_ ");
         registered_drivers_ = new  std::map<string, DriverInfo>;
     }
     if (registered_drivers_list_ == NULL)
-    {
+    { Serial.println("registered_drivers_list_");
         registered_drivers_list_ = new vector<DriverInfo*>;
     }
 }
@@ -53,9 +53,10 @@ DriverInfo* lookupDriver(string name)
     // Check if we have a compiled/loaded driver available.
     if (registered_drivers_->count(name) == 1)
     {
+        Serial.println("wMBus-lib: parse 41211");
         return &(*registered_drivers_)[name];
     }
-
+ Serial.println("wMBus-lib: parse 41212");
     // No, ok lets look for driver aliases.
     for (DriverInfo* di : *registered_drivers_list_)
     {
@@ -1228,6 +1229,8 @@ FieldInfo::FieldInfo(int index,
 
 bool lookupDriverInfo(const string& driver_name, DriverInfo* out_di)
 {
+    Serial.println("wMBus-lib: parse 4121");
+    Serial.println(driver_name.c_str());
     DriverInfo* di = lookupDriver(driver_name);
    
     if (out_di != NULL)
@@ -1240,6 +1243,7 @@ bool lookupDriverInfo(const string& driver_name, DriverInfo* out_di)
 
 bool is_driver_and_extras(const string& t, DriverName* out_driver_name, string* out_extras)
 {
+    Serial.println("wMBus-lib: parse 411");
     // piigth(jump=foo)
     // multical21
     DriverInfo di;
@@ -1252,6 +1256,7 @@ bool is_driver_and_extras(const string& t, DriverName* out_driver_name, string* 
 
     if (!found_parentheses)
     {
+        Serial.println("wMBus-lib: parse 412");
         if (lookupDriverInfo(t, &di))
         {
             *out_driver_name = di.name();
@@ -1262,13 +1267,13 @@ bool is_driver_and_extras(const string& t, DriverName* out_driver_name, string* 
         *out_extras = "";
         return true;
     }
-
+Serial.println("wMBus-lib: parse 413");
     // Parentheses must be last.
     if (!(ps > 0 && ps < pe && pe == t.length() - 1)) return false;
     te = ps;
 
     string type = t.substr(0, te);
-
+Serial.println("wMBus-lib: parse 414");
     bool found = lookupDriverInfo(type, &di);
 
     if (found)
@@ -1322,7 +1327,7 @@ bool isValidBps(const string& b)
 bool MeterInfo::parse(string n, string d, string i, string k)
 {
     clear();
-
+    Serial.println("wMBus-lib: parse 0.");
     name = n;
     ids = splitMatchExpressions(i);
     key = k;
@@ -1330,29 +1335,32 @@ bool MeterInfo::parse(string n, string d, string i, string k)
     bool bus_checked = false;
     bool bps_checked = false;
     bool link_modes_checked = false;
-
+    Serial.println("wMBus-lib: parse 1.");
     // The : colon is forbidden inside the parts.
     vector<string> parts = splitString(d, ':');
-
+    Serial.println("wMBus-lib: parse 2.");
     // Example piigth:MAIN:2400 // it is an mbus meter.
     //         c5isf:MAIN:2400:mbus // attached to mbus instead of t1
     //         multical21:c1
     //         telco:BUS2:c2
     // driver ( extras ) : bus_alias : bps : linkmodes
-
+    Serial.println("wMBus-lib: parse 3.");
     for (auto& p : parts)
     {
+            Serial.println("wMBus-lib: parse 4.");
         if (!driverextras_checked && is_driver_and_extras(p, &driver_name, &extras))
-        {
+        { Serial.println("wMBus-lib: parse 4.1");
             driverextras_checked = true;
         }
         else if (!bus_checked && isValidAlias(p) && !isValidBps(p) && !isValidLinkModes(p))
         {
+            Serial.println("wMBus-lib: parse 5");
             driverextras_checked = true;
             bus_checked = true;
         }
         else if (!bps_checked && isValidBps(p) && !isValidLinkModes(p))
         {
+            Serial.println("wMBus-lib: parse 6");
             driverextras_checked = true;
             bus_checked = true;
             bps_checked = true;
@@ -1360,6 +1368,7 @@ bool MeterInfo::parse(string n, string d, string i, string k)
         }
         else if (!link_modes_checked && isValidLinkModes(p))
         {
+            Serial.println("wMBus-lib: parse 7");
             driverextras_checked = true;
             bus_checked = true;
             bps_checked = true;

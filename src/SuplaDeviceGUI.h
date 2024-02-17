@@ -232,7 +232,6 @@
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
-#include <Drivers/drivers.h>
 #include <SensorInfo.h>
 #endif
 

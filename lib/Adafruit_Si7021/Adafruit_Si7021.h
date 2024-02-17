@@ -117,7 +117,7 @@ private:
   void _writeRegister8(uint8_t reg, uint8_t value);
 
   Adafruit_I2CDevice *i2c_dev = NULL;          ///< Pointer to I2C bus interface
-  const static int _TRANSACTION_TIMEOUT = 100; // Wire NAK/Busy timeout in ms
+  const static int _TRANSACTION_TIMEOUT = 200; // Wire NAK/Busy timeout in ms
 };
 
 #endif // __Si7021_H__

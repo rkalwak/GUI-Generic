@@ -79,6 +79,8 @@ vector<DriverInfo*>& allDrivers()
 
 void addRegisteredDriver(DriverInfo di)
 {
+    Serial.println("Trygin to register driver");
+
     verifyDriverLookupCreated();
     if (registered_drivers_->count(di.name().str()) != 0)
     {
@@ -153,9 +155,10 @@ bool forceRegisterDriver(function<void(DriverInfo&)> setup)
 
 bool registerDriver(function<void(DriverInfo&)> setup)
 {
+     Serial.println("Trygin to register driver 2");
     DriverInfo di;
     setup(di);
-
+   
     // Check that the driver name has not been registered before!
     assert(lookupDriver(di.name().str()) == NULL);
 
@@ -1554,6 +1557,7 @@ DriverInfo pickMeterDriver(Telegram* t)
 
 shared_ptr<Meter> createMeter(MeterInfo* mi)
 {
+    Serial.println("Trygin to create meter");
     shared_ptr<Meter> newm;
 
     const char* keymsg = (mi->key[0] == 0) ? "not-encrypted" : "encrypted";

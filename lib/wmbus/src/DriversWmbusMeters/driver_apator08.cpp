@@ -30,6 +30,7 @@ namespace
 
     static bool ok = registerDriver([](DriverInfo&di)
     {
+        Serial.println("Trygin to register driver apator08");
         di.setName("apator08");
         di.setDefaultFields("name,id,total_m3,timestamp");
         di.setMeterType(MeterType::WaterMeter);

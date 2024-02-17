@@ -19,7 +19,7 @@
 
 #include "SuplaDeviceGUI.h"
 
-#if defined(SUPLA_HC_SR04) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA) || defined(SUPLA_PMSX003) || \
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA_KPOP) || defined(SUPLA_PMSX003) || \
     defined(SUPLA_DIRECT_LINKS_MULTI_SENSOR)
 #define GUI_SENSOR_OTHER
 #endif
@@ -86,7 +86,7 @@ void handleCounterCalibrateSave();
 #define INPUT_PZEM_TX "iptx"
 #endif
 
-#ifdef SUPLA_VINDRIKTNING_IKEA
+#ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
 #define INPUT_VINDRIKTNING_IKEA_RX "ivirx"
 #endif
 

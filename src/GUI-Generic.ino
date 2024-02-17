@@ -440,7 +440,7 @@ void setup() {
   }
 #endif
 
-#ifdef SUPLA_VINDRIKTNING_IKEA
+#ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
   if (ConfigESP->getGpio(FUNCTION_VINDRIKTNING_IKEA) != OFF_GPIO) {
 #ifdef ARDUINO_ARCH_ESP32
     auto vindriktningIkea = new Supla::Sensor::VindriktningIkea(ConfigESP->getHardwareSerial(ConfigESP->getGpio(FUNCTION_VINDRIKTNING_IKEA)));

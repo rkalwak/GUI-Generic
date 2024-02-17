@@ -1273,7 +1273,7 @@
 		}
 	},
 	"AIR_QUALITY_SENSORS": {
-		"SUPLA_VINDRIKTNING_IKEA": {
+		"SUPLA_VINDRIKTNING_IKEA_KPOP": {
 			"name": "IKEA VINDRIKTNING",
 			"desc": "Ustawienia urządzenia->Inne. Czujnik cząstek stałych PM1006",
 			"defOn": false,

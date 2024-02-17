@@ -190,7 +190,7 @@
 #include "src/improv/improv_serial_component.h"
 #include "src/network/SuplaGuiWiFi.h"
 
-#ifdef SUPLA_VINDRIKTNING_IKEA
+#ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
 #include "src/sensor/VindriktningIkea.h"
 #endif
 

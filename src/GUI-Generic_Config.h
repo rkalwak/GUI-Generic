@@ -75,7 +75,7 @@
 // #define SUPLA_ADE7953
 
 // #define SUPLA_PMSX003 
-// #define SUPLA_VINDRIKTNING_IKEA
+// #define SUPLA_VINDRIKTNING_IKEA_KPOP
 
 // ##### Analog #####
 // #define SUPLA_NTC_10K

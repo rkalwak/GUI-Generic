@@ -155,7 +155,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_VINDRIKTNING_IKEA
+#ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_VINDRIKTNING_IKEA);
   addListGPIOBox(INPUT_VINDRIKTNING_IKEA_RX, S_RX, FUNCTION_VINDRIKTNING_IKEA);
   addFormHeaderEnd();
@@ -356,7 +356,7 @@ void handleOtherSave() {
   ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, WebServer->httpServer->arg(INPUT_HC_SR04_MAX_SENSOR_READ).c_str());
 #endif
 
-#ifdef SUPLA_VINDRIKTNING_IKEA
+#ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
   if (!WebServer->saveGPIO(INPUT_VINDRIKTNING_IKEA_RX, FUNCTION_VINDRIKTNING_IKEA)) {
     handleOther(6);
     return;

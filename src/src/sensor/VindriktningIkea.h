@@ -17,7 +17,7 @@
 #define _VindriktningIkea_h
 
 #include <Arduino.h>
-#include <supla/sensor/thermometer.h>
+#include <supla/sensor/general_purpose_measurement.h>
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include <SoftwareSerial.h>
@@ -28,7 +28,7 @@
 #define VINDRIKTNING_IKEA_BAUDRATE 9600
 
 struct particleSensorState_t {
-  double avgPM25 = TEMPERATURE_NOT_AVAILABLE;
+  double avgPM25 = NAN;
   double measurements[5] = {0, 0, 0, 0, 0};
   uint8_t measurementIdx = 0;
   boolean valid = false;
@@ -36,7 +36,7 @@ struct particleSensorState_t {
 
 namespace Supla {
 namespace Sensor {
-class VindriktningIkea : public Thermometer {
+class VindriktningIkea : public GeneralPurposeMeasurement {
  public:
 #ifdef ARDUINO_ARCH_ESP32
   VindriktningIkea(HardwareSerial& serial);

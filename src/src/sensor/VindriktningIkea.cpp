@@ -34,7 +34,7 @@ VindriktningIkea::VindriktningIkea(int8_t _pin_rx) {
 #endif
 
 double VindriktningIkea::getValue() {
-  double value = TEMPERATURE_NOT_AVAILABLE;
+  double value = NAN;
 
   if (state.valid) {
     value = state.avgPM25;
@@ -52,6 +52,9 @@ void VindriktningIkea::iterateAlways() {
 }
 
 void VindriktningIkea::onInit() {
+  this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+  this->setDefaultUnitAfterValue("μg/m³");
+
   handleUart(state);
   channel.setNewValue(getValue());
 }

@@ -42,18 +42,23 @@
 #define INPUT_WMBUS_SENSOR_TYPE1 "s_type1"
 #define INPUT_WMBUS_SENSOR_TYPE2 "s_type2"
 #define INPUT_WMBUS_SENSOR_TYPE3 "s_type3"
+#define INPUT_WMBUS_SENSOR_TYPE4 "s_type4"
 #define INPUT_WMBUS_SENSOR_ID1 "s_id1"
 #define INPUT_WMBUS_SENSOR_ID2 "s_id2"
 #define INPUT_WMBUS_SENSOR_ID3 "s_id3"
+#define INPUT_WMBUS_SENSOR_ID4 "s_id4"
 #define INPUT_WMBUS_SENSOR_KEY1 "s_key1"
 #define INPUT_WMBUS_SENSOR_KEY2 "s_key2"
 #define INPUT_WMBUS_SENSOR_KEY3 "s_key3"
+#define INPUT_WMBUS_SENSOR_KEY4 "s_key4"
 #define INPUT_WMBUS_SENSOR_PROP1 "s_prop1"
 #define INPUT_WMBUS_SENSOR_PROP2 "s_prop2"
 #define INPUT_WMBUS_SENSOR_PROP3 "s_prop3"
+#define INPUT_WMBUS_SENSOR_PROP4 "s_prop4"
 #define INPUT_WMBUS_SENSOR_ENABLED1 "s_enabled1"
 #define INPUT_WMBUS_SENSOR_ENABLED2 "s_enabled2"
 #define INPUT_WMBUS_SENSOR_ENABLED3 "s_enabled3"
+#define INPUT_WMBUS_SENSOR_ENABLED4 "s_enabled4"
 const char* const sensors_types[] PROGMEM = {
     "amiplus", 
     "apator08", 
@@ -120,7 +125,10 @@ enum _wmbus_config_positions
   WMBUS_CFG_SENSOR_ENABLED2,
   WMBUS_CFG_SENSOR_TYPE3,
   WMBUS_CFG_SENSOR_PROPERTY3,
-  WMBUS_CFG_SENSOR_ENABLED3
+  WMBUS_CFG_SENSOR_ENABLED3,
+  WMBUS_CFG_SENSOR_TYPE4,
+  WMBUS_CFG_SENSOR_PROPERTY4,
+  WMBUS_CFG_SENSOR_ENABLED4
 };
 #endif
 

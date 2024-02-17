@@ -1383,7 +1383,7 @@
 			},
 			"fr": {
 				"name": "Désactivation de LittleFS",
-				"desc": "Il exclut l'ajout du LITTLEFS includa, qui permet d'économiser près de 100 Ko sur la compilation.",
+				"desc": "Il exclut l´ajout du LITTLEFS includa, qui permet d´économiser près de 100 Ko sur la compilation.",
 				"alertOff": "La désactivation de cette option augmentera la compilation de près de 100 Ko, réduisant ainsi la quantité d'espace disponible, par exemple pour l'OTA."
 			}
 		},

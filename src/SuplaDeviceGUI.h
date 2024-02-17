@@ -279,8 +279,7 @@ struct ActionTrigger {
 extern ActionTrigger *actionTrigger;
 
 void addButtonActionTrigger(uint8_t nr);
-void addActionTriggerRelatedChannel(
-    uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
+void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
 int calculateElementCountActionTrigger();
 #endif
 
@@ -346,11 +345,11 @@ extern Supla::Sensor::MPX_5XXX *mpx;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_MAP
-extern Supla::Sensor::AnalogRedingMap **analog;
+extern std::vector<Supla::Sensor::AnalogRedingMap *> analogSensorData;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP
-extern Supla::Sensor::AnalogReding **analog;
+extern std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM

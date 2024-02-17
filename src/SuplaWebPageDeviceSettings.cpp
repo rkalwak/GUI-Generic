@@ -55,7 +55,7 @@ void handleDeviceSettings() {
 #endif
 
 #ifdef GUI_SENSOR_ANALOG
-  addButton(F("ANALOG"), PATH_ANALOG);
+  addButton(S_ANALOG, PATH_ANALOG);
 #endif
 
 #ifdef GUI_OTHER

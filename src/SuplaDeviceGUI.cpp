@@ -786,11 +786,11 @@ Supla::Sensor::MPX_5XXX *mpx = nullptr;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_MAP
-Supla::Sensor::AnalogRedingMap **analog = nullptr;
+std::vector<Supla::Sensor::AnalogRedingMap *> analogSensorData;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP
-Supla::Sensor::AnalogReding **analog = nullptr;
+std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM

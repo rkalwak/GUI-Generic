@@ -19,7 +19,7 @@
 #define _analog_reding_map_kpop_h
 
 #include <Arduino.h>
-#include "general_purpose_measurement.h"
+#include <supla/sensor/general_purpose_measurement.h>
 #include <supla/storage/storage.h>
 
 #ifdef ARDUINO_ARCH_ESP32

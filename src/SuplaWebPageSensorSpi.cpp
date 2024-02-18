@@ -266,6 +266,31 @@ void handleSensorSpiSave() {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 0);
   }
 
+  // third sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED4;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE4;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE4, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID4;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 2, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY4;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 2, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP4;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY4, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 0);
+  }
+
 #endif
 
   switch (ConfigManager->save()) {

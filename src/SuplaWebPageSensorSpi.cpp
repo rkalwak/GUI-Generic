@@ -183,12 +183,13 @@ void handleSensorSpiSave() {
   }
  
   input = INPUT_WMBUS_SENSOR_ID1;
+  auto elementIndex = 0;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 0, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
   }
 
   input = INPUT_WMBUS_SENSOR_KEY1;
-  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 0, WebServer->httpServer->arg(input).c_str());
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
 
   input = INPUT_WMBUS_SENSOR_PROP1;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -205,10 +206,11 @@ void handleSensorSpiSave() {
     }
   
     input = INPUT_WMBUS_SENSOR_ID2;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 1, WebServer->httpServer->arg(input).c_str());
+    elementIndex = 1;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_KEY2;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 1, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_PROP2;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -222,6 +224,7 @@ void handleSensorSpiSave() {
 
   // third sensor is optional
   input = INPUT_WMBUS_SENSOR_ENABLED3;
+  elementIndex = 2;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED3, 1);
     input = INPUT_WMBUS_SENSOR_TYPE3;
@@ -230,10 +233,10 @@ void handleSensorSpiSave() {
     }
   
     input = INPUT_WMBUS_SENSOR_ID3;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 2, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_KEY3;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 2, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_PROP3;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
@@ -245,8 +248,9 @@ void handleSensorSpiSave() {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED3, 0);
   }
 
-  // third sensor is optional
+  // fourth sensor is optional
   input = INPUT_WMBUS_SENSOR_ENABLED4;
+  elementIndex = 3;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 1);
     input = INPUT_WMBUS_SENSOR_TYPE4;
@@ -255,10 +259,10 @@ void handleSensorSpiSave() {
     }
   
     input = INPUT_WMBUS_SENSOR_ID4;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 2, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_KEY4;
-    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 2, WebServer->httpServer->arg(input).c_str());
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
 
     input = INPUT_WMBUS_SENSOR_PROP4;
     if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {

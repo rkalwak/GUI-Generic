@@ -95,16 +95,19 @@ void handleSensorAnalog(int save) {
   addListGPIOBox(INPUT_ANALOG_READING_MAP, F("ADC Pin"), FUNCTION_ANALOG_READING);
 #endif
 
-  if (ConfigESP->getGpio(FUNCTION_ANALOG_READING) != OFF_GPIO) {
-    addNumberBox(INPUT_MAX_ANALOG_READING, S_QUANTITY, KEY_MAX_ANALOG_READING, ConfigESP->countFreeGpio(FUNCTION_ANALOG_READING));
+  addNumberBox(INPUT_MAX_ANALOG_READING, S_QUANTITY, KEY_MAX_ANALOG_READING, ConfigESP->countFreeGpio(FUNCTION_ANALOG_READING));
 
-    int maxAnalogReading = ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt();
-    int sizeAnalogSensorData = static_cast<int>(Supla::GUI::analogSensorData.size());
+  int maxAnalogReading = ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt();
+  int sizeAnalogSensorData = static_cast<int>(Supla::GUI::analogSensorData.size());
+  int gpioValue = ConfigESP->getGpio(FUNCTION_ANALOG_READING);
 
-    for (int nr = 0; nr < maxAnalogReading; nr++) {
+  for (int nr = 0; nr < maxAnalogReading; nr++) {
 #ifdef ARDUINO_ARCH_ESP32
-      addListGPIOBox(INPUT_ANALOG_READING_MAP, F("ADC Pin"), FUNCTION_ANALOG_READING, nr);
+    addListGPIOBox(INPUT_ANALOG_READING_MAP, F("ADC Pin"), FUNCTION_ANALOG_READING, nr);
+    gpioValue = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
 #endif
+
+    if (gpioValue != OFF_GPIO) {
       if (nr >= sizeAnalogSensorData) {
         addLabel("Błąd odczytu wykonaj restart urządzenia.");
       }

@@ -173,16 +173,8 @@ namespace Supla
             Serial.println(meterIdString.c_str());
             Serial.print(readValue);
             Serial.println("m3");
-            if(fabs(readValue - lastReadValue) > 0.01f)
-            {
-              sensor->setNewValue((unsigned _supla_int64_t)(readValue * 1000));
-              sensor->iterateAlways();
-              lastReadValue = readValue;
-            }
-            else
-            {
-              Serial.println("Value is lower than previous one, ignoring.");
-            }
+            sensor->setNewValue((unsigned _supla_int64_t)(readValue * 1000));
+            sensor->iterateAlways();    
           }
           else
           {

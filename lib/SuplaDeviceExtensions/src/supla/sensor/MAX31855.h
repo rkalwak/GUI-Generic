@@ -19,6 +19,7 @@ Copyright (C) krycha88
 
 #include <Adafruit_MAX31855.h>
 #include <Arduino.h>
+#include <supla/sensor/thermometer.h>
 
 namespace Supla {
 namespace Sensor {
@@ -44,8 +45,7 @@ class MAX31855 : public Thermometer {
     return value;
   }
 
- private:
-  void onInit() {
+  void onInit() override {
     channel.setNewValue(getValue());
   }
 

@@ -90,7 +90,7 @@
 #include <supla/sensor/BMP280.h>
 #endif
 #ifdef SUPLA_SI7021_SONOFF
-#include <supla/sensor/Si7021_sonoff.h>
+#include "src/sensor/Si7021Sonoff.h"
 #endif
 #ifdef SUPLA_SHT3x
 #include <supla/sensor/SHT3x.h>

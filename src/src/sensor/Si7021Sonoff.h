@@ -28,19 +28,26 @@ namespace Supla {
 namespace Sensor {
 class Si7021Sonoff : public ThermHygroMeter {
  public:
-  Si7021Sonoff(int8_t pin):sensor(pin) {
-    sensor.setType(70);//type for sonoff
+  Si7021Sonoff(int8_t pin) : sensor(pin) {
+    statusSensor = DHTLIB_WAITING_FOR_READ;
     retryCountTemp = 0;
     retryCountHumi = 0;
     lastValidTemp = TEMPERATURE_NOT_AVAILABLE;
     lastValidHumi = HUMIDITY_NOT_AVAILABLE;
+
+    sensor.setType(70);  // type for sonoff
+  }
+
+  void onInit() {
+    statusSensor = sensor.read();
   }
 
   double getTemp() {
     double value = TEMPERATURE_NOT_AVAILABLE;
-    
+
     value = sensor.getTemperature();
-    if (isnan(value)) {
+
+    if (statusSensor != DHTLIB_OK) {
       value = TEMPERATURE_NOT_AVAILABLE;
     }
 
@@ -63,8 +70,10 @@ class Si7021Sonoff : public ThermHygroMeter {
 
   double getHumi() {
     double value = HUMIDITY_NOT_AVAILABLE;
+
     value = sensor.getHumidity();
-    if (isnan(value)) {
+
+    if (statusSensor != DHTLIB_OK) {
       value = HUMIDITY_NOT_AVAILABLE;
     }
 
@@ -88,13 +97,15 @@ class Si7021Sonoff : public ThermHygroMeter {
   void iterateAlways() {
     if (lastReadTime + 10000 < millis()) {
       lastReadTime = millis();
-      sensor.read();
+
+      statusSensor = sensor.read();
       channel.setNewValue(getTemp(), getHumi());
     }
   }
 
  protected:
   ::DHTNEW sensor;
+  int statusSensor;
   double lastValidTemp;
   double lastValidHumi;
   int8_t retryCountTemp;

@@ -182,7 +182,13 @@ void Supla::Protocol::Mqtt::onInit() {
   if (customPrefixLength > 0) {
     customPrefixLength++;  // add one char for '/'
   }
-  sdc->generateHostname(hostname, 3);
+  const int mqttMacSuffixSize = 3;
+  sdc->generateHostname(hostname, mqttMacSuffixSize);
+  // MQTT hostname is generated based on first network interface
+  auto net = Network::FirstInstance();
+  if (net) {
+    net->generateHostname(hostname, mqttMacSuffixSize, hostname);
+  }
   for (int i = 0; i < 32; i++) {
     hostname[i] = static_cast<char>(tolower(hostname[i]));
   }
@@ -220,7 +226,7 @@ void Supla::Protocol::Mqtt::publishDeviceStatus(bool onRegistration) {
     publishBool("state/connected", true, -1, 1);
     uint8_t mac[6] = {};
     char macStr[12 + 6] = {};
-    if (Supla::Network::GetMacAddr(mac)) {
+    if (Supla::Network::GetMainMacAddr(mac)) {
       generateHexString(mac, macStr, 6, ':');
     }
 
@@ -238,10 +244,14 @@ void Supla::Protocol::Mqtt::publishDeviceStatus(bool onRegistration) {
     publishInt("state/connection_uptime", uptime.getConnectionUptime());
   }
 
-  int8_t rssi = 0;
-  memcpy(&rssi, &channelState.WiFiRSSI, 1);
-  publishInt("state/rssi", rssi);
-  publishInt("state/wifi_signal_strength", channelState.WiFiSignalStrength);
+  if (channelState.Fields & SUPLA_CHANNELSTATE_FIELD_WIFIRSSI) {
+    int8_t rssi = 0;
+    memcpy(&rssi, &channelState.WiFiRSSI, 1);
+    publishInt("state/rssi", rssi);
+  }
+  if (channelState.Fields & SUPLA_CHANNELSTATE_FIELD_WIFISIGNALSTRENGTH) {
+    publishInt("state/wifi_signal_strength", channelState.WiFiSignalStrength);
+  }
 }
 
 void Supla::Protocol::Mqtt::publish(const char *topic,
@@ -1349,7 +1359,7 @@ void Supla::Protocol::Mqtt::generateObjectId(char *result, int channelNumber,
     SUPLA_LOG_DEBUG("Mqtt: invalid channel number");
     return;
   }
-  Supla::Network::GetMacAddr(mac);
+  Supla::Network::GetMainMacAddr(mac);
   generateHexString(mac, result, 6);
   for (int i = 0; i < 12; i++) {
     result[i] = static_cast<char>(tolower(result[i]));

@@ -29,11 +29,6 @@ Supla::Client::Client() {
 }
 
 Supla::Client::~Client() {
-  if (destroyCertOnExit && rootCACert != nullptr) {
-    destroyCertOnExit = false;
-    delete[] rootCACert;
-    rootCACert = nullptr;
-  }
 }
 
 int Supla::Client::connect(IPAddress ip, uint16_t port) {
@@ -118,13 +113,7 @@ void Supla::Client::setSSLEnabled(bool enabled) {
   sslEnabled = enabled;
 }
 
-void Supla::Client::setCACert(const char *rootCA, bool destroyCertOnExit) {
-  if (rootCACert != nullptr && this->destroyCertOnExit) {
-    delete[] rootCACert;
-    rootCACert = nullptr;
-  }
-
-  this->destroyCertOnExit = destroyCertOnExit;
+void Supla::Client::setCACert(const char *rootCA) {
   rootCACert = rootCA;
 }
 
@@ -165,6 +154,15 @@ void Supla::Client::setDebugLogs(bool debug) {
   debugLogs = debug;
 }
 
+bool Supla::Client::isDebugLogs() const {
+  return debugLogs;
+}
+
 void Supla::Client::setSdc(SuplaDeviceClass *newSdc) {
   sdc = newSdc;
+}
+
+uint32_t Supla::Client::getSrcConnectionIPAddress() const {
+  // when 0 is returned, supla-device will use default network interface address
+  return srcIp;
 }

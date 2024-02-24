@@ -15,30 +15,51 @@
 */
 
 #include "netif_wifi.h"
+
 #include <string.h>
+#include <supla/storage/config.h>
 
-namespace Supla {
+using Supla::Wifi;
 
-  Wifi::Wifi(const char *wifiSsid, const char *wifiPassword, unsigned char *ip)
-    : Network(ip) {
-      setSsid(wifiSsid);
-      setPassword(wifiPassword);
-    }
-
-  void Wifi::setSsid(const char *wifiSsid) {
-    if (wifiSsid) {
-      strncpy(ssid, wifiSsid, MAX_SSID_SIZE);
-    }
+Wifi::Wifi(const char *wifiSsid, const char *wifiPassword, unsigned char *ip)
+  : Network(ip) {
+    setSsid(wifiSsid);
+    setPassword(wifiPassword);
+    intfType = IntfType::WiFi;
   }
 
-  void Wifi::setPassword(const char *wifiPassword) {
-    if (wifiPassword) {
-      strncpy(password, wifiPassword, MAX_WIFI_PASSWORD_SIZE);
-    }
+void Wifi::setSsid(const char *wifiSsid) {
+  if (wifiSsid) {
+    strncpy(ssid, wifiSsid, MAX_SSID_SIZE);
+  }
+}
+
+void Wifi::setPassword(const char *wifiPassword) {
+  if (wifiPassword) {
+    strncpy(password, wifiPassword, MAX_WIFI_PASSWORD_SIZE);
+  }
+}
+
+bool Wifi::isWifiConfigRequired() {
+  return true;
+}
+
+
+void Wifi::onLoadConfig() {
+  Network::onLoadConfig();
+  auto cfg = Supla::Storage::ConfigInstance();
+  char buf[100] = {};
+  memset(buf, 0, sizeof(buf));
+  if (cfg->getWiFiSSID(buf) && strlen(buf) > 0) {
+    setSsid(buf);
   }
 
-  bool Wifi::isWifiConfigRequired() {
-    return true;
+  memset(buf, 0, sizeof(buf));
+  if (cfg->getWiFiPassword(buf) && strlen(buf) > 0) {
+    setPassword(buf);
   }
+}
 
-};  // namespace Supla
+const char* Wifi::getIntfName() const {
+  return "Wi-Fi";
+}

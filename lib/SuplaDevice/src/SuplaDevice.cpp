@@ -219,7 +219,11 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
     return false;
   }
 
-  Supla::Network::Instance()->setSuplaDeviceClass(this);
+  for (auto net = Supla::Network::FirstInstance(); net != nullptr;
+       net = Supla::Network::NextInstance(net)) {
+    net->setSuplaDeviceClass(this);
+  }
+
   if (Supla::WebServer::Instance()) {
     Supla::WebServer::Instance()->setSuplaDeviceClass(this);
   }
@@ -281,7 +285,7 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
   SUPLA_LOG_DEBUG("Initializing network layer");
   char hostname[32] = {};
   generateHostname(hostname, 6);
-  Supla::Network::SetHostname(hostname);
+  Supla::Network::SetHostname(hostname, 6);
 
   for (auto proto = Supla::Protocol::ProtocolLayer::first(); proto != nullptr;
        proto = proto->next()) {
@@ -627,8 +631,10 @@ bool SuplaDeviceClass::loadDeviceConfig() {
 
   // WiFi specific config
   auto net = Supla::Network::Instance();
+  Supla::Network::LoadConfig();
 
-  if (net != nullptr && net->isWifiConfigRequired()) {
+  if (net != nullptr && !net->isIntfDisabledInConfig() &&
+      net->isWifiConfigRequired()) {
     memset(buf, 0, sizeof(buf));
     if (cfg->getWiFiSSID(buf) && strlen(buf) > 0) {
       net->setSsid(buf);
@@ -912,17 +918,6 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
         skipBytes--;
       }
       destIdx--;
-    }
-  }
-
-  if (macSize > 0) {
-    uint8_t mac[6] = {};
-    if (Supla::Network::GetMacAddr(mac)) {
-      if (name[destIdx - 1] != '-') {
-        name[destIdx++] = '-';
-      }
-      destIdx +=
-          generateHexString(mac + (6 - macSize), &(name[destIdx]), macSize);
     }
   }
 

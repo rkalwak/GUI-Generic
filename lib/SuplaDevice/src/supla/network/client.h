@@ -53,10 +53,13 @@ class Client {
 
   // SSL configuration
   virtual void setSSLEnabled(bool enabled);
-  void setCACert(const char *rootCA, bool destroyCertOnExit = false);
+  void setCACert(const char *rootCA);
 
   void setDebugLogs(bool);
+  bool isDebugLogs() const;
   void setSdc(SuplaDeviceClass *sdc);
+
+  uint32_t getSrcConnectionIPAddress() const;
 
  protected:
   virtual int connectImp(const char *host, uint16_t port) = 0;
@@ -65,10 +68,10 @@ class Client {
 
   bool sslEnabled = false;
   bool debugLogs = false;
-  bool destroyCertOnExit = false;
   const char *rootCACert = nullptr;
   unsigned int rootCACertSize = 0;
   SuplaDeviceClass *sdc = nullptr;
+  uint32_t srcIp = 0;
 };
 
 extern Client *ClientBuilder();

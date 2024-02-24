@@ -19,16 +19,10 @@
 #ifndef EXTRAS_PORTING_ESP_IDF_ESP_IDF_WIFI_H_
 #define EXTRAS_PORTING_ESP_IDF_ESP_IDF_WIFI_H_
 
-// FreeRTOS includes
-#include <freertos/FreeRTOS.h>
-#include <freertos/event_groups.h>
-#include <freertos/task.h>
-// ESP-IDF includes
-#include <esp_tls.h>
-#include <esp_wifi.h>
-
 // supla-device includes
 #include <supla/network/netif_wifi.h>
+
+#include <esp_wifi.h>
 
 namespace Supla {
 
@@ -50,20 +44,21 @@ class EspIdfWifi : public Supla::Wifi {
   void fillStateData(TDSC_ChannelState *channelState) override;
 
   void setIpReady(bool ready);
-  void setIpv4Addr(unsigned _supla_int_t);
+  void setIpv4Addr(uint32_t ip);
   void setWifiConnected(bool state);
   bool isIpSetupTimeout() override;
 
   bool isInConfigMode();
   void logWifiReason(int);
 
+  uint32_t getIP() override;
+
  protected:
   bool initDone = false;
   bool isWifiConnected = false;
   bool isIpReady = false;
   bool allowDisable = false;
-  EventGroupHandle_t wifiEventGroup;
-  unsigned _supla_int_t ipv4 = 0;
+  uint32_t ipv4 = 0;
   uint8_t lastChannel = 0;
   int lastReasons[SUPLA_ESP_IDF_WIFI_LAST_REASON_MAX] = {};
   int lastReasonIdx = 0;

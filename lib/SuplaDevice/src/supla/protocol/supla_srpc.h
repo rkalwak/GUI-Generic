@@ -53,10 +53,14 @@ class CalCfgResultPending {
 
 class SuplaSrpc : public ProtocolLayer {
  public:
+  static bool isSuplaSSLEnabled;
+
   explicit SuplaSrpc(SuplaDeviceClass *sdc, int version = 16);
   ~SuplaSrpc();
 
   static bool isSuplaPublicServerConfigured();
+
+  void setNetworkClient(Supla::Client *newClient);
 
   void onInit() override;
   bool onLoadConfig() override;
@@ -67,6 +71,7 @@ class SuplaSrpc : public ProtocolLayer {
   bool isNetworkRestartRequested() override;
   uint32_t getConnectionFailTime() override;
   bool isRegisteredAndReady() override;
+  void initClient();
 
   void sendActionTrigger(uint8_t channelNumber, uint32_t actionId) override;
   void sendRegisterNotification(
@@ -153,6 +158,7 @@ class SuplaSrpc : public ProtocolLayer {
 
   const char *suplaCACert = nullptr;
   const char *supla3rdPartyCACert = nullptr;
+  const char *selectedCertificate = nullptr;
   void *srpc = nullptr;
 
  private:

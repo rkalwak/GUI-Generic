@@ -57,10 +57,12 @@ set(SUPLA_DEVICE_SRCS
   src/supla/network/web_server.cpp
   src/supla/network/web_sender.cpp
   src/supla/network/netif_wifi.cpp
+  src/supla/network/netif_lan.cpp
   src/supla/network/html/device_info.cpp
   src/supla/network/html/protocol_parameters.cpp
   src/supla/network/html/status_led_parameters.cpp
   src/supla/network/html/wifi_parameters.cpp
+  src/supla/network/html/ethernet_parameters.cpp
   src/supla/network/html/sw_update_beta.cpp
   src/supla/network/html/sw_update.cpp
   src/supla/network/html/custom_sw_update.cpp
@@ -134,6 +136,8 @@ set(SUPLA_DEVICE_SRCS
   src/supla/sensor/memory_variable_driver.cpp
   src/supla/sensor/virtual_binary.cpp
   src/supla/sensor/ntc10k.cpp
+  src/supla/sensor/weight.cpp
+  src/supla/sensor/distance.cpp
 )
 
 set(NETTLE_SRCS

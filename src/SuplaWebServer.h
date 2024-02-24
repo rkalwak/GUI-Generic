@@ -75,7 +75,12 @@ class SuplaWebServer : public Supla::Element {
   void createWebServer();
   void handleNotFound();
 
+#ifdef ARDUINO_ARCH_ESP8266
   static const int MAX_BUFFER_SIZE = 32;
+#elif ARDUINO_ARCH_ESP32
+  static const int MAX_BUFFER_SIZE = 265;
+#endif
+
   char contentBuffer[MAX_BUFFER_SIZE];
   size_t bufferIndex = 0;
   bool chunkedSendHeader = false;

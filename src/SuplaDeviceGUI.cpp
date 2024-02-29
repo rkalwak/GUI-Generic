@@ -255,7 +255,12 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
             button->repeatOnHoldEvery(250);
           }
           else {
-            button->addAction(buttonActionInternal, client, Supla::Event::ON_CLICK_1);
+            if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
+              button->addAction(buttonActionInternal, client, Supla::Event::ON_CLICK_1);
+            }
+            else {
+              button->addAction(buttonActionInternal, client, buttonEvent);
+            }
           }
           break;
       }

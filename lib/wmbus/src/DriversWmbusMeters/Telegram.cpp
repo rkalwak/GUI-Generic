@@ -477,6 +477,7 @@ void Telegram::addId(const vector<uchar>::iterator& pos)
 
 void Telegram::print()
 {
+#ifdef DEBUG_ENABLED
     uchar a = 0, b = 0, c = 0, d = 0;
     if (dll_id.size() >= 4)
     {
@@ -518,13 +519,13 @@ void Telegram::print()
         debug("                device: %s\n", about.device.c_str());
         debug("                  rssi: %d dBm\n", about.rssi_dbm);
     }
-    string possible_drivers = autoDetectPossibleDrivers();
-    debug("                driver: %s\n", possible_drivers.c_str());
+#endif
 }
 
 void Telegram::printDLL()
 {
-    if (about.type == FrameType::WMBUS)
+    #ifdef DEBUG_ENABLED
+    if ( about.type == FrameType::WMBUS)
     {
         string possible_drivers = autoDetectPossibleDrivers();
 
@@ -542,41 +543,38 @@ void Telegram::printDLL()
             about.device.c_str(),
             about.rssi_dbm);
     }
-
-    if (about.type == FrameType::MBUS)
-    {
-        verbose("(telegram) DLL L=%02x C=%02x (%s) A=%02x\n",
-            dll_len,
-            dll_c, cType(dll_c).c_str(),
-            mbus_primary_address);
-    }
-
+    #endif
 }
 
 void Telegram::printELL()
 {
-    if (ell_ci == 0) return;
+     #ifdef DEBUG_ENABLED
+     {
+        if (ell_ci == 0) return;
 
-    string ell_cc_info = ccType(ell_cc);
-    verbose("(telegram) ELL CI=%02x CC=%02x (%s) ACC=%02x",
-        ell_ci, ell_cc, ell_cc_info.c_str(), ell_acc);
+        string ell_cc_info = ccType(ell_cc);
+        verbose("(telegram) ELL CI=%02x CC=%02x (%s) ACC=%02x",
+            ell_ci, ell_cc, ell_cc_info.c_str(), ell_acc);
 
-    if (ell_ci == 0x8d || ell_ci == 0x8f)
-    {
-        string ell_sn_info = toStringFromELLSN(ell_sn);
+        if (ell_ci == 0x8d || ell_ci == 0x8f)
+        {
+            string ell_sn_info = toStringFromELLSN(ell_sn);
 
-        verbose(" SN=%02x%02x%02x%02x (%s) CRC=%02x%02x",
-            ell_sn_b[0], ell_sn_b[1], ell_sn_b[2], ell_sn_b[3], ell_sn_info.c_str(),
-            ell_pl_crc_b[0], ell_pl_crc_b[1]);
+            verbose(" SN=%02x%02x%02x%02x (%s) CRC=%02x%02x",
+                ell_sn_b[0], ell_sn_b[1], ell_sn_b[2], ell_sn_b[3], ell_sn_info.c_str(),
+                ell_pl_crc_b[0], ell_pl_crc_b[1]);
+        }
+        if (ell_ci == 0x8e || ell_ci == 0x8f)
+        {
+            string man = manufacturerFlag(ell_mfct);
+            verbose(" M=%02x%02x (%s) ID=%02x%02x%02x%02x",
+                ell_mfct_b[0], ell_mfct_b[1], man.c_str(),
+                ell_id_b[0], ell_id_b[1], ell_id_b[2], ell_id_b[3]);
+        }
+        verbose("\n");
+     
     }
-    if (ell_ci == 0x8e || ell_ci == 0x8f)
-    {
-        string man = manufacturerFlag(ell_mfct);
-        verbose(" M=%02x%02x (%s) ID=%02x%02x%02x%02x",
-            ell_mfct_b[0], ell_mfct_b[1], man.c_str(),
-            ell_id_b[0], ell_id_b[1], ell_id_b[2], ell_id_b[3]);
-    }
-    verbose("\n");
+    #endif
 }
 
 void Telegram::printNWL()
@@ -628,6 +626,7 @@ string toStringFromTPLConfig(int cfg)
 
 void Telegram::printTPL()
 {
+    #ifdef DEBUG_ENABLED
     if (tpl_ci == 0) return;
 
     verbose("(telegram) TPL CI=%02x", tpl_ci);
@@ -649,6 +648,7 @@ void Telegram::printTPL()
     }
 
     verbose("\n");
+    #endif
 }
 
 string manufacturer(int m_field) {
@@ -884,11 +884,21 @@ int ciFieldLength(int ci_field)
 
 bool isCiFieldManufacturerSpecific(int ci_field)
 {
-    return ci_field >= 0xA0 && ci_field <= 0xB7;
+    bool isSpecific= ci_field >= 0xA0 && ci_field <= 0xB7;
+if(isSpecific)
+{
+     debug("mfct specific");
+}
+else{
+     debug("not mfct specific");
+     Serial.println(ci_field);
+}
+    return isSpecific;
 }
 
 string ciType(int ci_field)
 {
+     #ifdef DEBUG_ENABLED
     if (ci_field >= 0xA0 && ci_field <= 0xB7) {
         return "Mfct specific";
     }
@@ -994,6 +1004,7 @@ string ciType(int ci_field)
     case 0xC4: return "Security info transfer from device (short tplh)";
     case 0xC5: return "Security info transfer from device (long tplh)";
     }
+    #endif
     return "?";
 }
 
@@ -1017,7 +1028,6 @@ void Telegram::addExplanationAndIncrementPos(vector<uchar>::iterator& pos, int l
 
 void Telegram::setExplanation(vector<uchar>::iterator& pos, int len, KindOfData k, Understanding u, const char* fmt, ...)
 {
-/*
     char buf[1024];
     buf[1023] = 0;
 
@@ -1028,7 +1038,6 @@ void Telegram::setExplanation(vector<uchar>::iterator& pos, int len, KindOfData 
 
     Explanation e(distance(frame.begin(), pos), len, buf, k, u);
     explanations.push_back(e);
-*/
 }
 
 void Telegram::addMoreExplanation(int pos, string json)
@@ -1038,7 +1047,7 @@ void Telegram::addMoreExplanation(int pos, string json)
 
 void Telegram::addMoreExplanation(int pos, const char* fmt, ...)
 {
-/*
+ #ifdef DEBUG_ENABLED
     char buf[1024];
 
     buf[1023] = 0;
@@ -1063,12 +1072,12 @@ void Telegram::addMoreExplanation(int pos, const char* fmt, ...)
     if (!found) {
         debug("(wmbus) warning: cannot find offset %d to add more explanation \"%s\"\n", pos, buf);
     }
-*/
+#endif
 }
 
 void Telegram::addSpecialExplanation(int offset, int len, KindOfData k, Understanding u, const char* fmt, ...)
 {
-/*
+ #ifdef DEBUG_ENABLED
     char buf[1024];
     buf[1023] = 0;
 
@@ -1078,7 +1087,7 @@ void Telegram::addSpecialExplanation(int offset, int len, KindOfData k, Understa
     va_end(args);
 
     explanations.push_back({ offset, len, buf, k, u });
-*/
+#endif
 }
 
 bool expectedMore(int line)
@@ -2078,6 +2087,7 @@ bool Telegram::parse_TPL_79(vector<uchar>::iterator& pos)
 
 bool Telegram::parse_TPL_7A(vector<uchar>::iterator& pos)
 {
+    debug("parse tpl 7a start");
     bool ok = parseShortTPL(pos);
     if (!ok) return false;
 
@@ -2088,10 +2098,12 @@ bool Telegram::parse_TPL_7A(vector<uchar>::iterator& pos)
 
     if (decrypt_ok)
     {
+        debug("parse tpl 7a decryption ok, parsing dv");
         parseDV(this, frame, pos, remaining, &dv_entries);
     }
     else
     {
+        debug("parse tpl 7a decryption failed");
         decryption_failed = true;
     }
     return true;
@@ -2114,7 +2126,7 @@ bool Telegram::parseTPL(vector<uchar>::iterator& pos)
             ci_field);
         if (parser_warns_)
         {
-            warning("(wmbus) Unknown tpl-ci-field %02x\n", ci_field);
+             DEBUG_PARSER("(wmbus) Unknown tpl-ci-field %02x\n", ci_field);
         }
         return false;
     }
@@ -2168,11 +2180,10 @@ void Telegram::preProcess()
 
 bool Telegram::parse(vector<uchar>& input_frame, MeterKeys* mk, bool warn)
 {
+        Serial.println("meters: parsing frame");
     switch (about.type)
     {
     case FrameType::WMBUS: return parseWMBUS(input_frame, mk, warn);
-    case FrameType::MBUS: return parseMBUS(input_frame, mk, warn);
-    case FrameType::HAN: return parseHAN(input_frame, mk, warn);
     }
     assert(0);
     return false;
@@ -2180,11 +2191,10 @@ bool Telegram::parse(vector<uchar>& input_frame, MeterKeys* mk, bool warn)
 
 bool Telegram::parseHeader(vector<uchar>& input_frame)
 {
+    Serial.println("meters: parsing header");
     switch (about.type)
     {
     case FrameType::WMBUS: return parseWMBUSHeader(input_frame);
-    case FrameType::MBUS: return parseMBUSHeader(input_frame);
-    case FrameType::HAN: return parseHANHeader(input_frame);
     }
     assert(0);
     return false;
@@ -2216,16 +2226,22 @@ bool Telegram::parseWMBUSHeader(vector<uchar>& input_frame)
     ok = parseELL(pos);
     if (!ok) return true;
     // Could not decrypt stop here.
-    if (decryption_failed) return true;
+    if (decryption_failed) {
+         Serial.println("telegram: decryption failed");
+        return true;
+    }
 
     ok = parseNWL(pos);
     if (!ok) return true;
 
     ok = parseAFL(pos);
     if (!ok) return true;
-
+ Serial.println("telegram: tpl");
     ok = parseTPL(pos);
-    if (!ok) return true;
+    if (!ok) {
+         Serial.println("telegram: tpl failed");
+        return true;
+    }
 
     return true;
 }
@@ -2307,71 +2323,6 @@ bool Telegram::parseWMBUS(vector<uchar>& input_frame, MeterKeys* mk, bool warn)
     return true;
 }
 
-bool Telegram::parseMBUSHeader(vector<uchar>& input_frame)
-{
-    assert(about.type == FrameType::MBUS);
-
-    bool ok;
-    // Parsing the header is used to extract the ids, so that we can
-    // match the telegram towards any known ids and thus keys.
-    // No need to warn.
-    parser_warns_ = false;
-    decryption_failed = false;
-    explanations.clear();
-    suffix_size = 0;
-    frame = input_frame;
-    vector<uchar>::iterator pos = frame.begin();
-    // Parsed accumulates parsed bytes.
-    parsed.clear();
-
-    ok = parseMBusDLLandTPL(pos);
-    if (!ok) return false;
-
-    return true;
-}
-
-bool Telegram::parseMBUS(vector<uchar>& input_frame, MeterKeys* mk, bool warn)
-{
-    assert(about.type == FrameType::MBUS);
-
-    parser_warns_ = warn;
-    decryption_failed = false;
-    explanations.clear();
-    suffix_size = 0;
-    meter_keys = mk;
-    assert(meter_keys != NULL);
-    bool ok;
-    frame = input_frame;
-    vector<uchar>::iterator pos = frame.begin();
-    // Parsed accumulates parsed bytes.
-    parsed.clear();
-
-    //     ┌──────────────────────────────────────────────┐
-    //     │                                              │
-    //     │ Parse DLL Data Link Layer for Wireless MBUS. │
-    //     │                                              │
-    //     └──────────────────────────────────────────────┘
-
-    ok = parseMBusDLLandTPL(pos);
-    if (!ok) return false;
-
-    return true;
-}
-
-bool Telegram::parseHANHeader(vector<uchar>& input_frame)
-{
-    assert(about.type == FrameType::HAN);
-
-    return false;
-}
-
-bool Telegram::parseHAN(vector<uchar>& input_frame, MeterKeys* mk, bool warn)
-{
-    assert(about.type == FrameType::HAN);
-
-    return false;
-}
-
 void Telegram::explainParse(string intro, int from)
 {
     for (auto& p : explanations)
@@ -2392,148 +2343,12 @@ void Telegram::explainParse(string intro, int from)
     }
 }
 
-string renderAnalysisAsText(vector<Explanation>& explanations, OutputFormat of)
-{
-    string s;
-
-    const char* green;
-    const char* yellow;
-    const char* red;
-    const char* reset;
-
-    if (of == OutputFormat::TERMINAL)
-    {
-        green = "\033[0;97m\033[1;42m";
-        yellow = "\033[0;97m\033[0;43m";
-        red = "\033[0;97m\033[0;41m\033[1;37m";
-        reset = "\033[0m";
-    }
-    else if (of == OutputFormat::HTML)
-    {
-        green = "<span style=\"color:white;background-color:#008450;\">";
-        yellow = "<span style=\"color:white;background-color:#efb700;\">";
-        red = "<span style=\"color:white;background-color:#b81d13;\">";
-        reset = "</span>";
-    }
-    else
-    {
-        green = "";
-        yellow = "";
-        red = "";
-        reset = "";
-    }
-
-    for (auto& p : explanations)
-    {
-        // Protocol or content?
-        const char* c = p.kind == KindOfData::PROTOCOL ? " " : "C";
-        const char* u = "?";
-        if (p.understanding == Understanding::FULL) u = "!";
-        if (p.understanding == Understanding::PARTIAL) u = "p";
-        if (p.understanding == Understanding::ENCRYPTED) u = "E";
-        if (p.understanding == Understanding::COMPRESSED) u = "C";
-
-        // Do not print ok for understood protocol, it is implicit.
-        // However if a protocol is not full understood then print p or ?.
-        if (p.kind == KindOfData::PROTOCOL && p.understanding == Understanding::FULL) u = " ";
-
-        const char* pre;
-        const char* post = reset;
-
-        if (*u == '!')
-        {
-            pre = green;
-        }
-        else if (*u == 'p')
-        {
-            pre = yellow;
-        }
-        else if (*u == ' ')
-        {
-            pre = "";
-            post = "";
-        }
-        else
-        {
-            pre = red;
-        }
-
-        s += tostrprintf("%03d %s%s: %s%s%s\n", p.pos, c, u, pre, p.info.c_str(), post);
-    }
-    return s;
-}
-
-string renderAnalysisAsJson(vector<Explanation>& explanations)
-{
-    return "{ \"TODO\": true }\n";
-}
-
-string Telegram::analyzeParse(OutputFormat format, int* content_length, int* understood_content_length)
-{
-    int u = 0;
-    int l = 0;
-
-    sort(explanations.begin(), explanations.end(),
-        [](const Explanation& a, const Explanation& b) -> bool { return a.pos < b.pos; });
-
-    // Calculate how much is understood.
-    for (auto& e : explanations)
-    {
-        if (e.kind == KindOfData::CONTENT)
-        {
-            l += e.len;
-            if (e.understanding == Understanding::PARTIAL ||
-                e.understanding == Understanding::FULL)
-            {
-                // Its content and we have at least some understanding.
-                u += e.len;
-            }
-        }
-    }
-    *content_length = l;
-    *understood_content_length = u;
-
-    switch (format)
-    {
-    case OutputFormat::PLAIN:
-    case OutputFormat::HTML:
-    case OutputFormat::TERMINAL:
-    {
-        return renderAnalysisAsText(explanations, format);
-        break;
-    }
-    case OutputFormat::JSON:
-        return renderAnalysisAsJson(explanations);
-        break;
-    case OutputFormat::NONE:
-        // Do nothing
-        return "";
-        break;
-    }
-    return "ERROR";
-}
-
 void detectMeterDrivers(int manufacturer, int media, int version, std::vector<std::string>* drivers);
-
-string Telegram::autoDetectPossibleDrivers()
-{
-    vector<string> drivers;
-    detectMeterDrivers(dll_mfct, dll_type, dll_version, &drivers);
-    if (tpl_id_found)
-    {
-        detectMeterDrivers(tpl_mfct, tpl_type, tpl_version, &drivers);
-    }
-    string possibles;
-    for (string d : drivers) possibles = possibles + d + " ";
-    if (possibles != "") possibles.pop_back();
-    else possibles = "unknown!";
-
-    return possibles;
-}
 
 string cType(int c_field)
 {
     string s;
+#ifdef DEBUG_ENABLED
     if (c_field & 0x80)
     {
         s += "relayed ";
@@ -2561,7 +2376,7 @@ string cType(int c_field)
     case 0xa: s += "REQ_UD1"; break; // to meter, alarm request
     case 0xb: s += "REQ_UD2"; break; // to meter, data request
     }
-
+#endif
     return s;
 }
 
@@ -2584,6 +2399,7 @@ bool isValidMBusCField(int c_field)
 string ccType(int cc_field)
 {
     string s = "";
+ #ifdef DEBUG_ENABLED
     if (cc_field & CC_B_BIDIRECTIONAL_BIT) s += "bidir ";
     if (cc_field & CC_RD_RESPONSE_DELAY_BIT) s += "fast_resp ";
     else s += "slow_resp ";
@@ -2592,489 +2408,8 @@ string ccType(int cc_field)
     if (cc_field & CC_P_HIGH_PRIO_BIT) s += "prio ";
 
     if (s.size() > 0 && s.back() == ' ') s.pop_back();
+#endif
     return s;
-}
-//
-//string vifType(int vif)
-//{
-//    // Remove any remaining 0x80 top bits.
-//    vif &= 0x7f7f;
-//
-//    switch (vif)
-//    {
-//    case 0x00: return "Energy mWh";
-//    case 0x01: return "Energy 10⁻² Wh";
-//    case 0x02: return "Energy 10⁻¹ Wh";
-//    case 0x03: return "Energy Wh";
-//    case 0x04: return "Energy 10¹ Wh";
-//    case 0x05: return "Energy 10² Wh";
-//    case 0x06: return "Energy kWh";
-//    case 0x07: return "Energy 10⁴ Wh";
-//
-//    case 0x08: return "Energy J";
-//    case 0x09: return "Energy 10¹ J";
-//    case 0x0A: return "Energy 10² J";
-//    case 0x0B: return "Energy kJ";
-//    case 0x0C: return "Energy 10⁴ J";
-//    case 0x0D: return "Energy 10⁵ J";
-//    case 0x0E: return "Energy MJ";
-//    case 0x0F: return "Energy 10⁷ J";
-//
-//    case 0x10: return "Volume cm³";
-//    case 0x11: return "Volume 10⁻⁵ m³";
-//    case 0x12: return "Volume 10⁻⁴ m³";
-//    case 0x13: return "Volume l";
-//    case 0x14: return "Volume 10⁻² m³";
-//    case 0x15: return "Volume 10⁻¹ m³";
-//    case 0x16: return "Volume m³";
-//    case 0x17: return "Volume 10¹ m³";
-//
-//    case 0x18: return "Mass g";
-//    case 0x19: return "Mass 10⁻² kg";
-//    case 0x1A: return "Mass 10⁻¹ kg";
-//    case 0x1B: return "Mass kg";
-//    case 0x1C: return "Mass 10¹ kg";
-//    case 0x1D: return "Mass 10² kg";
-//    case 0x1E: return "Mass t";
-//    case 0x1F: return "Mass 10⁴ kg";
-//
-//    case 0x20: return "On time seconds";
-//    case 0x21: return "On time minutes";
-//    case 0x22: return "On time hours";
-//    case 0x23: return "On time days";
-//
-//    case 0x24: return "Operating time seconds";
-//    case 0x25: return "Operating time minutes";
-//    case 0x26: return "Operating time hours";
-//    case 0x27: return "Operating time days";
-//
-//    case 0x28: return "Power mW";
-//    case 0x29: return "Power 10⁻² W";
-//    case 0x2A: return "Power 10⁻¹ W";
-//    case 0x2B: return "Power W";
-//    case 0x2C: return "Power 10¹ W";
-//    case 0x2D: return "Power 10² W";
-//    case 0x2E: return "Power kW";
-//    case 0x2F: return "Power 10⁴ W";
-//
-//    case 0x30: return "Power J/h";
-//    case 0x31: return "Power 10¹ J/h";
-//    case 0x32: return "Power 10² J/h";
-//    case 0x33: return "Power kJ/h";
-//    case 0x34: return "Power 10⁴ J/h";
-//    case 0x35: return "Power 10⁵ J/h";
-//    case 0x36: return "Power MJ/h";
-//    case 0x37: return "Power 10⁷ J/h";
-//
-//    case 0x38: return "Volume flow cm³/h";
-//    case 0x39: return "Volume flow 10⁻⁵ m³/h";
-//    case 0x3A: return "Volume flow 10⁻⁴ m³/h";
-//    case 0x3B: return "Volume flow l/h";
-//    case 0x3C: return "Volume flow 10⁻² m³/h";
-//    case 0x3D: return "Volume flow 10⁻¹ m³/h";
-//    case 0x3E: return "Volume flow m³/h";
-//    case 0x3F: return "Volume flow 10¹ m³/h";
-//
-//    case 0x40: return "Volume flow ext. 10⁻⁷ m³/min";
-//    case 0x41: return "Volume flow ext. cm³/min";
-//    case 0x42: return "Volume flow ext. 10⁻⁵ m³/min";
-//    case 0x43: return "Volume flow ext. 10⁻⁴ m³/min";
-//    case 0x44: return "Volume flow ext. l/min";
-//    case 0x45: return "Volume flow ext. 10⁻² m³/min";
-//    case 0x46: return "Volume flow ext. 10⁻¹ m³/min";
-//    case 0x47: return "Volume flow ext. m³/min";
-//
-//    case 0x48: return "Volume flow ext. mm³/s";
-//    case 0x49: return "Volume flow ext. 10⁻⁸ m³/s";
-//    case 0x4A: return "Volume flow ext. 10⁻⁷ m³/s";
-//    case 0x4B: return "Volume flow ext. cm³/s";
-//    case 0x4C: return "Volume flow ext. 10⁻⁵ m³/s";
-//    case 0x4D: return "Volume flow ext. 10⁻⁴ m³/s";
-//    case 0x4E: return "Volume flow ext. l/s";
-//    case 0x4F: return "Volume flow ext. 10⁻² m³/s";
-//
-//    case 0x50: return "Mass g/h";
-//    case 0x51: return "Mass 10⁻² kg/h";
-//    case 0x52: return "Mass 10⁻¹ kg/h";
-//    case 0x53: return "Mass kg/h";
-//    case 0x54: return "Mass 10¹ kg/h";
-//    case 0x55: return "Mass 10² kg/h";
-//    case 0x56: return "Mass t/h";
-//    case 0x57: return "Mass 10⁴ kg/h";
-//
-//    case 0x58: return "Flow temperature 10⁻³ °C";
-//    case 0x59: return "Flow temperature 10⁻² °C";
-//    case 0x5A: return "Flow temperature 10⁻¹ °C";
-//    case 0x5B: return "Flow temperature °C";
-//
-//    case 0x5C: return "Return temperature 10⁻³ °C";
-//    case 0x5D: return "Return temperature 10⁻² °C";
-//    case 0x5E: return "Return temperature 10⁻¹ °C";
-//    case 0x5F: return "Return temperature °C";
-//
-//    case 0x60: return "Temperature difference 10⁻³ K/°C";
-//    case 0x61: return "Temperature difference 10⁻² K/°C";
-//    case 0x62: return "Temperature difference 10⁻¹ K/°C";
-//    case 0x63: return "Temperature difference K/°C";
-//
-//    case 0x64: return "External temperature 10⁻³ °C";
-//    case 0x65: return "External temperature 10⁻² °C";
-//    case 0x66: return "External temperature 10⁻¹ °C";
-//    case 0x67: return "External temperature °C";
-//
-//    case 0x68: return "Pressure mbar";
-//    case 0x69: return "Pressure 10⁻² bar";
-//    case 0x6A: return "Pressure 10⁻¹ bar";
-//    case 0x6B: return "Pressure bar";
-//
-//    case 0x6C: return "Date type G";
-//    case 0x6D: return "Date and time type";
-//
-//    case 0x6E: return "Units for H.C.A.";
-//    case 0x6F: return "Third extension 6F of VIF-codes";
-//
-//    case 0x70: return "Averaging duration seconds";
-//    case 0x71: return "Averaging duration minutes";
-//    case 0x72: return "Averaging duration hours";
-//    case 0x73: return "Averaging duration days";
-//
-//    case 0x74: return "Actuality duration seconds";
-//    case 0x75: return "Actuality duration minutes";
-//    case 0x76: return "Actuality duration hours";
-//    case 0x77: return "Actuality duration days";
-//
-//    case 0x78: return "Fabrication no";
-//    case 0x79: return "Enhanced identification";
-//
-//    case 0x7B: return "First extension FB of VIF-codes";
-//    case 0x7C: return "VIF in following string (length in first byte)";
-//    case 0x7D: return "Second extension FD of VIF-codes";
-//
-//    case 0x7E: return "Any VIF";
-//    case 0x7F: return "Manufacturer specific";
-//
-//    case 0x7B00: return "Active Energy 0.1 MWh";
-//    case 0x7B01: return "Active Energy 1 MWh";
-//
-//    case 0x7B1A: return "Relative humidity 0.1%";
-//    case 0x7B1B: return "Relative humidity 1%";
-//
-//    default: return "?";
-//    }
-//}
-//
-//string vifKey(int vif)
-//{
-//    int t = vif & 0x7f;
-//
-//    switch (t) {
-//
-//    case 0x00:
-//    case 0x01:
-//    case 0x02:
-//    case 0x03:
-//    case 0x04:
-//    case 0x05:
-//    case 0x06:
-//    case 0x07: return "energy";
-//
-//    case 0x08:
-//    case 0x09:
-//    case 0x0A:
-//    case 0x0B:
-//    case 0x0C:
-//    case 0x0D:
-//    case 0x0E:
-//    case 0x0F: return "energy";
-//
-//    case 0x10:
-//    case 0x11:
-//    case 0x12:
-//    case 0x13:
-//    case 0x14:
-//    case 0x15:
-//    case 0x16:
-//    case 0x17: return "volume";
-//
-//    case 0x18:
-//    case 0x19:
-//    case 0x1A:
-//    case 0x1B:
-//    case 0x1C:
-//    case 0x1D:
-//    case 0x1E:
-//    case 0x1F: return "mass";
-//
-//    case 0x20:
-//    case 0x21:
-//    case 0x22:
-//    case 0x23: return "on_time";
-//
-//    case 0x24:
-//    case 0x25:
-//    case 0x26:
-//    case 0x27: return "operating_time";
-//
-//    case 0x28:
-//    case 0x29:
-//    case 0x2A:
-//    case 0x2B:
-//    case 0x2C:
-//    case 0x2D:
-//    case 0x2E:
-//    case 0x2F: return "power";
-//
-//    case 0x30:
-//    case 0x31:
-//    case 0x32:
-//    case 0x33:
-//    case 0x34:
-//    case 0x35:
-//    case 0x36:
-//    case 0x37: return "power";
-//
-//    case 0x38:
-//    case 0x39:
-//    case 0x3A:
-//    case 0x3B:
-//    case 0x3C:
-//    case 0x3D:
-//    case 0x3E:
-//    case 0x3F: return "volume_flow";
-//
-//    case 0x40:
-//    case 0x41:
-//    case 0x42:
-//    case 0x43:
-//    case 0x44:
-//    case 0x45:
-//    case 0x46:
-//    case 0x47: return "volume_flow_ext";
-//
-//    case 0x48:
-//    case 0x49:
-//    case 0x4A:
-//    case 0x4B:
-//    case 0x4C:
-//    case 0x4D:
-//    case 0x4E:
-//    case 0x4F: return "volume_flow_ext";
-//
-//    case 0x50:
-//    case 0x51:
-//    case 0x52:
-//    case 0x53:
-//    case 0x54:
-//    case 0x55:
-//    case 0x56:
-//    case 0x57: return "mass_flow";
-//
-//    case 0x58:
-//    case 0x59:
-//    case 0x5A:
-//    case 0x5B: return "flow_temperature";
-//
-//    case 0x5C:
-//    case 0x5D:
-//    case 0x5E:
-//    case 0x5F: return "return_temperature";
-//
-//    case 0x60:
-//    case 0x61:
-//    case 0x62:
-//    case 0x63: return "temperature_difference";
-//
-//    case 0x64:
-//    case 0x65:
-//    case 0x66:
-//    case 0x67: return "external_temperature";
-//
-//    case 0x68:
-//    case 0x69:
-//    case 0x6A:
-//    case 0x6B: return "pressure";
-//
-//    case 0x6C: return "date"; // Date type G
-//    case 0x6E: return "hca"; // Units for H.C.A.
-//    case 0x6F: return "reserved"; // Reserved
-//
-//    case 0x70:
-//    case 0x71:
-//    case 0x72:
-//    case 0x73: return "average_duration";
-//
-//    case 0x74:
-//    case 0x75:
-//    case 0x76:
-//    case 0x77: return "actual_duration";
-//
-//    case 0x78: return "fabrication_no"; // Fabrication no
-//    case 0x79: return "enhanced_identification"; // Enhanced identification
-//
-//    case 0x7C: // VIF in following string (length in first byte)
-//    case 0x7E: // Any VIF
-//    case 0x7F: // Manufacturer specific
-//
-//    default: warning("(wmbus) warning: generic type %d cannot be scaled!\n", t);
-//        return "unknown";
-//    }
-//}
-
-string vifUnit(int vif)
-{
-    int t = vif & 0x7f;
-
-    switch (t) {
-
-    case 0x00:
-    case 0x01:
-    case 0x02:
-    case 0x03:
-    case 0x04:
-    case 0x05:
-    case 0x06:
-    case 0x07: return "kwh";
-
-    case 0x08:
-    case 0x09:
-    case 0x0A:
-    case 0x0B:
-    case 0x0C:
-    case 0x0D:
-    case 0x0E:
-    case 0x0F: return "MJ";
-
-    case 0x10:
-    case 0x11:
-    case 0x12:
-    case 0x13:
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17: return "m3";
-
-    case 0x18:
-    case 0x19:
-    case 0x1A:
-    case 0x1B:
-    case 0x1C:
-    case 0x1D:
-    case 0x1E:
-    case 0x1F: return "kg";
-
-    case 0x20:
-    case 0x21:
-    case 0x22:
-    case 0x23:
-    case 0x24:
-    case 0x25:
-    case 0x26:
-    case 0x27: return "h";
-
-    case 0x28:
-    case 0x29:
-    case 0x2A:
-    case 0x2B:
-    case 0x2C:
-    case 0x2D:
-    case 0x2E:
-    case 0x2F: return "kw";
-
-    case 0x30:
-    case 0x31:
-    case 0x32:
-    case 0x33:
-    case 0x34:
-    case 0x35:
-    case 0x36:
-    case 0x37: return "MJ";
-
-    case 0x38:
-    case 0x39:
-    case 0x3A:
-    case 0x3B:
-    case 0x3C:
-    case 0x3D:
-    case 0x3E:
-    case 0x3F: return "m3/h";
-
-    case 0x40:
-    case 0x41:
-    case 0x42:
-    case 0x43:
-    case 0x44:
-    case 0x45:
-    case 0x46:
-    case 0x47: return "m3/h";
-
-    case 0x48:
-    case 0x49:
-    case 0x4A:
-    case 0x4B:
-    case 0x4C:
-    case 0x4D:
-    case 0x4E:
-    case 0x4F: return "m3/h";
-
-    case 0x50:
-    case 0x51:
-    case 0x52:
-    case 0x53:
-    case 0x54:
-    case 0x55:
-    case 0x56:
-    case 0x57: return "kg/h";
-
-    case 0x58:
-    case 0x59:
-    case 0x5A:
-    case 0x5B: return "c";
-
-    case 0x5C:
-    case 0x5D:
-    case 0x5E:
-    case 0x5F: return "c";
-
-    case 0x60:
-    case 0x61:
-    case 0x62:
-    case 0x63: return "k";
-
-    case 0x64:
-    case 0x65:
-    case 0x66:
-    case 0x67: return "c";
-
-    case 0x68:
-    case 0x69:
-    case 0x6A:
-    case 0x6B: return "bar";
-
-    case 0x6C: return ""; // Date type G
-    case 0x6D: return ""; // ??
-    case 0x6E: return ""; // Units for H.C.A.
-    case 0x6F: return ""; // Reserved
-
-    case 0x70:
-    case 0x71:
-    case 0x72:
-    case 0x73: return "h";
-
-    case 0x74:
-    case 0x75:
-    case 0x76:
-    case 0x77: return "h";
-
-    case 0x78: return ""; // Fabrication no
-    case 0x79: return ""; // Enhanced identification
-
-    case 0x7C: // VIF in following string (length in first byte)
-    case 0x7E: // Any VIF
-    case 0x7F: // Manufacturer specific
-
-    default: warning("(wmbus) warning: generic type %d cannot be scaled!\n", t);
-        return "unknown";
-    }
 }
 
 double toDoubleFromBytes(vector<uchar>& bytes, int len) {
@@ -3583,60 +2918,10 @@ FrameStatus checkWMBusFrame(vector<uchar>& data,
     return FullFrame;
 }
 
-bool is_command(string b, string* cmd)
-{
-    // Check if CMD(.)
-    if (b.length() < 6) return false;
-    if (b.rfind("CMD(", 0) != 0) return false;
-    if (b.back() != ')') return false;
-    *cmd = b.substr(4, b.length() - 5);
-    return true;
-}
-
-const char* toString(TelegramFormat format)
-{
-    if (format == TelegramFormat::WMBUS_C_FIELD) return "wmbus_c_field";
-    if (format == TelegramFormat::WMBUS_CI_FIELD) return "wmbus_ci_field";
-    if (format == TelegramFormat::MBUS_SHORT_FRAME) return "mbus_short_frame";
-    if (format == TelegramFormat::MBUS_LONG_FRAME) return "mbus_long_frame";
-
-    return "unknown";
-}
-
-TelegramFormat toTelegramFormat(const char* s)
-{
-    if (!strcmp(s, "wmbus_c_field")) return TelegramFormat::WMBUS_C_FIELD;
-    if (!strcmp(s, "wmbus_ci_field")) return TelegramFormat::WMBUS_CI_FIELD;
-    if (!strcmp(s, "mbus_short_frame")) return TelegramFormat::MBUS_SHORT_FRAME;
-    if (!strcmp(s, "mbus_long_frame")) return TelegramFormat::MBUS_LONG_FRAME;
-
-    return TelegramFormat::UNKNOWN;
-}
-
 const char* toString(FrameType ft)
 {
     switch (ft) {
     case FrameType::WMBUS: return "wmbus";
-    case FrameType::MBUS: return "mbus";
-    case FrameType::HAN: return "han";
     }
     return "?";
-}
-
-int genericifyMedia(int media)
-{
-    if (media == 0x06 || // Warm Water (30°C-90°C) meter
-        media == 0x07 || // Water meter
-        media == 0x15 || // Hot water (>=90°C) meter
-        media == 0x16 || // Cold water meter
-        media == 0x28)   // Waste water
-    {
-        return 0x07; // Return plain water
-    }
-    return media;
-}
-
-bool isCloseEnough(int media1, int media2)
-{
-    return genericifyMedia(media1) == genericifyMedia(media2);
 }

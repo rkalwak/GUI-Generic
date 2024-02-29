@@ -182,14 +182,8 @@ public:
     bool parseHeader(std::vector<uchar>& input_frame);
     bool parse(std::vector<uchar>& input_frame, MeterKeys* mk, bool warn);
 
-    bool parseMBUSHeader(std::vector<uchar>& input_frame);
-    bool parseMBUS(std::vector<uchar>& input_frame, MeterKeys* mk, bool warn);
-
     bool parseWMBUSHeader(std::vector<uchar>& input_frame);
     bool parseWMBUS(std::vector<uchar>& input_frame, MeterKeys* mk, bool warn);
-
-    bool parseHANHeader(std::vector<uchar>& input_frame);
-    bool parseHAN(std::vector<uchar>& input_frame, MeterKeys* mk, bool warn);
 
     void addId(const std::vector<uchar>::iterator& pos);
 
@@ -206,7 +200,6 @@ public:
     // Add an explanation of data inside manufacturer specific data.
     void addSpecialExplanation(int offset, int len, KindOfData k, Understanding u, const char* fmt, ...);
     void explainParse(std::string intro, int from);
-    std::string analyzeParse(OutputFormat o, int* content_length, int* understood_content_length);
 
     bool parserWarns() { return parser_warns_; }
     bool isSimulated() { return is_simulated_; }
@@ -217,8 +210,6 @@ public:
     // The actual content of the (w)mbus telegram. The DifVif entries.
     // Mapped from their key for quick access to their offset and content.
     std::map<std::string, std::pair<int, DVEntry>> dv_entries;
-
-    std::string autoDetectPossibleDrivers();
 
     // part of original telegram bytes, only filled if pre-processing modifies it
     std::vector<uchar> original;
@@ -279,9 +270,6 @@ std::string cType(int c_field);
 bool isValidWMBusCField(int c_field);
 bool isValidMBusCField(int c_field);
 std::string ccType(int cc_field);
-
-std::string vifKey(int vif); // E.g. temperature energy power mass_flow volume_flow
-std::string vifUnit(int vif); // E.g. m3 c kwh kw MJ MJh
 
 bool isCloseEnough(int media1, int media2);
 LinkModeInfo* getLinkModeInfo(LinkMode lm);

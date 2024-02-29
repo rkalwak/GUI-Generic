@@ -65,7 +65,6 @@ struct MeterCommonImplementation : public virtual Meter
     vector<string>& ids();
     string idsc();
     vector<FieldInfo>& fieldInfos();
-    vector<string>& extraConstantFields();
     string name();
     DriverName driverName();
     bool hasProcessContent();
@@ -76,7 +75,6 @@ struct MeterCommonImplementation : public virtual Meter
     string datetimeOfUpdateHumanReadable();
     string datetimeOfUpdateRobot();
     string unixTimestampOfUpdate();
-    void addExtraCalculatedField(std::string ef);
 
     int numUpdates();
 
@@ -207,7 +205,6 @@ private:
     LinkModeSet link_modes_{};
     vector<string> shell_cmdlines_added_;
     vector<string> shell_cmdlines_updated_;
-    vector<string> extra_constant_fields_;
     time_t poll_interval_{};
     Translate::Lookup mfct_tpl_status_bits_ = NoLookup;
     int force_mfct_index_ = -1;
@@ -226,8 +223,6 @@ protected:
     std::map<pair<std::string, Unit>, NumericField> numeric_values_;
     // Map field name (at_date) to string value.
     std::map<std::string, StringField> string_values_;
-    // Used to block next poll, until this poll has received a respones.
-    // Semaphore waiting_for_poll_response_sem_;
 };
 
 #endif

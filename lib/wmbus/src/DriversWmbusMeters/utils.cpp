@@ -42,15 +42,6 @@ void dumpHex(uint8_t* data, int len, bool newLine) {
     }
 }
 
-void dumpInt(uint8_t* data, int len, bool newLine)
-{
-    for (int i = 0; i < len; i++)
-    {
-      
-    }
-    
-}
-
 std::string str_snprintf(const char* fmt, size_t len, ...)
 {
     std::string str;
@@ -229,24 +220,29 @@ std::string safeString(std::vector<uchar>& target) {
     return str;
 }
 
+void debug(const char* fmt, ...) {
+    if(isDebugEnabled())
+ {
+    Serial.println(fmt);
+ }
+}
+
 void warning(const char* fmt, ...) {
-   
+ debug(fmt);
 }
 
 void error(const char* fmt, ...) {
-
+ debug(fmt);
 }
 
-void debug(const char* fmt, ...) {
 
-}
 
 void verbose(const char* fmt, ...) {
-
+ debug(fmt);
 }
 
 void trace(const char* fmt, ...) {
-
+  debug(fmt);
 }
 
 
@@ -281,14 +277,6 @@ std::vector<std::string> splitString(const std::string& s, char c)
 
 bool parseExtras(const std::string& s, std::map<std::string, std::string>* extras)
 {
-    std::vector<std::string> parts = splitString(s, ' ');
-
-    for (auto& p : parts)
-    {
-        std::vector<std::string> kv = splitString(p, '=');
-        if (kv.size() != 2) return false;
-        (*extras)[kv[0]] = kv[1];
-    }
     return true;
 }
 
@@ -394,7 +382,11 @@ bool isTraceEnabled() {
 
 bool isDebugEnabled()
 {
+    #ifdef DEBUG_ENABLED
     return true;
+    #else
+    return false;
+    #endif
 }
 
 bool isVerboseEnabled() { return true; }

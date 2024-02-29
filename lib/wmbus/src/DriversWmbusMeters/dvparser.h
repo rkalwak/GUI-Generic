@@ -1,6 +1,6 @@
 #pragma once
 /*
- Copyright (C) 2018-2022 Fredrik Öhrström (gpl-3.0-or-later)
+ Copyright (C) 2018-2022 Fredrik ï¿½hrstrï¿½m (gpl-3.0-or-later)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
 #include<vector>
 #include "types.h"
 #include "Telegram.h"
-
-
+//#define DEBUG_PARSER(...) if(isDebugEnabled) {fprintf(stdout, __VA_ARGS__);}
+#define DEBUG_PARSER(...)
 const char* toString(VIFRange v);
 VIFRange toVIFRange(const char* s);
 Unit toDefaultUnit(VIFRange v);

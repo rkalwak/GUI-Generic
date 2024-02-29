@@ -20,7 +20,7 @@ namespace Supla
       Serial.print(",");
       Serial.print(gdo2);
       Serial.println(" GPIO");
-      /*
+     /* 
       bool isInitialized = receiver.init(mosi, miso, clk, cs, gdo0, gdo2);
       if (isInitialized)
       {
@@ -75,11 +75,11 @@ namespace Supla
        
             readValue = sensor->handleTelegram(frame);
             Serial.print("Meter id as number: ");
-            Serial.println(meterIdRealString.c_str());
-            Serial.print("Meter id as string: ");
             Serial.println(meterIdString.c_str());
+            Serial.print("Meter id as string: ");
+            Serial.println(meterIdRealString.c_str());
             Serial.print(readValue);
-            Serial.println("m3");
+            Serial.println(" m3");
             if(fabs(readValue - lastReadValue) > 0.01f)
             {
               sensor->setNewValue((unsigned _supla_int64_t)(readValue * 1000));

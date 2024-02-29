@@ -56,7 +56,7 @@ DriverInfo* lookupDriver(string name)
         Serial.println("wMBus-lib: parse 41211");
         return &(*registered_drivers_)[name];
     }
- Serial.println("wMBus-lib: parse 41212");
+ Serial.println("wMBus-lib: driver not found");
     // No, ok lets look for driver aliases.
     for (DriverInfo* di : *registered_drivers_list_)
     {
@@ -101,56 +101,6 @@ bool DriverInfo::detect(uint16_t mfct, uchar type, uchar version)
         if (dd.mfct == mfct && dd.type == type && dd.version == version) return true;
     }
     return false;
-}
-
-bool DriverInfo::isValidMedia(uchar type)
-{
-    for (auto& dd : detect_)
-    {
-        if (dd.type == type) return true;
-    }
-    return false;
-}
-
-bool DriverInfo::isCloseEnoughMedia(uchar type)
-{
-    for (auto& dd : detect_)
-    {
-        if (isCloseEnough(dd.type, type)) return true;
-    }
-    return false;
-}
-
-bool forceRegisterDriver(function<void(DriverInfo&)> setup)
-{
-    DriverInfo di;
-    setup(di);
-
-    // Check that the driver name has not been registered before!
-    assert(lookupDriver(di.name().str()) == NULL);
-
-    // Check that no other driver also triggers on the same detection values.
-    for (auto& d : di.detect())
-    {
-        for (DriverInfo* p : allDrivers())
-        {
-            bool foo = p->detect(d.mfct, d.type, d.version);
-            if (foo)
-            {
-                error("Internal error: driver %s tried to register the same auto detect combo as driver %s alread has taken!\n",
-                    di.name().str().c_str(), p->name().str().c_str());
-            }
-        }
-    }
-
-    // Everything looks, good install this driver.
-    addRegisteredDriver(di);
-
-    // This code is invoked from the static initializers of DriverInfos when starting
-    // wmbusmeters. Thus we do not yet know if the user has supplied --debug or similar setting.
-    // To debug this you have to uncomment the printf below.
-    // fprintf(stderr, "(STATIC) added driver: %s\n", n.c_str());
-    return true;
 }
 
 bool registerDriver(function<void(DriverInfo&)> setup)
@@ -203,69 +153,8 @@ MeterCommonImplementation::MeterCommonImplementation(MeterInfo& mi,
         hex2bin(mi.key, &meter_keys_.confidentiality_key);
     }
 
-    for (auto j : mi.extra_constant_fields)
-    {
-        addExtraConstantField(j);
-    }
-
     link_modes_.unionLinkModeSet(di.linkModes());
     force_mfct_index_ = di.forceMfctIndex();
-}
-
-void MeterCommonImplementation::addExtraConstantField(string ecf)
-{
-    extra_constant_fields_.push_back(ecf);
-}
-
-void MeterCommonImplementation::addExtraCalculatedField(string ecf)
-{
-    verbose("(meter) Adding calculated field: %s\n", ecf.c_str());
-
-    vector<string> parts = splitString(ecf, '=');
-
-    if (parts.size() != 2)
-    {
-        warning("Invalid formula for calculated field. %s\n", ecf.c_str());
-        return;
-    }
-
-    string vname;
-    Unit unit;
-
-    bool ok = extractUnit(parts[0], &vname, &unit);
-    if (!ok)
-    {
-        warning("Could not extract a valid unit from calculated field name %s\n", parts[0].c_str());
-        return;
-    }
-
-    Quantity quantity = toQuantity(unit);
-
-    FieldInfo* existing = findFieldInfo(vname, quantity);
-    if (existing != NULL)
-    {
-        if (!canConvert(unit, existing->displayUnit()))
-        {
-            warning("Warning! Cannot add the calculated field: %s since it would conflict with the already declared field %s for quantity %s.\n",
-                parts[0].c_str(), vname.c_str(), toString(quantity));
-            return;
-        }
-    }
-
-    addNumericFieldWithCalculator(
-        vname,
-        "Calculated: " + ecf,
-        DEFAULT_PRINT_PROPERTIES,
-        quantity,
-        parts[1],
-        unit
-    );
-}
-
-
-vector<string>& MeterCommonImplementation::meterExtraConstantFields()
-{
-    return extra_constant_fields_;
 }
 
 DriverName MeterCommonImplementation::driverName()
@@ -508,11 +397,6 @@ string MeterCommonImplementation::idsc()
 vector<FieldInfo>& MeterCommonImplementation::fieldInfos()
 {
     return field_infos_;
-}
-
-vector<string>& MeterCommonImplementation::extraConstantFields()
-{
-    return extra_constant_fields_;
 }
 
 string MeterCommonImplementation::name()
@@ -775,12 +659,12 @@ bool MeterCommonImplementation::handleTelegram(AboutTelegram& about, vector<ucha
     Telegram t;
     t.about = about;
     bool ok = t.parseHeader(input_frame);
-
+ Serial.println("meters: parsed header");
     if (simulated) t.markAsSimulated();
     if (out_analyzed != NULL) t.markAsBeingAnalyzed();
 
     *ids = t.idsc;
-
+    Serial.println("meters: is telegram for meter");
     if (!ok || !isTelegramForMeter(&t, this, NULL))
     {
         // This telegram is not intended for this meter.
@@ -1171,7 +1055,7 @@ string MeterCommonImplementation::debugValues()
         string us = unitToStringLowerCase(p.first.second);
         NumericField& nf = p.second;
 
-        s += tostrprintf("%s_%s = %g\n", vname.c_str(), us.c_str(), nf.value);
+        s += tostrprintf("n_%s_%s = %g\n", vname.c_str(), us.c_str(), nf.value);
     }
 
     for (auto& p : string_values_)
@@ -1179,7 +1063,7 @@ string MeterCommonImplementation::debugValues()
         string vname = p.first;
         StringField& nf = p.second;
 
-        s += tostrprintf("%s = \"%s\"\n", vname.c_str(), nf.value.c_str());
+        s += tostrprintf("s_%s = \"%s\"\n", vname.c_str(), nf.value.c_str());
     }
 
     return s;
@@ -1232,7 +1116,6 @@ FieldInfo::FieldInfo(int index,
 
 bool lookupDriverInfo(const string& driver_name, DriverInfo* out_di)
 {
-    Serial.println("wMBus-lib: parse 4121");
     Serial.println(driver_name.c_str());
     DriverInfo* di = lookupDriver(driver_name);
    
@@ -1244,155 +1127,42 @@ bool lookupDriverInfo(const string& driver_name, DriverInfo* out_di)
     return true;
 }
 
-bool is_driver_and_extras(const string& t, DriverName* out_driver_name, string* out_extras)
+bool is_driver_and_extras(const string &t, DriverName *out_driver_name)
 {
-    Serial.println("wMBus-lib: parse 411");
-    // piigth(jump=foo)
-    // multical21
     DriverInfo di;
-    size_t ps = t.find('(');
-    size_t pe = t.find(')');
-
-    size_t te = 0; // Position after type end.
-
-    bool found_parentheses = (ps != string::npos && pe != string::npos);
-
-    if (!found_parentheses)
-    {
-        Serial.println("wMBus-lib: parse 412");
-        if (lookupDriverInfo(t, &di))
-        {
-            *out_driver_name = di.name();
-            // We found a registered driver.
-            *out_extras = "";
-            return true;
-        }
-        *out_extras = "";
-        return true;
-    }
-Serial.println("wMBus-lib: parse 413");
-    // Parentheses must be last.
-    if (!(ps > 0 && ps < pe && pe == t.length() - 1)) return false;
-    te = ps;
-
-    string type = t.substr(0, te);
-Serial.println("wMBus-lib: parse 414");
-    bool found = lookupDriverInfo(type, &di);
-
-    if (found)
+    if (lookupDriverInfo(t, &di))
     {
         *out_driver_name = di.name();
+        // We found a registered driver.
+        return true;
     }
 
-    string extras = t.substr(ps + 1, pe - ps - 1);
-    *out_extras = extras;
-
-    return true;
-}
-
-bool isValidLinkModes(string m)
-{
-    LinkModeSet lms;
-    char buf[50];
-    strcpy(buf, m.c_str());
-    char* saveptr{};
-    const char* tok = strtok_r(buf, ",", &saveptr);
-    while (tok != NULL)
-    {
-        LinkMode lm = toLinkMode(tok);
-        if (lm == LinkMode::UNKNOWN)
-        {
-            return false;
-        }
-        lms.addLinkMode(lm);
-        tok = strtok_r(NULL, ",", &saveptr);
-    }
-    return true;
-}
-
-
-bool isValidBps(const string& b)
-{
-    if (b == "300") return true;
-    if (b == "600") return true;
-    if (b == "1200") return true;
-    if (b == "2400") return true;
-    if (b == "4800") return true;
-    if (b == "9600") return true;
-    if (b == "14400") return true;
-    if (b == "19200") return true;
-    if (b == "38400") return true;
-    if (b == "57600") return true;
-    if (b == "115200") return true;
     return false;
 }
 
-bool MeterInfo::parse(string n, string d, string i, string k)
+bool MeterInfo::parse(string name_, string driver_, string ids_, string key_)
 {
     clear();
     Serial.println("wMBus-lib: parse 0.");
-    name = n;
-    ids = splitMatchExpressions(i);
-    key = k;
-    bool driverextras_checked = false;
+    name = name_;
+    ids = splitMatchExpressions(ids_);
+    key = key_;
     bool bus_checked = false;
     bool bps_checked = false;
     bool link_modes_checked = false;
-    Serial.println("wMBus-lib: parse 1.");
-    // The : colon is forbidden inside the parts.
-    vector<string> parts = splitString(d, ':');
-    Serial.println("wMBus-lib: parse 2.");
-    // Example piigth:MAIN:2400 // it is an mbus meter.
-    //         c5isf:MAIN:2400:mbus // attached to mbus instead of t1
-    //         multical21:c1
-    //         telco:BUS2:c2
-    // driver ( extras ) : bus_alias : bps : linkmodes
-    Serial.println("wMBus-lib: parse 3.");
-    for (auto& p : parts)
+
+    if (!is_driver_and_extras(driver_, &driver_name))
     {
-            Serial.println("wMBus-lib: parse 4.");
-        if (!driverextras_checked && is_driver_and_extras(p, &driver_name, &extras))
-        { Serial.println("wMBus-lib: parse 4.1");
-            driverextras_checked = true;
-        }
-        else if (!bus_checked && isValidAlias(p) && !isValidBps(p) && !isValidLinkModes(p))
-        {
-            Serial.println("wMBus-lib: parse 5");
-            driverextras_checked = true;
-            bus_checked = true;
-        }
-        else if (!bps_checked && isValidBps(p) && !isValidLinkModes(p))
-        {
-            Serial.println("wMBus-lib: parse 6");
-            driverextras_checked = true;
-            bus_checked = true;
-            bps_checked = true;
-            bps = atoi(p.c_str());
-        }
-        else if (!link_modes_checked && isValidLinkModes(p))
-        {
-            Serial.println("wMBus-lib: parse 7");
-            driverextras_checked = true;
-            bus_checked = true;
-            bps_checked = true;
-            link_modes_checked = true;
-            link_modes = parseLinkModes(p);
-        }
-        else
-        {
-            // Unknown part....
-            return false;
-        }
+        return false;
     }
 
     return true;
 }
 
-
 string FieldInfo::renderJson(Meter* m, DVEntry* dve)
 {
-    string s;
-
+    string s="";
+#ifdef DEBUG_ENABLED
     string display_unit_s = unitToStringLowerCase(displayUnit());
     string field_name = generateFieldNameNoUnit(dve);
 
@@ -1434,7 +1204,7 @@ string FieldInfo::renderJson(Meter* m, DVEntry* dve)
             s += "\"" + field_name + "_" + display_unit_s + "\":" + valueToString(m->getNumericValue(field_name, displayUnit()), displayUnit());
         }
     }
-
+#endif
     return s;
 }
 
@@ -1501,85 +1271,23 @@ void detectMeterDrivers(int manufacturer, int media, int version, vector<string>
     }
 }
 
-bool isMeterDriverValid(DriverName driver_name, int manufacturer, int media, int version)
-{
-    for (DriverInfo* p : allDrivers())
-    {
-        if (p->detect(manufacturer, media, version))
-        {
-            if (p->hasDriverName(driver_name)) return true;
-        }
-    }
-
-    return false;
-}
-
-bool isMeterDriverReasonableForMedia(string driver_name, int media)
-{
-    if (media == 0x37) return false;  // Skip converter meter side since they do not give any useful information.
-
-    for (DriverInfo* p : allDrivers())
-    {
-        if (p->name().str() == driver_name && p->isValidMedia(media))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 DriverInfo driver_unknown_;
-
-DriverInfo pickMeterDriver(Telegram* t)
-{
-    int manufacturer = t->dll_mfct;
-    int media = t->dll_type;
-    int version = t->dll_version;
-
-    if (t->tpl_id_found)
-    {
-        manufacturer = t->tpl_mfct;
-        media = t->tpl_type;
-        version = t->tpl_version;
-    }
-
-    for (DriverInfo* p : allDrivers())
-    {
-        if (p->detect(manufacturer, media, version))
-        {
-            return *p;
-        }
-    }
-
-    return driver_unknown_;
-}
 
 shared_ptr<Meter> createMeter(MeterInfo* mi)
 {
-    Serial.println("Trygin to create meter");
+    Serial.println("Trying to create meter");
     shared_ptr<Meter> newm;
 
     const char* keymsg = (mi->key[0] == 0) ? "not-encrypted" : "encrypted";
 
     DriverInfo* di = lookupDriver(mi->driver_name.str());
-
+Serial.println("Driver found");
     if (di != NULL)
     {
         shared_ptr<Meter> newm = di->construct(*mi);
-        for (string& j : mi->extra_calculated_fields)
-        {
-            newm->addExtraCalculatedField(j);
-        }
-      
-        if (mi->selected_fields.size() > 0)
-        {
-            newm->setSelectedFields(mi->selected_fields);
-        }
-        else
-        {
-            newm->setSelectedFields(di->defaultFields());
-        }
+        
+        newm->setSelectedFields(di->defaultFields());
+
         verbose("(meter) created %s %s %s %s\n",
             mi->name.c_str(),
             di->name().str().c_str(),
@@ -1589,22 +1297,6 @@ shared_ptr<Meter> createMeter(MeterInfo* mi)
     }
 
     return newm;
-}
-
-string MeterInfo::str()
-{
-    string r;
-    r += driver_name.str();
-    if (extras != "")
-    {
-        r += "(" + extras + ")";
-    }
-    r += ":";
-    if (bps != 0) r += bps + ":";
-    if (!link_modes.empty()) r += link_modes.hr() + ":";
-    if (r.size() > 0) r.pop_back();
-
-    return r;
 }
 
 bool isValidKey(const string& key, MeterInfo& mi)
@@ -1697,19 +1389,6 @@ bool FieldInfo::extractNumeric(Meter* m, Telegram* t, DVEntry* dve)
 
     if (dve == NULL)
     {
-        if (key == "")
-        {
-            // Search for key.
-            bool ok = findKeyWithNr(matcher_.measurement_type,
-                matcher_.vif_range,
-                matcher_.storage_nr_from.intValue(),
-                matcher_.tariff_nr_from.intValue(),
-                matcher_.index_nr.intValue(),
-                &key,
-                &t->dv_entries);
-            // No entry was found.
-            if (!ok) return false;
-        }
         // No entry with this key was found.
         if (t->dv_entries.count(key) == 0) return false;
         dve = &t->dv_entries[key].second;
@@ -1821,41 +1500,6 @@ bool FieldInfo::extractString(Meter* m, Telegram* t, DVEntry* dve)
 
     if (dve == NULL)
     {
-        if (key == "")
-        {
-            if (!hasMatcher())
-            {
-                // There is no matcher, only use case is to capture JOIN_TPL_STATUS.
-                if (print_properties_.hasINCLUDETPLSTATUS())
-                {
-                    string status = add_tpl_status("OK", m, t);
-                    m->setStringValue(this, status, dve);
-                    return true;
-                }
-            }
-            else
-            {
-                // Search for key.
-                bool ok = findKeyWithNr(matcher_.measurement_type,
-                    matcher_.vif_range,
-                    matcher_.storage_nr_from.intValue(),
-                    matcher_.tariff_nr_from.intValue(),
-                    matcher_.index_nr.intValue(),
-                    &key,
-                    &t->dv_entries);
-                // No entry was found.
-                if (!ok) {
-                    // Nothing found, however check if capturing JOIN_TPL_STATUS.
-                    if (print_properties_.hasINCLUDETPLSTATUS())
-                    {
-                        string status = add_tpl_status("OK", m, t);
-                        m->setStringValue(this, status, dve);
-                        return true;
-                    }
-                    return false;
-                }
-            }
-        }
         // No entry with this key was found.
         if (t->dv_entries.count(key) == 0)
         {
@@ -2462,21 +2106,4 @@ PrintProperties toPrintProperties(string s)
     }
 
     return bits;
-}
-
-char available_meter_types_[2048];
-
-const char* availableMeterTypes()
-{
-    if (available_meter_types_[0]) return available_meter_types_;
-
-#define X(m) if (MeterType::m != MeterType::AutoMeter && MeterType::m != MeterType::UnknownMeter) {  \
-        strcat(available_meter_types_, #m); strcat(available_meter_types_, "\n"); \
-        assert(strlen(available_meter_types_) < 1024); }
-    LIST_OF_METER_TYPES
-#undef X
-
-        // Remove last ,
-        available_meter_types_[strlen(available_meter_types_) - 1] = 0;
-    return available_meter_types_;
 }

@@ -13,7 +13,6 @@
 //  Function Declareration
 //----------------------------------------------------------------------------------
 void dumpHex(uint8_t* data, int len, bool newLine = true);
-void dumpInt(uint8_t* data, int len, bool newLine = true);
 unsigned char* safeButUnsafeVectorPtr(std::vector<unsigned char>& v);
 std::string str_snprintf(const char* fmt, size_t len, ...);
 //std::string to_string(int value);
@@ -124,7 +123,6 @@ std::string vif_6F_ThirdExtensionType(uchar dif, uchar vif, uchar vife);
 std::string vif_7F_ManufacturerExtensionType(uchar dif, uchar vif, uchar vife);
 LinkModeSet parseLinkModes(std::string m);
 bool isValidAlias(const std::string& alias);
-bool isValidBps(const std::string& b);
 uchar bcd2bin(uchar c);
 std::string currentYear();
 std::string currentDay();

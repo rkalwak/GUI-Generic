@@ -28,8 +28,8 @@
 // The parser should not crash on invalid data, but yeah, when I
 // need to debug it because it crashes on invalid data, then
 // I enable the following define...
-//#define DEBUG_PARSER(...) fprintf(stdout, __VA_ARGS__)
-#define DEBUG_PARSER(...)
+
+//#define DEBUG_PARSER(...)
 
 using namespace std;
 
@@ -76,6 +76,7 @@ const char* toString(VIFCombinable v)
 
 std::string measurementTypeName(MeasurementType mt)
 {
+ #ifdef DEBUG_ENABLED
     switch (mt) {
     case MeasurementType::Any: return "any";
     case MeasurementType::Instantaneous: return "instantaneous";
@@ -84,6 +85,8 @@ std::string measurementTypeName(MeasurementType mt)
     case MeasurementType::AtError: return "aterror";
     case MeasurementType::Unknown: return "unknown";
     }
+#endif
+    return "?";
 }
 
 
@@ -213,6 +216,7 @@ string vifType(int vif)
 
     switch (vif)
     {
+ #ifdef DEBUG_ENABLEDs
     case 0x00: return "Energy mWh";
     case 0x01: return "Energy 10⁻² Wh";
     case 0x02: return "Energy 10⁻¹ Wh";
@@ -369,7 +373,7 @@ string vifType(int vif)
 
     case 0x7B1A: return "Relative humidity 0.1%";
     case 0x7B1B: return "Relative humidity 1%";
-
+#endif
     default: return "?";
     }
 }
@@ -549,8 +553,6 @@ string vif_7B_FirstExtensionType(uchar dif, uchar vif, uchar vife)
 
     return "?";
 }
-
-
 
 
 string vif_7D_SecondExtensionType(uchar dif, uchar vif, uchar vife)
@@ -831,6 +833,7 @@ string vif_7D_SecondExtensionType(uchar dif, uchar vif, uchar vife)
 
 string vifeType(int dif, int vif, int vife)
 {
+#ifdef DEBUG_ENABLED
     if (vif == 0xfb) { // 0x7b without high bit
         return vif_7B_FirstExtensionType(dif, vif, vife);
     }
@@ -1038,6 +1041,7 @@ string vifeType(int dif, int vif, int vife)
     if (vif == 0x7f) {
         return "manufacturer specific";
     }
+#endif
     return "?";
 }
 
@@ -1045,6 +1049,8 @@ string vifeType(int dif, int vif, int vife)
 string difType(int dif)
 {
     string s;
+
+#ifdef DEBUG_ENABLED
     int t = dif & 0x0f;
     switch (t) {
     case 0x0: s += "No data"; break;
@@ -1083,6 +1089,7 @@ string difType(int dif)
         // This is the lsb of the storage nr.
         s += " storagenr=1";
     }
+#endif
     return s;
 }
 
@@ -1090,12 +1097,12 @@ bool parseDV(Telegram* t,
     vector<uchar>& databytes,
     vector<uchar>::iterator data,
     size_t data_len,
-     std::map<string, pair<int, DVEntry>>* dv_entries,
+    std::map<string, pair<int, DVEntry>>* dv_entries,
     vector<uchar>::iterator* format,
     size_t format_len,
     uint16_t* format_hash)
 {
-     std::map<string, int> dv_count;
+    std::map<string, int> dv_count;
     vector<uchar> format_bytes;
     vector<uchar> id_bytes;
     vector<uchar> data_bytes;
@@ -1165,7 +1172,7 @@ bool parseDV(Telegram* t,
 
             if (index >= force_mfct_index)
             {
-                DEBUG_PARSER("(dvparser) manufacturer specific data, parsing is done.\n", dif);
+                DEBUG_PARSER("(dvparser) manufacturer specific data, parsing is done.\n");
                 size_t datalen = std::distance(data, data_end);
                 string value = bin2hex(data, data_end, datalen);
                 t->addExplanationAndIncrementPos(data, datalen, KindOfData::CONTENT, Understanding::NONE, "manufacturer specific data %s", value.c_str());
@@ -1449,28 +1456,20 @@ bool parseDV(Telegram* t,
             datalen = remaining - 1;
         }
 
+ DEBUG_PARSER("(dvparser debug) getting value again\n");
         string value = bin2hex(data, data_end, datalen);
         int offset = start_parse_here + data - data_start;
-
+        DEBUG_PARSER("(dvparser debug) creating dv entry for key %d\n", key);
         (*dv_entries)[key] = { offset, DVEntry(offset,
                                                key,
                                                mt,
-                                               Vif(full_vif),
+                                               0,
                                                found_combinable_vifs,
                                                found_combinable_vifs_raw,
-                                               StorageNr(storage_nr),
-                                               TariffNr(tariff),
-                                               SubUnitNr(subunit),
-                                               value) };
-
-        DVEntry* dve = &(*dv_entries)[key].second;
-
-        if (isTraceEnabled())
-        {
-            trace("[DVPARSER] entry %s\n", dve->str().c_str());
-        }
-
-        assert(key == dve->dif_vif_key.str());
+                                               0,
+                                               0,
+                                               0,
+                                               value)};
 
         if (value.length() > 0) {
             // This call increments data with datalen.
@@ -1480,16 +1479,6 @@ bool parseDV(Telegram* t,
         if (remaining == datalen || data == databytes.end()) {
             // We are done here!
             break;
-        }
-    }
-
-    string format_string = bin2hex(format_bytes);
-    uint16_t hash = crc16_EN13757(safeButUnsafeVectorPtr(format_bytes), format_bytes.size());
-
-    if (data_has_difvifs) {
-        if (hash_to_format_.count(hash) == 0) {
-            hash_to_format_[hash] = format_string;
-            debug("(dvparser) found new format \"%s\" with hash %x, remembering!\n", format_string.c_str(), hash);
         }
     }
 
@@ -1517,17 +1506,13 @@ bool findKeyWithNr(MeasurementType mit, VIFRange vif_range, StorageNr storagenr,
     {
         MeasurementType ty = v.second.second.measurement_type;
         Vif vi = v.second.second.vif;
-        StorageNr sn = v.second.second.storage_nr;
-        TariffNr tn = v.second.second.tariff_nr;
 
         /* debug("(dvparser) match? %s type=%s vife=%x (%s) and storagenr=%d\n",
               v.first.c_str(),
               measurementTypeName(ty).c_str(), vi.intValue(), storagenr, sn);*/
 
         if (isInsideVIFRange(vi, vif_range) &&
-            (mit == MeasurementType::Instantaneous || mit == ty) &&
-            (storagenr == AnyStorageNr || storagenr == sn) &&
-            (tariffnr == AnyTariffNr || tariffnr == tn))
+            (mit == MeasurementType::Instantaneous || mit == ty)  )    
         {
             *key = v.first;
             nr--;
@@ -2380,9 +2365,9 @@ double DVEntry::getCounter(DVEntryCounterType ct)
 {
     switch (ct)
     {
-    case DVEntryCounterType::STORAGE_COUNTER: return storage_nr.intValue();
-    case DVEntryCounterType::TARIFF_COUNTER: return tariff_nr.intValue();
-    case DVEntryCounterType::SUBUNIT_COUNTER: return subunit_nr.intValue();
+    case DVEntryCounterType::STORAGE_COUNTER: return 0;
+    case DVEntryCounterType::TARIFF_COUNTER: return 0;
+    case DVEntryCounterType::SUBUNIT_COUNTER: return 0;
     case DVEntryCounterType::UNKNOWN: break;
     }
 
@@ -2391,19 +2376,20 @@ double DVEntry::getCounter(DVEntryCounterType ct)
 
 string DVEntry::str()
 {
-    string s =
-        tostrprintf("%d: %s %s vif=%x %s%s st=%d ta=%d su=%d",
+    string s = "";
+
+#ifdef DEBUG_ENABLED
+    s =
+        tostrprintf("%d: %s %s%s st=%d ta=%d su=%d",
             offset,
             dif_vif_key.str().c_str(),
-            toString(measurement_type),
-            vif.intValue(),
             combinable_vifs.size() > 0 ? "HASCOMB " : "",
             combinable_vifs_raw.size() > 0 ? "HASCOMBRAW " : "",
-            storage_nr.intValue(),
-            tariff_nr.intValue(),
-            subunit_nr.intValue()
+            0,
+            0,
+            0
         );
-
+#endif
     return s;
 }
 
@@ -2501,17 +2487,6 @@ bool FieldMatcher::matches(DVEntry& dv_entry)
         return b;
     }
 
-    // Test ranges and types.
-    bool b =
-        (!match_vif_range || isInsideVIFRange(dv_entry.vif, vif_range)) &&
-        (!match_vif_raw || dv_entry.vif == vif_raw) &&
-        (!match_measurement_type || dv_entry.measurement_type == measurement_type) &&
-        (!match_storage_nr || (dv_entry.storage_nr >= storage_nr_from && dv_entry.storage_nr <= storage_nr_to)) &&
-        (!match_tariff_nr || (dv_entry.tariff_nr >= tariff_nr_from && dv_entry.tariff_nr <= tariff_nr_to)) &&
-        (!match_subunit_nr || (dv_entry.subunit_nr >= subunit_nr_from && dv_entry.subunit_nr <= subunit_nr_to));
-
-    if (!b) return false;
-
     // So far so good, now test the combinables.
 
     // If field matcher has no combinables, then do NOT match any dventry with a combinable!
@@ -2578,36 +2553,11 @@ bool FieldMatcher::matches(DVEntry& dv_entry)
     return true;
 }
 
-const char* toString(MeasurementType mt)
-{
-    switch (mt)
-    {
-    case MeasurementType::Any: return "Any";
-    case MeasurementType::Instantaneous: return "Instantaneous";
-    case MeasurementType::Minimum: return "Minimum";
-    case MeasurementType::Maximum: return "Maximum";
-    case MeasurementType::AtError: return "AtError";
-    case MeasurementType::Unknown: return "Unknown";
-    }
-    return "?";
-}
-
-MeasurementType toMeasurementType(const char* s)
-{
-    if (!strcmp(s, "Any")) return MeasurementType::Any;
-    if (!strcmp(s, "Instantaneous")) return MeasurementType::Instantaneous;
-    if (!strcmp(s, "Minimum")) return MeasurementType::Minimum;
-    if (!strcmp(s, "Maximum")) return MeasurementType::Maximum;
-    if (!strcmp(s, "AtError")) return MeasurementType::AtError;
-    if (!strcmp(s, "Unknown")) return MeasurementType::Unknown;
-
-    return MeasurementType::Unknown;
-}
-
 string FieldMatcher::str()
 {
     string s = "";
 
+#ifdef DEBUG_ENABLED
     if (match_dif_vif_key)
     {
         s = s + "DVK(" + dif_vif_key.str() + ") ";
@@ -2665,7 +2615,7 @@ string FieldMatcher::str()
     {
         s.pop_back();
     }
-
+#endif
     return s;
 }
 
@@ -2679,6 +2629,7 @@ DVEntryCounterType toDVEntryCounterType(const std::string& s)
 
 const char* toString(DVEntryCounterType ct)
 {
+#ifdef DEBUG_ENABLED
     switch (ct)
     {
     case DVEntryCounterType::UNKNOWN: return "unknown";
@@ -2686,8 +2637,8 @@ const char* toString(DVEntryCounterType ct)
     case DVEntryCounterType::TARIFF_COUNTER: return "tariff_counter";
     case DVEntryCounterType::SUBUNIT_COUNTER: return "subunit_counter";
     }
-
-    return "unknown";
+#endif
+    return "?";
 }
 
 string available_vif_ranges_;

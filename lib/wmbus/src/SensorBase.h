@@ -10,8 +10,8 @@ namespace Supla {
 namespace Sensor {
 class SensorBase {
  public:
-  SensorBase(std::string meter_id, std::string type, std::string property_to_send, std::string keyString)
-      : _type(type), _meter_id(meter_id), _property_to_send(property_to_send) {
+  SensorBase(std::string meter_id, std::string type, std::string property_to_send, std::string keyString, Unit unit)
+      : _type(type), _meter_id(meter_id), _property_to_send(property_to_send), _unit(unit) {
     _key = hexToBytes(keyString);
     _keyString = keyString;
     MeterInfo mi;
@@ -41,7 +41,7 @@ class SensorBase {
     bool id_match = false;
     Telegram* tt = new Telegram();
     _meter->handleTelegram(_about, frame, false, &id, &id_match, tt);
-    double val = _meter->getNumericValue(_property_to_send, Unit::M3);
+    double val = _meter->getNumericValue(_property_to_send, _unit);
     return val;
   }
 
@@ -56,6 +56,7 @@ class SensorBase {
   std::string _property_to_send = "total_water_m3";
   std::string _keyString;
   std::shared_ptr<Meter> _meter;
+  Unit _unit;
 
  private:
   AboutTelegram _about;

@@ -179,7 +179,7 @@ double convert(double vfrom, Unit ufrom, Unit uto)
     string to = unitToStringHR(uto);
 
     fprintf(stderr, "Cannot convert between units! from %s to %s\n", from.c_str(), to.c_str());
-    assert(0);
+    //assert(0);
     return 0;
 }
 

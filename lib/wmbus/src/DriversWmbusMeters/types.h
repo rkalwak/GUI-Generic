@@ -423,8 +423,6 @@ enum class MeasurementType
     Unknown
 };
 
-const char* toString(MeasurementType mt);
-MeasurementType toMeasurementType(const char* s);
 MeasurementType difMeasurementType(int dif);
 std::string measurementTypeName(MeasurementType mt);
 
@@ -542,9 +540,6 @@ struct DVEntry
     Vif vif;
     std::set<VIFCombinable> combinable_vifs;
     std::set<uint16_t> combinable_vifs_raw;
-    StorageNr storage_nr;
-    TariffNr tariff_nr;
-    SubUnitNr subunit_nr;
     std::string value;
 
     DVEntry(int off,
@@ -553,9 +548,9 @@ struct DVEntry
         Vif vi,
         std::set<VIFCombinable> vc,
         std::set<uint16_t> vc_raw,
-        StorageNr st,
-        TariffNr ta,
-        SubUnitNr su,
+        u_int8_t st,
+        u_int8_t ta,
+        u_int8_t su,
         std::string& val) :
         offset(off),
         dif_vif_key(dvk),
@@ -563,9 +558,6 @@ struct DVEntry
         vif(vi),
         combinable_vifs(vc),
         combinable_vifs_raw(vc_raw),
-        storage_nr(st),
-        tariff_nr(ta),
-        subunit_nr(su),
         value(val)
     {
     }
@@ -575,9 +567,6 @@ struct DVEntry
         dif_vif_key("????"),
         measurement_type(MeasurementType::Instantaneous),
         vif(0),
-        storage_nr(0),
-        tariff_nr(0),
-        subunit_nr(0),
         value("x")
     {
     }

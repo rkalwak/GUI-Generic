@@ -23,9 +23,11 @@
 #include <dhtnew.h>
 
 #include <supla/sensor/therm_hygro_meter.h>
+#include <supla/log_wrapper.h>
 
 namespace Supla {
 namespace Sensor {
+namespace GUI {
 class Si7021Sonoff : public ThermHygroMeter {
  public:
   Si7021Sonoff(int8_t pin) : sensor(pin) {
@@ -99,6 +101,38 @@ class Si7021Sonoff : public ThermHygroMeter {
       lastReadTime = millis();
 
       statusSensor = sensor.read();
+      const char* sensorIdentifier = "Si7021Sonoff";
+
+      switch (statusSensor) {
+        case DHTLIB_OK:
+          SUPLA_LOG_DEBUG("%s: OK\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_CHECKSUM:
+          SUPLA_LOG_DEBUG("%s: Checksum error\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_TIMEOUT_A:
+          SUPLA_LOG_DEBUG("%s: Time out A error\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_TIMEOUT_B:
+          SUPLA_LOG_DEBUG("%s: Time out B error\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_TIMEOUT_C:
+          SUPLA_LOG_DEBUG("%s: Time out C error\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_TIMEOUT_D:
+          SUPLA_LOG_DEBUG("%s: Time out D error\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_SENSOR_NOT_READY:
+          SUPLA_LOG_DEBUG("%s: Sensor not ready\t", sensorIdentifier);
+          break;
+        case DHTLIB_ERROR_BIT_SHIFT:
+          SUPLA_LOG_DEBUG("%s: Bit shift error\t", sensorIdentifier);
+          break;
+        default:
+          SUPLA_LOG_DEBUG("%s: Unknown: %d\t", sensorIdentifier, statusSensor);
+          break;
+      }
+
       channel.setNewValue(getTemp(), getHumi());
     }
   }
@@ -112,6 +146,7 @@ class Si7021Sonoff : public ThermHygroMeter {
   int8_t retryCountHumi;
 };
 
+};  // namespace GUI
 };  // namespace Sensor
 };  // namespace Supla
 

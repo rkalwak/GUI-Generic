@@ -27,6 +27,7 @@
 
 namespace Supla {
 namespace Sensor {
+namespace GUI {
 class Si7021Sonoff : public ThermHygroMeter {
  public:
   Si7021Sonoff(int8_t pin) : sensor(pin) {
@@ -145,6 +146,7 @@ class Si7021Sonoff : public ThermHygroMeter {
   int8_t retryCountHumi;
 };
 
+};  // namespace GUI
 };  // namespace Sensor
 };  // namespace Supla
 

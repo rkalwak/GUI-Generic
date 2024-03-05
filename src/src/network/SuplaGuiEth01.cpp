@@ -55,10 +55,10 @@ void GUI_ETH01::setup() {
         },
         WiFiEvent_t::ARDUINO_EVENT_ETH_DISCONNECTED);  // ESP core 2.0.2
     (void)(event_disconnected);
-  }
 
-  Serial.println(F("establishing Lan connection"));
-  ETH.begin(ETH_ADDRESS, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
+    Serial.println(F("establishing Lan connection"));
+    ETH.begin(ETH_ADDRESS, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
+  }
 
   if (mode == Supla::DEVICE_MODE_CONFIG) {
     uint8_t mac[6] = {};

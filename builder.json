@@ -873,7 +873,7 @@
 				"desc": "Paramètres de l´appareil->I2C. Barometer MS5611."
 			}
 		},
-		"SUPLA_MAX44009": {
+		"SUPLA_MAX44009_KPOP": {
 			"name": "Sensor MAX44009",
 			"desc": "Ustawienia urządzenia->I2C. Czujnik natężenia światła MAX44009",
 			"defOn": false,

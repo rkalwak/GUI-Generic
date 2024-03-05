@@ -14,28 +14,30 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "MAX_44009.h"
+#include <supla/log_wrapper.h>
 
 namespace Supla {
 namespace Sensor {
 MAX_44009::MAX_44009() {
   sensor = new Max44009(0x4A);
+  setDefaultUnitAfterValue("lx");
+  setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
 }
 
 double MAX_44009::getValue() {
   int err = sensor->getError();
 
   if (err != MAX44009_OK) {
-    Serial.print(F("MAX44009 [ERROR] Code #"));
-    Serial.println(err);
+    SUPLA_LOG_DEBUG("MAX44009 [ERROR] Code #%d\n", err);
     retryCount++;
     if (retryCount > 3) {
       retryCount = 0;
-      lux = TEMPERATURE_NOT_AVAILABLE;
+      lux = NAN;
     }
   }
   else {
     retryCount = 0;
-    lux = sensor->getLux() / 1000;
+    lux = sensor->getLux();
   }
   return lux;
 }

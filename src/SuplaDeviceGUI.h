@@ -179,7 +179,7 @@
 #include <supla/sensor/MS5611.h>
 #endif
 
-#ifdef SUPLA_MAX44009
+#ifdef SUPLA_MAX44009_KPOP
 #include "src/sensor/MAX_44009.h"
 #endif
 

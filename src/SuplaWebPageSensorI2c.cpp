@@ -149,7 +149,7 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_MAX44009
+#ifdef SUPLA_MAX44009_KPOP
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_MAX44009).toInt();
     addFormHeader();
     addListBox(INPUT_MAX44009, F("MAX44009"), STATE_P, 2, selected);
@@ -364,7 +364,7 @@ void handleSensorI2cSave() {
   }
 #endif
 
-#ifdef SUPLA_MAX44009
+#ifdef SUPLA_MAX44009_KPOP
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_MAX44009;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {

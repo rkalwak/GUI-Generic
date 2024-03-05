@@ -754,7 +754,7 @@ void setup() {
     }
 #endif
 
-#ifdef SUPLA_MAX44009
+#ifdef SUPLA_MAX44009_KPOP
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_MAX44009).toInt()) {
       auto max4409 = new Supla::Sensor::MAX_44009();
 

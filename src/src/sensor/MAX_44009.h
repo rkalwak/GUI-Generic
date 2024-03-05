@@ -18,11 +18,11 @@
 #include <Max44009.h>
 
 #include <Arduino.h>
-#include <supla/sensor/thermometer.h>
+#include <supla/sensor/general_purpose_measurement.h>
 
 namespace Supla {
 namespace Sensor {
-class MAX_44009 : public Thermometer {
+class MAX_44009 : public GeneralPurposeMeasurement {
  public:
   MAX_44009();
   double getValue();
@@ -33,7 +33,7 @@ class MAX_44009 : public Thermometer {
  protected:
   Max44009 *sensor;
 
-  double lux = TEMPERATURE_NOT_AVAILABLE;
+  double lux = NAN;
   int8_t retryCount = 0;
 };
 }  // namespace Sensor

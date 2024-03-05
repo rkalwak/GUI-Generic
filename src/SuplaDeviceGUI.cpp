@@ -790,10 +790,6 @@ void addADE7953(int8_t pinIRQ) {
 Supla::Sensor::MPX_5XXX *mpx = nullptr;
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
-std::vector<Supla::Sensor::AnalogRedingMap *> analogSensorData;
-#endif
-
 #ifdef SUPLA_ANALOG_READING_KPOP
 std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
 #endif

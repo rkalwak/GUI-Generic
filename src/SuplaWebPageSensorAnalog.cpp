@@ -36,7 +36,7 @@ void createWebPageSensorAnalog() {
     }
 #endif
 
-#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
+#if defined(SUPLA_ANALOG_READING_KPOP)
     if (WebServer->httpServer->arg(ARG_PARM_URL) == PATH_ANALOG_READING_MAP_MIN) {
       int nr = WebServer->httpServer->arg(URL_ARG_NR).toInt();
       Supla::GUI::analogSensorData[nr]->calibrateMinValue();
@@ -88,7 +88,7 @@ void handleSensorAnalog(int save) {
   addFormHeaderEnd();
 #endif
 
-#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
+#if defined(SUPLA_ANALOG_READING_KPOP)
   addFormHeader(S_GPIO_SETTINGS_FOR S_SPACE S_ANALOG);
 
 #ifdef ARDUINO_ARCH_ESP8266
@@ -181,7 +181,7 @@ void handleSensorAnalogSave() {
 
 #endif
 
-#if defined(SUPLA_ANALOG_READING_MAP) || defined(SUPLA_ANALOG_READING_KPOP)
+#if defined(SUPLA_ANALOG_READING_KPOP)
   String input;
 
   for (int nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {

@@ -80,7 +80,6 @@
 // ##### Analog #####
 // #define SUPLA_NTC_10K
 // #define SUPLA_MPX_5XXX
-// #define SUPLA_ANALOG_READING_MAP
 
 #endif  // USE_CUSTOM
 #endif  // GUI-Generic_Config_h

@@ -144,10 +144,6 @@
 
 #include <supla/correction.h>
 
-#ifdef SUPLA_ANALOG_READING_MAP
-#include <supla/sensor/AnalogReadingMap.h>
-#endif
-
 #ifdef SUPLA_ANALOG_READING_KPOP
 #include "src/sensor/AnalogReading.h"
 #endif
@@ -342,10 +338,6 @@ void addADE7953(int8_t pinIRQ);
 
 #ifdef SUPLA_MPX_5XXX
 extern Supla::Sensor::MPX_5XXX *mpx;
-#endif
-
-#ifdef SUPLA_ANALOG_READING_MAP
-extern std::vector<Supla::Sensor::AnalogRedingMap *> analogSensorData;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP

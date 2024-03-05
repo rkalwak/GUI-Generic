@@ -413,24 +413,6 @@ void setup() {
   }
 #endif
 
-#ifdef SUPLA_ANALOG_READING_MAP
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
-#ifdef ARDUINO_ARCH_ESP8266
-    gpio = ConfigESP->getGpio(FUNCTION_ANALOG_READING);
-#endif
-#ifdef ARDUINO_ARCH_ESP32
-    gpio = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
-#endif
-
-    if (gpio != OFF_GPIO) {
-      Supla::GUI::analogSensorData.push_back(new Supla::Sensor::AnalogRedingMap(gpio));
-#ifdef SUPLA_CONDITIONS
-      Supla::GUI::Conditions::addConditionsSensor(SENSOR_ANALOG_READING_MAP, S_ANALOG_READING_MAP, Supla::GUI::analogSensorData[nr], nr);
-#endif
-    }
-  }
-#endif
-
 #ifdef SUPLA_ANALOG_READING_KPOP
   for (nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
 #ifdef ARDUINO_ARCH_ESP8266

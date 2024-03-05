@@ -961,7 +961,7 @@
 		}
 	},
 	"ANALOG": {
-		"SUPLA_ANALOG_READING_MAP": {
+		"SUPLA_ANALOG_READING_KPOP": {
 			"name": "Pomiar analogowy (ADC Pin)",
 			"desc": "Ustawienia urządzenia->Analog. Umożliwia obsługę pomiaru napięcia na wejściu ADC Pin.",
 			"defOn": false,

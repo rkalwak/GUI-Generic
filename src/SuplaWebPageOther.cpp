@@ -161,7 +161,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_PMSX003
+#ifdef SUPLA_PMSX003_KPOP
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_PMSX003);
   addListGPIOBox(INPUT_PMSX003_RX, S_RX, FUNCTION_PMSX003_RX);
   addListGPIOBox(INPUT_PMSX003_TX, S_TX, FUNCTION_PMSX003_TX);
@@ -363,7 +363,7 @@ void handleOtherSave() {
   }
 #endif
 
-#ifdef SUPLA_PMSX003
+#ifdef SUPLA_PMSX003_KPOP
   if (!WebServer->saveGPIO(INPUT_PMSX003_RX, FUNCTION_PMSX003_RX) || !WebServer->saveGPIO(INPUT_PMSX003_TX, FUNCTION_PMSX003_TX)) {
     handleOther(6);
     return;

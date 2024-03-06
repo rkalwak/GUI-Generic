@@ -86,10 +86,12 @@ void PMSx003::onInit() {
 
 PMS_PM01::PMS_PM01(PMSx003 *sensor) {
   pmsx003 = sensor;
+  this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+  this->setDefaultUnitAfterValue("μg/m³");
 }
 
 double PMS_PM01::getValue() {
-  double value = TEMPERATURE_NOT_AVAILABLE;
+  double value = NAN;
   if (pmsx003->sensor->has_particulate_matter()) {
     Serial.print(F("PM1.0 : "));
     Serial.println(pmsx003->sensor->pm01);
@@ -100,10 +102,12 @@ double PMS_PM01::getValue() {
 
 PMS_PM25::PMS_PM25(PMSx003 *sensor) {
   pmsx003 = sensor;
+  this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+  this->setDefaultUnitAfterValue("μg/m³");
 }
 
 double PMS_PM25::getValue() {
-  double value = TEMPERATURE_NOT_AVAILABLE;
+  double value = NAN;
   if (pmsx003->sensor->has_particulate_matter()) {
     Serial.print(F("PM2.5 : "));
     Serial.println(pmsx003->sensor->pm25);
@@ -114,10 +118,12 @@ double PMS_PM25::getValue() {
 
 PMS_PM10::PMS_PM10(PMSx003 *sensor) {
   pmsx003 = sensor;
+  this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+  this->setDefaultUnitAfterValue("μg/m³");
 }
 
 double PMS_PM10::getValue() {
-  double value = TEMPERATURE_NOT_AVAILABLE;
+  double value = NAN;
   if (pmsx003->sensor->has_particulate_matter()) {
     Serial.print(F("PM10 : "));
     Serial.println(pmsx003->sensor->pm10);

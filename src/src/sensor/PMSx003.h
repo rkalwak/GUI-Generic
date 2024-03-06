@@ -17,7 +17,7 @@
 #define _pmsx003_h
 
 #include <Arduino.h>
-#include <supla/sensor/thermometer.h>
+#include <supla/sensor/general_purpose_measurement.h>
 #include <supla/element.h>
 
 #include <PMserial.h>
@@ -39,7 +39,7 @@ class PMSx003 : public Element {
   bool sleepSensor = false;
 };
 
-class PMS_PM01 : public Thermometer {
+class PMS_PM01 : public GeneralPurposeMeasurement {
  public:
   PMS_PM01(PMSx003 *sensor);
   double getValue();
@@ -48,7 +48,7 @@ class PMS_PM01 : public Thermometer {
   PMSx003 *pmsx003;
 };
 
-class PMS_PM25 : public Thermometer {
+class PMS_PM25 : public GeneralPurposeMeasurement {
  public:
   PMS_PM25(PMSx003 *sensor);
   double getValue();
@@ -57,7 +57,7 @@ class PMS_PM25 : public Thermometer {
   PMSx003 *pmsx003;
 };
 
-class PMS_PM10 : public Thermometer {
+class PMS_PM10 : public GeneralPurposeMeasurement {
  public:
   PMS_PM10(PMSx003 *sensor);
   double getValue();

@@ -74,7 +74,7 @@
 // #define SUPLA_RF_BRIDGE
 // #define SUPLA_ADE7953
 
-// #define SUPLA_PMSX003 
+// #define SUPLA_PMSX003_KPOP 
 // #define SUPLA_VINDRIKTNING_IKEA_KPOP
 
 // ##### Analog #####

@@ -446,7 +446,7 @@ void setup() {
   }
 #endif
 
-#ifdef SUPLA_PMSX003
+#ifdef SUPLA_PMSX003_KPOP
   if (ConfigESP->getGpio(FUNCTION_PMSX003_RX) != OFF_GPIO) {
     Supla::Sensor::PMSx003 *pms;
 

@@ -15,71 +15,61 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include"meters_common_implementation.h"
+#include "meters_common_implementation.h"
 
-namespace
-{
-    struct Driver : public virtual MeterCommonImplementation
-    {
-        Driver(MeterInfo &mi, DriverInfo &di);
+namespace {
+struct Driver : public virtual MeterCommonImplementation {
+  Driver(MeterInfo &mi, DriverInfo &di);
 
-    private:
+ private:
+  void processContent(Telegram *t);
+};
+}  // namespace
+bool okApator08 = registerDriver([](DriverInfo &di) {
+  Serial.println("Trygin to register driver apator08");
+  di.setName("apator08");
+  di.setDefaultFields("name,id,total_m3,timestamp");
+  di.setMeterType(MeterType::WaterMeter);
+  di.addLinkMode(LinkMode::T1);
+  di.addDetection(0x8614 /*APT?*/, 0x03, 0x03);
+  di.usesProcessContent();
+  di.setConstructor([](MeterInfo &mi, DriverInfo &di) { return shared_ptr<Meter>(new Driver(mi, di)); });
+});
 
-        void processContent(Telegram *t);
-    };
+Driver::Driver(MeterInfo &mi, DriverInfo &di) : MeterCommonImplementation(mi, di) {
+  addNumericField("total", Quantity::Volume, DEFAULT_PRINT_PROPERTIES, "The total water consumption recorded by this meter.");
+}
 
-    static bool ok = registerDriver([](DriverInfo&di)
-    {
-        Serial.println("Trygin to register driver apator08");
-        di.setName("apator08");
-        di.setDefaultFields("name,id,total_m3,timestamp");
-        di.setMeterType(MeterType::WaterMeter);
-        di.addLinkMode(LinkMode::T1);
-        di.addDetection(0x8614/*APT?*/, 0x03,  0x03);
-        di.usesProcessContent();
-        di.setConstructor([](MeterInfo& mi, DriverInfo& di){ return shared_ptr<Meter>(new Driver(mi, di)); });
-    });
+void Driver::processContent(Telegram *t) {
+  Serial.println("apator08: handling telegram");
+  // The telegram says gas (0x03) but it is a water meter.... so fix this.
+  t->dll_type = 0x07;
 
-    Driver::Driver(MeterInfo &mi, DriverInfo &di) : MeterCommonImplementation(mi, di)
-    {
-        addNumericField(
-            "total",
-            Quantity::Volume,
-            DEFAULT_PRINT_PROPERTIES,
-            "The total water consumption recorded by this meter.");
-    }
+  vector<uchar> content;
+  t->extractPayload(&content);
 
-    void Driver::processContent(Telegram *t)
-    {
-        // The telegram says gas (0x03) but it is a water meter.... so fix this.
-        t->dll_type = 0x07;
+  if (content.size() < 4)
+    return;
+  Serial.println("apator08: vendor values");
+  std::map<string, pair<int, DVEntry>> vendor_values;
 
-        vector<uchar> content;
-        t->extractPayload(&content);
+  string total;
+  strprintf(&total, "%02x%02x%02x%02x", content[0], content[1], content[2], content[3]);
 
-        if (content.size() < 4) return;
+  vendor_values["0413"] = {25, DVEntry(25, DifVifKey("0413"), MeasurementType::Instantaneous, 0x13, {}, {}, 0, 0, 0, total)};
+  int offset;
+  string key;
+  if (findKey(MeasurementType::Instantaneous, VIFRange::Volume, 0, 0, &key, &vendor_values)) {
+    double total_water_consumption_m3{};
+    extractDVdouble(&vendor_values, key, &offset, &total_water_consumption_m3);
+    // Now divide with 3! Is this the same for all apator08 meters? Time will tell.
+    total_water_consumption_m3 /= 3.0;
 
-        std::map<string,pair<int,DVEntry>> vendor_values;
+    total = "*** 10|" + total + " total consumption (%f m3)";
+    t->addSpecialExplanation(offset, 4, KindOfData::CONTENT, Understanding::FULL, total.c_str(), total_water_consumption_m3);
 
-        string total;
-        strprintf(&total, "%02x%02x%02x%02x", content[0], content[1], content[2], content[3]);
-
-        vendor_values["0413"] = { 25, DVEntry(25, DifVifKey("0413"), MeasurementType::Instantaneous, 0x13, {}, {}, 0, 0, 0, total) };
-        int offset;
-        string key;
-        if(findKey(MeasurementType::Instantaneous, VIFRange::Volume, 0, 0, &key, &vendor_values))
-        {
-            double total_water_consumption_m3 {};
-            extractDVdouble(&vendor_values, key, &offset, &total_water_consumption_m3);
-            // Now divide with 3! Is this the same for all apator08 meters? Time will tell.
-            total_water_consumption_m3 /= 3.0;
-
-            total = "*** 10|"+total+" total consumption (%f m3)";
-            t->addSpecialExplanation(offset, 4, KindOfData::CONTENT, Understanding::FULL, total.c_str(), total_water_consumption_m3);
-
-            setNumericValue("total", Unit::M3, total_water_consumption_m3);
-        }
-    }
+    setNumericValue("total", Unit::M3, total_water_consumption_m3);
+  }
 }
 
 // Test: Vatten apator08 004444dd NOKEY

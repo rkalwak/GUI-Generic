@@ -40,6 +40,7 @@ extern "C" {
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
+SET_LOOP_TASK_STACK_SIZE(16*1024);
 #endif
 
 #include "src/boneIO/boneIO.h"
@@ -341,6 +342,81 @@ void setup() {
 #endif
 
 #ifdef SUPLA_CC1101
+extern bool okAmiplus;
+extern bool okApator08;
+extern bool okApator162;
+extern bool okIperl;
+extern bool okMkradio4;
+extern bool okAbbb23;
+extern bool okAerius;
+extern bool okWme5;
+extern bool okWeh07;
+extern bool okWatertech;
+extern bool okWaterstarm;
+extern bool okVario451mid;
+extern bool okVario451;
+extern bool okVario411;
+extern bool okUnismart;
+extern bool okUltrimis;
+extern bool okUltraheat;
+extern bool okTsd2;
+extern bool okTopaseskr;
+extern bool okSupercom587;
+extern bool okSontex868;
+extern bool okSharky774;
+extern bool okSharky;
+extern bool okSensostar;
+extern bool okRfmtx1;
+extern bool okQwater;
+extern bool okQualcosonic;
+extern bool okIzar;
+extern bool okQsmoke;
+extern bool okQheat;
+extern bool okQheat55us;
+extern bool okQcaloric;
+extern bool okQ400;
+extern bool okPollucomf;
+extern bool okOmnipower;
+extern bool okNemo;
+extern bool okApator172;
+Serial.print(okAmiplus);
+Serial.print(okApator08);
+Serial.print(okApator162);
+Serial.print(okIperl);
+Serial.print(okMkradio4);
+Serial.print(okAbbb23);
+Serial.print(okAerius);
+Serial.print(okWme5);
+Serial.print(okWeh07);
+Serial.print(okWatertech);
+Serial.print(okWaterstarm);
+Serial.print(okVario451mid);
+Serial.print(okVario451);
+Serial.print(okVario411);
+Serial.print(okUnismart);
+Serial.print(okUltrimis);
+Serial.print(okUltraheat);
+Serial.print(okTsd2);
+Serial.print(okTopaseskr);
+Serial.print(okSupercom587);
+Serial.print(okSontex868);
+Serial.print(okSharky774);
+Serial.print(okSharky);
+Serial.print(okSensostar);
+Serial.print(okRfmtx1);
+Serial.print(okQwater);
+Serial.print(okQualcosonic);
+Serial.print(okIzar);
+Serial.print(okQsmoke);
+Serial.print(okQheat);
+Serial.print(okQheat55us);
+Serial.print(okQcaloric);
+Serial.print(okQ400);
+Serial.print(okPollucomf);
+Serial.print(okOmnipower);
+Serial.print(okNemo);
+Serial.print(okApator172);
+
  Serial.println("wMBus-lib: TESTS:");
  Serial.print("Apator08");
 uint8_t packet1[254] = { 0x73,0x44,0x14,0x86,0xDD,0x44,0x44,0x00,0x03,0x03,0xA0,0xB9,0xE5,0x27,0x00,0x4C,0x40,0x34,0xB3,0x1C,0xED,0x01,0x06,0xFF,0x01,0xD0,0x93,0x27,0x00,0x65,0xF0,0x22,0x00,0x96,0x61,0x23,0x00,0x54,0xD0,0x23,0x00,0xEC,0x49,0x24,0x00,0x18,0xB4,0x24,0x00,0x5F,0x01,0x25,0x00,0x93,0x6D,0x25,0x00,0xFF,0xD5,0x25,0x00,0x0E,0x3D,0x26,0x00,0x1E,0xAC,0x26,0x00,0x0B,0x20,0x27,0x00,0x03,0x00,0x00,0x00,0x00,0x37,0x1D,0x0B,0x20,0x00,0x00,0x00,0x00,0x00,0x00,0x24,0x00,0x00,0x00,0x00,0x00,0x00,0x28,0x00,0x00,0x00,0x00,0x00,0x00,0x2C,0x00,0x33,0x15,0x0C,0x01,0x0D,0x2F,0x00,0x00,0x00,0x00,0x00,0x00, };

@@ -23,8 +23,8 @@ namespace
     {
         Driver(MeterInfo &mi, DriverInfo &di);
     };
-
-    static bool ok = registerDriver([](DriverInfo&di)
+}
+    bool okAbbb23 = registerDriver([](DriverInfo&di)
     {
         di.setName("abbb23");
         di.setDefaultFields("name,id,total_energy_consumption_kwh,timestamp");
@@ -1386,7 +1386,6 @@ namespace
             );
 
     }
-}
 
 /* / Test: ABBmeter abbb23 33221100 NOKEY
   / telegram=|844442040011223320027A3E000020_0E840017495200000004FFA0150000000004FFA1150000000004FFA2150000000004FFA3150000000007FFA600000000000000000007FFA700000000000000000007FFA800000000000000000007FFA90000000000000000000DFD8E0007302E38322E31420DFFAA000B3030312D313131203332421F|

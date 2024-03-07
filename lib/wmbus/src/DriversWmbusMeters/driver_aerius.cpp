@@ -23,8 +23,8 @@ namespace
     {
         Driver(MeterInfo &mi, DriverInfo &di);
     };
-
-    static bool ok = registerDriver([](DriverInfo&di)
+}
+    bool okAerius = registerDriver([](DriverInfo&di)
     {
         di.setName("aerius");
         di.setDefaultFields("name,id,total_m3,timestamp");
@@ -96,7 +96,6 @@ namespace
             );
 
     }
-}
 
 // Test: aerius_gas aerius 99657098 NOKEY
 // telegram=|2E44A5119870659930037A060020052F2F_0C933E842784060A3B00000A5A5901C4016D3B37DF2CCC01933E24032606|

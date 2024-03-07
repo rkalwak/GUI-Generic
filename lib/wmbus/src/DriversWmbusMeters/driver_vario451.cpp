@@ -25,8 +25,8 @@ namespace
 
         void processContent(Telegram *t);
     };
-
-    static bool ok = registerDriver([](DriverInfo&di)
+}
+    bool okVario451 = registerDriver([](DriverInfo&di)
     {
         di.setName("vario451");
         di.setDefaultFields("name,id,total_kwh,current_kwh,previous_kwh,timestamp");
@@ -96,7 +96,6 @@ namespace
         setNumericValue("previous", Unit::GJ, prev_gj);
     }
 
-}
 
 // Test: HeatMeter vario451 58234965 NOKEY
 // telegram=|374468506549235827C3A2_129F25383300A8622600008200800A2AF862115175552877A36F26C9AB1CB24400000004000000000004908002|

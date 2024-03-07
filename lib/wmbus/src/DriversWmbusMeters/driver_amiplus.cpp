@@ -23,8 +23,8 @@ namespace
     {
         Driver(MeterInfo &mi, DriverInfo &di);
     };
-
-    static bool ok = registerDriver([](DriverInfo&di)
+}
+    bool okAmiplus = registerDriver([](DriverInfo&di)
     {
         di.setName("amiplus");
         di.setDefaultFields("name,id,total_energy_consumption_kwh,current_power_consumption_kw,total_energy_production_kwh,current_power_production_kw,voltage_at_phase_1_v,voltage_at_phase_2_v,voltage_at_phase_3_v,total_energy_consumption_tariff_1_kwh,total_energy_consumption_tariff_2_kwh,total_energy_consumption_tariff_3_kwh,total_energy_production_tariff_1_kwh,total_energy_production_tariff_2_kwh,total_energy_production_tariff_3_kwh,timestamp");
@@ -197,7 +197,7 @@ namespace
             );
 
     }
-}
+
 
 // Test: MyElectricity1 amiplus 10101010 NOKEY
 // telegram=|4E4401061010101002027A00004005_2F2F0E035040691500000B2B300300066D00790C7423400C78371204860BABC8FC100000000E833C8074000000000BAB3C0000000AFDC9FC0136022F2F2F2F2F|

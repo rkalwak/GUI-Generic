@@ -62,7 +62,7 @@ Supla::Protocol::SuplaSrpc::~SuplaSrpc() {
 }
 
 void Supla::Protocol::SuplaSrpc::setNetworkClient(Supla::Client *newClient) {
-  bool debugLogs = true;
+  bool debugLogs = verboseLog;
   if (client) {
     debugLogs = client->isDebugLogs();
     delete client;
@@ -79,7 +79,7 @@ void Supla::Protocol::SuplaSrpc::initClient() {
     } else {
       client = Supla::ClientBuilder();
     }
-    client->setDebugLogs(true);
+    client->setDebugLogs(verboseLog);
   }
   client->setSdc(sdc);
   if (port == 2016 || (port == -1 && isSuplaSSLEnabled)) {
@@ -472,6 +472,10 @@ void Supla::messageReceived(void *srpc,
         }
         break;
       }
+      case SUPLA_SCD_CALL_SET_CHANNEL_CAPTION_RESULT:
+        SUPLA_LOG_DEBUG("Receieved setChannelCaptionResult for %d",
+                        rd.data.scd_set_caption_result->ChannelNumber);
+        break;
       default:
         SUPLA_LOG_WARNING("Received unknown message from server!");
         break;
@@ -1099,6 +1103,20 @@ bool Supla::Protocol::SuplaSrpc::setDeviceConfig(
   return true;
 }
 
+bool Supla::Protocol::SuplaSrpc::setInitialCaption(uint8_t channelNumber,
+                                                   const char *caption) {
+  if (!isRegisteredAndReady()) {
+    return false;
+  }
+  TDCS_SetCaption request = {};
+  request.ChannelNumber = channelNumber;
+  strncpy(request.Caption, caption, SUPLA_CAPTION_MAXSIZE);
+  request.Caption[SUPLA_CAPTION_MAXSIZE - 1] = '\0';
+  request.CaptionSize = strnlen(request.Caption, SUPLA_CAPTION_MAXSIZE) + 1;
+  srpc_dcs_async_set_channel_caption(srpc, &request);
+  return true;
+}
+
 void Supla::Protocol::SuplaSrpc::handleDeviceConfig(
     TSDS_SetDeviceConfig *request) {
   SUPLA_LOG_INFO("Received new device config");
@@ -1377,3 +1395,4 @@ void Supla::Protocol::SuplaSrpc::deinitializeSrpc() {
   }
   setDeviceConfigReceivedAfterRegistration = false;
 }
+

@@ -220,7 +220,15 @@ void Supla::Protocol::Mqtt::onInit() {
 void Supla::Protocol::Mqtt::publishDeviceStatus(bool onRegistration) {
   buttonNumber = 0;
   TDSC_ChannelState channelState = {};
-  Supla::Network::Instance()->fillStateData(&channelState);
+
+  // TODO(klew): esp-idf MQTT currently doesn't provide interface to obtain
+  // connection source IP address. Fix it later
+  // For now we fill it with IP address of any network
+  for (auto network = Supla::Network::FirstInstance();
+       network && channelState.IPv4 == 0;
+       network = Supla::Network::NextInstance(network)) {
+    network->fillStateData(&channelState);
+  }
 
   if (onRegistration) {
     publishBool("state/connected", true, -1, 1);
@@ -281,11 +289,13 @@ void Supla::Protocol::Mqtt::publish(const char *topic,
     mqttTopic.append(topic);
   }
 
-  SUPLA_LOG_DEBUG("MQTT publish(qos: %d, retain: %d): \"%s\" - \"%s\"",
-      qos,
-      retainValue,
-      mqttTopic.c_str(),
-      payload);
+  if (verboseLog) {
+    SUPLA_LOG_VERBOSE("MQTT publish(qos: %d, retain: %d): \"%s\" - \"%s\"",
+        qos,
+        retainValue,
+        mqttTopic.c_str(),
+        payload);
+  }
   publishImp(mqttTopic.c_str(), payload, qos, retainValue);
 }
 
@@ -573,7 +583,8 @@ void Supla::Protocol::Mqtt::publishChannelState(int channel) {
       break;
     }
     default:
-      SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
+      SUPLA_LOG_WARNING(
+          "Mqtt: publish channel state: channel type %d not supported",
           ch->getChannelType());
       break;
   }
@@ -643,6 +654,20 @@ void Supla::Protocol::Mqtt::publishExtendedChannelState(int channel) {
       if (ElectricityMeter::isRvrActEnergyUsed(extEMValue)) {
         publishDouble((topic / "total_reverse_active_energy").c_str(),
             ElectricityMeter::getTotalRvrActEnergy(extEMValue) / 100000.0,
+            -1, -1, 4);
+      }
+
+      if (ElectricityMeter::isFwdBalancedActEnergyUsed(extEMValue)) {
+        publishDouble(
+            (topic / "total_forward_balanced_active_energy").c_str(),
+            ElectricityMeter::getFwdBalancedActEnergy(extEMValue) / 100000.0,
+            -1, -1, 4);
+      }
+
+      if (ElectricityMeter::isRvrBalancedActEnergyUsed(extEMValue)) {
+        publishDouble(
+            (topic / "total_reverse_balanced_active_energy").c_str(),
+            ElectricityMeter::getRvrBalancedActEnergy(extEMValue) / 100000.0,
             -1, -1, 4);
       }
 
@@ -724,7 +749,8 @@ void Supla::Protocol::Mqtt::publishExtendedChannelState(int channel) {
       break;
     }
     default:
-      SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported for extended value",
+      SUPLA_LOG_WARNING(
+          "Mqtt: channel type %d not supported for extended value",
           ch->getChannelType());
       break;
   }
@@ -782,9 +808,13 @@ void Supla::Protocol::Mqtt::subscribeChannel(int channel) {
       subscribe((topic / "set" / "temperature_setpoint_cool").c_str());
       break;
     }
+    case SUPLA_CHANNELTYPE_ELECTRICITY_METER: {
+      // no subscriptions for EM
+      break;
+    }
 
     default:
-      SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
+      SUPLA_LOG_WARNING("Mqtt: subscribe: channel type %d not supported",
           ch->getChannelType());
       break;
   }
@@ -871,7 +901,7 @@ bool Supla::Protocol::Mqtt::processData(const char *topic,
 
     // Not supported
     default:
-      SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
+      SUPLA_LOG_WARNING("Mqtt: processData: channel type %d not supported",
           ch->getChannelType());
       break;
   }
@@ -964,7 +994,8 @@ void Supla::Protocol::Mqtt::publishHADiscovery(int channel) {
 
     // TODO(klew): add more channels here
     default:
-      SUPLA_LOG_DEBUG("Mqtt: channel type %d not supported",
+      SUPLA_LOG_WARNING(
+          "Mqtt: publishHADiscovery: channel type %d not supported",
           ch->getChannelType());
       break;
   }
@@ -1775,8 +1806,21 @@ void Supla::Protocol::Mqtt::publishHADiscoveryEM(Supla::Element *element) {
         Supla::Protocol::HADeviceClass_Energy);
   }
 
-  parameterId += 2;  // we add 2 here, because it is left for meters with
-                     // balanced energy values (not yet implemented here)
+  parameterId++;
+  if (ElectricityMeter::isFwdBalancedActEnergyUsed(extEMValue)) {
+    publishHADiscoveryEMParameter(element, parameterId,
+        "total_forward_active_energy_balanced", "kWh",
+        Supla::Protocol::HAStateClass_TotalIncreasing,
+        Supla::Protocol::HADeviceClass_Energy);
+  }
+
+  parameterId++;
+  if (ElectricityMeter::isRvrBalancedActEnergyUsed(extEMValue)) {
+    publishHADiscoveryEMParameter(element, parameterId,
+        "total_reverse_active_energy_balanced", "kWh",
+        Supla::Protocol::HAStateClass_TotalIncreasing,
+        Supla::Protocol::HADeviceClass_Energy);
+  }
 
   for (int phase = 0; phase < MAX_PHASES; phase++) {
     if ((phase == 0 &&

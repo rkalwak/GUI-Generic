@@ -38,6 +38,7 @@ class ProtocolLayer {
   ProtocolLayer *next();
   SuplaDeviceClass *getSdc();
 
+  void setVerboseLog(bool value);
   virtual void onInit() = 0;
   virtual bool onLoadConfig() = 0;
   virtual bool verifyConfig() = 0;
@@ -78,6 +79,7 @@ class ProtocolLayer {
   virtual void notifyConfigChange(int channelNumber);
 
   virtual bool setDeviceConfig(TSDS_SetDeviceConfig *deviceConfig);
+  virtual bool setInitialCaption(uint8_t channelNumber, const char *caption);
 
   virtual void sendRegisterNotification(
       TDS_RegisterPushNotification *notification);
@@ -91,6 +93,7 @@ class ProtocolLayer {
   ProtocolLayer *nextPtr = nullptr;
   SuplaDeviceClass *sdc = nullptr;
   bool configEmpty = true;
+  bool verboseLog = true;
 };
 
 }  // namespace Protocol

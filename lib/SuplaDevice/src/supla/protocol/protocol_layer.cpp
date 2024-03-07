@@ -115,6 +115,10 @@ bool ProtocolLayer::setDeviceConfig(TSDS_SetDeviceConfig *deviceConfig) {
   return false;
 }
 
+bool ProtocolLayer::setInitialCaption(uint8_t, const char *) {
+  return false;
+}
+
 bool ProtocolLayer::isConfigEmpty() {
   return configEmpty;
 }
@@ -159,6 +163,10 @@ void ProtocolLayer::sendRemainingTimeValue(uint8_t channelNumber,
 
 void ProtocolLayer::notifyConfigChange(int channelNumber) {
   (void)(channelNumber);
+}
+
+void ProtocolLayer::setVerboseLog(bool value) {
+  verboseLog = value;
 }
 
 }  // namespace Protocol

@@ -292,17 +292,14 @@ void HvacBase::onLoadConfig(SuplaDeviceClass *sdc) {
     }
 
     // load config changed offline flags
-    generateKey(key, "cfg_chng");
-    uint8_t flag = 0;
-    cfg->getUInt8(key, &flag);
-    SUPLA_LOG_INFO("HVAC config changed offline flag %d", flag);
-    if (flag) {
+    if (cfg->isChannelConfigChangeFlagSet(getChannelNumber())) {
+      SUPLA_LOG_INFO("HVAC config changed offline flag is set");
       channelConfigChangedOffline = 1;
     } else {
       channelConfigChangedOffline = 0;
     }
 
-    flag = 0;
+    uint8_t flag = 0;
     generateKey(key, "weekly_chng");
     cfg->getUInt8(key, &flag);
     SUPLA_LOG_INFO("HVAC weekly schedule config changed offline flag %d", flag);
@@ -2129,11 +2126,10 @@ void HvacBase::saveConfig() {
       SUPLA_LOG_INFO("HVAC failed to save config");
     }
 
-    generateKey(key, "cfg_chng");
     if (channelConfigChangedOffline) {
-      cfg->setUInt8(key, 1);
+      cfg->setChannelConfigChangeFlag(getChannelNumber());
     } else {
-      cfg->setUInt8(key, 0);
+      cfg->clearChannelConfigChangeFlag(getChannelNumber());
     }
 
     cfg->saveWithDelay(5000);
@@ -2221,9 +2217,7 @@ void HvacBase::clearChannelConfigChangedFlag() {
     channelConfigChangedOffline = 0;
     auto cfg = Supla::Storage::ConfigInstance();
     if (cfg) {
-      char key[SUPLA_CONFIG_MAX_KEY_SIZE] = {};
-      generateKey(key, "cfg_chng");
-      cfg->setUInt8(key, 0);
+      cfg->clearChannelConfigChangeFlag(getChannelNumber());
       cfg->saveWithDelay(1000);
     }
   }
@@ -3965,32 +3959,49 @@ void HvacBase::setButtonTemperatureStep(int16_t step) {
 
 void HvacBase::changeTemperatureSetpointsBy(int16_t tHeat, int16_t tCool) {
   auto function = getChannelFunction();
+  int16_t newHeat = getTemperatureSetpointHeat() + tHeat;
+  if (wrapAroundTemperatureSetpoints) {
+    if (newHeat > getTemperatureRoomMax()) {
+      newHeat = getTemperatureRoomMin();
+    } else if (newHeat < getTemperatureRoomMin()) {
+      newHeat = getTemperatureRoomMax();
+    }
+  }
+
+  int16_t newCool = getTemperatureSetpointCool() + tCool;
+  if (wrapAroundTemperatureSetpoints) {
+    if (newCool > getTemperatureRoomMax()) {
+      newCool = getTemperatureRoomMin();
+    } else if (newCool < getTemperatureRoomMin()) {
+      newCool = getTemperatureRoomMax();
+    }
+  }
 
   switch (function) {
     case SUPLA_CHANNELFNC_HVAC_THERMOSTAT: {
       if (isHeatingSubfunction()) {
         applyNewRuntimeSettings(SUPLA_HVAC_MODE_NOT_SET,
-                                getTemperatureSetpointHeat() + tHeat,
+                                newHeat,
                                 INT16_MIN);
       }
       if (isCoolingSubfunction()) {
         applyNewRuntimeSettings(SUPLA_HVAC_MODE_NOT_SET,
                                 INT16_MIN,
-                                getTemperatureSetpointCool() + tCool);
+                                newCool);
       }
       break;
     }
     case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL:
     case SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER: {
       applyNewRuntimeSettings(SUPLA_HVAC_MODE_NOT_SET,
-                              getTemperatureSetpointHeat() + tHeat,
+                              newHeat,
                               INT16_MIN);
       break;
     }
     case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL: {
       applyNewRuntimeSettings(SUPLA_HVAC_MODE_NOT_SET,
-                              getTemperatureSetpointHeat() + tHeat,
-                              getTemperatureSetpointCool() + tCool);
+                              newHeat,
+                              newCool);
       break;
     }
   }
@@ -4077,4 +4088,8 @@ void HvacBase::updateTimerValue() {
 void HvacBase::clearWaitingFlags() {
   lastConfigChangeTimestampMs = 0;
   lastIterateTimestampMs = 0;
+}
+
+void HvacBase::allowWrapAroundTemperatureSetpoints() {
+  wrapAroundTemperatureSetpoints = true;
 }

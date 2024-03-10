@@ -56,6 +56,9 @@ uint8_t getCountSensorChannels() {
       if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
         maxFrame += 1;
       }
+      if (channel->getChannelType() == SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT) {
+        maxFrame += 1;
+      }
     }
 
     if (element->getSecondaryChannel()) {

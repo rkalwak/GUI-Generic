@@ -124,6 +124,9 @@ void handlePageHome(int save) {
         if (channel->getChannelType() == SUPLA_CHANNELTYPE_PRESSURESENSOR) {
           addLabel(String(channel->getValueDouble()) + "hPa");
         }
+        if (channel->getChannelType() == SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT) {
+          addLabel(String(channel->getValueDouble()));
+        }
       }
 
       if (element->getSecondaryChannel()) {

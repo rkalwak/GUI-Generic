@@ -36,9 +36,6 @@ class GUI_ETH01 : public Supla::ESPETH {
   explicit GUI_ETH01(uint8_t ethmode);
 
   void setup();
-
- private:
-  bool ethConfigured = false;
 };
 };  // namespace Supla
 

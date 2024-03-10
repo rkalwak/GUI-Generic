@@ -294,7 +294,6 @@ void displayGeneral(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, 
     }
     else {
       displayUiGeneral(display, state, x, y, channel->getValueDouble());
-      channel->getValueDouble();
     }
   }
 }
@@ -597,6 +596,7 @@ void SuplaOled::onInit() {
           if (channel->getChannelType() == SUPLA_CHANNELTYPE_GENERAL_PURPOSE_MEASUREMENT) {
             frames[getFrameCount()] = {displayGeneral};
             oled[getFrameCount()].chanelSensor = channel->getChannelNumber();
+            oled[getFrameCount()].forSecondaryValue = false;
             setFrameCount(getFrameCount() + 1);
           }
 

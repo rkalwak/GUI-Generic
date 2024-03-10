@@ -22,7 +22,7 @@
 #include "../../SuplaDeviceGUI.h"
 
 namespace Supla {
-GUI_ETH01::GUI_ETH01(uint8_t ethmode, unsigned char *ip) : Supla::ESPETH(ethmode, ip) {
+GUI_ETH01::GUI_ETH01(uint8_t ethmode) : Supla::ESPETH(ethmode) {
 }
 
 void GUI_ETH01::setup() {

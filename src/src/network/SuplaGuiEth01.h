@@ -33,7 +33,7 @@
 namespace Supla {
 class GUI_ETH01 : public Supla::ESPETH {
  public:
-  explicit GUI_ETH01(uint8_t ethmode, unsigned char *ip = nullptr);
+  explicit GUI_ETH01(uint8_t ethmode);
 
   void setup();
 

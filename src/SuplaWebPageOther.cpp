@@ -606,13 +606,14 @@ void handleCounterCalibrate(int save) {
 #endif
 
   addFormHeader();
-  F("<p style='color:#000;'>Current Multi: ");
-  curent;
-  F("<br>Voltage Multi: ");
-  voltage;
-  F("<br>Power Multi: ");
-  power;
-  F("</p>");
+  String htmlCode = "<p style='color:#000;'>Current Multi: ";
+  htmlCode += String(curent);
+  htmlCode += "<br>Voltage Multi: ";
+  htmlCode += String(voltage);
+  htmlCode += "<br>Power Multi: ";
+  htmlCode += String(power);
+  htmlCode += "</p>";
+  addTextBox(htmlCode);
   addFormHeaderEnd();
 
   addForm(F("post"), getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, couter));

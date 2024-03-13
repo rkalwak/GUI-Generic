@@ -137,7 +137,7 @@ bool HLW_8012::getMode() {
   return currentWhen;
 }
 
-_supla_int64_t HLW_8012::getCounter() {
+unsigned long HLW_8012::getCounter() {
   return energy;
 }
 
@@ -161,7 +161,7 @@ void HLW_8012::setMode(bool value) {
   sensor->setMode((hlw8012_mode_t)value);
 }
 
-void HLW_8012::setCounter(_supla_int64_t newEnergy) {
+void HLW_8012::setCounter(unsigned long newEnergy) {
   _energy = newEnergy;  // ------- energy value read from memory at startup
   energy = newEnergy;
   setFwdActEnergy(0, newEnergy);

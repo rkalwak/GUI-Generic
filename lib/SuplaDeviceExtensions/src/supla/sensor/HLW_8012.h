@@ -43,13 +43,13 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   double getVoltageMultiplier();
   double getPowerMultiplier();
   bool getMode();
-  _supla_int64_t getCounter();
+  unsigned long getCounter();
 
   void setCurrentMultiplier(double value);
   void setVoltageMultiplier(double value);
   void setPowerMultiplier(double value);
   void setMode(bool value);
-  void setCounter(_supla_int64_t value);
+  void setCounter(unsigned long value);
   int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request);
 
   static IRAM_ATTR void hjl01_cf1_interrupt();
@@ -68,9 +68,8 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   double powerMultiplier;
   bool currentWhen;
 
-  unsigned _supla_int64_t energy = 0;
-  unsigned _supla_int64_t _energy =
-      0;  // energy value read from memory at startup
+  unsigned long energy = 0;
+  unsigned long _energy = 0;  // energy value read from memory at startup
 };
 
 };  // namespace Sensor

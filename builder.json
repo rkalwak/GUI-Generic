@@ -1,8 +1,5 @@
 {
 	"version": "6.0.1",
-	"compiler": {
-		"gglib": ["EspSoftwareSerial"]
-	},
 	"Opis struktury": {
 		"SEKCJA": {
 			"SUPLA_OPTION": {

@@ -804,7 +804,7 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 
   Serial.println(resetMessage);
 
-  if (resetType == RESET_FACTORY_DATA || RESET_DEVICE_DATA) {
+  if (resetType == RESET_FACTORY_DATA || resetType == RESET_DEVICE_DATA) {
     clearEEPROM();
     if (resetType == RESET_FACTORY_DATA) {
       ConfigManager->deleteAllValues();

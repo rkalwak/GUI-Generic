@@ -255,7 +255,7 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
             button->repeatOnHoldEvery(250);
           }
           else {
-            if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
+            if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt() && getCountActiveThermostat() != 0) {
               button->addAction(buttonActionInternal, client, Supla::Event::ON_CLICK_1);
             }
             else {

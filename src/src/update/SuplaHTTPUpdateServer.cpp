@@ -7,11 +7,11 @@
 #include <WiFiUdp.h>
 
 #include <FS.h>
-#include <flash_hal.h>
 #include "StreamString.h"
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include <EEPROM.h>
+#include <flash_hal.h>
 #endif
 
 HTTPUpdateServer::HTTPUpdateServer(bool serial_debug) {

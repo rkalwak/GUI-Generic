@@ -14,6 +14,7 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_MAX6675
 #ifdef ARDUINO
 #include "MAX6675K.h"
 
@@ -73,3 +74,4 @@ byte MAX6675K::spiRead() {
 };     // namespace Sensor
 };     // namespace Supla
 #endif /*ARDUINO*/
+#endif

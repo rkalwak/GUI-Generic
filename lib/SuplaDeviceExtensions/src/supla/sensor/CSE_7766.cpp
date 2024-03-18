@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_CSE7766
 #include "CSE_7766.h"
 
 namespace Supla {
@@ -218,3 +218,4 @@ void CSE_7766::calibrate(double calibPower, double calibVoltage) {
 }
 };  // namespace Sensor
 };  // namespace Supla
+#endif

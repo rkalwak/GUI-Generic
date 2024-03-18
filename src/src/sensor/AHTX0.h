@@ -18,6 +18,7 @@
 #ifndef SRC_SUPLA_SENSOR_AHT_H_
 #define SRC_SUPLA_SENSOR_AHT_H_
 
+#ifdef SUPLA_AHTX0
 #include <Adafruit_AHTX0.h>
 
 #include <supla/sensor/therm_hygro_meter.h>
@@ -61,3 +62,4 @@ class AHTX0 : public ThermHygroMeter {
 };      // namespace Sensor
 };      // namespace Supla
 #endif  // SRC_SUPLA_SENSOR_AHT_H_
+#endif

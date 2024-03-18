@@ -13,6 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_HLW8012
 
 #include "HLW_8012.h"
 
@@ -225,3 +226,4 @@ void HLW_8012::calibrate(double calibPower, double calibVoltage) {
 HLW8012 *HLW_8012::sensor = nullptr;
 };  // namespace Sensor
 };  // namespace Supla
+#endif

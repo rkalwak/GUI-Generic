@@ -15,6 +15,7 @@
 */
 
 // https://github.com/arendst/Tasmota/blob/development/tasmota/tasmota_xsns_sensor/xsns_02_analog.ino
+#ifdef SUPLA_NTC_10K
 
 #ifndef _ntc10k_h
 #define _ntc10k_h
@@ -69,4 +70,5 @@ class NTC10K : public Thermometer {
 }  // namespace Sensor
 }  // namespace Supla
 
+#endif
 #endif

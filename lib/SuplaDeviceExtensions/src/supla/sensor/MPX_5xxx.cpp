@@ -14,6 +14,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_MPX_5XXX
 #include "MPX_5xxx.h"
 
 namespace Supla {
@@ -144,3 +145,4 @@ int16_t MPX_5XXX::readValuesFromDevice() {
 
 };  // namespace Sensor
 };  // namespace Supla
+#endif

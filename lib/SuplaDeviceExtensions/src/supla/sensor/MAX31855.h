@@ -13,6 +13,7 @@ Copyright (C) krycha88
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_MAX31855
 
 #ifndef _max_31855_h
 #define _max_31855_h
@@ -57,4 +58,5 @@ class MAX31855 : public Thermometer {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

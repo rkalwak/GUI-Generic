@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_HLW8012
 #ifndef _hlw8012_h
 #define _hlw8012_h
 
@@ -76,4 +76,5 @@ class HLW_8012 : public OnePhaseElectricityMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

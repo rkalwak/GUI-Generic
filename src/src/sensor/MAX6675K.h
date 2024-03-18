@@ -15,6 +15,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_MAX6675
 
 #ifndef _SUPLA_SENSOR_MAX6675K_H_
 #define _SUPLA_SENSOR_MAX6675K_H_
@@ -43,3 +44,4 @@ class MAX6675K : public Thermometer {
 };  // namespace Supla
 
 #endif  // SRC_SUPLA_SENSOR_MAX6675K_H_
+#endif

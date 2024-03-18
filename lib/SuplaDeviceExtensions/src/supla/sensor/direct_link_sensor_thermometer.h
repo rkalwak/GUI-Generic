@@ -17,6 +17,11 @@
 #ifndef _direct_link_sensor_thermometer_h
 #define _direct_link_sensor_thermometer_h
 
+#define MAX_DIRECT_LINKS_SIZE 32
+#define MAX_HOST_SIZE         32
+
+#ifdef SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
@@ -24,9 +29,6 @@
 #include <supla/actions.h>
 #include <supla/channel_element.h>
 #include <supla/sensor/thermometer.h>
-
-#define MAX_DIRECT_LINKS_SIZE 32
-#define MAX_HOST_SIZE         32
 
 namespace Supla {
 namespace Sensor {
@@ -67,4 +69,5 @@ class DirectLinksSensorThermometer : public Supla::Sensor::Thermometer {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

@@ -1,3 +1,4 @@
+#ifdef SUPLA_BMP280
 #ifndef _bmp280_h
 #define _bmp280_h
 
@@ -69,4 +70,5 @@ class BMP280 : public ThermPressMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

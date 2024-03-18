@@ -14,6 +14,8 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_VL53L0X
+
 #ifndef _vl_53l0x_h
 #define _vl_53l0x_h
 
@@ -44,4 +46,5 @@ class VL_53L0X : public Distance {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

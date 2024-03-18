@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_CSE7766
 #ifndef _cse7766_h
 #define _cse7766_h
 
@@ -66,4 +66,5 @@ class CSE_7766 : public OnePhaseElectricityMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

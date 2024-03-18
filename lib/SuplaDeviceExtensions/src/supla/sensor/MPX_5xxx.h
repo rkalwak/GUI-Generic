@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_MPX_5XXX
 #ifndef _mpx_5xxx_h
 #define _mpx_5xxx_h
 
@@ -62,4 +62,5 @@ class MPX_5XXX : public Distance {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

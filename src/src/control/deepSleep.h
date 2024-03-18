@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_DEEP_SLEEP
 #ifndef _deepSleep_h
 #define _deepSleep_h
 
@@ -41,4 +41,5 @@ class DeepSleep : public Element {
 };  // namespace Control
 };  // namespace Supla
 
+#endif
 #endif

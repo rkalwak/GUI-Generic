@@ -13,6 +13,7 @@ Copyright (C) krycha88
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_HDC1080
 
 #ifndef _hdc1080_h
 #define _hdc1080_h
@@ -82,4 +83,5 @@ class HDC1080 : public ThermHygroMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

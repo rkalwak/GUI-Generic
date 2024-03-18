@@ -1,3 +1,5 @@
+#ifdef SUPLA_DS18B20
+
 #include "DS_18B20.h"
 #include "../../SuplaDeviceGUI.h"
 
@@ -152,3 +154,4 @@ void findAndSaveDS18B20Addresses() {
 
   ConfigManager->save();
 }
+#endif

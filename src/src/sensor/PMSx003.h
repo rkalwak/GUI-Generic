@@ -13,6 +13,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_PMSX003_KPOP
+
 #ifndef _pmsx003_h
 #define _pmsx003_h
 
@@ -169,4 +171,5 @@ class PMS_PM10 : public GeneralPurposeMeasurement {
 }  // namespace Sensor
 }  // namespace Supla
 
+#endif
 #endif

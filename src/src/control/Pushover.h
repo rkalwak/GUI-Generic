@@ -17,23 +17,25 @@
 #ifndef _pushover_h
 #define _pushover_h
 
-#include <Arduino.h>
-#include <WiFiClientSecure.h>
-#include <supla/action_handler.h>
-#include <supla/actions.h>
-#include <supla/channel_element.h>
-
 #define MAX_TOKEN_SIZE   32
 #define MAX_USER_SIZE    32
 #define MAX_TITLE_SIZE   32
 #define MAX_MESSAGE_SIZE 16
 #define MAX_SOUND_SIZE   16
 
+#ifdef SUPLA_PUSHOVER
+#include <Arduino.h>
+#include <WiFiClientSecure.h>
+#include <supla/action_handler.h>
+#include <supla/actions.h>
+#include <supla/channel_element.h>
+
 namespace Supla {}  // namespace Supla
 
 namespace Supla {
 namespace PushoverSound {
-enum PushoverSound {
+enum PushoverSound
+{
   SOUND_PUSHOVER,
   SOUND_BIKE,
   SOUND_BUGLE,
@@ -63,9 +65,7 @@ enum PushoverSound {
 namespace Control {
 class Pushover : public Supla::Element, public Supla::ActionHandler {
  public:
-  Pushover(const char *token = nullptr,
-           const char *user = nullptr,
-           bool isSecured = true);
+  Pushover(const char *token = nullptr, const char *user = nullptr, bool isSecured = true);
   ~Pushover();
 
   void setToken(const char *token);
@@ -101,4 +101,5 @@ class Pushover : public Supla::Element, public Supla::ActionHandler {
 };  // namespace Control
 };  // namespace Supla
 
+#endif
 #endif

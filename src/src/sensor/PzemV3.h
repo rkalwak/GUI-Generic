@@ -15,6 +15,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_PZEM_V_3
 
 #ifndef GUI_SRC_SUPLA_SENSOR_PZEMV3_H_
 #define GUI_SRC_SUPLA_SENSOR_PZEMV3_H_
@@ -59,12 +60,12 @@ class PZEMv3 : public OnePhaseElectricityMeter {
   }
 
   int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
-  if (request && request->Command == SUPLA_CALCFG_CMD_RESET_COUNTERS) {
-    pzem.resetEnergy();
-    return SUPLA_CALCFG_RESULT_DONE;
+    if (request && request->Command == SUPLA_CALCFG_CMD_RESET_COUNTERS) {
+      pzem.resetEnergy();
+      return SUPLA_CALCFG_RESULT_DONE;
+    }
+    return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
   }
-  return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
-}
 
   virtual void readValuesFromDevice() {
     float current = pzem.current();
@@ -109,3 +110,4 @@ class PZEMv3 : public OnePhaseElectricityMeter {
 };  // namespace Supla
 
 #endif  // SRC_SUPLA_SENSOR_PZEMV3_H_
+#endif

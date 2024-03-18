@@ -13,7 +13,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_MODBUS_SDM
 #ifndef _Three_Phase_SDM630_h
 #define _Three_Phase_SDM630_h
 
@@ -40,4 +40,5 @@ class SDM630 : public ReadValuesSDM, public ElectricityMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

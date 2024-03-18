@@ -13,7 +13,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_MODBUS_SDM_ONE_PHASE
 #ifndef _One_Phase_SDM120_h
 #define _One_Phase_SDM120_h
 
@@ -40,4 +40,5 @@ class SDM120 : public ReadValuesSDM, public OnePhaseElectricityMeter {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

@@ -1,3 +1,5 @@
+#ifdef SUPLA_CC1101
+
 #include "WmbusMeter.h"
 #include <string>
 namespace Supla
@@ -217,3 +219,4 @@ namespace Supla
 };
 
 Supla::Sensor::WmbusMeter *meter;
+#endif

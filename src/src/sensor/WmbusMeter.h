@@ -1,3 +1,4 @@
+#ifdef SUPLA_CC1101
 #ifndef _WmbusMeter_h
 #define _WmbusMeter_h
 #include <Arduino.h>
@@ -34,4 +35,5 @@ class WmbusMeter : public Element {
 };  // namespace Supla
 
 extern Supla::Sensor::WmbusMeter *meter;
+#endif
 #endif

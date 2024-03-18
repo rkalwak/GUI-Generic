@@ -20,8 +20,6 @@
 #include "GUI-Generic_Config.h"
 #include "GUIGenericCommonDefined.h"
 
-#include <SPI.h>
-
 #include <SuplaDeviceExtensions.h>
 #include <SuplaDevice.h>
 #include "src/control/ControlGUI.h"
@@ -60,6 +58,7 @@
 
 #ifdef SUPLA_OLED
 #include "src/display/SuplaOled.h"
+#include "src/display/OledButtonController.h"
 #endif
 
 #include <vector>
@@ -74,7 +73,10 @@
 #ifdef SUPLA_DS18B20
 #include "src/sensor/DS_18B20.h"
 #endif
+
+#if defined(SUPLA_DHT22) || defined(SUPLA_DHT11)
 #include <supla/sensor/DHT.h>
+#endif
 
 #ifdef SUPLA_HC_SR04
 #include "src/sensor/HC_SR04_NewPing.h"

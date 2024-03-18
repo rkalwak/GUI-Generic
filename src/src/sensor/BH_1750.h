@@ -13,8 +13,10 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_BH1750_KPOP
 #ifndef _bh1750_h
 #define _bh1750_h
+
 #include <Arduino.h>
 #include <BH1750_WE.h>
 #include <Wire.h>
@@ -48,4 +50,5 @@ class BH_1750 : public GeneralPurposeMeasurement {
 }  // namespace Sensor
 }  // namespace Supla
 
+#endif
 #endif

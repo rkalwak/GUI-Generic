@@ -34,16 +34,11 @@ extern "C" {
 #include <supla/sensor/direct_link_sensor_thermometer.h>
 #endif
 
-#ifdef SUPLA_DIRECT_LINKS_MULTI_SENSOR
 #include "src/sensor/DirectLinks.h"
-#endif
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
 #endif
-
-#include "src/boneIO/boneIO.h"
-#include "src/display/OledButtonController.h"
 
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16

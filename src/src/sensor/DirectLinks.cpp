@@ -13,6 +13,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_DIRECT_LINKS_MULTI_SENSOR
+
 #include "DirectLinks.h"
 
 namespace Supla {
@@ -202,13 +204,13 @@ void DirectLinksElectricityMeter::sendRequest() {
 }
 
 void DirectLinksElectricityMeter::setPhaseData(int phaseIndex, JsonObject &phase) {
-  setVoltage(phaseIndex, (double)phase["voltage"] * 100); // voltage in 0.01 V
-  setCurrent(phaseIndex, (double)phase["current"] * 1000); // current in 0.001 A
-  setPowerActive(phaseIndex, (double)phase["powerActive"] * 100000); // power in 0.00001 kW
-  setPowerReactive(phaseIndex, (double)phase["powerReactive"] * 100000); // power in 0.00001 kvar
-  setPowerApparent(phaseIndex, (double)phase["powerApparent"] * 100000); // power in 0.00001 kVA
-  setPowerFactor(phaseIndex, (double)phase["powerFactor"] * 1000); // power in 0.001
-  setFwdActEnergy(phaseIndex, (double)phase["totalForwardActiveEnergy"] * 100000); // energy in 0.00001 kWh
+  setVoltage(phaseIndex, (double)phase["voltage"] * 100);                           // voltage in 0.01 V
+  setCurrent(phaseIndex, (double)phase["current"] * 1000);                          // current in 0.001 A
+  setPowerActive(phaseIndex, (double)phase["powerActive"] * 100000);                // power in 0.00001 kW
+  setPowerReactive(phaseIndex, (double)phase["powerReactive"] * 100000);            // power in 0.00001 kvar
+  setPowerApparent(phaseIndex, (double)phase["powerApparent"] * 100000);            // power in 0.00001 kVA
+  setPowerFactor(phaseIndex, (double)phase["powerFactor"] * 1000);                  // power in 0.001
+  setFwdActEnergy(phaseIndex, (double)phase["totalForwardActiveEnergy"] * 100000);  // energy in 0.00001 kWh
 }
 
 DirectLinksDistance::DirectLinksDistance(const char *url, const char *host, bool isSecured) : DirectLinksConnect(url, host, isSecured){};
@@ -289,3 +291,4 @@ void DirectLinksDepth::onInit() {
 
 };  // namespace Sensor
 };  // namespace Supla
+#endif

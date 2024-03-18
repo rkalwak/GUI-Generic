@@ -13,7 +13,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_MODBUS_SDM_ONE_PHASE
 #include "SDM_120.h"
 
 namespace Supla {
@@ -90,3 +90,4 @@ void SDM120::readValuesFromDevice() {
 
 };  // namespace Sensor
 };  // namespace Supla
+#endif

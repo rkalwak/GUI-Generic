@@ -1,3 +1,5 @@
+#ifdef SUPLA_DS18B20
+
 #ifndef SuplaSensorDS18B20_h
 #define SuplaSensorDS18B20_h
 
@@ -37,3 +39,4 @@ class DS18B20 : public Supla::Sensor::Thermometer {
 void findAndSaveDS18B20Addresses();
 
 #endif  // SuplaSensorDS18B20_h
+#endif

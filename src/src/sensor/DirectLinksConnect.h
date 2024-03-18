@@ -13,18 +13,19 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 #ifndef _direct_links_connect_h
 #define _direct_links_connect_h
+
+#define MAX_DIRECT_LINKS_SIZE 32
+#define MAX_HOST_SIZE         32
+
+#ifdef SUPLA_DIRECT_LINKS_MULTI_SENSOR
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
 #include <supla/element.h>
 #include <supla/network/network.h>
-
-#define MAX_DIRECT_LINKS_SIZE 32
-#define MAX_HOST_SIZE         32
 
 namespace Supla {
 namespace Sensor {
@@ -65,4 +66,5 @@ class DirectLinksConnect : public Element {
 };  // namespace Sensor
 };  // namespace Supla
 
+#endif
 #endif

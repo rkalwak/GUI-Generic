@@ -13,6 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_RF_BRIDGE
 
 #ifndef _RF_Bridge_Virtual_Relay_h
 #define _RF_Bridge_Virtual_Relay_h
@@ -37,4 +38,5 @@ class RFBridgeVirtualRelay : public VirtualRelay, public RFBridge {
 
 };  // namespace Control
 };  // namespace Supla
+#endif
 #endif

@@ -15,6 +15,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_PZEM_V_3
 
 #ifndef GUI_SRC_SUPLA_SENSOR_THREE_PHASE_PZEMV3_H_
 #define GUI_SRC_SUPLA_SENSOR_THREE_PHASE_PZEMV3_H_
@@ -62,4 +63,5 @@ class CustomThreePhasePZEMv3 : public ThreePhasePZEMv3 {
 
 };  // namespace Sensor
 };  // namespace Supla
+#endif
 #endif

@@ -13,6 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_SI7021_SONOFF
 
 #ifndef SUPLA_SENSOR_SI_7021_SONOFF_H_
 #define SUPLA_SENSOR_SI_7021_SONOFF_H_
@@ -151,3 +152,4 @@ class Si7021Sonoff : public ThermHygroMeter {
 };  // namespace Supla
 
 #endif  // SRC_SUPLA_SENSOR_LM75_H_
+#endif

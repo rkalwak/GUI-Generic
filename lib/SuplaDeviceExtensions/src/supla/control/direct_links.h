@@ -13,18 +13,18 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 #ifndef _direct_link_h
 #define _direct_link_h
 
+#define MAX_DIRECT_LINKS_SIZE 32
+#define MAX_HOST_SIZE         32
+
+#ifdef SUPLA_DIRECT_LINKS
 #include <Arduino.h>
 #include <WiFiClientSecure.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>
 #include <supla/channel_element.h>
-
-#define MAX_DIRECT_LINKS_SIZE 32
-#define MAX_HOST_SIZE         32
 
 namespace Supla {
 enum DirectLinks {
@@ -73,4 +73,5 @@ class DirectLinks : public Element, public ActionHandler {
 };  // namespace Control
 };  // namespace Supla
 
+#endif
 #endif

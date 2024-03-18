@@ -13,7 +13,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef SUPLA_MODBUS_SDM
 #include "SDM_630.h"
 
 namespace Supla {
@@ -34,7 +34,7 @@ void SDM630::readValuesFromDevice() {
   clearSuccCount();
   clearErrCount();
   clearErrCode();
-  
+
   // float energyTotal = ReadValuesSDM::getFwdActEnergyTotal();
   // float reactEnergyTotal = ReadValuesSDM::getFwdReactEnergyTotal();
   float freq = ReadValuesSDM::getFreq();
@@ -91,3 +91,4 @@ void SDM630::readValuesFromDevice() {
 
 };  // namespace Sensor
 };  // namespace Supla
+#endif

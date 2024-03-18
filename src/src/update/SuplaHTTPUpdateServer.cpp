@@ -7,6 +7,7 @@
 #include <WiFiUdp.h>
 
 #include <FS.h>
+#include <flash_hal.h>
 #include "StreamString.h"
 
 #ifdef ARDUINO_ARCH_ESP8266

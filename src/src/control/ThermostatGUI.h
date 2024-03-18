@@ -22,7 +22,6 @@
 
 #include <SuplaDevice.h>
 #include <supla/storage/eeprom.h>
-#include <supla/storage/littlefs_config.h>
 #include <supla/control/hvac_base.h>
 #include <supla/clock/clock.h>
 #include <supla/control/internal_pin_output.h>

@@ -13,7 +13,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
+#ifdef GUI_SENSOR_I2C_EXPENDER
 #include "ConfigExpander.h"
 
 #include "../../SuplaDeviceGUI.h"
@@ -259,3 +259,4 @@ Supla::Io *ConfigExpander::getIoExpender(uint8_t nr, uint8_t function) {
 
 }  // namespace Control
 }  // namespace Supla
+#endif

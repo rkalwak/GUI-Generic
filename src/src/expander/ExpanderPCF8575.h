@@ -15,6 +15,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_PCF8575
 
 #ifndef EXPANDER_PCF8575_H_
 #define EXPANDER_PCF8575_H_
@@ -52,4 +53,5 @@ class ExpanderPCF8575 : public Supla::Io, public Supla::Element {
 };  // namespace Control
 };  // namespace Supla
 
+#endif
 #endif

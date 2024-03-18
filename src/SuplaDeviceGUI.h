@@ -131,7 +131,9 @@
 #include <supla/control/dimmer_leds.h>
 #endif
 
+#if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
 #include <Wire.h>
+#endif
 
 #include <supla/control/direct_links.h>
 

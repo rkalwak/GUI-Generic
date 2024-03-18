@@ -16,6 +16,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_MCP23017
+
 #ifndef EXPANDER_MCP23017_H_
 #define EXPANDER_MCP23017_H_
 
@@ -94,4 +96,5 @@ class ExpanderMCP23017 : public Supla::Io, public Supla::Element {
 };  // namespace Control
 };  // namespace Supla
 
+#endif
 #endif

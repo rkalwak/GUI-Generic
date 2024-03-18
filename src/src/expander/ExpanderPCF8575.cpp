@@ -14,6 +14,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_PCF8575
+
 #include "ExpanderPCF8575.h"
 
 namespace Supla {
@@ -49,3 +51,4 @@ void ExpanderPCF8575::customDigitalWrite(int channelNumber, uint8_t pin, uint8_t
 
 }  // namespace Control
 }  // namespace Supla
+#endif

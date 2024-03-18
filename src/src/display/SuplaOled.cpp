@@ -14,12 +14,11 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_OLED
 #include "SuplaOled.h"
 #include <supla/clock/clock.h>
 #include <supla/sensor/therm_hygro_press_meter.h>
 #include <supla/sensor/distance.h>
-
-#ifdef SUPLA_OLED
 
 struct oledStruct {
   uint8_t chanelSensor;

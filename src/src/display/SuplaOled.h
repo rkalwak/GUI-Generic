@@ -26,11 +26,6 @@
 #include <SH1106Wire.h>   //OLED 1.3"
 #include <OLEDDisplayUi.h>
 
-#ifdef SUPLA_THERMOSTAT
-#include <supla/control/hvac_base.h>
-#include "../control/ThermostatGUI.h"
-#endif
-
 enum customActions
 {
   OLED_TURN_ON = 99,

@@ -22,6 +22,7 @@
 #include "SuplaOled.h"
 #ifdef SUPLA_THERMOSTAT
 #include "../control/ThermostatGUI.h"
+#include "../../SuplaConfigManager.h"
 #endif
 #include <supla/action_handler.h>
 

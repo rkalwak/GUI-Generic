@@ -16,6 +16,12 @@
 
 #ifdef SUPLA_OLED
 #include "SuplaOled.h"
+
+#ifdef SUPLA_THERMOSTAT
+#include <supla/control/hvac_base.h>
+#include "../control/ThermostatGUI.h"
+#endif
+
 #include "../../SuplaDeviceGUI.h"
 
 #include <supla/clock/clock.h>

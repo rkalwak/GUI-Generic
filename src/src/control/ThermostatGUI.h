@@ -14,7 +14,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#if SUPLA_THERMOSTAT
+#ifdef SUPLA_THERMOSTAT
 #ifndef _thermostat_gui_h
 #define _thermostat_gui_h
 
@@ -28,8 +28,8 @@
 #include <supla/events.h>
 #include <supla/actions.h>
 
-#include "../../SuplaDeviceGUI.h"
 #include "supla/protocol/protocol_layer.h"
+#include "../../SuplaConfigManager.h"
 
 #define THERMOSTAT_DEFAULT_HISTERESIS "0.4"
 #define THERMOSTAT_NO_TEMP_CHANNEL    0

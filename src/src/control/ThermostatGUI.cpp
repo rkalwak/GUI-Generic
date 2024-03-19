@@ -14,8 +14,9 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#if SUPLA_THERMOSTAT
+#ifdef SUPLA_THERMOSTAT
 #include "ThermostatGUI.h"
+#include "../../SuplaDeviceGUI.h"
 
 namespace Supla {
 namespace Control {

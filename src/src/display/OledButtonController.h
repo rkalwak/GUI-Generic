@@ -14,15 +14,15 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_OLED
+
 #ifndef OLED_BUTTON_CONTROLLER_H
 #define OLED_BUTTON_CONTROLLER_H
 
-#include "../../SuplaDeviceGUI.h"
-
-#ifdef SUPLA_OLED
 #include "SuplaOled.h"
+#ifdef SUPLA_THERMOSTAT
 #include "../control/ThermostatGUI.h"
-
+#endif
 #include <supla/action_handler.h>
 
 namespace Supla {

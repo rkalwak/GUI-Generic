@@ -57,8 +57,8 @@
 #include "SuplaWebPageHome.h"
 
 #ifdef SUPLA_OLED
-#include "src/display/SuplaOled.h"
 #include "src/display/OledButtonController.h"
+#include "src/display/SuplaOled.h"
 #endif
 
 #include <vector>

@@ -14,12 +14,10 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_OLED
 #ifndef SuplaOled_H
 #define SuplaOled_H
 
-#include "../../SuplaDeviceGUI.h"
-
-#ifdef SUPLA_OLED
 #include <pgmspace.h>
 #include <supla/action_handler.h>
 #include <supla/element.h>
@@ -28,8 +26,10 @@
 #include <SH1106Wire.h>   //OLED 1.3"
 #include <OLEDDisplayUi.h>
 
+#ifdef SUPLA_THERMOSTAT
 #include <supla/control/hvac_base.h>
 #include "../control/ThermostatGUI.h"
+#endif
 
 enum customActions
 {
@@ -1898,4 +1898,4 @@ const char utf8_win1250_table[] = {
 };
 #endif
 
-#endif  // SuplaOled_H
+#endif  // SuplaOled_H 

@@ -16,6 +16,8 @@
 #ifdef SUPLA_OLED
 #include "OledButtonController.h"
 
+#include "../../SuplaDeviceGUI.h"
+
 #include <supla/events.h>
 #include <supla/actions.h>
 #include <supla/control/button.h>

@@ -48,7 +48,7 @@ void DS18B20::iterateAlways() {
 
   unsigned long timeSinceLastOperation = currentTime - lastUpdateTime;
 
-  if (timeSinceLastOperation >= conversionInterval + 2000) {
+  if (timeSinceLastOperation >= conversionInterval + 4000) {
     channel.setNewValue(getValue());
 
     lastUpdateTime = currentTime;

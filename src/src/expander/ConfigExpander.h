@@ -18,8 +18,8 @@
 #include "../../GUIGenericCommonDefined.h"
 #ifdef GUI_SENSOR_I2C_EXPENDER
 
-#ifndef CONFIG_EXPANDER_PCF8575_H_
-#define CONFIG_EXPANDER_PCF8575_H_
+#ifndef CONFIG_EXPANDER_H_
+#define CONFIG_EXPANDER_H_
 
 #include <supla/io.h>
 #include "../../SuplaCommonPROGMEM.h"

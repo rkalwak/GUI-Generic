@@ -13,9 +13,9 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifdef GUI_SENSOR_I2C_EXPENDER
 #include "ConfigExpander.h"
 
+#ifdef GUI_SENSOR_I2C_EXPENDER
 #include "../../SuplaDeviceGUI.h"
 
 #include "ExpanderPCF8575.h"
@@ -213,24 +213,30 @@ Supla::Io *ConfigExpander::getIoExpender(uint8_t nr, uint8_t function) {
 
   if (address != OFF_ADDRESS_MCP23017) {
     switch (ConfigManager->get(KEY_ACTIVE_EXPENDER)->getElement(function).toInt()) {
+#ifdef SUPLA_PCF8575
       case EXPENDER_PCF8575:
         if (ioExpender[address].io == nullptr) {
           ioExpender[address].io = new Supla::Control::ExpanderPCF8575(&Wire, addressHex);
         }
         io = ioExpender[address].io;
         break;
+#endif
+#ifdef SUPLA_PCF8574
       case EXPENDER_PCF8574:
         if (ioExpender[address].io == nullptr) {
           ioExpender[address].io = new Supla::Control::ExpanderPCF8574(&Wire, addressHex);
         }
         io = ioExpender[address].io;
         break;
+#endif
+#ifdef SUPLA_MCP23017
       case EXPENDER_MCP23017:
         if (ioExpender[address].io == nullptr) {
           ioExpender[address].io = new Supla::Control::ExpanderMCP23017(&Wire, addressHex);
         }
         io = ioExpender[address].io;
         break;
+#endif
 
 #ifdef ARDUINO_ARCH_ESP32
       case EXPENDER_PCF8575_I2C2:

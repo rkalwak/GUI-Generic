@@ -239,23 +239,30 @@ Supla::Io *ConfigExpander::getIoExpender(uint8_t nr, uint8_t function) {
 #endif
 
 #ifdef ARDUINO_ARCH_ESP32
+#ifdef SUPLA_PCF8575
       case EXPENDER_PCF8575_I2C2:
         if (ioExpender[address].io_Wire1 == nullptr) {
           ioExpender[address].io_Wire1 = new Supla::Control::ExpanderPCF8575(&Wire1, addressHex);
         }
         io = ioExpender[address].io_Wire1;
         break;
+#endif
+#ifdef SUPLA_PCF8574
       case EXPENDER_PCF8574_I2C2:
         if (ioExpender[address].io_Wire1 == nullptr) {
           ioExpender[address].io_Wire1 = new Supla::Control::ExpanderPCF8574(&Wire1, addressHex);
         }
         io = ioExpender[address].io_Wire1;
         break;
+#endif
+#ifdef SUPLA_MCP23017
       case EXPENDER_MCP23017_I2C2:
         if (ioExpender[address].io_Wire1 == nullptr) {
           ioExpender[address].io_Wire1 = new Supla::Control::ExpanderMCP23017(&Wire1, addressHex);
         }
         io = ioExpender[address].io_Wire1;
+        break;
+#endif
 #endif
     }
   }

@@ -278,6 +278,10 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
 ActionTrigger *actionTrigger = nullptr;
 
 void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element) {
+  if (button == nullptr) {
+    return;
+  }
+
   auto at = new Supla::Control::ActionTrigger();
 
   int muliclickTimeMs = ConfigManager->get(KEY_AT_MULTICLICK_TIME)->getValueFloat() * 1000;
@@ -290,7 +294,7 @@ void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, 
     button->setMulticlickTime(muliclickTimeMs);
     button->setHoldTime(holdTimeMs);
   }
-  if (element != NULL) {
+  if (element != nullptr) {
     at->setRelatedChannel(element);
   }
   at->attach(button);

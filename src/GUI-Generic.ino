@@ -884,7 +884,6 @@ void setup() {
   for (nr = 0; nr < Supla::GUI::calculateElementCountActionTrigger(); nr++) {
     Supla::GUI::addButtonActionTrigger(nr);
   }
-  delete Supla::GUI::actionTrigger;
 #endif
 
 #ifdef SUPLA_DEBUG_MODE

@@ -892,24 +892,24 @@
 			}
 		},
 		"SUPLA_AHTX0": {
-			"name": "Sensor AHT10/20",
-			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę sensorów AHT10/20.",
+			"name": "Sensor AHT XX",
+			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę sensorów AHT XX.",
 			"defOn": false,
 			"en": {
-				"name": "AHT10/20 sensor",
-				"desc": "Device settings->I2C. It enables the support of AHT10/20 sensors."
+				"name": "AHT XX sensor",
+				"desc": "Device settings->I2C. It enables the support of AHT XX sensors."
 			},
 			"es": {
-				"name": "Sensor AHT10/20",
-				"desc": "Configuración del dispositivo->I2C. Habilita el soporte de sensores AHT10/20."
+				"name": "Sensor AHT XX",
+				"desc": "Configuración del dispositivo->I2C. Habilita el soporte de sensores AHT XX."
 			},
 			"de": {
-				"name": "AHT10/20 Sensor",
-				"desc": "Geräteeinstellungen->I2C. Es ermöglicht die Unterstützung von AHT10/20-Sensoren."
+				"name": "AHT XX Sensor",
+				"desc": "Geräteeinstellungen->I2C. Es ermöglicht die Unterstützung von AHT XX-Sensoren."
 			},
 			"fr": {
-				"name": "Capteur AHT10/20",
-				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs AHT10/20."
+				"name": "Capteur AHT XX",
+				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs AHT XX."
 			}
 		}
 	},

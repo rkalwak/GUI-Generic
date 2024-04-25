@@ -48,7 +48,7 @@
 #define S_MAX44009                       "MAX44009"
 #define S_GPIO                           "GPIO"
 #define S_CC1101                         "CC1101"
-#define S_AHTX0                          "ATHX0"
+#define S_AHTX0                          "AHT"
 #define S_ANALOG                         "Analog"
 
 //### PIN codes not translated ###

@@ -76,6 +76,7 @@ class AnalogReding : public GeneralPurposeMeasurement {
   void onInit() {
     pinMode(pin, INPUT);
     channel.setNewValue(getValue());
+    this->setRefreshIntervalMs(1000);
   }
 
   uint16_t readValuesFromDevice() {
@@ -103,14 +104,6 @@ class AnalogReding : public GeneralPurposeMeasurement {
     value = constrain(value, minDesired, maxDesired);
 
     return value;
-  }
-
-  void iterateAlways() {
-    if (millis() - lastReadTime > 1000) {
-      lastReadTime = millis();
-
-      channel.setNewValue(getValue());
-    }
   }
 
   void onSaveState() {

@@ -29,7 +29,6 @@ class MAX_44009 : public GeneralPurposeMeasurement {
   explicit MAX_44009() {
     sensor = new Max44009(0x4A);
     setDefaultUnitAfterValue("lx");
-    setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
   }
 
   double getValue() {

@@ -106,7 +106,7 @@ class PMS_PM01 : public GeneralPurposeMeasurement {
  public:
   PMS_PM01(PMSx003 *sensor) {
     pmsx003 = sensor;
-    this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+
     this->setDefaultUnitAfterValue("μg/m³");
   }
 
@@ -128,7 +128,7 @@ class PMS_PM25 : public GeneralPurposeMeasurement {
  public:
   PMS_PM25(PMSx003 *sensor) {
     pmsx003 = sensor;
-    this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+
     this->setDefaultUnitAfterValue("μg/m³");
   }
 
@@ -150,7 +150,7 @@ class PMS_PM10 : public GeneralPurposeMeasurement {
  public:
   PMS_PM10(PMSx003 *sensor) {
     pmsx003 = sensor;
-    this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
+
     this->setDefaultUnitAfterValue("μg/m³");
   }
 

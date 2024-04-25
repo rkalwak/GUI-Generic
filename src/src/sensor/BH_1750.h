@@ -29,7 +29,6 @@ class BH_1750 : public GeneralPurposeMeasurement {
   explicit BH_1750(int8_t address = 0x23) {
     setDefaultUnitAfterValue("klx");
     setDefaultValueDivider(1000000);  // in 0.001 units
-    setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
 
     myBH1750 = new BH1750_WE(address);
   }

@@ -64,7 +64,8 @@ class VindriktningIkea : public GeneralPurposeMeasurement {
   }
 
   void iterateAlways() {
-    if (millis() - lastReadTime > 10000) {
+    if (millis() - lastReadTime > refreshIntervalMs) {
+      Serial.println(refreshIntervalMs);
       lastReadTime = millis();
       handleUart(state);
       channel.setNewValue(getValue());
@@ -72,9 +73,8 @@ class VindriktningIkea : public GeneralPurposeMeasurement {
   }
 
   void onInit() {
-    this->setKeepHistory(SUPLA_GENERAL_PURPOSE_MEASUREMENT_CHART_TYPE_LINEAR);
     this->setDefaultUnitAfterValue("μg/m³");
-
+    this->setRefreshIntervalMs(10000);
     handleUart(state);
     channel.setNewValue(getValue());
   }

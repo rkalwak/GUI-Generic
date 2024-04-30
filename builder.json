@@ -231,7 +231,28 @@
 				"name": "WT32-ETH01",
 				"desc": ""
 			}
-		}
+		},
+		"SUPLA_ETH01_LAN8720": {
+			"name": "LAN8720",
+			"desc": "Moduł Ethernet oparty na układzie LAN8720. Działa tylko z ESP32.",
+			"defOn": false,
+			"en": {
+				"name": "LAN8720",
+				"desc": ""
+			},
+			"es": {
+				"name": "LAN8720",
+				"desc": ""
+			},
+			"de": {
+				"name": "LAN8720",
+				"desc": ""
+			},
+			"fr": {
+				"name": "LAN8720",
+				"desc": ""
+			}
+		}		
 	},
 	"CONTROL": {
 		"SUPLA_RELAY": {

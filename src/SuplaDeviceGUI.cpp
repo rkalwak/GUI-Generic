@@ -172,6 +172,7 @@ void addRelay(uint8_t nr) {
   }
 
   relay.push_back(newRelay);
+  delay(0);
 }
 
 void addButtonToRelay(uint8_t nrRelay, Supla::Control::Relay *relay) {
@@ -300,6 +301,7 @@ void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, 
   at->attach(button);
 
   actionTrigger[nr].active = true;
+  delay(0);
 }
 
 void addButtonActionTrigger(uint8_t nr) {
@@ -325,6 +327,7 @@ void addButtonActionTrigger(uint8_t nr) {
 
     at->attach(button);
   }
+  delay(0);
 }
 
 int calculateElementCountActionTrigger() {

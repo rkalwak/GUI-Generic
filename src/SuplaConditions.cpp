@@ -48,15 +48,13 @@ void handleConditions(int save) {
       addFormHeader(String(S_CONDITION) + S_SPACE + (nr + 1));
       uint8_t selected = ConfigManager->get(KEY_CONDITIONS_CLIENT_TYPE)->getElement(nr).toInt();
 
-      addListBox(String(INPUT_CONDITIONS_TYPE_CLIENT) + nr, "Wykonaj dla", CONDITIONS_EXECUTIVE_TYPE_LIST, COUNT_EXECUTIVE_LIST,
-                 selected, 0, false);
+      addListBox(String(INPUT_CONDITIONS_TYPE_CLIENT) + nr, "Wykonaj dla", CONDITIONS_EXECUTIVE_TYPE_LIST, COUNT_EXECUTIVE_LIST, selected, 0, false);
 
       selected = ConfigManager->get(KEY_CONDITIONS_CLIENT_TYPE_NUMBER)->getElement(nr).toInt();
       addListNumbersBox(String(INPUT_CONDITIONS_CLIENT_NUMBER) + nr, "Numer", 20, selected);
 
       selected = ConfigManager->get(KEY_CONDITIONS_SENSOR_TYPE)->getElement(nr).toInt();
-      addListBox(String(INPUT_CONDITIONS_SENSOR_TYPE) + nr, "Sensor", CONDITIONS_SENSOR_LIST, COUNT_SENSOR_LIST, selected, 0,
-                 false);
+      addListBox(String(INPUT_CONDITIONS_SENSOR_TYPE) + nr, "Sensor", CONDITIONS_SENSOR_LIST, COUNT_SENSOR_LIST, selected, 0, false);
 
       selected = ConfigManager->get(KEY_CONDITIONS_SENSOR_NUMBER)->getElement(nr).toInt();
       addListNumbersBox(String(INPUT_CONDITIONS_SENSOR_NUMBER) + nr, "Numer", 20, selected);
@@ -69,6 +67,7 @@ void handleConditions(int save) {
       value = ConfigManager->get(KEY_CONDITIONS_MAX)->getElement(nr);
       addNumberBox(String(INPUT_CONDITIONS_MAX) + nr, S_OFF, S_SWITCH_OFF_VALUE, false, value, false);
       addFormHeaderEnd();
+      delay(0);
     }
   }
 
@@ -159,6 +158,7 @@ void addConditionsExecutive(int functionClient, const char *nameExecutive, Supla
       Serial.print(", nrClient: ");
       Serial.println(conditions[nr].nrClient);
     }
+    delay(0);
   }
 }
 
@@ -179,6 +179,7 @@ void addConditionsSensor(int functionSensor, const char *nameSensor, Supla::Chan
       Serial.print(", nrSensor : ");
       Serial.println(conditions[nr].nrSensor);
     }
+    delay(0);
   }
 }
 
@@ -199,6 +200,7 @@ void addConditionsSensor(int functionSensor, const char *nameSensor, Supla::Elem
       Serial.print(", nrSensor : ");
       Serial.println(conditions[nr].nrSensor);
     }
+    delay(0);
   }
 }
 
@@ -219,6 +221,7 @@ void addConditionsSensor(int functionSensor, const char *nameSensor, Supla::Sens
       Serial.print(", nrSensor : ");
       Serial.println(conditions[nr].nrSensor);
     }
+    delay(0);
   }
 }
 
@@ -235,6 +238,7 @@ void addConditions() {
 
       addCondition(&conditions[nr], nr, actionON, actionOFF);
     }
+    delay(0);
   }
 }
 

@@ -215,7 +215,7 @@ void SuplaConfigESP::getMacAddress(char *macAddress, bool formating) {
   }
 }
 
-void SuplaConfigESP::getFreeHeapAsString(char* freeHeapStr) {
+void SuplaConfigESP::getFreeHeapAsString(char *freeHeapStr) {
   float freeHeap = ESP.getFreeHeap() / 1024.0;
   snprintf(freeHeapStr, 10, "%.2f", freeHeap);
 }
@@ -566,6 +566,12 @@ uint8_t SuplaConfigESP::getEvent(uint8_t gpio) {
 }
 
 uint8_t SuplaConfigESP::getLightRelay(uint8_t gpio) {
+#ifdef GUI_SENSOR_I2C_EXPENDER
+  if (ConfigManager->get(KEY_ACTIVE_EXPENDER)->getElement(FUNCTION_RELAY).toInt() != EXPENDER_OFF) {
+    return false;
+  }
+#endif
+
   return ConfigManager->get(getKeyGpio(gpio))->getElement(EVENT_BUTTON).toInt();
 }
 

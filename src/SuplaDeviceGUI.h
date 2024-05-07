@@ -30,7 +30,6 @@
 #include "SuplaConfigESP.h"
 
 #include "SuplaCommonPROGMEM.h"
-#include "src/boneIO/boneIO.h"
 
 #include "SuplaConfigManager.h"
 #include "SuplaWebPageRelay.h"
@@ -212,6 +211,10 @@
 #include "src/expander/ExpanderPCF8574.h"
 #include "src/expander/ExpanderPCF8575.h"
 #include "src/expander/ExpanderMCP23017.h"
+#endif
+
+#if defined(SUPLA_BONEIO_32x10A) || defined(SUPLA_BONEIO_24x16A)
+#include "src/boneIO/boneIO.h"
 #endif
 
 #ifdef SUPLA_WAKE_ON_LAN

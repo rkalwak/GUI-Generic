@@ -206,15 +206,15 @@
 #include "src/sensor/ADE7953.h"
 #endif
 
+#if defined(SUPLA_BONEIO_32x10A) || defined(SUPLA_BONEIO_24x16A)
+#include "src/boneIO/boneIO.h"
+#endif
+
 #ifdef GUI_SENSOR_I2C_EXPENDER
 #include "src/expander/ConfigExpander.h"
 #include "src/expander/ExpanderPCF8574.h"
 #include "src/expander/ExpanderPCF8575.h"
 #include "src/expander/ExpanderMCP23017.h"
-#endif
-
-#if defined(SUPLA_BONEIO_32x10A) || defined(SUPLA_BONEIO_24x16A)
-#include "src/boneIO/boneIO.h"
 #endif
 
 #ifdef SUPLA_WAKE_ON_LAN

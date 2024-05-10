@@ -53,7 +53,13 @@ void OledButtonController::initializeThermostatButtons() {
 
 #if defined(SUPLA_BUTTON) && defined(SUPLA_THERMOSTAT)
   if (getCountActiveThermostat() != 0) {
-    Supla::GUI::addButtonToRelay(0, thermostat[0], this);
+    for (size_t i = 0; i < thermostat.size(); ++i) {
+      if (thermostat[i] != nullptr) {
+        Supla::GUI::addButtonToRelay(i, thermostat[i], this);
+        activeCurrentFrameOffset = i;
+        break;
+      }
+    }
 
     for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_BUTTON)->getValueInt(); nr++) {
       uint8_t pinButton = ConfigESP->getGpio(nr, FUNCTION_BUTTON);
@@ -104,7 +110,7 @@ void OledButtonController::handleAction(int event, int action) {
         skipThermostatAction = true;
       }
 
-      int activeCurrentFrame = oled->getCurrentFrame();
+      int activeCurrentFrame = oled->getCurrentFrame() + activeCurrentFrameOffset;
 
       if (thermostat[activeCurrentFrame] != nullptr && !skipThermostatAction) {
         if (action == Supla::GUI::Action::TOGGLE_MANUAL_WEEKLY_SCHEDULE_MODES_HOLD_OFF && holdCounter == 8) {

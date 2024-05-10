@@ -36,6 +36,7 @@ class OledButtonController : public Supla::ActionHandler {
   std::array<Supla::Control::GUI::ThermostatGUI *, MAX_THERMOSTAT> thermostat;
 #endif
   int holdCounter = 0;
+  uint8_t activeCurrentFrameOffset = 0;
 
   void initializeThermostatButtons();
 

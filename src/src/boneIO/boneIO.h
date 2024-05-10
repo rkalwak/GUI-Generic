@@ -19,19 +19,6 @@
 #if defined(ARDUINO_ARCH_ESP32)
 #if defined(SUPLA_BONEIO_32x10A) || defined(SUPLA_BONEIO_24x16A)
 #define SUPLA_BONEIO
-
-#ifndef SUPLA_MCP23017
-#define SUPLA_MCP23017
-#endif
-
-#ifndef SUPLA_PCF8575
-#define SUPLA_PCF8575
-#endif
-
-#ifndef SUPLA_PCF8574
-#define SUPLA_PCF8574
-#endif
-#endif
 #endif
 
 #if defined(SUPLA_BONEIO)

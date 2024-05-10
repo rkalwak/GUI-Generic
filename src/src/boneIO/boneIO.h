@@ -20,6 +20,7 @@
 #if defined(SUPLA_BONEIO_32x10A) || defined(SUPLA_BONEIO_24x16A)
 #define SUPLA_BONEIO
 #endif
+#endif
 
 #if defined(SUPLA_BONEIO)
 

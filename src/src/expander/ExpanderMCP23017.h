@@ -16,6 +16,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include "../../GUIGenericCommonDefined.h"
+
 #ifdef SUPLA_MCP23017
 
 #ifndef EXPANDER_MCP23017_H_

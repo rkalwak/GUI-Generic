@@ -76,8 +76,7 @@ class SPS30_X : public Element {
 #endif /* PLOTTER_FORMAT */
   }
 
-  sps30_measurement getMeasurement()
-  {
+  sps30_measurement getMeasurement() {
     return this->m;
   }
 

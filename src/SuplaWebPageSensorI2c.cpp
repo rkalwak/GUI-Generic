@@ -163,6 +163,13 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd();
 #endif
 
+#ifdef SUPLA_SPS30_KPOP
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt();
+    addFormHeader();
+    addListBox(INPUT_SPS30, F("SPS30"), STATE_P, 2, selected);;
+    addFormHeaderEnd();
+#endif
+
 #ifdef SUPLA_OLED
     addFormHeader();
 

@@ -932,6 +932,27 @@
 				"name": "Capteur AHT XX",
 				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs AHT XX."
 			}
+		},
+		"SUPLA_SPS30_KPOP": {
+			"name": "Sensor SPS30",
+			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę sensorów SPS30.",
+			"defOn": false,
+			"en": {
+				"name": "SPS30 sensor",
+				"desc": "Device settings->I2C. It enables the support of SPS30 sensors."
+			},
+			"es": {
+				"name": "Sensor SPS30",
+				"desc": "Configuración del dispositivo->I2C. Habilita el soporte de sensores SPS30."
+			},
+			"de": {
+				"name": "SPS30 Sensor",
+				"desc": "Geräteeinstellungen->I2C. Es ermöglicht die Unterstützung von SPS30-Sensoren."
+			},
+			"fr": {
+				"name": "Capteur SPS30",
+				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs SPS30."
+			}
 		}
 	},
 	"SPI": {

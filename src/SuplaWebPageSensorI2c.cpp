@@ -466,6 +466,14 @@ ConfigESP->setBrightnessLevelOLED(value);
   }
 #endif
 
+#ifdef SUPLA_SPS30_KPOP
+  key = KEY_ACTIVE_SENSOR_2;
+  input = INPUT_SPS30;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
+
   switch (ConfigManager->save()) {
     case E_CONFIG_OK:
       handleSensorI2c(1);

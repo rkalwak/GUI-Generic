@@ -32,7 +32,7 @@ class SPS30_X : public Element {
   }
 
   void iterateAlways() {
-    if (millis() - lastSleepTime > 600000) {  // 10min
+    if (millis() - lastReadTime > 60000) {  // 1min
       lastReadTime = millis();
       do {
         ret = sps30_read_data_ready(&data_ready);
@@ -91,6 +91,26 @@ class SPS30_X : public Element {
   struct sps30_measurement m;
 };
 
+class SPS30_PM005 : public GeneralPurposeMeasurement {
+ public:
+  SPS30_PM005(SPS30_X *sensor) {
+    sps30 = sensor;
+
+    this->setDefaultUnitAfterValue("μg/m³");
+    this->setInitialCaption("Light sensor 🌞");
+  }
+
+  double getValue() {
+    double value = NAN;
+     auto measurement =sps30->getMeasurement();
+    value = measurement.nc_0p5;
+    return value;
+  }
+
+ protected:
+  SPS30_X *sps30;
+};
+
 class SPS30_PM01 : public GeneralPurposeMeasurement {
  public:
   SPS30_PM01(SPS30_X *sensor) {
@@ -101,7 +121,8 @@ class SPS30_PM01 : public GeneralPurposeMeasurement {
 
   double getValue() {
     double value = NAN;
-    value = sps30->getMeasurement().mc_1p0;
+     auto measurement =sps30->getMeasurement();
+    value = measurement.nc_1p0-measurement.nc_0p5;
     return value;
   }
 
@@ -119,7 +140,8 @@ class SPS30_PM025 : public GeneralPurposeMeasurement {
 
   double getValue() {
     double value = NAN;
-    value = sps30->getMeasurement().mc_2p5;
+     auto measurement =sps30->getMeasurement();
+    value = measurement.nc_2p5-measurement.nc_1p0;
     return value;
   }
 
@@ -137,7 +159,8 @@ class SPS30_PM04 : public GeneralPurposeMeasurement {
 
   double getValue() {
     double value = NAN;
-    value = sps30->getMeasurement().mc_4p0;
+     auto measurement =sps30->getMeasurement();
+    value = measurement.nc_4p0-measurement.nc_2p5;
     return value;
   }
 
@@ -155,7 +178,8 @@ class SPS30_PM10 : public GeneralPurposeMeasurement {
 
   double getValue() {
     double value = NAN;
-    value = sps30->getMeasurement().mc_10p0;
+    auto measurement =sps30->getMeasurement();
+    value = measurement.nc_10p0-measurement.nc_4p0;
     return value;
   }
 

@@ -247,6 +247,10 @@
 #include "src/sensor/AHTX0.h"
 #endif
 
+#ifdef SUPLA_SPS30_KPOP
+#include "src/sensor/SPS30.h"
+#endif
+
 #include "src/storage/SPIFFS_config.h"
 
 #define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds

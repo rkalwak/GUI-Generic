@@ -55,6 +55,7 @@
 // #define SUPLA_LCD_HD44780
 // #define SUPLA_MS5611
 // #define SUPLA_AHTX0
+// #define SUPLA_SENSIRON_SPS30_KPOP
 // ##### SPI #####
 // #define SUPLA_MAX6675
 // #define SUPLA_MAX31855

@@ -163,6 +163,13 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd();
 #endif
 
+#ifdef SUPLA_SPS30_KPOP
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt();
+    addFormHeader();
+    addListBox(INPUT_SPS30, F("SPS30"), STATE_P, 2, selected);;
+    addFormHeaderEnd();
+#endif
+
 #ifdef SUPLA_OLED
     addFormHeader();
 
@@ -463,6 +470,14 @@ ConfigESP->setBrightnessLevelOLED(value);
   input = INPUT_AHTX0;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
+
+#ifdef SUPLA_SPS30_KPOP
+  key = KEY_ACTIVE_SENSOR_2;
+  input = INPUT_SPS30;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 

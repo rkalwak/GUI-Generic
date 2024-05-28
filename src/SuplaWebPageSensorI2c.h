@@ -27,7 +27,7 @@
 #endif
 
 /* Another one to support more sensors settings.*/
-#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0)
+#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP)
 #define GUI_SENSOR_I2C_2
 #endif
 
@@ -58,7 +58,8 @@ enum _sensor2
 {
   SENSOR_I2C_MS5611,
   SENSOR_SPI_CC1101,
-  SENSOR_I2C_AHTX0
+  SENSOR_I2C_AHTX0,
+  SENSOR_I2C_SPS30,
 };
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER) || defined(GUI_SENSOR_I2C_2)
@@ -177,6 +178,10 @@ enum _ahtAdress
   AHT_ADDRESS_0X39,
   AHT_ADDRESS_0X38_AND_0X39
 };
+#endif
+
+#ifdef SUPLA_SPS30_KPOP
+#define INPUT_SPS30 "sps30"
 #endif
 
 #endif // defined(GUI_SENSOR_I2C)

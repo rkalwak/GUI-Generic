@@ -877,6 +877,20 @@ void setup() {
 #endif
     }
 #endif
+
+#ifdef SUPLA_SPS30_KPOP
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt()) {
+    Supla::Sensor::SPS30_X *sps30;
+
+    sps30 = new Supla::Sensor::SPS30_X();
+    auto spsPM005 = new Supla::Sensor::SPS30_PM005(sps30);
+    auto spsPM01 = new Supla::Sensor::SPS30_PM01(sps30);
+    auto spsPM025 = new Supla::Sensor::SPS30_PM025(sps30);
+    auto spsPM04 = new Supla::Sensor::SPS30_PM04(sps30);
+    auto spsPM10 = new Supla::Sensor::SPS30_PM10(sps30);
+
+  }
+#endif
   }
 #endif
 

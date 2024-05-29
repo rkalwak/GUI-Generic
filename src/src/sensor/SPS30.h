@@ -97,7 +97,6 @@ class SPS30_PM005 : public GeneralPurposeMeasurement {
     sps30 = sensor;
 
     this->setDefaultUnitAfterValue("μg/m³");
-    this->setInitialCaption("Light sensor 🌞");
   }
 
   double getValue() {

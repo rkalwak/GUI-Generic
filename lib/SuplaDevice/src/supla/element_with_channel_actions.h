@@ -59,9 +59,9 @@ class ElementWithChannelActions : public Element, public LocalAction {
   bool iterateConnected() override;
   void handleChannelConfigFinished() override;
   uint8_t handleChannelConfig(TSD_ChannelConfig *result, bool local) override;
-  virtual uint8_t applyChannelConfig(TSD_ChannelConfig *result);
   void handleSetChannelConfigResult(
       TSDS_SetChannelConfigResult *result) override;
+  void purgeConfig() override;
 
   void clearChannelConfigChangedFlag();
 
@@ -72,8 +72,11 @@ class ElementWithChannelActions : public Element, public LocalAction {
   virtual bool loadFunctionFromConfig();
   virtual bool saveConfigChangeFlag();
   virtual bool loadConfigChangeFlag();
-  virtual void fillChannelConfig(void *channelConfig, int *size);
   bool isAnyUpdatePending() override;
+
+  // methods to override for channels with runtime config support
+  virtual uint8_t applyChannelConfig(TSD_ChannelConfig *result, bool local);
+  virtual void fillChannelConfig(void *channelConfig, int *size);
 
  protected:
   Supla::ChannelConfigState channelConfigState =

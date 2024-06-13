@@ -22,10 +22,11 @@
 #include <supla/network/web_sender.h>
 #include <supla/tools.h>
 #include <supla/log_wrapper.h>
+#include <supla/channels/channel.h>
+#include <supla/control/hvac_base.h>
 
 #include <stdio.h>
 #include <string.h>
-#include "supla/control/hvac_base.h"
 
 using Supla::Html::HvacParameters;
 
@@ -219,17 +220,18 @@ void HvacParameters::send(Supla::WebSender* sender) {
   sender->send("<select ");
   sender->sendNameAndId(key);
   sender->send(">");
-  for (int i = 0; i < Supla::Channel::reg_dev.channel_count; i++) {
-    if (Supla::Channel::reg_dev.channels[i].Type ==
-            SUPLA_CHANNELTYPE_THERMOMETER ||
-        Supla::Channel::reg_dev.channels[i].Type ==
-            SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+  for (Supla::Channel* ch = Supla::Channel::Begin(); ch != nullptr;
+       ch = ch->next()) {
+    int channelNumber = ch->getChannelNumber();
+    auto channelType = ch->getChannelType();
+    if (channelType == SUPLA_CHANNELTYPE_THERMOMETER ||
+        channelType == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
       char buf[100] = {};
-      snprintf(buf, sizeof(buf), "%d", i);
+      snprintf(buf, sizeof(buf), "%d", channelNumber);
       sender->sendSelectItem(
-          i,
+          channelNumber,
           buf,
-          hvac->getMainThermometerChannelNo() == i);
+          hvac->getMainThermometerChannelNo() == channelNumber);
     }
   }
   sender->send("</select>");
@@ -247,17 +249,18 @@ void HvacParameters::send(Supla::WebSender* sender) {
   sender->send(">");
   sender->sendSelectItem(hvac->getChannelNumber(), "Not set",
       hvac->getAuxThermometerChannelNo() == hvac->getChannelNumber());
-  for (int i = 0; i < Supla::Channel::reg_dev.channel_count; i++) {
-    if (Supla::Channel::reg_dev.channels[i].Type ==
-            SUPLA_CHANNELTYPE_THERMOMETER ||
-        Supla::Channel::reg_dev.channels[i].Type ==
-            SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
+  for (Supla::Channel* ch = Supla::Channel::Begin(); ch != nullptr;
+       ch = ch->next()) {
+    int channelNumber = ch->getChannelNumber();
+    auto channelType = ch->getChannelType();
+    if (channelType == SUPLA_CHANNELTYPE_THERMOMETER ||
+        channelType == SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR) {
       char buf[100] = {};
-      snprintf(buf, sizeof(buf), "%d", i);
+      snprintf(buf, sizeof(buf), "%d", channelNumber);
       sender->sendSelectItem(
-          i,
+          channelNumber,
           buf,
-          hvac->getAuxThermometerChannelNo() == i);
+          hvac->getAuxThermometerChannelNo() == channelNumber);
     }
   }
   sender->send("</select>");
@@ -463,11 +466,12 @@ void HvacParameters::send(Supla::WebSender* sender) {
   // form-field BEGIN
   int countSensors = 0;
   int sensorId = 0;
-  for (int i = 0; i < Supla::Channel::reg_dev.channel_count; i++) {
-    if (Supla::Channel::reg_dev.channels[i].Type ==
-        SUPLA_CHANNELTYPE_BINARYSENSOR) {
+  for (Supla::Channel* ch = Supla::Channel::Begin(); ch != nullptr;
+       ch = ch->next()) {
+    auto channelType = ch->getChannelType();
+    if (channelType == SUPLA_CHANNELTYPE_BINARYSENSOR) {
       countSensors++;
-      sensorId = i;
+      sensorId = ch->getChannelNumber();
     }
   }
   if (countSensors > 0) {
@@ -488,10 +492,18 @@ void HvacParameters::send(Supla::WebSender* sender) {
           "Enabled",
           hvac->getBinarySensorChannelNo() == sensorId);
     } else {
-      for (int i = 0; i < Supla::Channel::reg_dev.channel_count; i++) {
-        char buf[100] = {};
-        snprintf(buf, sizeof(buf), "Use sensor #%d", i);
-        sender->sendSelectItem(i, buf, hvac->getBinarySensorChannelNo() == i);
+      for (Supla::Channel* ch = Supla::Channel::Begin(); ch != nullptr;
+          ch = ch->next()) {
+        auto channelType = ch->getChannelType();
+        if (channelType == SUPLA_CHANNELTYPE_BINARYSENSOR) {
+          char buf[100] = {};
+          auto channelNumber = ch->getChannelNumber();
+          snprintf(buf, sizeof(buf), "Use sensor #%d", channelNumber);
+          sender->sendSelectItem(
+              channelNumber,
+              buf,
+              hvac->getBinarySensorChannelNo() == channelNumber);
+        }
       }
     }
     sender->send("</select>");
@@ -727,10 +739,7 @@ bool HvacParameters::handleResponse(const char* key, const char* value) {
     newValue = new TSD_SuplaChannelNewValue;
     memset(newValue, 0, sizeof(TSD_SuplaChannelNewValue));
     hvacValue = reinterpret_cast<THVACValue*>(newValue->value);
-    memcpy(
-        hvacValue,
-        &Supla::Channel::reg_dev.channels[hvac->getChannelNumber()].hvacValue,
-        sizeof(THVACValue));
+    hvac->getChannel()->fillRawValue(hvacValue);
   }
 
   if (config == nullptr) {

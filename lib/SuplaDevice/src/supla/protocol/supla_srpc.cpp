@@ -24,6 +24,7 @@
 #include <supla/tools.h>
 #include <supla/network/client.h>
 #include <supla/device/remote_device_config.h>
+#include <supla/device/register_device.h>
 
 #include <string.h>
 
@@ -121,7 +122,8 @@ bool Supla::Protocol::SuplaSrpc::onLoadConfig() {
     }
 
     if (port == 2016 || (port == -1 && isSuplaSSLEnabled)) {
-      bool usePublicServer = isSuplaPublicServerConfigured();
+      bool usePublicServer =
+          Supla::RegisterDevice::isSuplaPublicServerConfigured();
       selectedCertificate = suplaCACert;
 
       // Public Supla server use different root CA for server certificate
@@ -194,7 +196,8 @@ void Supla::Protocol::SuplaSrpc::onInit() {
     if (!cfg && (suplaCACert != nullptr || supla3rdPartyCACert != nullptr)) {
       selectedCertificate = suplaCACert;
       if (suplaCACert != nullptr && supla3rdPartyCACert != nullptr) {
-        bool usePublicServer = isSuplaPublicServerConfigured();
+        bool usePublicServer =
+            Supla::RegisterDevice::isSuplaPublicServerConfigured();
 
         // Public Supla server use different root CA for server certificate
         // validation then CA used for private servers
@@ -697,7 +700,7 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
         port = 2015;
       }
     }
-    int result = client->connect(Supla::Channel::reg_dev.ServerName, port);
+    int result = client->connect(Supla::RegisterDevice::getServerName(), port);
     if (1 == result) {
       sdc->uptime.resetConnectionUptime();
       connectionFailCounter = 0;
@@ -711,7 +714,7 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
       }
       SUPLA_LOG_DEBUG("Connection fail (%d). Server: %s",
                       result,
-                      Supla::Channel::reg_dev.ServerName);
+                      Supla::RegisterDevice::getServerName());
       if (firstConnectionAttempt) {
         waitForIterate = 1000;
       } else {
@@ -741,30 +744,9 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
     // Perform registration if we are not yet registered
     registered = -1;
     sdc->status(STATUS_REGISTER_IN_PROGRESS, F("Register in progress"));
-    static bool firstRegistration = true;
-    if (firstRegistration) {
-      firstRegistration = false;
-      for (int i = 0; i < Supla::Channel::reg_dev.channel_count; i++) {
-        SUPLA_LOG_DEBUG(
-            "CH #%i, type: %d, FuncList: 0x%X, default: %d, flags: 0x%X, "
-            "value: "
-            "[%02x %02x %02x %02x %02x %02x %02x %02x]",
-            Supla::Channel::reg_dev.channels[i].Number,
-            Supla::Channel::reg_dev.channels[i].Type,
-            Supla::Channel::reg_dev.channels[i].FuncList,
-            Supla::Channel::reg_dev.channels[i].Default,
-            Supla::Channel::reg_dev.channels[i].Flags,
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[0]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[1]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[2]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[3]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[4]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[5]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[6]),
-            static_cast<uint8_t>(Supla::Channel::reg_dev.channels[i].value[7]));
-      }
-    }
-    if (!srpc_ds_async_registerdevice_e(srpc, &Supla::Channel::reg_dev)) {
+    if (!srpc_ds_async_registerdevice_in_chunks(
+            srpc, Supla::RegisterDevice::getRegDevHeaderPtr(),
+            Supla::RegisterDevice::getChannelPtr)) {
       SUPLA_LOG_WARNING("Fatal SRPC failure!");
     }
     return false;
@@ -791,7 +773,7 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
       SUPLA_LOG_INFO("Sending new device config to server");
       remoteDeviceConfig = new Supla::Device::RemoteDeviceConfig();
       TSDS_SetDeviceConfig deviceConfig = {};
-      if (remoteDeviceConfig->fillFullSetDeviceConfig(&deviceConfig)) {
+      if (remoteDeviceConfig->fillSetDeviceConfig(&deviceConfig)) {
         srpc_ds_async_set_device_config_request(srpc, &deviceConfig);
       } else {
         cfg->clearDeviceConfigChangeFlag();
@@ -888,14 +870,14 @@ bool Supla::Protocol::SuplaSrpc::verifyConfig() {
     return true;
   }
 
-  if (Supla::Channel::reg_dev.ServerName[0] == '\0') {
+  if (Supla::RegisterDevice::isServerNameEmpty()) {
     sdc->status(STATUS_UNKNOWN_SERVER_ADDRESS, F("Missing server address"));
     if (sdc->getDeviceMode() != Supla::DEVICE_MODE_CONFIG) {
       return false;
     }
   }
 
-  if (Supla::Channel::reg_dev.Email[0] == '\0') {
+  if (Supla::RegisterDevice::isEmailEmpty()) {
     sdc->status(STATUS_MISSING_CREDENTIALS, F("Missing email address"));
     if (sdc->getDeviceMode() != Supla::DEVICE_MODE_CONFIG) {
       return false;
@@ -949,25 +931,6 @@ bool Supla::Protocol::SuplaSrpc::isUpdatePending() {
     }
   }
   return Supla::Element::IsAnyUpdatePending();
-}
-
-bool Supla::Protocol::SuplaSrpc::isSuplaPublicServerConfigured() {
-  if (Supla::Channel::reg_dev.ServerName[0] != '\0') {
-    const int serverLength = strlen(Supla::Channel::reg_dev.ServerName);
-    const char suplaPublicServerSuffix[] = ".supla.org";
-    const int suplaPublicServerSuffixLength =
-      strlen(suplaPublicServerSuffix);
-
-    if (serverLength > suplaPublicServerSuffixLength) {
-      if (strncmpInsensitive(Supla::Channel::reg_dev.ServerName +
-            serverLength - suplaPublicServerSuffixLength,
-            suplaPublicServerSuffix,
-            suplaPublicServerSuffixLength) == 0) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 bool Supla::Protocol::SuplaSrpc::isRegisteredAndReady() {
@@ -1042,8 +1005,8 @@ void Supla::Protocol::SuplaSrpc::sendChannelValueChanged(
   if (!isRegisteredAndReady()) {
     return;
   }
-  srpc_ds_async_channel_value_changed_c(srpc, channelNumber, value,
-      offline, validityTimeSec);
+  srpc_ds_async_channel_value_changed_c(
+      srpc, channelNumber, value, offline, validityTimeSec);
 }
 
 void Supla::Protocol::SuplaSrpc::sendExtendedChannelValueChanged(
@@ -1138,7 +1101,7 @@ void Supla::Protocol::SuplaSrpc::handleDeviceConfig(
 
     if (remoteDeviceConfig->isSetDeviceConfigRequired()) {
       TSDS_SetDeviceConfig deviceConfig = {};
-      if (remoteDeviceConfig->fillFullSetDeviceConfig(&deviceConfig)) {
+      if (remoteDeviceConfig->fillSetDeviceConfig(&deviceConfig)) {
         srpc_ds_async_set_device_config_request(srpc, &deviceConfig);
       } else {
         auto cfg = Supla::Storage::ConfigInstance();

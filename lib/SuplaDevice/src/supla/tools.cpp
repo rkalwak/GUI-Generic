@@ -19,7 +19,12 @@
 #include "tools.h"
 #include <string.h>
 #include <supla-common/proto.h>
+
+#if defined(ARDUINO_ARCH_AVR)
 #include <stdlib.h>
+#else
+#include <cstdlib>
+#endif
 
 void float2DoublePacked(float number, uint8_t *bar, int byteOrder) {
   (void)(byteOrder);
@@ -107,6 +112,10 @@ void hexStringToArray(const char *input, char *output, int outputLength) {
 }
 
 uint32_t hexStringToInt(const char *str, int len) {
+  if (len == -1) {
+    len = strlen(str);
+  }
+
   uint32_t result = 0;
 
   for (int i = 0; i < len; i++) {
@@ -208,7 +217,7 @@ void urlDecodeInplace(char *buffer, int size) {
   *insertPtr = '\0';
 }
 
-int urlEncode(char *input, char *output, int outputMaxSize) {
+int urlEncode(const char *input, char *output, int outputMaxSize) {
   auto parserPtr = input;
   auto outputPtr = output;
   auto lastOutputPtr = output + outputMaxSize - 1;
@@ -419,4 +428,28 @@ bool stringToColor(const char *payload,
   (void)(blue);
   return false;
 #endif
+}
+
+int Supla::getBitNumber(uint64_t value) {
+  if (value == 0 || (value & (value - 1)) != 0) {
+    // more than 1 bit set
+    return -1;
+  }
+  int position = 0;
+  while ((value & 1) != 1) {
+    value >>= 1;
+    position++;
+  }
+
+  return position;
+}
+
+int Supla::rssiToSignalStrength(int rssi) {
+  if (rssi > -50) {
+    return 100;
+  } else if (rssi <= -100) {
+    return 0;
+  }
+
+  return 2 * (rssi + 100);
 }

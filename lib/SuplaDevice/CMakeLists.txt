@@ -3,6 +3,7 @@ set(SUPLA_DEVICE_SRCS
 
   src/supla/uptime.cpp
   src/supla/channels/channel.cpp
+  src/supla/channels/channel_types.cpp
   src/supla/channels/binary_sensor_channel.cpp
   src/supla/channels/channel_extended.cpp
   src/supla/io.cpp
@@ -42,6 +43,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/device/remote_device_config.cpp
   src/supla/device/notifications.cpp
   src/supla/device/enter_cfg_mode_after_power_cycle.cpp
+  src/supla/device/register_device.cpp
 
   src/supla/storage/storage.cpp
   src/supla/storage/config.cpp
@@ -78,11 +80,13 @@ set(SUPLA_DEVICE_SRCS
   src/supla/network/html/time_parameters.cpp
   src/supla/network/html/volume_parameters.cpp
   src/supla/network/html/screen_delay_parameters.cpp
+  src/supla/network/html/screen_delay_type_parameters.cpp
   src/supla/network/html/screen_brightness_parameters.cpp
   src/supla/network/html/disable_user_interface_parameter.cpp
   src/supla/network/html/h2_tag.cpp
   src/supla/network/html/h3_tag.cpp
   src/supla/network/html/em_phase_led.cpp
+  src/supla/network/html/em_ct_type.cpp
 
   src/supla/network/client.cpp
   src/supla/network/ip_address.cpp

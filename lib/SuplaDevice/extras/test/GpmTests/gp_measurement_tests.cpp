@@ -33,13 +33,11 @@ using ::testing::SetArgPointee;
 class GpMeasurementTestsFixture : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
 
   virtual void TearDown() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
 };
 
@@ -319,19 +317,19 @@ TEST_F(GpMeasurementTestsFixture, setConfigValues) {
   gp.setDefaultUnitBeforeValue("default unit before VALUE");
   gp.setDefaultUnitAfterValue("default unit after VALUE");
 
-  char testString[100] = {};
+  char testString[15] = {};
   gp.getUnitBeforeValue(testString);
   // values are truncated to 15 bytes
-  EXPECT_STREQ(testString, "unit before VAL");
+  EXPECT_STREQ(testString, "unit before VA");
 
   gp.getUnitAfterValue(testString);
-  EXPECT_STREQ(testString, "unit after VALU");
+  EXPECT_STREQ(testString, "unit after VAL");
 
   gp.getDefaultUnitBeforeValue(testString);
-  EXPECT_STREQ(testString, "default unit be");
+  EXPECT_STREQ(testString, "default unit b");
 
   gp.getDefaultUnitAfterValue(testString);
-  EXPECT_STREQ(testString, "default unit af");
+  EXPECT_STREQ(testString, "default unit a");
 
   gp.setUnitBeforeValue("");
   gp.setUnitAfterValue("");

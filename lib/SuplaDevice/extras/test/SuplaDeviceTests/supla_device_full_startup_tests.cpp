@@ -30,9 +30,11 @@
 #include <supla/storage/storage.h>
 #include <timer_mock.h>
 #include <simple_time.h>
+#include <supla/device/register_device.h>
+#include <supla/version.h>
 
 // Update this value if you change default Proto Version
-const int defaultProtoVersion = 21;
+const int defaultProtoVersion = 23;
 
 using ::testing::_;
 using ::testing::Assign;
@@ -43,12 +45,10 @@ using ::testing::ReturnPointee;
 class SuplaDeviceTests : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
   virtual void TearDown() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
 };
 
@@ -72,8 +72,8 @@ class SuplaDeviceTestsFullStartupNoClient : public SuplaDeviceTests {
 
     EXPECT_CALL(timer, initTimers());
 
-    char GUID[SUPLA_GUID_SIZE] = {1};
-    char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
+    char GUID[SUPLA_GUID_SIZE] = "GUID";
+    char AUTHKEY[SUPLA_AUTHKEY_SIZE] = "AUTHKEY";
     EXPECT_TRUE(sd.begin(GUID, "supla.rulez", "superman@supla.org", AUTHKEY));
     EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
   }
@@ -91,12 +91,6 @@ class SuplaDeviceTestsFullStartup : public SuplaDeviceTestsFullStartupNoClient {
                                      // Supla::Protocol::SuplaSrpc
     SuplaDeviceTestsFullStartupNoClient::SetUp();
   }
-};
-
-class SuplaDeviceElementWithSecondaryChannel
-    : public SuplaDeviceTestsFullStartup {
- protected:
-  Supla::Sensor::ThermHygroPressMeter thpm;
 };
 
 class SuplaDeviceTestsFullStartupManual : public SuplaDeviceTests {
@@ -198,7 +192,7 @@ TEST_F(SuplaDeviceTestsFullStartup, NoReplyForDeviceRegistrationShoudResetConnec
 
   EXPECT_CALL(*client, stop()).WillOnce(Assign(&isConnected, false));
 
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(2);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(2);
 
   for (int i = 0; i < 11*10; i++) {
     sd.iterate();
@@ -217,7 +211,8 @@ TEST_F(SuplaDeviceTestsFullStartup, SuccessfulStartup) {
   bool isConnected = false;
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connected()).WillRepeatedly(ReturnPointee(&isConnected));
-  EXPECT_CALL(*client, connectImp(_, _)).WillRepeatedly(DoAll(Assign(&isConnected, true), Return(1)));
+  EXPECT_CALL(*client, connectImp(_, _))
+      .WillRepeatedly(DoAll(Assign(&isConnected, true), Return(1)));
 
   EXPECT_CALL(net, setup()).Times(1);
   EXPECT_CALL(net, iterate()).Times(AtLeast(1));
@@ -233,7 +228,22 @@ TEST_F(SuplaDeviceTestsFullStartup, SuccessfulStartup) {
   EXPECT_CALL(el1, onRegistered(_));
   EXPECT_CALL(el2, onRegistered(_));
 
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1)
+      .WillOnce([](void *, TDS_SuplaRegisterDeviceHeader *regDevHeader) {
+        EXPECT_EQ(regDevHeader->channel_count, 0);
+        EXPECT_EQ(regDevHeader->Flags,
+                  SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED);
+        EXPECT_EQ(regDevHeader->ManufacturerID, 0);
+        EXPECT_EQ(regDevHeader->ProductID, 0);
+        EXPECT_STREQ(regDevHeader->Email, "superman@supla.org");
+        EXPECT_STREQ(regDevHeader->AuthKey, "AUTHKEY");
+        EXPECT_STREQ(regDevHeader->GUID, "GUID");
+        EXPECT_STREQ(regDevHeader->Name, "SUPLA-DEVICE");
+        EXPECT_STREQ(regDevHeader->SoftVer, suplaDeviceVersion);
+        EXPECT_STREQ(regDevHeader->ServerName, "supla.rulez");
+
+        return 1;
+      });
   EXPECT_CALL(srpc, srpc_dcs_async_set_activity_timeout(_, _)).Times(1);
   EXPECT_CALL(srpc, srpc_dcs_async_ping_server(_)).Times(2);
 
@@ -322,7 +332,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
     .WillRepeatedly(Return(true));
   // SSL disabled, port should be 2015
   EXPECT_CALL(*client, connectImp(_, 2015)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -401,7 +411,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
     .WillRepeatedly(Return(true));
   // SSL disabled, port should be 2015
   EXPECT_CALL(*client, connectImp(_, 2015)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -476,7 +486,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
     .WillRepeatedly(Return(true));
   // Port should be 2016
   EXPECT_CALL(*client, connectImp(_, 2016)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -555,7 +565,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(*client, connected()).WillOnce(Return(false))
     .WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connectImp(_, 2016)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -634,7 +644,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(*client, connected()).WillOnce(Return(false))
     .WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connectImp(_, 2016)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -713,7 +723,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(*client, connected()).WillOnce(Return(false))
     .WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connectImp(_, 2016)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -792,7 +802,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(*client, connected()).WillOnce(Return(false))
     .WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connectImp(_, 2016)).WillRepeatedly(Return(1));
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
 
   EXPECT_CALL(el1, iterateAlways()).Times(AtLeast(1));
   EXPECT_CALL(el2, iterateAlways()).Times(AtLeast(1));
@@ -833,7 +843,8 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_EQ(client->getRootCACert(), myCA2);
 }
 
-TEST_F(SuplaDeviceElementWithSecondaryChannel, SuccessfulStartup) {
+TEST_F(SuplaDeviceTestsFullStartup, SuccessfulStartupDoubleChannel) {
+  Supla::Sensor::ThermHygroPressMeter thpm;
   bool isConnected = false;
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connected()).WillRepeatedly(ReturnPointee(&isConnected));
@@ -854,7 +865,7 @@ TEST_F(SuplaDeviceElementWithSecondaryChannel, SuccessfulStartup) {
   EXPECT_CALL(el1, onRegistered(_));
   EXPECT_CALL(el2, onRegistered(_));
 
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
   EXPECT_CALL(srpc, srpc_dcs_async_set_activity_timeout(_, _)).Times(1);
   EXPECT_CALL(srpc, srpc_dcs_async_ping_server(_)).Times(2);
 
@@ -893,7 +904,8 @@ TEST_F(SuplaDeviceElementWithSecondaryChannel, SuccessfulStartup) {
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_REGISTERED_AND_READY);
 }
 
-TEST_F(SuplaDeviceElementWithSecondaryChannel, SleepingChannel) {
+TEST_F(SuplaDeviceTestsFullStartup, SleepingChannelDoubleChannel) {
+  Supla::Sensor::ThermHygroPressMeter thpm;
   bool isConnected = false;
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
   EXPECT_CALL(*client, connected()).WillRepeatedly(ReturnPointee(&isConnected));
@@ -914,7 +926,7 @@ TEST_F(SuplaDeviceElementWithSecondaryChannel, SleepingChannel) {
   EXPECT_CALL(el1, onRegistered(_));
   EXPECT_CALL(el2, onRegistered(_));
 
-  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_e(_, _)).Times(1);
+  EXPECT_CALL(srpc, srpc_ds_async_registerdevice_in_chunks(_, _)).Times(1);
   EXPECT_CALL(srpc, srpc_dcs_async_set_activity_timeout(_, _)).Times(1);
   EXPECT_CALL(srpc, srpc_dcs_async_ping_server(_)).Times(2);
 
@@ -951,4 +963,28 @@ TEST_F(SuplaDeviceElementWithSecondaryChannel, SleepingChannel) {
   }
 
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_REGISTERED_AND_READY);
+}
+
+TEST_F(SuplaDeviceTests, CheckCustomNameSoftVer) {
+  TimerMock timer;
+  SuplaDeviceClass sd;
+  NetworkMock net;
+
+  sd.setName("Some name");
+  sd.setSwVersion("1.2.3");
+
+  EXPECT_CALL(timer, initTimers());
+
+  char GUID[SUPLA_GUID_SIZE] = "GUID";
+  char AUTHKEY[SUPLA_AUTHKEY_SIZE] = "AUTHKEY";
+  EXPECT_TRUE(sd.begin(GUID, "supla.rulez", "superman@supla.org", AUTHKEY));
+  EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
+
+  EXPECT_STREQ(Supla::RegisterDevice::getEmail(), "superman@supla.org");
+  EXPECT_STREQ(Supla::RegisterDevice::getServerName(), "supla.rulez");
+  EXPECT_STREQ(Supla::RegisterDevice::getGUID(), GUID);
+  EXPECT_STREQ(Supla::RegisterDevice::getAuthKey(), AUTHKEY);
+  EXPECT_STREQ(Supla::RegisterDevice::getName(), "Some name");
+  EXPECT_STREQ(Supla::RegisterDevice::getSoftVer(), "1.2.3");
+
 }

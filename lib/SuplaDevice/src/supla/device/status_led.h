@@ -29,7 +29,8 @@ enum LedState { NOT_INITIALIZED, ON, OFF };
 enum LedMode {
   LED_ON_WHEN_CONNECTED /* default */,
   LED_OFF_WHEN_CONNECTED,
-  LED_ALWAYS_OFF
+  LED_ALWAYS_OFF,
+  LED_IN_CONFIG_MODE_ONLY
 };
 
 // States SERVER_CONNECTING, REGISTERED_AND_READY, PACZKOW_WE_HAVE_A_PROBLEM
@@ -84,6 +85,8 @@ class StatusLed : public Element {
   void setMode(LedMode newMode);
   LedMode getMode() const;
   void storeModeToConfig();
+  void setDefaultMode(enum LedMode newMode);
+  void setUseDeviceConfig(bool value);
 
  protected:
   void updatePin();
@@ -92,6 +95,7 @@ class StatusLed : public Element {
 
   uint8_t outPin = 0;
   bool invert = false;
+  bool useDeviceConfig = true;
   unsigned int onDuration = 0;
   unsigned int offDuration = 1000;
   uint32_t lastUpdate = 0;
@@ -100,6 +104,7 @@ class StatusLed : public Element {
   LedMode ledMode = LED_ON_WHEN_CONNECTED;
   Supla::Io *io = nullptr;
   Supla::Mutex *mutex = nullptr;
+  int8_t defaultMode = 0;
 };
 
 }  // namespace Device

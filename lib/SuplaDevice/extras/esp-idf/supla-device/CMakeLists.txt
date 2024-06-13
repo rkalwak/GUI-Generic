@@ -11,6 +11,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/action_handler.cpp
   ../../../src/supla/at_channel.cpp
   ../../../src/supla/channels/channel.cpp
+  ../../../src/supla/channels/channel_types.cpp
   ../../../src/supla/channels/binary_sensor_channel.cpp
   ../../../src/supla/channel_element.cpp
   ../../../src/supla/element_with_channel_actions.cpp
@@ -55,6 +56,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/network/html/sw_update.cpp
   ../../../src/supla/network/html/button_multiclick_parameters.cpp
   ../../../src/supla/network/html/custom_parameter.cpp
+  ../../../src/supla/network/html/custom_text_parameter.cpp
   ../../../src/supla/network/html/channel_correction.cpp
   ../../../src/supla/network/html/hide_show_container.cpp
   ../../../src/supla/network/html/div.cpp
@@ -71,11 +73,13 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/network/html/time_parameters.cpp
   ../../../src/supla/network/html/volume_parameters.cpp
   ../../../src/supla/network/html/screen_delay_parameters.cpp
+  ../../../src/supla/network/html/screen_delay_type_parameters.cpp
   ../../../src/supla/network/html/disable_user_interface_parameter.cpp
   ../../../src/supla/network/html/h2_tag.cpp
   ../../../src/supla/network/html/h3_tag.cpp
   ../../../src/supla/network/html/screen_brightness_parameters.cpp
   ../../../src/supla/network/html/em_phase_led.cpp
+  ../../../src/supla/network/html/em_ct_type.cpp
   ../../../src/supla/network/client.cpp
   ../../../src/supla/network/ip_address.cpp
 
@@ -124,6 +128,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/device/factory_test.cpp
   ../../../src/supla/device/remote_device_config.cpp
   ../../../src/supla/device/enter_cfg_mode_after_power_cycle.cpp
+  ../../../src/supla/device/register_device.cpp
 # not all files from sensor folder are compiled here. Some still require
 # porting from ARDUINO
   ../../../src/supla/sensor/binary.cpp
@@ -172,6 +177,7 @@ set(SUPLA_DEVICE_PORTING_SRCS
   ../../porting/esp-idf/esp_idf_client.cpp
   ../../porting/esp-idf/esp_mqtt.cpp
   ../../porting/esp-idf/esp_idf_network_common.cpp
+  ../../porting/esp-idf/esp_idf_sector_wl_storage.cpp
 )
 
 
@@ -193,6 +199,7 @@ idf_component_register(SRCS
     driver
     mqtt
     esp_timer
+    esp_partition
   EMBED_TXTFILES supla_org_cert.pem supla_3rd_cert.pem
 )
 

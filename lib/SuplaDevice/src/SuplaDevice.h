@@ -82,8 +82,9 @@ namespace Device {
     WithoutTimeout
   };
 class SwUpdate;
-};
-};
+class Mutex;
+}  // namespace Device
+}  // namespace Supla
 
 class SuplaDeviceClass : public Supla::ActionHandler,
   public Supla::LocalAction {
@@ -99,9 +100,9 @@ class SuplaDeviceClass : public Supla::ActionHandler,
              const char *Server,
              const char *email,
              const char authkey[SUPLA_AUTHKEY_SIZE],
-             unsigned char protoVersion = 21);
+             unsigned char protoVersion = 23);
 
-  bool begin(unsigned char protoVersion = 21);
+  bool begin(unsigned char protoVersion = 23);
 
   // Use ASCII only in name
   void setName(const char *Name);
@@ -111,17 +112,17 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   void setEmail(const char *email);
   void setServer(const char *server);
   void setSwVersion(const char *);
-  void setManufacturerId(_supla_int16_t);
-  void setProductId(_supla_int16_t);
-  void addFlags(_supla_int_t);
-  void removeFlags(_supla_int_t);
+  void setManufacturerId(int16_t);
+  void setProductId(int16_t);
+  void addFlags(int32_t);
+  void removeFlags(int32_t);
   bool isSleepingDeviceEnabled();
 
   int generateHostname(char*, int macSize = 6);
 
   // Timer with 100 Hz frequency (10 ms)
   void onTimer(void);
-  // TImer with 2000 Hz frequency (0.5 ms)
+  // Timer with 2000 Hz frequency (0.5 ms or 1 ms)
   void onFastTimer(void);
   void iterate(void);
 
@@ -134,6 +135,7 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request);
 
   void enterConfigMode();
+  void leaveConfigModeWithoutRestart();
   void enterNormalMode();
   // Schedules timeout to restart device. When provided timeout is 0
   // then restart will be done asap.
@@ -154,7 +156,7 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   void disableLastStateLog();
   void setRsaPublicKeyPtr(const uint8_t *ptr);
   const uint8_t *getRsaPublicKey();
-  enum Supla::DeviceMode getDeviceMode();
+  enum Supla::DeviceMode getDeviceMode() const;
 
   void setActivityTimeout(_supla_int_t newActivityTimeout);
   uint32_t getActivityTimeout();
@@ -196,6 +198,9 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   void setShowUptimeInChannelState(bool value);
 
   void setProtoVerboseLog(bool value);
+  bool isOfflineModeDuringConfig() const;
+
+  Supla::Mutex *getTimerAccessMutex();
 
  protected:
   int networkIsNotReadyCounter = 0;
@@ -220,11 +225,14 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   bool skipNetwork = false;
   bool storageInitResult = false;
   bool configEmpty = true;
+  bool atLeastOneProtoIsEnabled = false;
   bool showUptimeInChannelState = true;
   bool lastStateLogEnabled = true;
   // used to indicate if begin() method was called - it will be set to
   // true even if initialization procedure failed for some reason
   bool initializationDone = false;
+
+  uint8_t goToOfflineModeTimeout = 0;
 
   Supla::Protocol::SuplaSrpc *srpcLayer = nullptr;
   Supla::Device::SwUpdate *swUpdate = nullptr;
@@ -233,14 +241,15 @@ class SuplaDeviceClass : public Supla::ActionHandler,
   _impl_arduino_status impl_arduino_status = nullptr;
   Supla::Device::LastStateLogger *lastStateLogger = nullptr;
   char *customHostnamePrefix = nullptr;
+  Supla::Mutex *timerAccessMutex = nullptr;
 
-  void setString(char *dst, const char *src, int max_size);
   void iterateAlwaysElements(uint32_t _millis);
   bool iterateNetworkSetup();
   bool iterateSuplaProtocol(uint32_t _millis);
   void handleLocalActionTriggers();
   void checkIfRestartIsNeeded(uint32_t _millis);
   void createSrpcLayerIfNeeded();
+  void setupDeviceMode();
 };
 
 extern SuplaDeviceClass SuplaDevice;

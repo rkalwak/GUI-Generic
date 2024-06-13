@@ -19,14 +19,15 @@
 #ifndef EXTRAS_PORTING_LINUX_SUPLA_SENSOR_SENSOR_PARSED_H_
 #define EXTRAS_PORTING_LINUX_SUPLA_SENSOR_SENSOR_PARSED_H_
 
+#include <supla-common/proto.h>
+#include <supla/control/action_trigger.h>
 #include <supla/parser/parser.h>
 
-#include <supla-common/proto.h>
 #include <map>
 #include <string>
-#include <vector>
 #include <utility>
-#include "supla/control/action_trigger.h"
+#include <variant>
+#include <vector>
 
 namespace Supla {
 
@@ -35,7 +36,6 @@ class ActionTriggerParsed;
 }  // namespace Control
 
 namespace Sensor {
-
 const char BatteryLevel[] = "battery_level";
 const char MultiplierBatteryLevel[] = "multiplier_battery_level";
 
@@ -56,7 +56,8 @@ class SensorParsedBase {
   // Returns -1 on invalid source/parser/value,
   // Otherwise returns >= 0 read from parser.
   int getStateValue();
-  void setOnValues(const std::vector<int> &onValues);
+  void setOnValues(
+      const std::vector<std::variant<int, bool, std::string>> &onValues);
   bool addAtOnState(const std::vector<int> &onState);
   bool addAtOnValue(const std::vector<int> &onValue);
   bool addAtOnStateChange(const std::vector<int> &onState);
@@ -69,6 +70,9 @@ class SensorParsedBase {
   static void registerAtName(std::string,
                              Supla::Control::ActionTriggerParsed *);
 
+  virtual void setInitialCaption(const std::string &caption) = 0;
+  virtual Supla::Channel *getChannel() = 0;
+
  protected:
   double getParameterValue(const std::string &parameter);
 
@@ -77,7 +81,7 @@ class SensorParsedBase {
   Supla::Parser::Parser *parser = nullptr;
   std::map<std::string, std::string> parameterToKey;
   std::map<std::string, double> parameterMultiplier;
-  std::vector<int> stateOnValues;
+  std::vector<std::variant<int, bool, std::string>> stateOnValues;
 
   // action trigger configuration
   std::string atName;
@@ -91,14 +95,20 @@ class SensorParsedBase {
 
   static std::map<std::string, Supla::Control::ActionTriggerParsed *> atMap;
 
+  std::variant<int, bool, std::string> getStateParameterValue(
+      const std::string &parameter);
+
   // TODO(klew): add local action
 };
 
-template <typename T> class SensorParsed : public T, public SensorParsedBase {
+template <typename T>
+class SensorParsed : public T, public SensorParsedBase {
  public:
   explicit SensorParsed(Supla::Parser::Parser *);
 
   void handleGetChannelState(TDSC_ChannelState *channelState) override;
+  void setInitialCaption(const std::string &caption) override;
+  Supla::Channel *getChannel() override;
 };
 
 template <typename T>
@@ -122,6 +132,16 @@ void SensorParsed<T>::handleGetChannelState(TDSC_ChannelState *channelState) {
   }
 
   T::handleGetChannelState(channelState);
+}
+
+template <typename T>
+void SensorParsed<T>::setInitialCaption(const std::string &caption) {
+  T::setInitialCaption(caption.c_str());
+}
+
+template <typename T>
+Supla::Channel *SensorParsed<T>::getChannel() {
+  return T::getChannel();
 }
 
 };  // namespace Sensor

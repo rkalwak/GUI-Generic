@@ -19,10 +19,12 @@
 #ifndef SRC_SUPLA_NETWORK_HTML_EM_PHASE_LED_H_
 #define SRC_SUPLA_NETWORK_HTML_EM_PHASE_LED_H_
 
-#include <supla/network/html/select_input_parameter.h>
+#include <supla/network/html_element.h>
 
 namespace Supla {
-class Element;
+namespace Sensor {
+class ElectricityMeter;
+}  // namespace Sensor
 
 namespace Html {
 
@@ -32,17 +34,16 @@ const char EmPhaseLedVoltageHighTag[] = "em_led_vh";
 const char EmPhaseLedPowerLowTag[] = "em_led_pl";
 const char EmPhaseLedPowerHighTag[] = "em_led_ph";
 
-class EmPhaseLedParameters : public SelectInputParameter {
+class EmPhaseLedParameters : public HtmlElement {
  public:
-  explicit EmPhaseLedParameters(int channelNo, Supla::Element *notify);
+  explicit EmPhaseLedParameters(Supla::Sensor::ElectricityMeter *em);
   virtual ~EmPhaseLedParameters();
   void send(Supla::WebSender* sender) override;
   bool handleResponse(const char* key, const char* value) override;
   void onProcessingEnd() override;
 
  private:
-  int channelNo = 0;
-  Supla::Element *notify = nullptr;
+  Supla::Sensor::ElectricityMeter *em = nullptr;
   bool channelConfigChanged = false;
 };
 

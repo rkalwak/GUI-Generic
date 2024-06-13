@@ -22,6 +22,8 @@
 #include <srpc_mock.h>
 #include <supla/protocol/supla_srpc.h>
 #include <network_client_mock.h>
+#include <simple_time.h>
+#include <supla_srpc_layer_mock.h>
 
 using ::testing::Return;
 using ::testing::ElementsAreArray;
@@ -45,13 +47,11 @@ class ElementTests : public ::testing::Test {
     virtual void SetUp() {
       suplaSrpc = new SuplaSrpcStub(&sd);
       suplaSrpc->setRegisteredAndReady();
-      Supla::Channel::lastCommunicationTimeMs = 0;
-      memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+      Supla::Channel::resetToDefaults();
     }
     virtual void TearDown() {
       delete suplaSrpc;
-      Supla::Channel::lastCommunicationTimeMs = 0;
-      memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+      Supla::Channel::resetToDefaults();
     }
 
 };
@@ -159,7 +159,8 @@ TEST_F(ElementTests, ChannelElementMethods) {
 
   EXPECT_CALL(time, millis()).Times(1);
 
-  // those methods are empty, so just call to make sure that they do nothing and don't crash
+  // those methods are empty, so just call to make sure that they do nothing and
+  // don't crash
   el1.onInit();
   el1.onLoadState();
   el1.onSaveState();
@@ -251,6 +252,20 @@ TEST_F(ElementTests, ChannelElementWithWeeklySchedule) {
   EXPECT_EQ(el1.iterateConnected(), false);  // #2
   EXPECT_EQ(el1.iterateConnected(), true);  // #3
 }
+
+TEST_F(ElementTests, InitialCaptionTest) {
+  ElementWithChannel el1;
+  SimpleTime time;
+  SuplaSrpcLayerMock srpc;
+
+  EXPECT_CALL(srpc, isRegisteredAndReady()).WillRepeatedly(Return(true));
+  EXPECT_CALL(srpc, setInitialCaption(0, ::testing::StrEq("Test Captiona")));
+
+  el1.setInitialCaption("Test Captiona");
+
+  el1.onRegistered(&srpc);
+}
+
 
 
 

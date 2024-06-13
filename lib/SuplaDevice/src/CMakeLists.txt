@@ -4,6 +4,7 @@
 set(SRCS
   supla/uptime.cpp
   supla/channels/channel.cpp
+  supla/channels/channel_types.cpp
   supla/channels/binary_sensor_channel.cpp
   supla/channels/channel_extended.cpp
   supla/io.cpp
@@ -24,6 +25,7 @@ set(SRCS
   supla/device/status_led.cpp
   supla/device/remote_device_config.cpp
   supla/device/notifications.cpp
+  supla/device/register_device.cpp
   supla/device/enter_cfg_mode_after_power_cycle.cpp
 
   supla/storage/storage.cpp
@@ -85,7 +87,9 @@ set(SRCS
   supla/network/html/h3_tag.cpp
   supla/network/html/screen_brightness_parameters.cpp
   supla/network/html/screen_delay_parameters.cpp
+  supla/network/html/screen_delay_type_parameters.cpp
   supla/network/html/em_phase_led.cpp
+  supla/network/html/em_ct_type.cpp
   supla/network/web_sender.cpp
   supla/clock/clock.cpp
 

@@ -110,6 +110,18 @@ void Supla::Sensor::ThermHygroMeter::onLoadConfig(SuplaDeviceClass *sdc) {
   lastReadTime = 0;
 }
 
+void Supla::Sensor::ThermHygroMeter::purgeConfig() {
+  auto cfg = Supla::Storage::ConfigInstance();
+  if (!cfg) {
+    return;
+  }
+  char key[16] = {};
+  for (int i = 0; i < 2; i++) {
+    snprintf(key, sizeof(key), "corr_%d_%d", getChannelNumber(), i);
+    cfg->eraseKey(key);
+  }
+}
+
 int16_t Supla::Sensor::ThermHygroMeter::readCorrectionFromIndex(int index) {
   if (index < 0 || index > 1) {
     return 0;
@@ -166,7 +178,8 @@ void Supla::Sensor::ThermHygroMeter::setRefreshIntervalMs(int intervalMs) {
 }
 
 uint8_t Supla::Sensor::ThermHygroMeter::applyChannelConfig(
-    TSD_ChannelConfig *result) {
+    TSD_ChannelConfig *result, bool local) {
+  (void)(local);
   if (result == nullptr) {
     return SUPLA_CONFIG_RESULT_DATA_ERROR;
   }

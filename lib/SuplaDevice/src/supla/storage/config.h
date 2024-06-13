@@ -50,7 +50,7 @@ class Config {
   virtual ~Config();
   virtual bool init() = 0;
   virtual void removeAll() = 0;
-  virtual bool isMinimalConfigReady();
+  virtual bool isMinimalConfigReady(bool showLogs = true);
   virtual bool isConfigModeSupported();
 
   // Override this method and setup all default value if needed
@@ -73,6 +73,7 @@ class Config {
   virtual bool setUInt8(const char* key, const uint8_t value) = 0;
   virtual bool setInt32(const char* key, const int32_t value) = 0;
   virtual bool setUInt32(const char* key, const uint32_t value) = 0;
+  virtual bool eraseKey(const char* key) = 0;
 
   static void generateKey(char *, int, const char *);
 

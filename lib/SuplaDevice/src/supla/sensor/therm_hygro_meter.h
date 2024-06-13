@@ -36,6 +36,7 @@ class ThermHygroMeter : public ChannelElement {
   void onLoadConfig(SuplaDeviceClass *) override;
   void iterateAlways() override;
   void fillChannelConfig(void *channelConfig, int *size) override;
+  void purgeConfig() override;
 
   virtual double getTemp();
   virtual double getHumi();
@@ -43,7 +44,7 @@ class ThermHygroMeter : public ChannelElement {
   int16_t getTempInt16();
   int16_t getHumiInt16();
 
-  uint8_t applyChannelConfig(TSD_ChannelConfig *result) override;
+  uint8_t applyChannelConfig(TSD_ChannelConfig *result, bool local) override;
 
   int16_t getConfiguredTemperatureCorrection();
   int16_t getConfiguredHumidityCorrection();

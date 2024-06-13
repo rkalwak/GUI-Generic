@@ -21,6 +21,7 @@
 #include <arduino_mock.h>
 #include <simple_time.h>
 #include <storage_mock.h>
+#include <supla/device/register_device.h>
 
 #include <supla/control/roller_shutter.h>
 #include <supla/actions.h>
@@ -43,13 +44,11 @@ class RollerShutterFixture : public testing::Test {
   }
 
   void SetUp() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
 
   void TearDown() {
-    Supla::Channel::lastCommunicationTimeMs = 0;
-    memset(&(Supla::Channel::reg_dev), 0, sizeof(Supla::Channel::reg_dev));
+    Supla::Channel::resetToDefaults();
   }
 };
 
@@ -59,17 +58,15 @@ TEST_F(RollerShutterFixture, basicTests) {
   int number = rs.getChannelNumber();
   ASSERT_EQ(number, 0);
   TDSC_RollerShutterValue value = {};
-  EXPECT_EQ(number, Supla::Channel::reg_dev.channels[number].Number);
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[number].Type,
-            SUPLA_CHANNELTYPE_RELAY);
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[number].FuncList,
+  EXPECT_EQ(rs.getChannel()->getChannelType(), SUPLA_CHANNELTYPE_RELAY);
+  EXPECT_EQ(rs.getChannel()->getFuncList(),
             SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER);
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[number].Default,
+  EXPECT_EQ(rs.getChannel()->getDefaultFunction(),
             SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER);
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[number].Flags,
+  EXPECT_EQ(rs.getChannel()->getFlags(),
             SUPLA_CHANNEL_FLAG_CHANNELSTATE |
                 SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS);
-  EXPECT_EQ(0, memcmp(Supla::Channel::reg_dev.channels[number].value,
+  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(number),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 }
@@ -139,7 +136,7 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
   }
 
   TDSC_RollerShutterValue value = {};
-  EXPECT_EQ(0, memcmp(Supla::Channel::reg_dev.channels[0].value,
+  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 
@@ -150,7 +147,7 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
   }
 
   value.position = -1;
-  EXPECT_EQ(0, memcmp(Supla::Channel::reg_dev.channels[0].value,
+  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 
@@ -160,7 +157,7 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
     time.advance(100);
   }
 
-  EXPECT_EQ(0, memcmp(Supla::Channel::reg_dev.channels[0].value,
+  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 
@@ -244,7 +241,7 @@ TEST_F(RollerShutterFixture, movementTests) {
   }
 
   TDSC_RollerShutterValue value = {};
-  EXPECT_EQ(0, memcmp(Supla::Channel::reg_dev.channels[0].value,
+  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 
@@ -254,7 +251,7 @@ TEST_F(RollerShutterFixture, movementTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   rs.handleAction(0, Supla::MOVE_UP);
   // relays are disabled after 60s timeout
@@ -263,7 +260,7 @@ TEST_F(RollerShutterFixture, movementTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 0);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 0);
 
   rs.handleAction(0, Supla::STEP_BY_STEP);  // sbs - move down
   for (int i = 0; i < 11; i++) {
@@ -271,7 +268,7 @@ TEST_F(RollerShutterFixture, movementTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   rs.handleAction(0, Supla::STEP_BY_STEP);  // sbs - stop
   for (int i = 0; i < 11; i++) {
@@ -279,7 +276,7 @@ TEST_F(RollerShutterFixture, movementTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   rs.handleAction(0, Supla::STEP_BY_STEP);  // sbs - move up
   for (int i = 0; i < 700; i++) {
@@ -287,7 +284,7 @@ TEST_F(RollerShutterFixture, movementTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 0);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 0);
 }
 
 TEST_F(RollerShutterFixture, movementByServerTests) {
@@ -419,7 +416,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   value->position = 2;  // up
   rs.handleNewValueFromServer(&newValueFromServer);
@@ -429,7 +426,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 0);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 0);
 
   value->position = 5;  // step by step -> move down
   rs.handleNewValueFromServer(&newValueFromServer);
@@ -438,7 +435,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // sbs - stop
   for (int i = 0; i < 11; i++) {
@@ -446,7 +443,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // sbs - move up
   for (int i = 0; i < 700; i++) {
@@ -454,7 +451,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 0);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 0);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // sbs - move down
   for (int i = 0; i < 11; i++) {
@@ -462,7 +459,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   value->position = 0;
   rs.handleNewValueFromServer(&newValueFromServer);  // stop
@@ -471,7 +468,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 10);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
   value->position = 3;  // down or stop
   rs.handleNewValueFromServer(&newValueFromServer);  // down
@@ -480,7 +477,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 20);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 20);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // stop (down or stop)
   for (int i = 0; i < 11; i++) {
@@ -488,7 +485,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 20);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 20);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // down (down or stop)
   for (int i = 0; i < 11; i++) {
@@ -496,7 +493,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 30);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 30);
 
   value->position = 4;  // move up or stop
   rs.handleNewValueFromServer(&newValueFromServer);  // stop (up or stop)
@@ -505,7 +502,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 30);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 30);
 
   rs.handleNewValueFromServer(&newValueFromServer);  // up (up or stop)
   for (int i = 0; i < 11; i++) {
@@ -513,7 +510,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 20);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 20);
 
   value->position = 1;  // down
   rs.handleNewValueFromServer(&newValueFromServer);  // down
@@ -522,7 +519,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 30);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 30);
 
   value->position = 2;  // up
   rs.handleNewValueFromServer(&newValueFromServer);  // up
@@ -531,5 +528,5 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
     time.advance(100);
   }
 
-  EXPECT_EQ(Supla::Channel::reg_dev.channels[0].value[0], 20);
+  EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 20);
 }

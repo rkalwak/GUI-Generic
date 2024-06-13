@@ -374,6 +374,12 @@ class HvacBase : public ChannelElement, public ActionHandler {
 
   void allowWrapAroundTemperatureSetpoints();
 
+  void enableInitialConfig();
+
+  // returns Linux timestamp in seconds when current countdown timer will end.
+  // It return 1 if countdown timer is not set
+  time_t getCountDownTimerEnds() const;
+
  private:
   _supla_int16_t getTemperature(int channelNo);
   // returns true if forced off should be set
@@ -400,6 +406,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void updateTimerValue();
 
   TChannelConfig_HVAC config = {};
+  TChannelConfig_HVAC *initialConfig = nullptr;
   TChannelConfig_WeeklySchedule weeklySchedule = {};
   TChannelConfig_WeeklySchedule altWeeklySchedule = {};
   bool isWeeklyScheduleConfigured = false;

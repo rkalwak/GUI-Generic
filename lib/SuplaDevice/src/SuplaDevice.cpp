@@ -36,6 +36,9 @@
 #include <supla/timer.h>
 #include <supla/tools.h>
 #include <supla/version.h>
+#include <supla/device/register_device.h>
+#include <supla/mutex.h>
+#include <supla/auto_lock.h>
 
 #ifndef ARDUINO
 #ifndef F
@@ -58,9 +61,11 @@ void SuplaDeviceClass::status(int newStatus,
   if ((currentStatus == STATUS_CONFIG_MODE ||
        currentStatus == STATUS_TEST_WAIT_FOR_CFG_BUTTON) &&
       newStatus != STATUS_SOFTWARE_RESET && newStatus != STATUS_INVALID_GUID &&
-      newStatus != STATUS_INVALID_AUTHKEY) {
+      newStatus != STATUS_INVALID_AUTHKEY &&
+      newStatus != STATUS_OFFLINE_MODE) {
     // Config mode and testing is final state and the only exit goes through
-    // reset with exception for invalid GUID and AUTHKEY
+    // reset with exception for: invalid GUID and AUTHKEY, offline mode (2)
+    // after timeout (it goes from config mode to offline mode)
     return;
   }
 
@@ -98,6 +103,7 @@ bool SuplaDeviceClass::prepareLastStateLog() {
 }
 
 SuplaDeviceClass::SuplaDeviceClass() {
+  timerAccessMutex = Supla::Mutex::Create();
 }
 
 SuplaDeviceClass::~SuplaDeviceClass() {
@@ -112,6 +118,10 @@ SuplaDeviceClass::~SuplaDeviceClass() {
   if (lastStateLogger) {
     delete lastStateLogger;
     lastStateLogger = nullptr;
+  }
+  if (timerAccessMutex) {
+    delete timerAccessMutex;
+    timerAccessMutex = nullptr;
   }
 }
 
@@ -145,6 +155,9 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
   if (protoVersion >= 21) {
     addFlags(SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED);
   }
+  if (protoVersion < 23) {
+    SUPLA_LOG_ERROR("Minimum supported protocol version is 23!");
+  }
 
   // Initialize protocol layers
   createSrpcLayerIfNeeded();
@@ -152,7 +165,7 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
   storageInitResult = Supla::Storage::Init();
 
-  bool atLeastOneProtoIsEnabled = false;
+  atLeastOneProtoIsEnabled = false;
   bool configComplete = true;
   if (Supla::Storage::IsConfigStorageAvailable()) {
     if (!lastStateLogger) {
@@ -228,12 +241,12 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
     Supla::WebServer::Instance()->setSuplaDeviceClass(this);
   }
 
-  if (isArrayEmpty(Supla::Channel::reg_dev.GUID, SUPLA_GUID_SIZE)) {
+  if (Supla::RegisterDevice::isGUIDEmpty()) {
     status(STATUS_INVALID_GUID, F("Missing GUID"));
     return false;
   }
 
-  if (isArrayEmpty(Supla::Channel::reg_dev.AuthKey, SUPLA_AUTHKEY_SIZE)) {
+  if (Supla::RegisterDevice::isAuthKeyEmpty()) {
     status(STATUS_INVALID_AUTHKEY, F("Missing AuthKey"));
     return false;
   }
@@ -260,10 +273,10 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
   }
 
   char buf[SUPLA_GUID_SIZE * 2 + 1] = {};
-  generateHexString(Supla::Channel::reg_dev.GUID, buf, SUPLA_GUID_SIZE);
+  generateHexString(Supla::RegisterDevice::getGUID(), buf, SUPLA_GUID_SIZE);
   SUPLA_LOG_INFO("GUID: %s", buf);
 
-  if (strnlen(Supla::Channel::reg_dev.Name, SUPLA_DEVICE_NAME_MAXSIZE) == 0) {
+  if (Supla::RegisterDevice::isNameEmpty()) {
 #if defined(ARDUINO_ARCH_ESP8266)
     setName("SUPLA-ESP8266");
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -275,12 +288,12 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 #endif
   }
 
-  if (strnlen(Supla::Channel::reg_dev.SoftVer, SUPLA_SOFTVER_MAXSIZE) == 0) {
+  if (Supla::RegisterDevice::isSoftVerEmpty()) {
     setSwVersion(suplaDeviceVersion);
   }
-  SUPLA_LOG_INFO("Device name: %s", Supla::Channel::reg_dev.Name);
+  SUPLA_LOG_INFO("Device name: %s", Supla::RegisterDevice::getName());
   SUPLA_LOG_INFO("Device software version: %s",
-      Supla::Channel::reg_dev.SoftVer);
+      Supla::RegisterDevice::getSoftVer());
 
   SUPLA_LOG_DEBUG("Initializing network layer");
   char hostname[32] = {};
@@ -295,14 +308,21 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
   status(STATUS_INITIALIZED, F("SuplaDevice initialized"));
 
+  setupDeviceMode();
+
+  return true;
+}
+
+void SuplaDeviceClass::setupDeviceMode() {
   if ((allowOfflineMode == 1 && deviceMode == Supla::DEVICE_MODE_CONFIG &&
        configEmpty) ||
       (allowOfflineMode == 2 && deviceMode == Supla::DEVICE_MODE_CONFIG &&
-       !atLeastOneProtoIsEnabled)) {
+       (!atLeastOneProtoIsEnabled || goToOfflineModeTimeout == 1))) {
     deviceMode = Supla::DEVICE_MODE_NORMAL;
     SUPLA_LOG_INFO("Disabling network setup, device work in offline mode");
     skipNetwork = true;
     status(STATUS_OFFLINE_MODE, F("Offline mode"));
+    goToOfflineModeTimeout = 2;
   }
 
   if (deviceMode == Supla::DEVICE_MODE_CONFIG) {
@@ -313,31 +333,17 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
     }
     enterConfigMode();
   } else {
+    goToOfflineModeTimeout = 2;
     enterNormalMode();
   }
-
-  return true;
 }
 
-void SuplaDeviceClass::setName(const char *Name) {
-  setString(Supla::Channel::reg_dev.Name, Name, SUPLA_DEVICE_NAME_MAXSIZE);
-}
-
-void SuplaDeviceClass::setString(char *dst, const char *src, int max_size) {
-  if (src == nullptr) {
-    dst[0] = 0;
-    return;
-  }
-
-  int size = strlen(src);
-
-  if (size + 1 > max_size) size = max_size - 1;
-
-  strncpy(dst, src, size);
-  dst[size] = 0;
+void SuplaDeviceClass::setName(const char *name) {
+  Supla::RegisterDevice::setName(name);
 }
 
 void SuplaDeviceClass::onTimer(void) {
+  Supla::AutoLock lock(timerAccessMutex);
   for (auto element = Supla::Element::begin(); element != nullptr;
        element = element->next()) {
     element->onTimer();
@@ -345,10 +351,7 @@ void SuplaDeviceClass::onTimer(void) {
 }
 
 void SuplaDeviceClass::onFastTimer(void) {
-  // Iteration over all impulse counters will count incomming impulses. It is
-  // after SuplaDevice initialization (because we have to read stored counter
-  // values) and before any other operation like connection to Supla cloud
-  // (because we want to count impulses even when we have connection issues.
+  Supla::AutoLock lock(timerAccessMutex);
   for (auto element = Supla::Element::begin(); element != nullptr;
        element = element->next()) {
     element->onFastTimer();
@@ -361,6 +364,14 @@ void SuplaDeviceClass::iterate(void) {
   }
 
   uint32_t _millis = millis();
+
+  // in allowOfflineMode(2) device starts in "offline" mode with cfg mode
+  // enabled for 1h. After that time, it will switch to full offline mode.
+  if (goToOfflineModeTimeout == 0 && _millis > 60*60*1000) {
+    SUPLA_LOG_INFO("Offline mode timeout triggered");
+    goToOfflineModeTimeout = 1;
+    leaveConfigModeWithoutRestart();
+  }
 
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
@@ -503,7 +514,7 @@ void SuplaDeviceClass::setServerPort(int value) {
 }
 
 void SuplaDeviceClass::setSwVersion(const char *swVersion) {
-  setString(Supla::Channel::reg_dev.SoftVer, swVersion, SUPLA_SOFTVER_MAXSIZE);
+  Supla::RegisterDevice::setSoftVer(swVersion);
 }
 
 int SuplaDeviceClass::getCurrentStatus() {
@@ -527,34 +538,22 @@ void SuplaDeviceClass::fillStateData(TDSC_ChannelState *channelState) {
 }
 
 void SuplaDeviceClass::setGUID(const char GUID[SUPLA_GUID_SIZE]) {
-  memcpy(Supla::Channel::reg_dev.GUID, GUID, SUPLA_GUID_SIZE);
+  Supla::RegisterDevice::setGUID(GUID);
 }
 
 void SuplaDeviceClass::setAuthKey(const char authkey[SUPLA_AUTHKEY_SIZE]) {
-  memcpy(Supla::Channel::reg_dev.AuthKey, authkey, SUPLA_AUTHKEY_SIZE);
+  Supla::RegisterDevice::setAuthKey(authkey);
 }
 
 void SuplaDeviceClass::setEmail(const char *email) {
-  setString(Supla::Channel::reg_dev.Email, email, SUPLA_EMAIL_MAXSIZE);
+  Supla::RegisterDevice::setEmail(email);
 }
 
 void SuplaDeviceClass::setServer(const char *server) {
-  setString(
-      Supla::Channel::reg_dev.ServerName, server, SUPLA_SERVER_NAME_MAXSIZE);
-
-  // for Supla public servers we check if address is misspelled (srv instead
-  // of svr) and replace it
-  if (Supla::Protocol::SuplaSrpc::isSuplaPublicServerConfigured()) {
-    if (strncmpInsensitive(server, "srv", 3) == 0 && server[3] >= '0' &&
-        server[3] <= '9') {
-      Supla::Channel::reg_dev.ServerName[1] = 'v';
-      Supla::Channel::reg_dev.ServerName[2] = 'r';
-    }
-  }
+  Supla::RegisterDevice::setServerName(server);
 }
 
-void SuplaDeviceClass::addClock(Supla::Clock *_clock) {
-  (void)(_clock);
+void SuplaDeviceClass::addClock(Supla::Clock *) {
   SUPLA_LOG_DEBUG("addClock: DEPRECATED");
 }
 
@@ -599,7 +598,7 @@ bool SuplaDeviceClass::loadDeviceConfig() {
         setAuthKey(buf);
       }
       generateHexString(
-          Supla::Channel::reg_dev.AuthKey, buf, SUPLA_AUTHKEY_SIZE);
+          Supla::RegisterDevice::getAuthKey(), buf, SUPLA_AUTHKEY_SIZE);
       SUPLA_LOG_DEBUG("New AuthKey: %s", buf);
       cfg->initDefaultDeviceConfig();
     } else {
@@ -753,6 +752,23 @@ void SuplaDeviceClass::enterConfigMode() {
   status(STATUS_CONFIG_MODE, F("Config mode"), true);
 }
 
+void SuplaDeviceClass::leaveConfigModeWithoutRestart() {
+  if (deviceMode != Supla::DEVICE_MODE_CONFIG) {
+    return;
+  }
+  enterConfigModeTimestamp = 0;
+
+  if (Supla::WebServer::Instance()) {
+    Supla::WebServer::Instance()->stop();
+  }
+
+  setupDeviceMode();
+
+  if (Supla::Network::PopSetupNeeded()) {
+    Supla::Network::Setup();
+  }
+}
+
 void SuplaDeviceClass::softRestart() {
   status(STATUS_SOFTWARE_RESET, F("Software reset"));
 
@@ -790,20 +806,20 @@ void SuplaDeviceClass::enterNormalMode() {
   Supla::Network::SetNormalMode();
 }
 
-void SuplaDeviceClass::setManufacturerId(_supla_int16_t id) {
-  Supla::Channel::reg_dev.ManufacturerID = id;
+void SuplaDeviceClass::setManufacturerId(int16_t id) {
+  Supla::RegisterDevice::setManufacturerId(id);
 }
 
-void SuplaDeviceClass::setProductId(_supla_int16_t id) {
-  Supla::Channel::reg_dev.ProductID = id;
+void SuplaDeviceClass::setProductId(int16_t id) {
+  Supla::RegisterDevice::setProductId(id);
 }
 
-void SuplaDeviceClass::addFlags(_supla_int_t newFlags) {
-  Supla::Channel::reg_dev.Flags |= newFlags;
+void SuplaDeviceClass::addFlags(int32_t newFlags) {
+  Supla::RegisterDevice::addFlags(newFlags);
 }
 
-void SuplaDeviceClass::removeFlags(_supla_int_t flags) {
-  Supla::Channel::reg_dev.Flags &= ~flags;
+void SuplaDeviceClass::removeFlags(int32_t flags) {
+  Supla::RegisterDevice::removeFlags(flags);
 }
 
 int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
@@ -861,9 +877,9 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
     appendixSize = 1 + 2 * macSize;
   }
 
-  char *srcName = customHostnamePrefix;
+  const char *srcName = customHostnamePrefix;
   if (srcName == nullptr || strlen(srcName) == 0) {
-    srcName = Supla::Channel::reg_dev.Name;
+    srcName = Supla::RegisterDevice::getName();
   }
 
   int srcNameLength = strlen(srcName);
@@ -931,6 +947,8 @@ int SuplaDeviceClass::generateHostname(char *buf, int macSize) {
 void SuplaDeviceClass::disableCfgModeTimeout() {
   if (!forceRestartTimeMs) {
     deviceRestartTimeoutTimestamp = 0;
+    goToOfflineModeTimeout = 2;
+    runAction(Supla::ON_DEVICE_STATUS_CHANGE);
   }
 }
 
@@ -1017,8 +1035,8 @@ void SuplaDeviceClass::resetToFactorySettings() {
   if (cfg) {
     SUPLA_LOG_DEBUG("Clearing configuration...");
     cfg->removeAll();
-    cfg->setGUID(Supla::Channel::reg_dev.GUID);
-    cfg->setAuthKey(Supla::Channel::reg_dev.AuthKey);
+    cfg->setGUID(Supla::RegisterDevice::getGUID());
+    cfg->setAuthKey(Supla::RegisterDevice::getAuthKey());
     cfg->initDefaultDeviceConfig();
     cfg->commit();
   }
@@ -1135,7 +1153,7 @@ void SuplaDeviceClass::createSrpcLayerIfNeeded() {
   }
 }
 
-enum Supla::DeviceMode SuplaDeviceClass::getDeviceMode() {
+enum Supla::DeviceMode SuplaDeviceClass::getDeviceMode() const {
   return deviceMode;
 }
 
@@ -1190,8 +1208,7 @@ void SuplaDeviceClass::requestCfgMode(
 }
 
 bool SuplaDeviceClass::isSleepingDeviceEnabled() {
-  return (Supla::Channel::reg_dev.Flags &
-          SUPLA_DEVICE_FLAG_SLEEP_MODE_ENABLED) != 0;
+  return Supla::RegisterDevice::isSleepingDeviceEnabled();
 }
 
 uint32_t SuplaDeviceClass::getActivityTimeout() {
@@ -1216,8 +1233,7 @@ void SuplaDeviceClass::allowWorkInOfflineMode(int mode) {
 }
 
 bool SuplaDeviceClass::isRemoteDeviceConfigEnabled() const {
-  return Supla::Channel::reg_dev.Flags &
-         SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED;
+  return Supla::RegisterDevice::isRemoteDeviceConfigEnabled();
 }
 
 void SuplaDeviceClass::enableLastStateLog() {
@@ -1237,6 +1253,15 @@ void SuplaDeviceClass::setProtoVerboseLog(bool value) {
   if (srpcLayer) {
     srpcLayer->setVerboseLog(value);
   }
+}
+
+bool SuplaDeviceClass::isOfflineModeDuringConfig() const {
+  return goToOfflineModeTimeout == 0 &&
+         getDeviceMode() == Supla::DEVICE_MODE_CONFIG;
+}
+
+Supla::Mutex *SuplaDeviceClass::getTimerAccessMutex() {
+  return timerAccessMutex;
 }
 
 SuplaDeviceClass SuplaDevice;

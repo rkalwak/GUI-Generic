@@ -25,7 +25,7 @@ namespace Supla {
 Element *Element::firstPtr = nullptr;
 bool Element::invalidatePtr = false;
 
-Element::Element() : nextPtr(nullptr) {
+Element::Element() {
   if (firstPtr == nullptr) {
     firstPtr = this;
   } else {
@@ -92,6 +92,8 @@ void Element::onInit() {}
 
 void Element::onLoadConfig(SuplaDeviceClass *) {}
 
+void Element::purgeConfig() {}
+
 void Element::onLoadState() {}
 
 void Element::onSaveState() {}
@@ -102,14 +104,21 @@ void Element::onRegistered(Supla::Protocol::SuplaSrpc *suplaSrpc) {
   }
   auto ch = getChannel();
 
-  if (ch != nullptr && ch->isSleepingEnabled()) {
-    suplaSrpc->sendChannelStateResult(0, ch->getChannelNumber());
-    ch->setUpdateReady();
-  }
-  ch = getSecondaryChannel();
-  if (ch != nullptr && ch->isSleepingEnabled()) {
-    suplaSrpc->sendChannelStateResult(0, ch->getChannelNumber());
-    ch->setUpdateReady();
+  while (ch) {
+    if (ch->isInitialCaptionSet()) {
+      suplaSrpc->setInitialCaption(ch->getChannelNumber(),
+                                   ch->getInitialCaption());
+    }
+    if (ch->isSleepingEnabled()) {
+      suplaSrpc->sendChannelStateResult(0, ch->getChannelNumber());
+      ch->setUpdateReady();
+    }
+
+    if (ch == getSecondaryChannel()) {
+      ch = nullptr;
+    } else {
+      ch = getSecondaryChannel();
+    }
   }
 }
 
@@ -181,6 +190,12 @@ void Element::handleGetChannelState(TDSC_ChannelState *channelState) {
 
         channelState->BatteryPowered = 1;
         channelState->BatteryLevel = channel->getBatteryLevel();
+      }
+      if (channel->isBridgeSignalStrengthAvailable()) {
+        channelState->Fields |=
+            SUPLA_CHANNELSTATE_FIELD_BRIDGENODESIGNALSTRENGTH;
+        channelState->BridgeNodeSignalStrength =
+            channel->getBridgeSignalStrength();
       }
       return;
     }
@@ -269,5 +284,24 @@ bool Element::isAnyUpdatePending() {
   return false;
 }
 
+void Element::setInitialCaption(const char *caption, bool secondaryChannel) {
+  Supla::Channel *ch = nullptr;
+  if (!secondaryChannel) {
+    ch = getChannel();
+  } else {
+    ch = getSecondaryChannel();
+  }
+
+  if (ch) {
+    ch->setInitialCaption(caption);
+  }
+}
+
+void Element::setDefaultFunction(int32_t defaultFunction) {
+  Supla::Channel *ch = getChannel();
+  if (ch) {
+    ch->setDefaultFunction(defaultFunction);
+  }
+}
 
 };  // namespace Supla

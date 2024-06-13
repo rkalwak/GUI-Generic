@@ -82,10 +82,16 @@ bool Supla::ElementWithChannelActions::loadFunctionFromConfig() {
     generateKey(key, "fnc");
     int32_t channelFunc = 0;
     if (cfg->getInt32(key, &channelFunc)) {
-      SUPLA_LOG_INFO("Channel[%d] function loaded successfully (%d)",
-                     channel->getChannelNumber(),
-                     channelFunc);
-      channel->setDefault(channelFunc);
+      if (channel->isFunctionValid(channelFunc)) {
+        SUPLA_LOG_INFO("Channel[%d] function loaded successfully (%d)",
+                       channel->getChannelNumber(),
+                       channelFunc);
+        channel->setDefault(channelFunc);
+      } else {
+        SUPLA_LOG_INFO("Channel[%d] function invalid (%d)",
+                       channel->getChannelNumber(),
+                       channelFunc);
+      }
       return true;
     } else {
       SUPLA_LOG_INFO("Channel[%d] function missing. Using SW defaults",
@@ -249,17 +255,8 @@ bool Supla::ElementWithChannelActions::iterateConnected() {
   return result;
 }
 
-void Supla::ElementWithChannelActions::fillChannelConfig(void *channelConfig,
-                                                         int *size) {
-  (void)(channelConfig);
-  if (size) {
-    *size = 0;
-  }
-}
-
 uint8_t Supla::ElementWithChannelActions::handleChannelConfig(
     TSD_ChannelConfig *result, bool local) {
-  (void)(local);
   SUPLA_LOG_DEBUG(
       "Channel[%d]: handleChannelConfig, func %d, configtype %d, configsize %d",
       getChannelNumber(),
@@ -302,15 +299,24 @@ uint8_t Supla::ElementWithChannelActions::handleChannelConfig(
     return SUPLA_CONFIG_RESULT_TRUE;
   }
 
-  return applyChannelConfig(result);
+  return applyChannelConfig(result, local);
 }
 
 uint8_t Supla::ElementWithChannelActions::applyChannelConfig(
-    TSD_ChannelConfig *result) {
+    TSD_ChannelConfig *result, bool local) {
   (void)(result);
+  (void)(local);
   SUPLA_LOG_WARNING("Channel[%d]: applyChannelConfig missing",
                   getChannelNumber());
   return SUPLA_CONFIG_RESULT_TRUE;
+}
+
+void Supla::ElementWithChannelActions::fillChannelConfig(void *channelConfig,
+                                                         int *size) {
+  (void)(channelConfig);
+  if (size) {
+    *size = 0;
+  }
 }
 
 void Supla::ElementWithChannelActions::handleSetChannelConfigResult(
@@ -339,3 +345,14 @@ void Supla::ElementWithChannelActions::handleSetChannelConfigResult(
   }
 }
 
+void Supla::ElementWithChannelActions::purgeConfig() {
+  auto cfg = Supla::Storage::ConfigInstance();
+  auto channel = getChannel();
+  if (cfg && channel) {
+    char key[SUPLA_CONFIG_MAX_KEY_SIZE] = {};
+    generateKey(key, "fnc");
+    cfg->eraseKey(key);
+    generateKey(key, "cfg_chng");
+    cfg->eraseKey(key);
+  }
+}

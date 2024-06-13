@@ -1,10 +1,7 @@
 // https://github.com/esphome/esphome/blob/dev/esphome/components/improv_serial/improv_serial_component.cpp
 #include "improv_serial_component.h"
 #include "../../SuplaDeviceGUI.h"
-
-namespace {
-TDS_SuplaRegisterDeviceHeader reg_dev = {};
-}
+#include <supla/device/register_device.h>
 
 ImprovSerialComponent::ImprovSerialComponent() {
 #ifdef USE_ARDUINO
@@ -109,7 +106,7 @@ std::vector<uint8_t> ImprovSerialComponent::build_version_info_() {
   std::string type = "ESP32";
 #endif
 
-  std::vector<std::string> infos = {"GUI-Generic", reg_dev.SoftVer, type, ConfigManager->get(KEY_HOST_NAME)->getValue()};
+  std::vector<std::string> infos = {"GUI-Generic", Supla::RegisterDevice::getSoftVer(), type, ConfigManager->get(KEY_HOST_NAME)->getValue()};
   std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
   return data;
 };

@@ -15,16 +15,13 @@
 */
 
 #include "SuplaWebPageDownload.h"
+#include <supla/device/register_device.h>
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include "FS.h"
 #elif ARDUINO_ARCH_ESP32
 #include "SPIFFS.h"
 #endif
-
-namespace {
-TDS_SuplaRegisterDeviceHeader reg_dev = {};
-}
 
 void handleDownload() {
   if (!WebServer->isLoggedIn(true)) {
@@ -42,7 +39,7 @@ void handleDownload() {
 
       String str = F("attachment; filename=config_");
       str += ConfigManager->get(KEY_HOST_NAME)->getValue();
-      str += reg_dev.SoftVer;
+      str += Supla::RegisterDevice::getSoftVer();
       str += '_';
       str += F(".dat");
 

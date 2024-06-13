@@ -17,10 +17,7 @@
 #include "SuplaWebServer.h"
 #include "SuplaDeviceGUI.h"
 #include <supla/tools.h>
-
-namespace {
-TDS_SuplaRegisterDeviceHeader reg_dev = {};
-}  // namespace
+#include <supla/device/register_device.h>
 
 SuplaWebServer::SuplaWebServer() {
   isRunningWebServer = false;
@@ -114,10 +111,10 @@ void SuplaWebServer::sendHeaderStart() {
     WebServer->sendContent(F("</h1><span>LAST STATE: "));
     WebServer->sendContent(ConfigESP->getLastStatusMessageSupla());
     WebServer->sendContent(F("<br>Firmware: "));
-    WebServer->sendContent(reg_dev.SoftVer);
+    WebServer->sendContent(Supla::RegisterDevice::getSoftVer());
     WebServer->sendContent(F("<br>GUID: "));
 
-    generateHexString(reg_dev.GUID, buf, SUPLA_GUID_SIZE);
+    generateHexString(Supla::RegisterDevice::getGUID(), buf, SUPLA_GUID_SIZE);
     WebServer->sendContent(buf);
 
     WebServer->sendContent(F("<br>MAC: "));

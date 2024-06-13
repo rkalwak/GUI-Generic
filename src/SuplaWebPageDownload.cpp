@@ -22,6 +22,10 @@
 #include "SPIFFS.h"
 #endif
 
+namespace {
+TDS_SuplaRegisterDeviceHeader reg_dev = {};
+}
+
 void handleDownload() {
   if (!WebServer->isLoggedIn(true)) {
     return;
@@ -38,7 +42,7 @@ void handleDownload() {
 
       String str = F("attachment; filename=config_");
       str += ConfigManager->get(KEY_HOST_NAME)->getValue();
-      str += Supla::Channel::reg_dev.SoftVer;
+      str += reg_dev.SoftVer;
       str += '_';
       str += F(".dat");
 

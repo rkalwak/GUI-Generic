@@ -17,6 +17,11 @@
 #include "SSD1306.h"
 
 #ifdef SUPLA_BONEIO
+
+namespace {
+TDS_SuplaRegisterDeviceHeader reg_dev = {};
+}
+
 #include <supla/tools.h>
 #include "../../../GUIGenericCommon.h"
 
@@ -81,7 +86,7 @@ void drawFrame2(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int1
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(ArialMT_Plain_10);
 
-  display->drawString(0, 22, String("FW: ") + Supla::Channel::reg_dev.SoftVer);
+  display->drawString(0, 22, String("FW: ") + reg_dev.SoftVer);
   display->drawString(0, 32, String("VER: ") + ConfigManager->get(KEY_HOST_NAME)->getValue());
   display->drawString(0, 42, String("MAC: ") + WiFi.macAddress());
 

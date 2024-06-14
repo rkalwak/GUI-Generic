@@ -19,7 +19,7 @@
 Supla::Sensor::HumidityMeter::HumidityMeter() : lastReadTime(0) {
   channel.setType(SUPLA_CHANNELTYPE_HUMIDITYSENSOR);
   channel.setDefault(SUPLA_CHANNELFNC_HUMIDITY);
-  channel.setNewValue(HUMIDITY_NOT_AVAILABLE);
+  // channel.setNewValue(HUMIDITY_NOT_AVAILABLE);
 }
 
 double Supla::Sensor::HumidityMeter::getHumi() {

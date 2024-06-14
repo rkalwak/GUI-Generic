@@ -22,7 +22,7 @@
 Supla::Sensor::DistanceHumidityMeter::DistanceHumidityMeter() {
   humidityChannel.setType(SUPLA_CHANNELTYPE_HUMIDITYSENSOR);
   humidityChannel.setDefault(SUPLA_CHANNELFNC_HUMIDITY);
-  humidityChannel.setNewValue(HUMIDITY_NOT_AVAILABLE);
+  // humidityChannel.setNewValue(HUMIDITY_NOT_AVAILABLE);
 }
 
 double Supla::Sensor::DistanceHumidityMeter::getHumi() {

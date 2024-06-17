@@ -30,12 +30,8 @@ void begin() {
   ver.reserve(16);
   SuplaDevice.setSwVersion(ver.c_str());
 #endif
-
-#ifdef SUPLA_THERMOSTAT
-  SuplaDevice.begin(21);
-#else
+  
   SuplaDevice.begin();
-#endif
 
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
     Supla::Network::SetConfigMode();

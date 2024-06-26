@@ -484,7 +484,10 @@ void setup() {
 #endif
 
 #ifdef SUPLA_PZEM_V_3
+  // Declaration of the ElectricityMeter pointer
   Supla::Sensor::ElectricityMeter *PZEMv3 = nullptr;
+
+  // Retrieve GPIO pin configurations
   int8_t pinRX1 = ConfigESP->getGpio(1, FUNCTION_PZEM_RX);
   int8_t pinTX1 = ConfigESP->getGpio(1, FUNCTION_PZEM_TX);
   int8_t pinRX2 = ConfigESP->getGpio(2, FUNCTION_PZEM_RX);
@@ -493,21 +496,30 @@ void setup() {
   int8_t pinTX3 = ConfigESP->getGpio(3, FUNCTION_PZEM_TX);
 
   if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO && pinRX3 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+    // For ESP32-C3, use the same Serial port with different pins
+    PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial, pinRX2, pinTX2, &Serial, pinRX3, pinTX3);
+#elif defined(ARDUINO_ARCH_ESP32)
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial1, pinRX2, pinTX2, &Serial2, pinRX3, pinTX3);
 #else
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(pinRX1, pinTX1, pinRX2, pinTX2, pinRX3, pinTX3);
 #endif
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinTX2 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+    // For ESP32-C3, use the same Serial port with different pins
+    PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial, pinRX1, pinTX2, &Serial, pinRX1, pinTX3);
+#elif defined(ARDUINO_ARCH_ESP32)
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial1, pinRX1, pinTX2, &Serial2, pinRX1, pinTX3);
 #else
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(pinRX1, pinTX1, pinRX1, pinTX2, pinRX1, pinTX3);
 #endif
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO) {
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32C3)
+    Serial.begin(9600, SERIAL_8N1, pinRX1, pinTX1);
+    PZEMv3 = new Supla::Sensor::PZEMv3(&Serial, pinRX1, pinTX1);
+#elif defined(ARDUINO_ARCH_ESP32)
     PZEMv3 = new Supla::Sensor::PZEMv3(&Serial, pinRX1, pinTX1);
 #else
     PZEMv3 = new Supla::Sensor::PZEMv3(pinRX1, pinTX1);
@@ -879,17 +891,16 @@ void setup() {
 #endif
 
 #ifdef SUPLA_SPS30_KPOP
-  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt()) {
-    Supla::Sensor::SPS30_X *sps30;
+    if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt()) {
+      Supla::Sensor::SPS30_X *sps30;
 
-    sps30 = new Supla::Sensor::SPS30_X();
-    auto spsPM005 = new Supla::Sensor::SPS30_PM005(sps30);
-    auto spsPM01 = new Supla::Sensor::SPS30_PM01(sps30);
-    auto spsPM025 = new Supla::Sensor::SPS30_PM025(sps30);
-    auto spsPM04 = new Supla::Sensor::SPS30_PM04(sps30);
-    auto spsPM10 = new Supla::Sensor::SPS30_PM10(sps30);
-
-  }
+      sps30 = new Supla::Sensor::SPS30_X();
+      auto spsPM005 = new Supla::Sensor::SPS30_PM005(sps30);
+      auto spsPM01 = new Supla::Sensor::SPS30_PM01(sps30);
+      auto spsPM025 = new Supla::Sensor::SPS30_PM025(sps30);
+      auto spsPM04 = new Supla::Sensor::SPS30_PM04(sps30);
+      auto spsPM10 = new Supla::Sensor::SPS30_PM10(sps30);
+    }
 #endif
   }
 #endif

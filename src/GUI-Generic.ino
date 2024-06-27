@@ -496,7 +496,7 @@ void setup() {
   int8_t pinTX3 = ConfigESP->getGpio(3, FUNCTION_PZEM_TX);
 
   if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO && pinRX3 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
     // For ESP32-C3, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial, pinRX2, pinTX2, &Serial, pinRX3, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -506,7 +506,7 @@ void setup() {
 #endif
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinTX2 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
     // For ESP32-C3, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::CustomThreePhasePZEMv3(&Serial, pinRX1, pinTX1, &Serial, pinRX1, pinTX2, &Serial, pinRX1, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)

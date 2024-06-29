@@ -52,16 +52,25 @@
 #define MAX_MONOSTABLE_TRIGGER  1
 #define MAX_FUNCTION            1
 
+#ifdef SUPLA_INCREASE_LIMIT
+#define MAX_DS18B20          20
+#define MAX_PUSHOVER_MESSAGE 10
+#define MAX_DIRECT_LINK      10
+#define MAX_VIRTUAL_RELAY    20
+#define MAX_BRIDGE_RF        20
+#define MAX_THERMOSTAT       10
+#define MAX_ANALOG_BUTTON    10
+#define MAX_WAKE_ON_LAN      10
+#else
 #define MAX_DS18B20          20
 #define MAX_PUSHOVER_MESSAGE 5
 #define MAX_DIRECT_LINK      5
 #define MAX_VIRTUAL_RELAY    10
 #define MAX_BRIDGE_RF        10
-
-#define MAX_THERMOSTAT 5
-
-#define MAX_ANALOG_BUTTON 5
-#define MAX_WAKE_ON_LAN   5
+#define MAX_THERMOSTAT       5
+#define MAX_ANALOG_BUTTON    5
+#define MAX_WAKE_ON_LAN      5
+#endif
 
 #ifdef ARDUINO_ARCH_ESP8266
 #define MAX_GPIO 17
@@ -276,50 +285,50 @@ enum _button_additional
 class ConfigOption {
  public:
   ConfigOption(uint8_t key, const char *value, int maxLength, bool loadKey);
-  uint8_t getKey();
+  uint8_t     getKey();
   const char *getValue();
-  int getValueInt();
-  float getValueFloat();
-  bool getValueBool();
-  void getValueHex(char* buffer, size_t bufferSize);
-  int getValueElement(int element);
+  int         getValueInt();
+  float       getValueFloat();
+  bool        getValueBool();
+  void        getValueHex(char *buffer, size_t bufferSize);
+  int         getValueElement(int element);
 
-  int getLength();
+  int  getLength();
   void setLength(int maxLength);
   bool getLoadKey();
 
-  void setValue(const char *value);
+  void         setValue(const char *value);
   const String getElement(int index);
   const String replaceElement(int index, int value);
   const String replaceElement(int index, const char *newvalue);
 
  private:
-  uint8_t _key;
-  char *_value;
+  uint8_t  _key;
+  char *   _value;
   uint16_t _maxLength;
-  bool _loadKey;
+  bool     _loadKey;
 };
 
 class SuplaConfigManager : public Supla::KeyValue {
  public:
   explicit SuplaConfigManager();
-  bool SPIFFSbegin();
-  bool migrationConfig();
+  bool    SPIFFSbegin();
+  bool    migrationConfig();
   uint8_t addKey(uint8_t key, int maxLength, bool loadKey = true);
   uint8_t addKey(uint8_t key, const char *value, int maxLength, bool loadKey = true);
   uint8_t deleteKey(uint8_t key);
 
   uint8_t load(bool configParse = true);
   uint8_t save();
-  void showAllValue();
-  void deleteAllValues();
-  void deleteDeviceValues();
-  void deleteWifiSuplaAdminValues();
-  void deleteGPIODeviceValues();
+  void    showAllValue();
+  void    deleteAllValues();
+  void    deleteDeviceValues();
+  void    deleteWifiSuplaAdminValues();
+  void    deleteGPIODeviceValues();
 
   ConfigOption *get(uint8_t key);
-  bool set(uint8_t key, int value);
-  bool set(uint8_t key, const char *value);
+  bool          set(uint8_t key, int value);
+  bool          set(uint8_t key, const char *value);
 
   bool setElement(uint8_t key, int index, int newvalue);
   bool setElement(uint8_t key, int index, double newvalue);
@@ -355,7 +364,7 @@ class SuplaConfigManager : public Supla::KeyValue {
   bool getUInt8(const char *key, uint8_t *result) override;
 
  private:
-  int _optionCount;
+  int           _optionCount;
   ConfigOption *_options[CONFIG_MAX_OPTIONS];
 
   bool setElementInternal(uint8_t key, int index, const String &newvalue);

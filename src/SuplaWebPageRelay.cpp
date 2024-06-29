@@ -210,7 +210,7 @@ void handleRelaySaveSet() {
   uint8_t newThermostatType = WebServer->httpServer->arg(input).toInt();
   ConfigManager->setElement(KEY_THERMOSTAT_TYPE, thermostatIndex, newThermostatType);
 
-  if (thermostatIndex >= 0 && thermostatIndex < MAX_THERMOSTAT) {
+  if (thermostatIndex >= 0 && thermostatIndex <= MAX_THERMOSTAT) {
     if (oldThermostatType == Supla::GUI::THERMOSTAT_OFF && newThermostatType != Supla::GUI::THERMOSTAT_OFF) {
       ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, THERMOSTAT_DEFAULT_HISTERESIS);
       ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, THERMOSTAT_NO_TEMP_CHANNEL);
@@ -382,7 +382,7 @@ void handleRelaySet(int save) {
 #ifdef SUPLA_THERMOSTAT
     auto thermostatIndex = nr_relay.toInt();
 
-    if (thermostatIndex >= 0 && thermostatIndex < MAX_THERMOSTAT) {
+    if (thermostatIndex >= 0 && thermostatIndex <= MAX_THERMOSTAT) {
       addFormHeader(S_THERMOSTAT);
       selected = ConfigManager->get(KEY_THERMOSTAT_TYPE)->getElement(thermostatIndex).toInt();
       addListBox(INPUT_THERMOSTAT_TYPE, S_TYPE, THERMOSTAT_TYPE_P, COUNT_ELEMENTS_PGM(THERMOSTAT_TYPE_P), selected);

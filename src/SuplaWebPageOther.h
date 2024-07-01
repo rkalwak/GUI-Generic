@@ -19,12 +19,13 @@
 
 #include "SuplaDeviceGUI.h"
 
-#if defined(SUPLA_HC_SR04) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA_KPOP) || defined(SUPLA_PMSX003_KPOP) || \
-    defined(SUPLA_DIRECT_LINKS_MULTI_SENSOR)
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA_KPOP) || \
+    defined(SUPLA_PMSX003_KPOP) || defined(SUPLA_DIRECT_LINKS_MULTI_SENSOR)
 #define GUI_SENSOR_OTHER
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_PZEM_V_3) || defined(SUPLA_CSE7766) || defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE)
+#if defined(SUPLA_HLW8012) || defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR) || defined(SUPLA_CSE7766) || defined(SUPLA_MODBUS_SDM) || \
+    defined(SUPLA_MODBUS_SDM_ONE_PHASE)
 #define GUI_OTHER_ENERGY
 #endif
 
@@ -81,7 +82,7 @@ void handleCounterCalibrate(int save = 0);
 void handleCounterCalibrateSave();
 #endif
 
-#ifdef SUPLA_PZEM_V_3
+#if defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR)
 #define INPUT_PZEM_RX "iprx"
 #define INPUT_PZEM_TX "iptx"
 #endif

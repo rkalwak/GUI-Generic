@@ -18,6 +18,9 @@
 #ifdef SUPLA_PZEM_V_3
 #include "src/sensor/PzemV3.h"
 #include "src/sensor/three_phase_PzemV3.h"
+#elif SUPLA_PZEM_ADR
+#include "supla/sensor/PzemV3.h"
+#include "supla/sensor/three_phase_PzemV3_ADDR.h"
 #endif
 
 #ifdef SUPLA_MPX_5XXX
@@ -529,6 +532,41 @@ void setup() {
   if (PZEMv3) {
     improvSerialComponent->disable();
 #ifdef SUPLA_CONDITIONS
+    Supla::GUI::Conditions::addConditionsSensor(SENSOR_PZEM_V3, S_PZEM_V3, PZEMv3);
+#endif
+  }
+#elif SUPLA_PZEM_ADR
+  Supla::Sensor::ElectricityMeter *PZEMv3 = nullptr;
+
+  // Pobranie konfiguracji pinów RX i TX dla PZEMv3 1F
+  int8_t pinRX1 = ConfigESP->getGpio(1, FUNCTION_PZEM_RX);
+  int8_t pinTX1 = ConfigESP->getGpio(1, FUNCTION_PZEM_TX);
+  // Pobranie konfiguracji pinów RX i TX dla ThreePhasePZEMv3_ADDR 3F
+  int8_t pinRX2 = ConfigESP->getGpio(2, FUNCTION_PZEM_RX);
+  int8_t pinTX2 = ConfigESP->getGpio(2, FUNCTION_PZEM_TX);
+
+  if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO) {
+#if defined(ARDUINO_ARCH_ESP32)
+    PZEMv3 = new Supla::Sensor::PZEMv3(&Serial, pinRX1, pinTX1);
+#else
+    PZEMv3 = new Supla::Sensor::PZEMv3(pinRX1, pinTX1);
+#endif
+  }
+
+  if (pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO) {
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial, pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+#elif defined(ARDUINO_ARCH_ESP32)
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial2, pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+#else
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+#endif
+  }
+
+  if (PZEMv3) {
+    improvSerialComponent->disable();
+#ifdef SUPLA_CONDITIONS
+    // Optionally add conditions for PZEMv3 sensor
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_PZEM_V3, S_PZEM_V3, PZEMv3);
 #endif
   }

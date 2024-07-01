@@ -131,6 +131,25 @@ void handleOther(int save) {
     addListGPIOBox(INPUT_PZEM_TX, String(F("L")) + nr + F(" - TX"), FUNCTION_PZEM_TX, nr, true, "", true);
   }
   addFormHeaderEnd();
+
+#elif SUPLA_PZEM_ADR
+  addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + F("PZEM-004T 1F (Adresowany)"));
+
+  addListGPIOBox(INPUT_PZEM_RX, F("RX"), FUNCTION_PZEM_RX, 1, true, "", true);
+  addListGPIOBox(INPUT_PZEM_TX, F("TX"), FUNCTION_PZEM_TX, 1, true, "", true);
+  addLabel(F("Domyślny adres PZEM: 0xF8"));
+  addFormHeaderEnd();
+
+  addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + F("PZEM-004T 3F (Adresowany)"));
+
+  addListGPIOBox(INPUT_PZEM_RX, F("RX"), FUNCTION_PZEM_RX, 2, true, "", true);
+  addListGPIOBox(INPUT_PZEM_TX, F("TX"), FUNCTION_PZEM_TX, 2, true, "", true);
+  addLabel(
+      F("Domyślne adresy PZEM:<br>"
+        "1F: 0x01<br>"
+        "2F: 0x02<br>"
+        "3F: 0x03"));
+  addFormHeaderEnd();
 #endif
 
 #if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE)
@@ -331,6 +350,14 @@ void handleOtherSave() {
 
 #ifdef SUPLA_PZEM_V_3
   for (nr = 1; nr <= 3; nr++) {
+    if (!WebServer->saveGPIO(INPUT_PZEM_RX, FUNCTION_PZEM_RX, nr) || !WebServer->saveGPIO(INPUT_PZEM_TX, FUNCTION_PZEM_TX, nr)) {
+      handleOther(6);
+      return;
+    }
+  }
+
+#elif SUPLA_PZEM_ADR
+  for (nr = 1; nr <= 2; nr++) {
     if (!WebServer->saveGPIO(INPUT_PZEM_RX, FUNCTION_PZEM_RX, nr) || !WebServer->saveGPIO(INPUT_PZEM_TX, FUNCTION_PZEM_TX, nr)) {
       handleOther(6);
       return;

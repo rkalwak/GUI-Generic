@@ -28,6 +28,7 @@
 #endif
 
 #include "electricity_meter.h"
+#include "supla/element.h"
 
 #define PZEM_1_DEFAULT_ADDR 0x01
 #define PZEM_2_DEFAULT_ADDR 0x02
@@ -36,7 +37,7 @@
 namespace Supla {
 namespace Sensor {
 
-class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
+class ThreePhasePZEMv3_ADDR : public ElectricityMeter, public Element {
  public:
 #if defined(PZEM004_SOFTSERIAL)
   ThreePhasePZEMv3_ADDR(uint8_t pinRX1,
@@ -73,11 +74,15 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
 #endif
 
   void onInit() {
-    readValuesFromDevice();
+    readValues();
     updateChannelValues();
   }
 
-  virtual void readValuesFromDevice() {
+  void onFastTimer() {
+    readValues();
+  }
+
+  virtual void readValues() {
     bool atLeatOnePzemWasRead = false;
     for (int i = 0; i < 3; i++) {
       float current = pzem[i].current();

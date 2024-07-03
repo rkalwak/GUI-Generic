@@ -547,19 +547,19 @@ void setup() {
 
   if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO) {
 #if defined(ARDUINO_ARCH_ESP32)
-    PZEMv3 = new Supla::Sensor::PZEMv3(&Serial, pinRX1, pinTX1);
+    PZEMv3 = new Supla::Sensor::PZEMv3(&Serial, pinRX1, pinTX1, 0xF8);
 #else
-    PZEMv3 = new Supla::Sensor::PZEMv3(pinRX1, pinTX1);
+    PZEMv3 = new Supla::Sensor::PZEMv3(pinRX1, pinTX1, 0xF8);
 #endif
   }
 
   if (pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO) {
 #if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
-    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial, pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial, pinRX2, pinTX2, 0x01, 0x02, 0x03);
 #elif defined(ARDUINO_ARCH_ESP32)
-    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial2, pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(&Serial2, pinRX2, pinTX2, 0x01, 0x02, 0x03);
 #else
-    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(pinRX2, pinTX2, PZEM_1_DEFAULT_ADDR, PZEM_2_DEFAULT_ADDR, PZEM_3_DEFAULT_ADDR);
+    PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(pinRX2, pinTX2, 0x01, 0x02, 0x03);
 #endif
   }
 

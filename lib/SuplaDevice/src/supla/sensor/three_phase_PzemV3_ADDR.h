@@ -114,6 +114,7 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter, public Element {
       setPowerReactive(i, reactive * 100000);
 
       setFreq(pzem[i].frequency() * 100);
+      delay(0);
     }
 
     if (!atLeatOnePzemWasRead) {

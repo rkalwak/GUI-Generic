@@ -83,46 +83,42 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter, public Element {
   }
 
   virtual void readValues() {
-    if (millis() - lastReadTime > readIntervalMs) {
-      lastReadTime = millis();
-
-      bool atLeastOnePzemWasRead = false;
-      for (int i = 0; i < 3; i++) {
-        float current = pzem[i].current();
-        // If current reading is NAN, we assume that PZEM there is no valid
-        // communication with PZEM. Sensor shouldn't show any data
-        if (isnan(current)) {
-          current = 0.0;
-          continue;
-        }
-
-        atLeastOnePzemWasRead = true;
-
-        float voltage = pzem[i].voltage();
-        float active = pzem[i].power();
-        float apparent = (voltage * current);
-        float reactive = 0;
-        if (apparent > active) {
-          reactive = sqrt(apparent * apparent - active * active);
-        } else {
-          reactive = 0;
-        }
-
-        setVoltage(i, voltage * 100);
-        setCurrent(i, current * 1000);
-        setPowerActive(i, active * 100000);
-        setFwdActEnergy(i, pzem[i].energy() * 100000);
-        setPowerFactor(i, pzem[i].pf() * 1000);
-        setPowerApparent(i, apparent * 100000);
-        setPowerReactive(i, reactive * 100000);
-
-        setFreq(pzem[i].frequency() * 100);
-        delay(0);
+    bool atLeatOnePzemWasRead = false;
+    for (int i = 0; i < 3; i++) {
+      float current = pzem[i].current();
+      // If current reading is NAN, we assume that PZEM there is no valid
+      // communication with PZEM. Sensor shouldn't show any data
+      if (isnan(current)) {
+        current = 0.0;
+        continue;
       }
 
-      if (!atLeastOnePzemWasRead) {
-        resetReadParameters();
+      atLeatOnePzemWasRead = true;
+
+      float voltage = pzem[i].voltage();
+      float active = pzem[i].power();
+      float apparent = (voltage * current);
+      float reactive = 0;
+      if (apparent > active) {
+        reactive = sqrt(apparent * apparent - active * active);
+      } else {
+        reactive = 0;
       }
+
+      setVoltage(i, voltage * 100);
+      setCurrent(i, current * 1000);
+      setPowerActive(i, active * 100000);
+      setFwdActEnergy(i, pzem[i].energy() * 100000);
+      setPowerFactor(i, pzem[i].pf() * 1000);
+      setPowerApparent(i, apparent * 100000);
+      setPowerReactive(i, reactive * 100000);
+
+      setFreq(pzem[i].frequency() * 100);
+      delay(0);
+    }
+
+    if (!atLeatOnePzemWasRead) {
+      resetReadParameters();
     }
   }
 
@@ -134,10 +130,6 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter, public Element {
 
  protected:
   PZEM004Tv30 pzem[3];
-
- private:
-  uint32_t lastReadTime = 0;
-  const uint32_t readIntervalMs = 5000;
 };
 
 };  // namespace Sensor

@@ -20,7 +20,7 @@
 #include "src/sensor/three_phase_PzemV3.h"
 #elif SUPLA_PZEM_ADR
 #include "supla/sensor/PzemV3.h"
-#include "supla/sensor/three_phase_PzemV3_ADDR.h"
+#include "src/sensor/three_phase_PzemV3_ADDR.h"
 #endif
 
 #ifdef SUPLA_MPX_5XXX

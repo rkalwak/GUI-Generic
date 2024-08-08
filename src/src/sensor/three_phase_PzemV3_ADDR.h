@@ -16,8 +16,8 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef SRC_SUPLA_SENSOR_THREE_PHASE_PZEMV3_ADDR_H_
-#define SRC_SUPLA_SENSOR_THREE_PHASE_PZEMV3_ADDR_H_
+#ifndef GUI_SUPLA_SENSOR_THREE_PHASE_PZEMV3_ADDR_H_
+#define GUI_SUPLA_SENSOR_THREE_PHASE_PZEMV3_ADDR_H_
 
 #include <Arduino.h>
 // Dependence: Arduino library for the Updated PZEM-004T v3.0 Power and Energy
@@ -27,7 +27,7 @@
 #include <SoftwareSerial.h>
 #endif
 
-#include "electricity_meter.h"
+#include <supla/sensor/electricity_meter.h>
 
 #define PZEM_1_DEFAULT_ADDR 0x01
 #define PZEM_2_DEFAULT_ADDR 0x02
@@ -47,10 +47,7 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
                         uint8_t pzem_2_addr = PZEM_2_DEFAULT_ADDR,
                         uint8_t pzem_3_addr = PZEM_3_DEFAULT_ADDR)
       : softSerial(pinRX1, pinTX1),
-        pzem{PZEM004Tv30(softSerial, pzem_1_addr),
-             PZEM004Tv30(softSerial, pzem_2_addr),
-             PZEM004Tv30(softSerial, pzem_3_addr)} {
-    softSerial.begin(9600);
+        pzem{PZEM004Tv30(softSerial, pzem_1_addr), PZEM004Tv30(softSerial, pzem_2_addr), PZEM004Tv30(softSerial, pzem_3_addr)} {
   }
 #endif
 
@@ -62,10 +59,8 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
                         uint8_t pzem_2_addr = PZEM_2_DEFAULT_ADDR,
                         uint8_t pzem_3_addr = PZEM_3_DEFAULT_ADDR)
       : serial(serial),
-        pzem{PZEM004Tv30(serial, pinRx1, pinTx1, pzem_1_addr),
-             PZEM004Tv30(serial, pinRx1, pinTx1, pzem_2_addr),
+        pzem{PZEM004Tv30(serial, pinRx1, pinTx1, pzem_1_addr), PZEM004Tv30(serial, pinRx1, pinTx1, pzem_2_addr),
              PZEM004Tv30(serial, pinRx1, pinTx1, pzem_3_addr)} {
-    serial.begin(9600, SERIAL_8N1, pinRx1, pinTx1);
   }
 
   //#else
@@ -104,7 +99,8 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
       float reactive = 0;
       if (apparent > active) {
         reactive = sqrt(apparent * apparent - active * active);
-      } else {
+      }
+      else {
         reactive = 0;
       }
 

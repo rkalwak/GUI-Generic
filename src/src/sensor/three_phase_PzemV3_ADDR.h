@@ -23,7 +23,8 @@
 // Dependence: Arduino library for the Updated PZEM-004T v3.0 Power and Energy
 // meter  https://github.com/mandulaj/PZEM-004T-v30
 #include <PZEM004Tv30.h>
-#if defined(PZEM004_SOFTSERIAL) || defined(ESP8266)
+
+#if defined(ESP8266)
 #include <SoftwareSerial.h>
 #endif
 
@@ -40,39 +41,28 @@ namespace Sensor {
 
 class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
  public:
-#if defined(PZEM004_SOFTSERIAL) || defined(ESP8266)
-  ThreePhasePZEMv3_ADDR(uint8_t pinRX1,
-                        uint8_t pinTX1,
+#if defined(ESP8266)
+  ThreePhasePZEMv3_ADDR(uint8_t pinRX,
+                        uint8_t pinTX,
                         uint8_t pzem_1_addr = PZEM_1_DEFAULT_ADDR,
                         uint8_t pzem_2_addr = PZEM_2_DEFAULT_ADDR,
                         uint8_t pzem_3_addr = PZEM_3_DEFAULT_ADDR)
-      : softSerial(pinRX1, pinTX1),
+      : softSerial(pinRX, pinTX),
         pzem{PZEM004Tv30(softSerial, pzem_1_addr), PZEM004Tv30(softSerial, pzem_2_addr), PZEM004Tv30(softSerial, pzem_3_addr)} {
+    softSerial.begin(PZEM_BAUD_RATE);
   }
-#endif
-
-#if defined(ESP32)
+#elif defined(ESP32)
   ThreePhasePZEMv3_ADDR(HardwareSerial &serial,
-                        uint8_t pinRx1,
-                        uint8_t pinTx1,
+                        uint8_t pinRX,
+                        uint8_t pinTX,
                         uint8_t pzem_1_addr = PZEM_1_DEFAULT_ADDR,
                         uint8_t pzem_2_addr = PZEM_2_DEFAULT_ADDR,
                         uint8_t pzem_3_addr = PZEM_3_DEFAULT_ADDR)
       : serial(serial),
-        pzem{PZEM004Tv30(serial, pinRx1, pinTx1, pzem_1_addr), PZEM004Tv30(serial, pinRx1, pinTx1, pzem_2_addr),
-             PZEM004Tv30(serial, pinRx1, pinTx1, pzem_3_addr)} {
+        pzem{PZEM004Tv30(serial, pinRX, pinTX, pzem_1_addr), PZEM004Tv30(serial, pinRX, pinTX, pzem_2_addr),
+             PZEM004Tv30(serial, pinRX, pinTX, pzem_3_addr)} {
+    serial.begin(PZEM_BAUD_RATE);
   }
-
-  //#else
-  // ThreePhasePZEMv3_ADDR(HardwareSerial &serial,
-  //                       uint8_t pzem_1_addr = PZEM_1_DEFAULT_ADDR,
-  //                       uint8_t pzem_2_addr = PZEM_2_DEFAULT_ADDR,
-  //                       uint8_t pzem_3_addr = PZEM_3_DEFAULT_ADDR)
-  //     : serial(serial),
-  //       pzem{PZEM004Tv30(serial, pzem_1_addr),
-  //            PZEM004Tv30(serial, pzem_2_addr),
-  //            PZEM004Tv30(serial, pzem_3_addr)} {
-  // }
 #endif
 
   void onInit() {
@@ -82,37 +72,73 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
 
   virtual void readValuesFromDevice() {
     bool atLeastOnePzemWasRead = false;
+
     for (int i = 0; i < 3; i++) {
       float current = pzem[i].current();
-      // If current reading is NAN, we assume that there is no valid
-      // communication with the PZEM. Sensor shouldn't show any data
-      if (isnan(current)) {
-        current = 0.0;
+      bool currentValid = !isnan(current) && current >= 0;
+      if (!currentValid) {
+        Serial.printf("Error reading current from PZEM %d\n", i + 1);
         continue;
       }
 
       atLeastOnePzemWasRead = true;
 
       float voltage = pzem[i].voltage();
+      bool voltageValid = !isnan(voltage) && voltage > 0;
+      if (!voltageValid) {
+        Serial.printf("Error reading voltage from PZEM %d\n", i + 1);
+      }
+
       float active = pzem[i].power();
-      float apparent = (voltage * current);
-      float reactive = 0;
-      if (apparent > active) {
-        reactive = sqrt(apparent * apparent - active * active);
-      }
-      else {
-        reactive = 0;
+      bool activeValid = !isnan(active) && active >= 0;
+      if (!activeValid) {
+        Serial.printf("Error reading power from PZEM %d\n", i + 1);
       }
 
-      setVoltage(i, voltage * 100);
-      setCurrent(i, current * 1000);
-      setPowerActive(i, active * 100000);
-      setFwdActEnergy(i, pzem[i].energy() * 100000);
-      setPowerFactor(i, pzem[i].pf() * 1000);
-      setPowerApparent(i, apparent * 100000);
-      setPowerReactive(i, reactive * 100000);
+      float apparent = (voltageValid && currentValid) ? (voltage * current) : NAN;
+      float reactive = (voltageValid && activeValid && apparent > active) ? sqrt(apparent * apparent - active * active) : 0;
 
-      setFreq(pzem[i].frequency() * 100);
+      float energy = pzem[i].energy();
+      bool energyValid = !isnan(energy) && energy >= 0;
+      if (!energyValid) {
+        Serial.printf("Error reading energy from PZEM %d\n", i + 1);
+      }
+
+      float powerFactor = pzem[i].pf();
+      bool powerFactorValid = !isnan(powerFactor) && powerFactor >= 0 && powerFactor <= 1;
+      if (!powerFactorValid) {
+        Serial.printf("Error reading power factor from PZEM %d\n", i + 1);
+      }
+
+      float frequency = pzem[i].frequency();
+      bool frequencyValid = !isnan(frequency) && frequency > 0;
+      if (!frequencyValid) {
+        Serial.printf("Error reading frequency from PZEM %d\n", i + 1);
+      }
+
+      if (voltageValid) {
+        setVoltage(i, static_cast<int>(voltage * 100));
+      }
+      if (currentValid) {
+        setCurrent(i, static_cast<int>(current * 1000));
+      }
+      if (activeValid) {
+        setPowerActive(i, static_cast<int>(active * 100000));
+      }
+      if (energyValid) {
+        setFwdActEnergy(i, static_cast<int>(energy * 100000));
+      }
+      if (powerFactorValid) {
+        setPowerFactor(i, static_cast<int>(powerFactor * 1000));
+      }
+      if (voltageValid && currentValid) {
+        setPowerApparent(i, static_cast<int>(apparent * 100000));
+        setPowerReactive(i, static_cast<int>(reactive * 100000));
+      }
+      if (frequencyValid) {
+        setFreq(static_cast<unsigned short>(frequency * 100));
+      }
+
       delay(UPDATE_TIME);  // Delay between readings
     }
 
@@ -128,16 +154,16 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
   }
 
  protected:
-#if defined(PZEM004_SOFTSERIAL) || defined(ESP8266)
+#if defined(ESP8266)
   SoftwareSerial softSerial;
 #endif
-#if defined(ESP32) || !defined(PZEM004_SOFTSERIAL)
+#if defined(ESP32)
   HardwareSerial &serial;
 #endif
   PZEM004Tv30 pzem[3];
 };
 
-};  // namespace Sensor
-};  // namespace Supla
+}  // namespace Sensor
+}  // namespace Supla
 
 #endif  // SRC_SUPLA_SENSOR_THREE_PHASE_PZEMV3_ADDR_H_

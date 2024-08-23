@@ -318,16 +318,29 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
       return;
 
     _supla_int_t flags = channel->getFlags();
-    double averageVoltage;
 
     if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
-      averageVoltage = (emValue->m[0].voltage[0]);
+      // Display single phase voltage
+      double voltage = emValue->m[0].voltage[0] / 100.0;
+      displayUiGeneral(display, state, x, y, String(voltage, 0), "V");
     }
     else {
-      averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
-    }
+      if (display->getWidth() < 64) {
+        // Display summarized voltage for three phases
+        double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
+        displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
+      }
+      else {
+        // Display three-phase voltages
+        double voltage1 = emValue->m[0].voltage[0] / 100.0;
+        double voltage2 = emValue->m[0].voltage[1] / 100.0;
+        double voltage3 = emValue->m[0].voltage[2] / 100.0;
 
-    displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
+        displayUiGeneral(display, state, x, y, "L1: " + String(voltage1, 0) + "V", "");
+        displayUiGeneral(display, state, x, y + 10, "L2: " + String(voltage2, 0) + "V", "");
+        displayUiGeneral(display, state, x, y + 20, "L3: " + String(voltage3, 0) + "V", "");
+      }
+    }
   }
 }
 
@@ -343,8 +356,30 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
-    displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
+    _supla_int_t flags = channel->getFlags();
+
+    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+      // Display single phase current
+      double current = emValue->m[0].current[0] / 1000.0;
+      displayUiGeneral(display, state, x, y, String(current, 1), "A");
+    }
+    else {
+      if (display->getWidth() < 64) {
+        // Display summarized current for three phases
+        double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
+        displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
+      }
+      else {
+        // Display three-phase currents
+        double current1 = emValue->m[0].current[0] / 1000.0;
+        double current2 = emValue->m[0].current[1] / 1000.0;
+        double current3 = emValue->m[0].current[2] / 1000.0;
+
+        displayUiGeneral(display, state, x, y, "L1: " + String(current1, 1) + "A", "");
+        displayUiGeneral(display, state, x, y + 10, "L2: " + String(current2, 1) + "A", "");
+        displayUiGeneral(display, state, x, y + 20, "L3: " + String(current3, 1) + "A", "");
+      }
+    }
   }
 }
 
@@ -360,8 +395,30 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
     if (emValue->m_count < 1 || emValue == nullptr)
       return;
 
-    double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
-    displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
+    _supla_int_t flags = channel->getFlags();
+
+    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+      // Display single phase active power
+      double powerActive = emValue->m[0].power_active[0] / 100000.0;
+      displayUiGeneral(display, state, x, y, String(powerActive, 1), "W");
+    }
+    else {
+      if (display->getWidth() < 64) {
+        // Display summarized active power for three phases
+        double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
+        displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
+      }
+      else {
+        // Display three-phase active powers
+        double powerActive1 = emValue->m[0].power_active[0] / 100000.0;
+        double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
+        double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
+
+        displayUiGeneral(display, state, x, y, "L1: " + String(powerActive1, 1) + "W", "");
+        displayUiGeneral(display, state, x, y + 10, "L2: " + String(powerActive2, 1) + "W", "");
+        displayUiGeneral(display, state, x, y + 20, "L3: " + String(powerActive3, 1) + "W", "");
+      }
+    }
   }
 }
 

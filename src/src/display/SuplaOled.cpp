@@ -300,6 +300,13 @@ void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int1
   }
 }
 
+void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
+  double lastTemperature = getTemperatureFromChannelThermometr(channel);
+
+  displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
+}
+
 void displayPressure(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
 

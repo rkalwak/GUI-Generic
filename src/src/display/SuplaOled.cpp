@@ -411,7 +411,7 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
         double current2 = emValue->m[0].current[1] / 1000.0;
         double current3 = emValue->m[0].current[2] / 1000.0;
 
-        displayUiThreeValues(display, state, x, y, String(current1, 0), String(current2, 0), String(current1, 0), "");
+        displayUiThreeValues(display, state, x, y, String(current1, 0), String(current2, 0), String(current3, 0), "");
       }
     }
   }
@@ -448,7 +448,7 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
         double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
         double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
 
-        displayUiThreeValues(display, state, x, y, String(powerActive1, 1), String(powerActive2, 1), String(powerActive2, 1), "");
+        displayUiThreeValues(display, state, x, y, String(powerActive1, 1), String(powerActive2, 1), String(powerActive3, 1), "");
       }
     }
   }

@@ -271,17 +271,20 @@ void displayUiThreeValues(OLEDDisplay* display,
   String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
   if (!name.isEmpty()) {
     display->setFont(ArialMT_Win1250_Plain_10);
-    display->drawString(x + getWidthValue(display, name), y + display->getHeight() / 2 - 12, name);
+    display->drawString(x + getWidthValue(display, name), y + display->getHeight() / 2 - 16, name);
   }
 
-  display->setFont(ArialMT_Win1250_Plain_24);
-  display->drawString(x, y + display->getHeight() / 2 - 2, value1);
+  display->setFont(ArialMT_Win1250_Plain_16);
+
+  int16_t verticalOffset = display->getHeight() / 2 - 8; // Adjusted to center text vertically
+
+  display->drawString(x, y + verticalOffset, value1);
 
   int16_t x2 = x + sectionWidth;
-  display->drawString(x2, y + display->getHeight() / 2 - 2, value2);
+  display->drawString(x2, y + verticalOffset, value2);
 
   int16_t x3 = x + 2 * sectionWidth;
-  display->drawString(x3, y + display->getHeight() / 2 - 2, value3);
+  display->drawString(x3, y + verticalOffset, value3);
 
   if (!unit.isEmpty()) {
     uint8_t totalWidth = getWidthValue(display, value1) + getWidthValue(display, value2) + getWidthValue(display, value3);

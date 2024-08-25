@@ -37,7 +37,7 @@ namespace Supla {
 namespace Sensor {
 class ThreePhasePZEMv3 : public ElectricityMeter {
  public:
-#if defined(PZEM004_SOFTSERIAL)
+#if defined(ESP8266)
   ThreePhasePZEMv3(int8_t pinRX1, int8_t pinTX1, int8_t pinRX2, int8_t pinTX2, int8_t pinRX3, int8_t pinTX3)
       : softSerial1(pinRX1, pinTX1),
         softSerial2(pinRX2, pinTX2),
@@ -156,7 +156,7 @@ class ThreePhasePZEMv3 : public ElectricityMeter {
   }
 
  protected:
-#if defined(PZEM004_SOFTSERIAL)
+#if defined(ESP8266)
   SoftwareSerial softSerial1;
   SoftwareSerial softSerial2;
   SoftwareSerial softSerial3;

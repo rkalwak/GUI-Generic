@@ -255,11 +255,39 @@ void displayUiGeneral(
   }
 }
 
-void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
-  double lastTemperature = getTemperatureFromChannelThermometr(channel);
+void displayUiThreeValues(OLEDDisplay* display,
+                          OLEDDisplayUiState* state,
+                          int16_t x,
+                          int16_t y,
+                          const String& value1,
+                          const String& value2,
+                          const String& value3,
+                          const String& unit) {
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-  displayUiGeneral(display, state, x, y, getTempString(lastTemperature), "°C", temp_bits);
+  int16_t sectionWidth = display->getWidth() / 3;
+
+  String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
+  if (!name.isEmpty()) {
+    display->setFont(ArialMT_Win1250_Plain_10);
+    display->drawString(x + getWidthValue(display, name), y + display->getHeight() / 2 - 12, name);
+  }
+
+  display->setFont(ArialMT_Win1250_Plain_24);
+  display->drawString(x, y + display->getHeight() / 2 - 2, value1);
+
+  int16_t x2 = x + sectionWidth;
+  display->drawString(x2, y + display->getHeight() / 2 - 2, value2);
+
+  int16_t x3 = x + 2 * sectionWidth;
+  display->drawString(x3, y + display->getHeight() / 2 - 2, value3);
+
+  if (!unit.isEmpty()) {
+    uint8_t totalWidth = getWidthValue(display, value1) + getWidthValue(display, value2) + getWidthValue(display, value3);
+    display->setFont(ArialMT_Win1250_Plain_16);
+    display->drawString(x + totalWidth + 10, y + display->getHeight() / 2 + 5, unit);
+  }
 }
 
 void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -336,9 +364,7 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
         double voltage2 = emValue->m[0].voltage[1] / 100.0;
         double voltage3 = emValue->m[0].voltage[2] / 100.0;
 
-        displayUiGeneral(display, state, x, y, "L1: " + String(voltage1, 0) + "V", "");
-        displayUiGeneral(display, state, x, y + 10, "L2: " + String(voltage2, 0) + "V", "");
-        displayUiGeneral(display, state, x, y + 20, "L3: " + String(voltage3, 0) + "V", "");
+        displayUiThreeValues(display, state, x, y, String(voltage1, 0), String(voltage2, 0), String(voltage3, 0), "");
       }
     }
   }
@@ -375,9 +401,7 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
         double current2 = emValue->m[0].current[1] / 1000.0;
         double current3 = emValue->m[0].current[2] / 1000.0;
 
-        displayUiGeneral(display, state, x, y, "L1: " + String(current1, 1) + "A", "");
-        displayUiGeneral(display, state, x, y + 10, "L2: " + String(current2, 1) + "A", "");
-        displayUiGeneral(display, state, x, y + 20, "L3: " + String(current3, 1) + "A", "");
+        displayUiThreeValues(display, state, x, y, String(current1, 0), String(current2, 0), String(current1, 0), "");
       }
     }
   }
@@ -414,9 +438,7 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
         double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
         double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
 
-        displayUiGeneral(display, state, x, y, "L1: " + String(powerActive1, 1) + "W", "");
-        displayUiGeneral(display, state, x, y + 10, "L2: " + String(powerActive2, 1) + "W", "");
-        displayUiGeneral(display, state, x, y + 20, "L3: " + String(powerActive3, 1) + "W", "");
+        displayUiThreeValues(display, state, x, y, String(powerActive1, 1), String(powerActive2, 1), String(powerActive2, 1), "");
       }
     }
   }

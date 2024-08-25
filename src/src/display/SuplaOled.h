@@ -61,6 +61,14 @@ void displayUiGeneral(
     OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y, double value, const String& unit = "\n", const uint8_t* xbm = NULL);
 void displayUiGeneral(
     OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y, const String& value, const String& unit = "\n", const uint8_t* xbm = NULL);
+void displayUiThreeValues(OLEDDisplay* display,
+                          OLEDDisplayUiState* state,
+                          int16_t x,
+                          int16_t y,
+                          const String& value1,
+                          const String& value2,
+                          const String& value3,
+                          const String& unit = "\n");
 
 void displayTemperature(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void displayDoubleHumidity(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y);
@@ -1893,4 +1901,4 @@ const char utf8_win1250_table[] = {
 };
 #endif
 
-#endif  // SuplaOled_H 
+#endif  // SuplaOled_H

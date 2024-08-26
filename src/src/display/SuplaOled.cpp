@@ -266,28 +266,32 @@ void displayUiThreeValues(OLEDDisplay* display,
   display->setColor(WHITE);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-  int16_t sectionWidth = display->getWidth() / 3;
-
   String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
   if (!name.isEmpty()) {
     display->setFont(ArialMT_Win1250_Plain_10);
-    display->drawString(x + getWidthValue(display, name), y + display->getHeight() / 2 - 16, name);
+    int16_t nameWidth = getWidthValue(display, name);
+    display->drawString(x + nameWidth, y + display->getHeight() / 2 - 16, name);
   }
 
   display->setFont(ArialMT_Win1250_Plain_16);
 
-  int16_t verticalOffset = display->getHeight() / 2 - 8; // Adjusted to center text vertically
+  int16_t verticalOffset = y + display->getHeight() / 2 - 8;
+  int16_t verticalOffsetAdjustment = 8;
 
-  display->drawString(x, y + verticalOffset, value1);
+  int16_t value1Width = getWidthValue(display, value1);
+  int16_t value2Width = getWidthValue(display, value2);
+  int16_t value3Width = getWidthValue(display, value3);
+  int16_t totalWidth = value1Width + value2Width + value3Width;
 
-  int16_t x2 = x + sectionWidth;
-  display->drawString(x2, y + verticalOffset, value2);
+  int16_t xOffset = x;
 
-  int16_t x3 = x + 2 * sectionWidth;
-  display->drawString(x3, y + verticalOffset, value3);
+  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value1);
+  xOffset += value1Width;
+  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value2);
+  xOffset += value2Width;
+  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value3);
 
   if (!unit.isEmpty()) {
-    uint8_t totalWidth = getWidthValue(display, value1) + getWidthValue(display, value2) + getWidthValue(display, value3);
     display->setFont(ArialMT_Win1250_Plain_16);
     display->drawString(x + totalWidth + 10, y + display->getHeight() / 2 + 5, unit);
   }
@@ -369,12 +373,15 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
         displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
       }
       else {
-        // Display three-phase voltages
         double voltage1 = emValue->m[0].voltage[0] / 100.0;
         double voltage2 = emValue->m[0].voltage[1] / 100.0;
         double voltage3 = emValue->m[0].voltage[2] / 100.0;
 
-        displayUiThreeValues(display, state, x, y, String(voltage1, 0), String(voltage2, 0), String(voltage3, 0), "");
+        String voltageStr1 = (voltage1 >= 100) ? String(voltage1, 0) : String(voltage1, 1);
+        String voltageStr2 = (voltage2 >= 100) ? String(voltage2, 0) : String(voltage2, 1);
+        String voltageStr3 = (voltage3 >= 100) ? String(voltage3, 0) : String(voltage3, 1);
+
+        displayUiThreeValues(display, state, x, y, voltageStr1, voltageStr2, voltageStr3, "");
       }
     }
   }
@@ -406,12 +413,15 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
         displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
       }
       else {
-        // Display three-phase currents
         double current1 = emValue->m[0].current[0] / 1000.0;
         double current2 = emValue->m[0].current[1] / 1000.0;
         double current3 = emValue->m[0].current[2] / 1000.0;
 
-        displayUiThreeValues(display, state, x, y, String(current1, 0), String(current2, 0), String(current3, 0), "");
+        String currentStr1 = (current1 >= 100) ? String(current1, 0) : String(current1, 1);
+        String currentStr2 = (current2 >= 100) ? String(current2, 0) : String(current2, 1);
+        String currentStr3 = (current3 >= 100) ? String(current3, 0) : String(current3, 1);
+
+        displayUiThreeValues(display, state, x, y, currentStr1, currentStr2, currentStr3, "");
       }
     }
   }
@@ -443,12 +453,15 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
         displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
       }
       else {
-        // Display three-phase active powers
         double powerActive1 = emValue->m[0].power_active[0] / 100000.0;
         double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
         double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
 
-        displayUiThreeValues(display, state, x, y, String(powerActive1, 1), String(powerActive2, 1), String(powerActive3, 1), "");
+        String powerActiveStr1 = (powerActive1 >= 100) ? String(powerActive1, 0) : String(powerActive1, 1);
+        String powerActiveStr2 = (powerActive2 >= 100) ? String(powerActive2, 0) : String(powerActive2, 1);
+        String powerActiveStr3 = (powerActive3 >= 100) ? String(powerActive3, 0) : String(powerActive3, 1);
+
+        displayUiThreeValues(display, state, x, y, powerActiveStr1, powerActiveStr2, powerActiveStr3, "");
       }
     }
   }

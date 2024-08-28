@@ -85,7 +85,10 @@ int getWidthValue(OLEDDisplay* display, const String& value) {
     return (display->getWidth() / 2) - (display->getStringWidth(value) / 5);
   }
 
-  return (display->getWidth() / 2) - (display->getStringWidth(value) / 2);
+  int stringWidth = display->getStringWidth(value);
+  int centeredPosition = (display->getWidth() / 2) - (stringWidth / 2);
+
+  return centeredPosition;
 }
 
 int getQuality() {
@@ -255,16 +258,14 @@ void displayUiGeneral(
   }
 }
 
-void displayUiThreeValues(OLEDDisplay* display,
-                          OLEDDisplayUiState* state,
-                          int16_t x,
-                          int16_t y,
-                          const String& value1,
-                          const String& value2,
-                          const String& value3,
-                          const String& unit) {
+void displayUiThreeValues(
+    OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y, double value1, double value2, double value3, const String& unit) {
   display->setColor(WHITE);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
+
+  String valueStr1 = (value1 >= 100) ? String(value1, 0) : String(value1, 1);
+  String valueStr2 = (value2 >= 100) ? String(value2, 0) : String(value2, 1);
+  String valueStr3 = (value3 >= 100) ? String(value3, 0) : String(value3, 1);
 
   String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
   if (!name.isEmpty()) {
@@ -275,25 +276,28 @@ void displayUiThreeValues(OLEDDisplay* display,
 
   display->setFont(ArialMT_Win1250_Plain_16);
 
-  int16_t verticalOffset = y + display->getHeight() / 2 - 8;
-  int16_t verticalOffsetAdjustment = 8;
+  int16_t screenWidth = display->getWidth();
+  int16_t value1Width = display->getStringWidth(valueStr1);
+  int16_t value2Width = display->getStringWidth(valueStr2);
+  int16_t value3Width = display->getStringWidth(valueStr3);
 
-  int16_t value1Width = getWidthValue(display, value1);
-  int16_t value2Width = getWidthValue(display, value2);
-  int16_t value3Width = getWidthValue(display, value3);
-  int16_t totalWidth = value1Width + value2Width + value3Width;
+  int16_t totalValuesWidth = value1Width + value2Width + value3Width;
+  int16_t remainingSpace = screenWidth - totalValuesWidth;
+  int16_t gap = remainingSpace / 4;
 
-  int16_t xOffset = x;
+  int16_t xOffset = x + (screenWidth - totalValuesWidth - (gap * 2)) / 2;
+  int16_t verticalOffset = y + display->getHeight() / 2;
 
-  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value1);
-  xOffset += value1Width;
-  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value2);
-  xOffset += value2Width;
-  display->drawString(xOffset, verticalOffset + verticalOffsetAdjustment, value3);
+  display->drawString(xOffset, verticalOffset, valueStr1);
+  xOffset += value1Width + gap;
+  display->drawString(xOffset, verticalOffset, valueStr2);
+  xOffset += value2Width + gap;
+  display->drawString(xOffset, verticalOffset, valueStr3);
 
   if (!unit.isEmpty()) {
-    display->setFont(ArialMT_Win1250_Plain_16);
-    display->drawString(x + totalWidth + 10, y + display->getHeight() / 2 + 5, unit);
+    int16_t unitWidth = display->getStringWidth(unit);
+    int16_t unitOffset = screenWidth - unitWidth - 5;
+    display->drawString(unitOffset, verticalOffset, unit);
   }
 }
 
@@ -347,122 +351,114 @@ void displayGeneral(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, 
   }
 }
 
-void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+bool readElectricityMeterValues(OLEDDisplay* display,
+                                OLEDDisplayUiState* state,
+                                int16_t& x,
+                                int16_t& y,
+                                TSuplaChannelExtendedValue*& extValue,
+                                TElectricityMeter_ExtendedValue_V2*& emValue,
+                                _supla_int_t& flags) {
   auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
+  if (!channel) {
+    displayUiGeneral(display, state, x, y, "Channel error");
+    return false;
+  }
 
-  if (channel) {
-    TSuplaChannelExtendedValue* extValue = channel->getExtValue();
-    if (extValue == nullptr)
-      return;
+  extValue = channel->getExtValue();
+  if (extValue == nullptr) {
+    displayUiGeneral(display, state, x, y, "Ext value error");
+    return false;
+  }
 
-    TElectricityMeter_ExtendedValue_V2* emValue = reinterpret_cast<TElectricityMeter_ExtendedValue_V2*>(extValue->value);
-    if (emValue->m_count < 1 || emValue == nullptr)
-      return;
+  emValue = reinterpret_cast<TElectricityMeter_ExtendedValue_V2*>(extValue->value);
+  if (emValue == nullptr || emValue->m_count < 1) {
+    displayUiGeneral(display, state, x, y, "Data error");
+    return false;
+  }
 
-    _supla_int_t flags = channel->getFlags();
+  flags = channel->getFlags();
+  return true;
+}
 
-    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
-      // Display single phase voltage
-      double voltage = emValue->m[0].voltage[0] / 100.0;
-      displayUiGeneral(display, state, x, y, String(voltage, 0), "V");
+void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  TSuplaChannelExtendedValue* extValue;
+  TElectricityMeter_ExtendedValue_V2* emValue;
+  _supla_int_t flags;
+
+  if (!readElectricityMeterValues(display, state, x, y, extValue, emValue, flags)) {
+    return;  // Jeśli odczyt danych się nie powiódł, zakończ funkcję
+  }
+
+  if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+    double voltage = emValue->m[0].voltage[0] / 100.0;
+    displayUiGeneral(display, state, x, y, String(voltage, 0), "V");
+  }
+  else {
+    if (display->getWidth() < 64) {
+      double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
+      displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
     }
     else {
-      if (display->getWidth() < 64) {
-        // Display summarized voltage for three phases
-        double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
-        displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
-      }
-      else {
-        double voltage1 = emValue->m[0].voltage[0] / 100.0;
-        double voltage2 = emValue->m[0].voltage[1] / 100.0;
-        double voltage3 = emValue->m[0].voltage[2] / 100.0;
+      double voltage1 = emValue->m[0].voltage[0] / 100.0;
+      double voltage2 = emValue->m[0].voltage[1] / 100.0;
+      double voltage3 = emValue->m[0].voltage[2] / 100.0;
 
-        String voltageStr1 = (voltage1 >= 100) ? String(voltage1, 0) : String(voltage1, 1);
-        String voltageStr2 = (voltage2 >= 100) ? String(voltage2, 0) : String(voltage2, 1);
-        String voltageStr3 = (voltage3 >= 100) ? String(voltage3, 0) : String(voltage3, 1);
-
-        displayUiThreeValues(display, state, x, y, voltageStr1, voltageStr2, voltageStr3, "");
-      }
+      displayUiThreeValues(display, state, x, y, voltage1, voltage2, voltage3, "");
     }
   }
 }
 
 void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
+  TSuplaChannelExtendedValue* extValue;
+  TElectricityMeter_ExtendedValue_V2* emValue;
+  _supla_int_t flags;
 
-  if (channel) {
-    TSuplaChannelExtendedValue* extValue = channel->getExtValue();
-    if (extValue == nullptr)
-      return;
+  if (!readElectricityMeterValues(display, state, x, y, extValue, emValue, flags)) {
+    return;
+  }
 
-    TElectricityMeter_ExtendedValue_V2* emValue = reinterpret_cast<TElectricityMeter_ExtendedValue_V2*>(extValue->value);
-    if (emValue->m_count < 1 || emValue == nullptr)
-      return;
-
-    _supla_int_t flags = channel->getFlags();
-
-    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
-      // Display single phase current
-      double current = emValue->m[0].current[0] / 1000.0;
-      displayUiGeneral(display, state, x, y, String(current, 1), "A");
+  if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+    double current = emValue->m[0].current[0] / 1000.0;
+    displayUiGeneral(display, state, x, y, String(current, 1), "A");
+  }
+  else {
+    if (display->getWidth() < 64) {
+      double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
+      displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
     }
     else {
-      if (display->getWidth() < 64) {
-        // Display summarized current for three phases
-        double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
-        displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
-      }
-      else {
-        double current1 = emValue->m[0].current[0] / 1000.0;
-        double current2 = emValue->m[0].current[1] / 1000.0;
-        double current3 = emValue->m[0].current[2] / 1000.0;
+      double current1 = emValue->m[0].current[0] / 1000.0;
+      double current2 = emValue->m[0].current[1] / 1000.0;
+      double current3 = emValue->m[0].current[2] / 1000.0;
 
-        String currentStr1 = (current1 >= 100) ? String(current1, 0) : String(current1, 1);
-        String currentStr2 = (current2 >= 100) ? String(current2, 0) : String(current2, 1);
-        String currentStr3 = (current3 >= 100) ? String(current3, 0) : String(current3, 1);
-
-        displayUiThreeValues(display, state, x, y, currentStr1, currentStr2, currentStr3, "");
-      }
+      displayUiThreeValues(display, state, x, y, current1, current2, current3, "");
     }
   }
 }
-
 void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  auto channel = getChanelByChannelNumber(oled[state->currentFrame].chanelSensor);
+  TSuplaChannelExtendedValue* extValue;
+  TElectricityMeter_ExtendedValue_V2* emValue;
+  _supla_int_t flags;
 
-  if (channel) {
-    TSuplaChannelExtendedValue* extValue = channel->getExtValue();
-    if (extValue == nullptr)
-      return;
+  if (!readElectricityMeterValues(display, state, x, y, extValue, emValue, flags)) {
+    return;
+  }
 
-    TElectricityMeter_ExtendedValue_V2* emValue = reinterpret_cast<TElectricityMeter_ExtendedValue_V2*>(extValue->value);
-    if (emValue->m_count < 1 || emValue == nullptr)
-      return;
-
-    _supla_int_t flags = channel->getFlags();
-
-    if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
-      // Display single phase active power
-      double powerActive = emValue->m[0].power_active[0] / 100000.0;
-      displayUiGeneral(display, state, x, y, String(powerActive, 1), "W");
+  if (flags & (SUPLA_CHANNEL_FLAG_PHASE2_UNSUPPORTED | SUPLA_CHANNEL_FLAG_PHASE3_UNSUPPORTED)) {
+    double powerActive = emValue->m[0].power_active[0] / 100000.0;
+    displayUiGeneral(display, state, x, y, String(powerActive, 1), "W");
+  }
+  else {
+    if (display->getWidth() < 64) {
+      double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
+      displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
     }
     else {
-      if (display->getWidth() < 64) {
-        // Display summarized active power for three phases
-        double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
-        displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
-      }
-      else {
-        double powerActive1 = emValue->m[0].power_active[0] / 100000.0;
-        double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
-        double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
+      double powerActive1 = emValue->m[0].power_active[0] / 100000.0;
+      double powerActive2 = emValue->m[0].power_active[1] / 100000.0;
+      double powerActive3 = emValue->m[0].power_active[2] / 100000.0;
 
-        String powerActiveStr1 = (powerActive1 >= 100) ? String(powerActive1, 0) : String(powerActive1, 1);
-        String powerActiveStr2 = (powerActive2 >= 100) ? String(powerActive2, 0) : String(powerActive2, 1);
-        String powerActiveStr3 = (powerActive3 >= 100) ? String(powerActive3, 0) : String(powerActive3, 1);
-
-        displayUiThreeValues(display, state, x, y, powerActiveStr1, powerActiveStr2, powerActiveStr3, "");
-      }
+      displayUiThreeValues(display, state, x, y, powerActive1, powerActive2, powerActive3, "");
     }
   }
 }

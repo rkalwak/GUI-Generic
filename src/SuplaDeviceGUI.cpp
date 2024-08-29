@@ -30,7 +30,7 @@ void begin() {
   ver.reserve(16);
   SuplaDevice.setSwVersion(ver.c_str());
 #endif
-  
+
   SuplaDevice.begin();
 
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
@@ -652,6 +652,8 @@ void addImpulseCounter(uint8_t nr) {
 #endif
 
 #ifdef SUPLA_RGBW
+std::map<uint8_t, Supla::Control::GroupButtonControlRgbw *> buttonGroups;
+
 void addRGBWLeds(uint8_t nr) {
   int redPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_RED);
   int greenPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_GREEN);
@@ -663,60 +665,55 @@ void addRGBWLeds(uint8_t nr) {
   analogWriteFreq(400);
 #endif
 
-  if (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO && brightnessPin != OFF_GPIO) {
-    auto rgbw = new Supla::Control::RGBWLeds(redPin, greenPin, bluePin, brightnessPin);
-    setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-    setRGBWButton(nr, rgbw);
+  Supla::Control::RGBWBase *rgbw = nullptr;
 
-#ifdef SUPLA_CONDITIONS
-    Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-    Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-#endif
+  if (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO && brightnessPin != OFF_GPIO) {
+    rgbw = new Supla::Control::RGBWLeds(redPin, greenPin, bluePin, brightnessPin);
+    setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
   }
   else if (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO) {
-    auto rgbw = new Supla::Control::RGBLeds(redPin, greenPin, bluePin);
+    rgbw = new Supla::Control::RGBLeds(redPin, greenPin, bluePin);
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-    setRGBWButton(nr, rgbw);
-
-#ifdef SUPLA_CONDITIONS
-    Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-    Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-#endif
   }
   else if (brightnessPin != OFF_GPIO) {
-    auto rgbw = new Supla::Control::DimmerLeds(brightnessPin);
+    rgbw = new Supla::Control::DimmerLeds(brightnessPin);
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(brightnessPin));
-    setRGBWButton(nr, rgbw);
+  }
+
+  if (rgbw != nullptr) {
+    uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr);
+    int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
+    int pullupButton = ConfigESP->getPullUp(buttonPin);
+    int inversedButton = ConfigESP->getInversed(buttonPin);
+
+    Supla::Control::GroupButtonControlRgbw *buttonGroup = nullptr;
+
+    if (buttonGroups.find(nrButton) != buttonGroups.end()) {
+      buttonGroup = buttonGroups[nrButton];
+    }
+    else {
+      buttonGroup = new Supla::Control::GroupButtonControlRgbw;
+      buttonGroups[nrButton] = buttonGroup;
+    }
+
+    buttonGroup->addToGroup(rgbw);
+
+    if (buttonPin != OFF_GPIO) {
+      auto button = new Supla::Control::Button(buttonPin, pullupButton, inversedButton);
+      button->setMulticlickTime(300);
+      button->setHoldTime(400);
+      button->repeatOnHoldEvery(35);
+
+      buttonGroup->attach(button);
+
+#ifdef SUPLA_ACTION_TRIGGER
+      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(buttonPin), rgbw);
+#endif
+    }
 
 #ifdef SUPLA_CONDITIONS
     Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
     Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-#endif
-  }
-}
-
-void setRGBWButton(uint8_t nr, Supla::Control::RGBWBase *rgbw) {
-  uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr);
-  int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
-  int pullupButton = ConfigESP->getPullUp(buttonPin);
-  int inversedButton = ConfigESP->getInversed(buttonPin);
-
-  if (buttonPin != OFF_GPIO) {
-    auto button = Supla::Control::GUI::Button(buttonPin, pullupButton, inversedButton, nrButton);
-    button->setMulticlickTime(200);
-    button->setHoldTime(400);
-    button->repeatOnHoldEvery(35);
-
-    rgbw->setStep(1);
-    // rgbw->setMinMaxIterationDelay(750);  // delay between dimming direction
-    // change, 750 ms (default)
-    // rgbw->setMinIterationBrightness(1);  // 1 is default value
-
-    button->addAction(Supla::ITERATE_DIM_ALL, rgbw, Supla::ON_HOLD);
-    button->addAction(Supla::TOGGLE, rgbw, Supla::ON_CLICK_1);
-
-#ifdef SUPLA_ACTION_TRIGGER
-    addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(buttonPin), rgbw);
 #endif
   }
 }

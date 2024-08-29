@@ -128,6 +128,8 @@
 #include <supla/control/rgbw_leds.h>
 #include <supla/control/rgb_leds.h>
 #include <supla/control/dimmer_leds.h>
+#include <supla/control/group_button_control_rgbw.h>
+#include <map>
 #endif
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
@@ -329,7 +331,6 @@ void addImpulseCounter(uint8_t nr);
 
 #ifdef SUPLA_RGBW
 void addRGBWLeds(uint8_t nr);
-void setRGBWButton(uint8_t nr, Supla::Control::RGBWBase *rgbw);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 

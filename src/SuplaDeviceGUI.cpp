@@ -652,7 +652,12 @@ void addImpulseCounter(uint8_t nr) {
 #endif
 
 #ifdef SUPLA_RGBW
-std::map<uint8_t, Supla::Control::GroupButtonControlRgbw *> buttonGroups;
+struct RGBWButtonGroupManager {
+  std::map<uint8_t, Supla::Control::GroupButtonControlRgbw *> buttonGroups;
+  std::map<uint8_t, Supla::Control::Button *> buttonRGBW;
+};
+
+RGBWButtonGroupManager rgbwButtonManager;
 
 void addRGBWLeds(uint8_t nr) {
   int redPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_RED);
@@ -685,37 +690,50 @@ void addRGBWLeds(uint8_t nr) {
     int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
     int pullupButton = ConfigESP->getPullUp(buttonPin);
     int inversedButton = ConfigESP->getInversed(buttonPin);
+    int buttonEvent = ConfigESP->getEvent(buttonPin);
 
     Supla::Control::GroupButtonControlRgbw *buttonGroup = nullptr;
 
-    if (buttonGroups.find(nrButton) != buttonGroups.end()) {
-      buttonGroup = buttonGroups[nrButton];
+    if (rgbwButtonManager.buttonGroups.find(nrButton) != rgbwButtonManager.buttonGroups.end()) {
+      buttonGroup = rgbwButtonManager.buttonGroups[nrButton];
+
+      if (rgbwButtonManager.buttonRGBW.find(nrButton) != rgbwButtonManager.buttonRGBW.end()) {
+        buttonGroup->attach(rgbwButtonManager.buttonRGBW[nrButton]);
+      }
     }
     else {
       buttonGroup = new Supla::Control::GroupButtonControlRgbw;
-      buttonGroups[nrButton] = buttonGroup;
+      rgbwButtonManager.buttonGroups[nrButton] = buttonGroup;
+
+      if (buttonPin != OFF_GPIO) {
+        auto button = new Supla::Control::Button(buttonPin, pullupButton, inversedButton);
+
+        if (buttonEvent == Supla::Event::ON_CHANGE) {
+          button->setButtonType(Supla::Control::Button::ButtonType::BISTABLE);
+        }
+        else {
+          button->setButtonType(Supla::Control::Button::ButtonType::MONOSTABLE);
+        }
+
+        button->setMulticlickTime(300);
+        button->setHoldTime(400);
+        button->repeatOnHoldEvery(100);
+        buttonGroup->attach(button);
+        rgbwButtonManager.buttonRGBW[nrButton] = button;
+      }
     }
 
     buttonGroup->addToGroup(rgbw);
 
-    if (buttonPin != OFF_GPIO) {
-      auto button = new Supla::Control::Button(buttonPin, pullupButton, inversedButton);
-      button->setMulticlickTime(300);
-      button->setHoldTime(400);
-      button->repeatOnHoldEvery(35);
-
-      buttonGroup->attach(button);
-
 #ifdef SUPLA_ACTION_TRIGGER
-      addActionTriggerRelatedChannel(nr, button, ConfigESP->getEvent(buttonPin), rgbw);
-#endif
-    }
-
-#ifdef SUPLA_CONDITIONS
-    Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
-    Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
+    addActionTriggerRelatedChannel(nr, rgbwButtonManager.buttonRGBW[nrButton], buttonEvent, rgbw);
 #endif
   }
+
+#ifdef SUPLA_CONDITIONS
+  Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
+  Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
+#endif
 }
 
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory) {

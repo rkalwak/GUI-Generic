@@ -680,19 +680,20 @@ void addRGBWLeds(uint8_t nr) {
     rgbw = new Supla::Control::RGBWLeds(redPin, greenPin, bluePin, brightnessPin);
     buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_RGBW;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-  } 
+  }
   else if (hasRGB) {
     rgbw = new Supla::Control::RGBLeds(redPin, greenPin, bluePin);
     buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_RGB;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-  } 
+  }
   else if (hasBrightness) {
     rgbw = new Supla::Control::DimmerLeds(brightnessPin);
     buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_W;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(brightnessPin));
   }
 
-  if (!rgbw) return;
+  if (!rgbw)
+    return;
 
   uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr);
   int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
@@ -708,12 +709,12 @@ void addRGBWLeds(uint8_t nr) {
     if (rgbwButtonManager.buttonRGBW.find(nrButton) == rgbwButtonManager.buttonRGBW.end()) {
       auto button = new Supla::Control::Button(buttonPin, ConfigESP->getPullUp(buttonPin), ConfigESP->getInversed(buttonPin));
 
-      button->setButtonType(ConfigESP->getEvent(buttonPin) == Supla::Event::ON_CHANGE
-                           ? Supla::Control::Button::ButtonType::BISTABLE
-                           : Supla::Control::Button::ButtonType::MONOSTABLE);
-      button->setMulticlickTime(300);
+      button->setButtonType(ConfigESP->getEvent(buttonPin) == Supla::Event::ON_CHANGE ? Supla::Control::Button::ButtonType::BISTABLE
+                                                                                      : Supla::Control::Button::ButtonType::MONOSTABLE);
+      button->setMulticlickTime(200);
       button->setHoldTime(400);
-      button->repeatOnHoldEvery(100);
+      button->repeatOnHoldEvery(35);
+      rgbw->setStep(1);
 
       rgbwButtonManager.buttonRGBW[nrButton] = button;
       buttonGroup->attach(button);

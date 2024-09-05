@@ -18,6 +18,7 @@
 
 #include "board_mock.h"
 
+#include <supla/tools.h>
 #include <assert.h>
 #include <gmock/gmock.h>
 
@@ -38,9 +39,22 @@ void deviceSoftwareReset() {
   BoardInterface::instance->deviceSoftwareReset();
 }
 
+bool isDeviceSoftwareResetSupported() {
+  return true;
+}
+
 bool isLastResetSoft() {
   // TODO(klew): implement
   return false;
+}
+
+bool Supla::isLastResetPower() {
+  // TODO(klew): implement
+  return false;
+}
+
+int Supla::getPlatformId() {
+  return 43;
 }
 
 BoardMock::BoardMock() {}

@@ -10,8 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
+ * * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
@@ -25,6 +24,7 @@
 #include <supla/network/client.h>
 #include <supla/device/remote_device_config.h>
 #include <supla/device/register_device.h>
+#include <supla/device/channel_conflict_resolver.h>
 
 #include <string.h>
 
@@ -32,7 +32,7 @@
 
 namespace Supla::Protocol {
 struct CalCfgResultPendingItem {
-  uint8_t channelNo = 0;
+  int16_t channelNo = 0;
   int32_t receiverId = 0;
   int32_t command = 0;
 
@@ -137,7 +137,10 @@ bool Supla::Protocol::SuplaSrpc::onLoadConfig() {
         securityLevel = 0;
       }
 
-      SUPLA_LOG_DEBUG("Security level: %d", securityLevel);
+      SUPLA_LOG_DEBUG("Security level: %s",
+          securityLevel == 2 ? "Skip CA check" :
+          securityLevel == 1 ? "Custom CA" :
+          "Supla CA");
       switch (securityLevel) {
         default:
         case 0: {
@@ -254,6 +257,9 @@ void Supla::messageReceived(void *srpc,
       case SUPLA_SD_CALL_REGISTER_DEVICE_RESULT:
         suplaSrpc->onRegisterResult(rd.data.sd_register_device_result);
         break;
+      case SUPLA_SD_CALL_REGISTER_DEVICE_RESULT_B:
+        suplaSrpc->onRegisterResultB(rd.data.sd_register_device_result_b);
+        break;
       case SUPLA_SD_CALL_CHANNEL_SET_VALUE: {
         auto element = Supla::Element::getElementByChannelNumber(
             rd.data.sd_channel_new_value->ChannelNumber);
@@ -300,7 +306,7 @@ void Supla::messageReceived(void *srpc,
         result.DataSize = 0;
         SUPLA_LOG_DEBUG(
             "CALCFG CMD received: senderId %d, ch %d, cmd %d, suauth %d, "
-            "datatype %d, datasize %d, ",
+            "datatype %d, datasize %d",
             rd.data.sd_device_calcfg_request->SenderID,
             rd.data.sd_device_calcfg_request->ChannelNumber,
             rd.data.sd_device_calcfg_request->Command,
@@ -312,7 +318,12 @@ void Supla::messageReceived(void *srpc,
           // calcfg with channel == -1 are for whole device, so we route
           // it to SuplaDeviceClass instance
           result.Result = suplaSrpc->getSdc()->handleCalcfgFromServer(
-              rd.data.sd_device_calcfg_request);
+              rd.data.sd_device_calcfg_request, &result);
+          if (result.Command == SUPLA_CALCFG_CMD_START_SUBDEVICE_PAIRING &&
+              result.Result == SUPLA_CALCFG_RESULT_TRUE) {
+            suplaSrpc->calCfgResultPending.set(
+                result.ChannelNumber, result.ReceiverID, result.Command);
+          }
         } else {
           auto element = Supla::Element::getElementByChannelNumber(
               rd.data.sd_device_calcfg_request->ChannelNumber);
@@ -330,6 +341,9 @@ void Supla::messageReceived(void *srpc,
           }
         }
         if (result.Result >= 0) {
+          SUPLA_LOG_DEBUG("Sending CALCFG result: CMD %d result: %d",
+                          result.Command,
+                          result.Result);
           srpc_ds_async_device_calcfg_result(srpc, &result);
         }
         break;
@@ -462,7 +476,7 @@ void Supla::messageReceived(void *srpc,
         if (request) {
           auto element = Supla::Element::getElementByChannelNumber(
               request->ChannelNumber);
-          SUPLA_LOG_INFO("Received ChannelConfigFinished for channel %d",
+          SUPLA_LOG_INFO("Received ChannelConfigFinished for channel [%d]",
               request->ChannelNumber);
 
           if (element) {
@@ -476,11 +490,12 @@ void Supla::messageReceived(void *srpc,
         break;
       }
       case SUPLA_SCD_CALL_SET_CHANNEL_CAPTION_RESULT:
-        SUPLA_LOG_DEBUG("Receieved setChannelCaptionResult for %d",
+        SUPLA_LOG_DEBUG("Receieved setChannelCaptionResult for channel [%d]",
                         rd.data.scd_set_caption_result->ChannelNumber);
         break;
       default:
-        SUPLA_LOG_WARNING("Received unknown message from server!");
+        SUPLA_LOG_WARNING("Received unknown message from server! (call_id: %d)",
+                          rd.call_id);
         break;
     }
 
@@ -503,6 +518,66 @@ void Supla::Protocol::SuplaSrpc::onVersionError(
 
   lastIterateTime = millis();
   waitForIterate = 15000;
+}
+
+void Supla::Protocol::SuplaSrpc::onRegisterResultB(
+      TSD_SuplaRegisterDeviceResult_B *registerDeviceResultB) {
+  // Handle generic result code
+  auto regDevResult = reinterpret_cast<TSD_SuplaRegisterDeviceResult*>(
+      registerDeviceResultB);
+  onRegisterResult(regDevResult);
+
+  // Handle channel conflict report
+  SUPLA_LOG_DEBUG("onRegisterResultB: %d, report size: %d",
+                  regDevResult->result_code,
+                  registerDeviceResultB->channel_report_size);
+
+  // First, check types of conflicts reported by server
+  bool hasConflictInvalidType = false;
+  bool hasConflictChannelMissingOnServer = false;
+  bool hasConflictChannelMissingOnDevice = false;
+  if (registerDeviceResultB->channel_report_size <
+      Supla::RegisterDevice::getMaxChannelNumberUsed()) {
+    SUPLA_LOG_WARNING(
+        "RegisterResultB: conflict server report has %d entries, device has "
+        "channel with max number %d",
+        registerDeviceResultB->channel_report_size,
+        Supla::RegisterDevice::getMaxChannelNumberUsed());
+    hasConflictChannelMissingOnServer = true;
+  }
+  for (int i = 0; i < registerDeviceResultB->channel_report_size; i++) {
+    if (registerDeviceResultB->channel_report[i] == 0 &&
+        !Supla::RegisterDevice::isChannelNumberFree(i)) {
+      SUPLA_LOG_WARNING(
+          "Channel[%d]: is present on device, but missing on server side", i);
+      hasConflictChannelMissingOnServer = true;
+      continue;
+    }
+
+    if ((registerDeviceResultB->channel_report[i] &
+         CHANNEL_REPORT_CHANNEL_REGISTERED) &&
+        Supla::RegisterDevice::isChannelNumberFree(i)) {
+      SUPLA_LOG_ERROR(
+          "Channel[%d]: is registered on server side, but missing on device",
+          i);
+      hasConflictChannelMissingOnDevice = true;
+      continue;
+    }
+
+    if ((registerDeviceResultB->channel_report[i] &
+         CHANNEL_REPORT_INCORRECT_CHANNEL_TYPE)) {
+      SUPLA_LOG_WARNING("Channel[%d]: channel type mismatch", i);
+      hasConflictInvalidType = true;
+      continue;
+    }
+  }
+  if (channelConflictResolver) {
+    channelConflictResolver->onChannelConflictReport(
+        registerDeviceResultB->channel_report,
+        registerDeviceResultB->channel_report_size,
+        hasConflictInvalidType, hasConflictChannelMissingOnServer,
+        hasConflictChannelMissingOnDevice);
+  }
 }
 
 void Supla::Protocol::SuplaSrpc::onRegisterResult(
@@ -531,7 +606,7 @@ void Supla::Protocol::SuplaSrpc::onRegisterResult(
       sdc->status(STATUS_REGISTERED_AND_READY, F("Registered and ready"));
 
       if (serverActivityTimeout != activityTimeoutS) {
-        SUPLA_LOG_DEBUG("Changing activity timeout to %d", activityTimeoutS);
+        SUPLA_LOG_DEBUG("Changing activity timeout to %d s", activityTimeoutS);
         TDCS_SuplaSetActivityTimeout at;
         at.activity_timeout = activityTimeoutS;
         srpc_dcs_async_set_activity_timeout(srpc, &at);
@@ -744,10 +819,20 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
     // Perform registration if we are not yet registered
     registered = -1;
     sdc->status(STATUS_REGISTER_IN_PROGRESS, F("Register in progress"));
-    if (!srpc_ds_async_registerdevice_in_chunks(
-            srpc, Supla::RegisterDevice::getRegDevHeaderPtr(),
-            Supla::RegisterDevice::getChannelPtr)) {
-      SUPLA_LOG_WARNING("Fatal SRPC failure!");
+    if (version <= 24) {
+      if (!srpc_ds_async_registerdevice_in_chunks(
+              srpc,
+              Supla::RegisterDevice::getRegDevHeaderPtr(),
+              Supla::RegisterDevice::getChannelPtr_D)) {
+        SUPLA_LOG_WARNING("Fatal SRPC failure!");
+      }
+    } else {
+      if (!srpc_ds_async_registerdevice_in_chunks_g(
+              srpc,
+              Supla::RegisterDevice::getRegDevHeaderPtr(),
+              Supla::RegisterDevice::getChannelPtr_E)) {
+        SUPLA_LOG_WARNING("Fatal SRPC failure!");
+      }
     }
     return false;
   } else if (registered == -1) {
@@ -1170,6 +1255,17 @@ void Supla::Protocol::SuplaSrpc::sendRegisterNotification(
   }
 }
 
+void Supla::Protocol::SuplaSrpc::sendSubdeviceDetails(
+    TDS_SubdeviceDetails *subdeviceDetails) {
+  if (!isRegisteredAndReady() || subdeviceDetails == nullptr) {
+    return;
+  }
+  int result = srpc_ds_async_set_subdevice_details(srpc, subdeviceDetails);
+  if (result == 0) {
+    SUPLA_LOG_WARNING("Sending subdevice details failed");
+  }
+}
+
 void Supla::Protocol::SuplaSrpc::sendRemainingTimeValue(uint8_t channelNumber,
                                            uint32_t timeMs,
                                            uint8_t state,
@@ -1190,7 +1286,7 @@ void Supla::Protocol::SuplaSrpc::sendRemainingTimeValue(uint8_t channelNumber,
   timerState->TargetValue[0] = state;
   timerState->RemainingTimeMs = timeMs;
 
-  SUPLA_LOG_DEBUG("SRPC sedning: remaining time %d, channel %d, state %d",
+  SUPLA_LOG_DEBUG("SRPC sending: remaining time %d, channel %d, state %d",
                   timeMs, channelNumber, state);
   srpc_ds_async_channel_extendedvalue_changed(srpc, channelNumber, value);
   delete value;
@@ -1226,7 +1322,7 @@ void Supla::Protocol::SuplaSrpc::sendRemainingTimeValue(
     timerState->RemainingTimeS = remainingTime;
   }
 
-  SUPLA_LOG_DEBUG("SRPC sedning: remaining time %d %s, channel %d",
+  SUPLA_LOG_DEBUG("SRPC sending: remaining time %d %s, channel %d",
                   remainingTime,
                   useSecondsInsteadOfMs ? "s" : "ms",
                   channelNumber);
@@ -1234,7 +1330,7 @@ void Supla::Protocol::SuplaSrpc::sendRemainingTimeValue(
   delete value;
 }
 
-void Supla::Protocol::CalCfgResultPending::set(uint8_t channelNo,
+void Supla::Protocol::CalCfgResultPending::set(int16_t channelNo,
                                                int32_t receiverId,
                                                int32_t command) {
   auto ptr = first;
@@ -1261,7 +1357,7 @@ void Supla::Protocol::CalCfgResultPending::set(uint8_t channelNo,
   }
 }
 
-void Supla::Protocol::CalCfgResultPending::clear(uint8_t channelNo) {
+void Supla::Protocol::CalCfgResultPending::clear(int16_t channelNo) {
   auto ptr = first;
   CalCfgResultPendingItem *prev = nullptr;
   while (ptr) {
@@ -1291,7 +1387,7 @@ Supla::Protocol::CalCfgResultPending::~CalCfgResultPending() {
 }
 
 Supla::Protocol::CalCfgResultPendingItem *
-Supla::Protocol::CalCfgResultPending::get(uint8_t channelNo) {
+Supla::Protocol::CalCfgResultPending::get(int16_t channelNo) {
   auto ptr = first;
   while (ptr) {
     if (ptr->channelNo == channelNo) {
@@ -1302,7 +1398,7 @@ Supla::Protocol::CalCfgResultPending::get(uint8_t channelNo) {
   return nullptr;
 }
 
-void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(uint8_t channelNo,
+void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(int16_t channelNo,
                                                          int32_t resultId,
                                                          int32_t command,
                                                          int dataSize,
@@ -1328,7 +1424,13 @@ void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(uint8_t channelNo,
     dataSize = SUPLA_CALCFG_DATA_MAXSIZE;
   }
   memcpy(result.Data, data, dataSize);
+  SUPLA_LOG_DEBUG("Sending CALCFG result: CMD %d result: %d", result.Command,
+                  result.Result);
   srpc_ds_async_device_calcfg_result(srpc, &result);
+}
+
+void Supla::Protocol::SuplaSrpc::clearPendingCalCfgResult(int16_t channelNo) {
+  calCfgResultPending.clear(channelNo);
 }
 
 void Supla::Protocol::SuplaSrpc::initializeSrpc() {
@@ -1336,7 +1438,7 @@ void Supla::Protocol::SuplaSrpc::initializeSrpc() {
     deinitializeSrpc();
   }
 
-  SUPLA_LOG_INFO("Initializing SRPC");
+  SUPLA_LOG_INFO("Initializing SRPC (proto: %d)", version);
   TsrpcParams srpcParams;
   srpc_params_init(&srpcParams);
   srpcParams.data_read = &Supla::dataRead;
@@ -1359,3 +1461,7 @@ void Supla::Protocol::SuplaSrpc::deinitializeSrpc() {
   setDeviceConfigReceivedAfterRegistration = false;
 }
 
+void Supla::Protocol::SuplaSrpc::setChannelConflictResolver(
+    Supla::Device::ChannelConflictResolver *resolver) {
+  channelConflictResolver = resolver;
+}

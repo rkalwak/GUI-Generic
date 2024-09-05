@@ -63,6 +63,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/network/html/device_info.cpp
   src/supla/network/html/protocol_parameters.cpp
   src/supla/network/html/status_led_parameters.cpp
+  src/supla/network/html/power_status_led_parameters.cpp
   src/supla/network/html/wifi_parameters.cpp
   src/supla/network/html/ethernet_parameters.cpp
   src/supla/network/html/sw_update_beta.cpp
@@ -82,6 +83,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/network/html/screen_delay_parameters.cpp
   src/supla/network/html/screen_delay_type_parameters.cpp
   src/supla/network/html/screen_brightness_parameters.cpp
+  src/supla/network/html/home_screen_content.cpp
   src/supla/network/html/disable_user_interface_parameter.cpp
   src/supla/network/html/h2_tag.cpp
   src/supla/network/html/h3_tag.cpp
@@ -131,6 +133,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/sensor/hygro_meter.cpp
   src/supla/sensor/impulse_counter.cpp
   src/supla/sensor/virtual_impulse_counter.cpp
+  src/supla/sensor/ocr_impulse_counter.cpp
   src/supla/sensor/therm_hygro_meter.cpp
   src/supla/sensor/therm_hygro_press_meter.cpp
   src/supla/sensor/thermometer.cpp
@@ -143,6 +146,7 @@ set(SUPLA_DEVICE_SRCS
   src/supla/sensor/ntc10k.cpp
   src/supla/sensor/weight.cpp
   src/supla/sensor/distance.cpp
+  src/supla/sensor/temperature_drop_sensor.cpp
 )
 
 set(NETTLE_SRCS

@@ -122,8 +122,6 @@ bool Channel::setChannelNumber(int newChannelNumber) {
     return true;
   }
   if (!Supla::RegisterDevice::isChannelNumberFree(newChannelNumber)) {
-    SUPLA_LOG_INFO("Channel with number %d already exists, swapping...",
-                   newChannelNumber);
     channelNumber = -1;
     auto conflictChannel = GetByChannelNumber(newChannelNumber);
     if (conflictChannel) {
@@ -132,7 +130,6 @@ bool Channel::setChannelNumber(int newChannelNumber) {
   }
 
   channelNumber = newChannelNumber;
-  SUPLA_LOG_INFO("Channel %d moved to %d", oldChannelNumber, newChannelNumber);
   return true;
 }
 
@@ -209,7 +206,7 @@ void Channel::setNewValue(double temp, double humi) {
     runAction(ON_CHANGE);
     runAction(ON_SECONDARY_CHANNEL_CHANGE);
     SUPLA_LOG_DEBUG(
-        "Channel(%d) value changed to temp(%f), humi(%f)",
+        "Channel(%d) value changed to temp(%.2f), humi(%.2f)",
         channelNumber,
         temp,
         humi);
@@ -682,8 +679,13 @@ bool Channel::isBridgeSignalStrengthAvailable() const {
   return bridgeSignalStrength <= 100;
 }
 
-void Channel::setHvacIsOn(uint8_t isOn) {
+void Channel::setHvacIsOn(int8_t isOn) {
+  // channel isOn has range 0..100. However internally negative isOn values
+  // are used for cooling indication. Here we convert it to 0..100 range
   auto value = getValueHvac();
+  if (isOn < 0) {
+    isOn = -isOn;
+  }
   if (value != nullptr && value->IsOn != isOn) {
     if (value->IsOn == 0 && isOn != 0) {
       runAction(Supla::ON_TURN_ON);
@@ -965,6 +967,20 @@ void Channel::setHvacFlagWeeklyScheduleTemporalOverride(bool value) {
   }
 }
 
+void Channel::clearHvacState() {
+  clearHvacSetpointTemperatureCool();
+  clearHvacSetpointTemperatureHeat();
+  setHvacMode(SUPLA_HVAC_MODE_OFF);
+  setHvacFlagWeeklySchedule(false);
+  setHvacFlagHeating(false);
+  setHvacFlagCooling(false);
+  setHvacIsOn(0);
+  setHvacFlagFanEnabled(false);
+  setHvacFlagThermometerError(false);
+  setHvacFlagClockError(false);
+  setHvacFlagCountdownTimer(false);
+}
+
 bool Channel::isHvacFlagSetpointTemperatureCoolSet() {
   return isHvacFlagSetpointTemperatureCoolSet(getValueHvac());
 }
@@ -1170,6 +1186,7 @@ uint16_t Channel::getHvacFlags() {
 
 void Channel::setOffline() {
   if (offline == false) {
+    SUPLA_LOG_DEBUG("Channel[%d] go offline", channelNumber);
     offline = true;
     setUpdateReady();
   }
@@ -1177,6 +1194,7 @@ void Channel::setOffline() {
 
 void Channel::setOnline() {
   if (offline == true) {
+    SUPLA_LOG_DEBUG("Channel[%d] go online", channelNumber);
     offline = false;
     setUpdateReady();
   }
@@ -1260,6 +1278,50 @@ void Channel::fillDeviceChannelStruct(
       static_cast<uint8_t>(value[7]));
 }
 
+void Channel::fillDeviceChannelStruct(
+    TDS_SuplaDeviceChannel_E *deviceChannelStruct) {
+  if (deviceChannelStruct == nullptr) {
+    return;
+  }
+  // this method is called during register device message preparation, so
+  // we clear update ready flag in order to not send the same values again
+  // after registration
+  clearUpdateReady();
+  memset(deviceChannelStruct, 0, sizeof(TDS_SuplaDeviceChannel_E));
+
+  deviceChannelStruct->Number = getChannelNumber();
+  deviceChannelStruct->Type = getChannelType();
+  deviceChannelStruct->FuncList = getFuncList();  // also sets ActionTriggerCaps
+  deviceChannelStruct->Default = getDefaultFunction();
+  deviceChannelStruct->Flags = getFlags();
+  deviceChannelStruct->Offline = offline;
+  deviceChannelStruct->ValueValidityTimeSec = validityTimeSec;
+  deviceChannelStruct->DefaultIcon = getDefaultIcon();
+  deviceChannelStruct->SubDeviceId = getSubDeviceId();
+  memcpy(deviceChannelStruct->value, value, SUPLA_CHANNELVALUE_SIZE);
+  SUPLA_LOG_VERBOSE(
+      "CH[%i], subDevId: %d, type: %d, FuncList: 0x%X, function: %d, flags: "
+      "0x%llX, %s, validityTimeSec: %d, icon: %d, value: "
+      "[%02x %02x %02x %02x %02x %02x %02x %02x]",
+      getChannelNumber(),
+      getSubDeviceId(),
+      getChannelType(),
+      getFuncList(),
+      getDefaultFunction(),
+      getFlags(),
+      offline ? "offline" : "online",
+      validityTimeSec,
+      getDefaultIcon(),
+      static_cast<uint8_t>(value[0]),
+      static_cast<uint8_t>(value[1]),
+      static_cast<uint8_t>(value[2]),
+      static_cast<uint8_t>(value[3]),
+      static_cast<uint8_t>(value[4]),
+      static_cast<uint8_t>(value[5]),
+      static_cast<uint8_t>(value[6]),
+      static_cast<uint8_t>(value[7]));
+}
+
 void Channel::fillRawValue(void *valueToFill) {
   if (valueToFill == nullptr) {
     return;
@@ -1298,4 +1360,34 @@ bool Channel::isFunctionValid(int32_t function) const {
       return true;
     }
   }
+}
+
+void Channel::setSubDeviceId(uint8_t subDeviceId) {
+  this->subDeviceId = subDeviceId;
+}
+
+uint8_t Channel::getSubDeviceId() const {
+  return subDeviceId;
+}
+
+bool Channel::isHvacValueValid(THVACValue *hvacValue) {
+  if (hvacValue == nullptr) {
+    return false;
+  }
+  if (hvacValue->IsOn > 102) {
+    return false;
+  }
+  // last supported mode:
+  if (hvacValue->Mode > SUPLA_HVAC_MODE_CMD_SWITCH_TO_MANUAL) {
+    return false;
+  }
+  if (hvacValue->Flags > (1ULL << 12)) {
+    return false;
+  }
+  if (hvacValue->Flags & SUPLA_HVAC_VALUE_FLAG_COOLING &&
+      hvacValue->Flags & SUPLA_HVAC_VALUE_FLAG_HEATING) {
+    return false;
+  }
+
+  return true;
 }

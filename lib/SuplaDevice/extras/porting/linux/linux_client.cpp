@@ -70,8 +70,14 @@ int Supla::LinuxClient::connectImp(const char *server, uint16_t port) {
       continue;
     }
 
-    flagsCopy = fcntl(connectionFd, F_GETFL, 0);
-    fcntl(connectionFd, F_SETFL, O_NONBLOCK);
+    flagsCopy = ::fcntl(connectionFd, F_GETFL, 0);
+    struct timeval timeout = {};
+    timeout.tv_sec = 10;
+    ::setsockopt(
+        connectionFd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    ::setsockopt(
+        connectionFd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+    ::fcntl(connectionFd, F_SETFL, O_NONBLOCK);
     if (::connect(connectionFd, addr->ai_addr, addr->ai_addrlen) == 0) {
       break;
     }
@@ -84,10 +90,11 @@ int Supla::LinuxClient::connectImp(const char *server, uint16_t port) {
       pfd.fd = connectionFd;
       pfd.events = POLLOUT;
 
-      int result = poll(&pfd, 1, timeoutMs);
+      int result = ::poll(&pfd, 1, timeoutMs);
       if (result > 0) {
         socklen_t len = sizeof(err);
-        int retval = getsockopt(connectionFd, SOL_SOCKET, SO_ERROR, &err, &len);
+        int retval =
+            ::getsockopt(connectionFd, SOL_SOCKET, SO_ERROR, &err, &len);
 
         if (retval == 0 && err == 0) {
           isConnected = true;
@@ -95,11 +102,13 @@ int Supla::LinuxClient::connectImp(const char *server, uint16_t port) {
       }
     }
 
+    fcntl(connectionFd, F_SETFL, flagsCopy);
+
     if (isConnected) {
       break;
     }
     srcIp = 0;
-    close(connectionFd);
+    ::close(connectionFd);
     connectionFd = -1;
   }
 
@@ -111,7 +120,6 @@ int Supla::LinuxClient::connectImp(const char *server, uint16_t port) {
     return 0;
   }
 
-  fcntl(connectionFd, F_SETFL, flagsCopy);
 
   if (sslEnabled) {
     if (ctx == nullptr) {
@@ -161,7 +169,7 @@ int Supla::LinuxClient::connectImp(const char *server, uint16_t port) {
     ipArr[i] = (srcIp >> (i * 8)) & 0xFF;
   }
 
-  SUPLA_LOG_INFO("Connected via IP %d.%d.%d.%d", ipArr[0], ipArr[1],
+  SUPLA_LOG_DEBUG("Connected via IP %d.%d.%d.%d", ipArr[0], ipArr[1],
       ipArr[2], ipArr[3]);
 
   return 1;

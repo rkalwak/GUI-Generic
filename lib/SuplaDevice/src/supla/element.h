@@ -95,7 +95,7 @@ class Element {
   //  -1 - don't send reply to server
   //  0 - success==false
   //  1 - success==true
-  virtual int handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue);
+  virtual int32_t handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue);
 
   virtual void fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value);
 
@@ -118,7 +118,10 @@ class Element {
 
   virtual void handleChannelConfigFinished();
 
-  int getChannelNumber();
+  int getChannelNumber() const;
+  int getSecondaryChannelNumber() const;
+  virtual const Channel *getChannel() const;
+  virtual const Channel *getSecondaryChannel() const;
   virtual Channel *getChannel();
   virtual Channel *getSecondaryChannel();
 

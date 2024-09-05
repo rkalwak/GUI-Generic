@@ -124,8 +124,13 @@ void RGBWBase::setRGBW(int red,
   this->instant = instant;
   resetDisance = true;
 
-  SUPLA_LOG_DEBUG("RGBW: %d,%d,%d,%d,%d", curRed, curGreen, curBlue,
-                  curColorBrightness, curBrightness);
+  SUPLA_LOG_DEBUG("RGBWBase[%d]: %d,%d,%d,%d,%d",
+                  getChannelNumber(),
+                  curRed,
+                  curGreen,
+                  curBlue,
+                  curColorBrightness,
+                  curBrightness);
 
   // Schedule save in 5 s after state change
   Supla::Storage::ScheduleSave(5000);
@@ -140,7 +145,7 @@ void RGBWBase::iterateAlways() {
   }
 }
 
-int RGBWBase::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
+int32_t RGBWBase::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
   uint8_t command = static_cast<uint8_t>(newValue->value[6]);
   uint8_t toggleOnOff = static_cast<uint8_t>(newValue->value[5]);
   uint8_t red = static_cast<uint8_t>(newValue->value[4]);
@@ -150,8 +155,9 @@ int RGBWBase::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
   uint8_t brightness = static_cast<uint8_t>(newValue->value[0]);
 
   SUPLA_LOG_DEBUG(
-      "RGBW: red=%d, green=%d, blue=%d, colorBrightness=%d, "
+      "RGBWBase[%d]: red=%d, green=%d, blue=%d, colorBrightness=%d, "
       "brightness=%d, command=%d, toggleOnOff=%d",
+      getChannelNumber(),
       red,
       green,
       blue,
@@ -990,7 +996,7 @@ void RGBWBase::onLoadConfig(SuplaDeviceClass *sdc) {
         key, getChannel()->getChannelNumber(), Supla::Html::RgbwButtonTag);
     int32_t rgbwButtonControlType = 0;
     // try to read RGBW button control type from channel specific parameter
-    // and if it is missgin, read gloal value setting
+    // and if it is missing, read global value setting
     if (!cfg->getInt32(key, &rgbwButtonControlType)) {
       cfg->getInt32(Supla::Html::RgbwButtonTag, &rgbwButtonControlType);
     }
@@ -1013,8 +1019,13 @@ void RGBWBase::fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value) {
   value->value[2] = curBlue;
   value->value[3] = curGreen;
   value->value[4] = curRed;
-  SUPLA_LOG_DEBUG("RGBW fill: %d,%d,%d,%d,%d", curRed, curGreen, curBlue,
-                  curColorBrightness, curBrightness);
+  SUPLA_LOG_DEBUG("RGBWBase[%d] fill: %d,%d,%d,%d,%d",
+                  getChannelNumber(),
+                  curRed,
+                  curGreen,
+                  curBlue,
+                  curColorBrightness,
+                  curBrightness);
 }
 
 int RGBWBase::getCurrentDimmerBrightness() const {

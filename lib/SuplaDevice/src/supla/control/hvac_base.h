@@ -53,7 +53,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void iterateAlways() override;
   bool iterateConnected() override;
 
-  int handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) override;
+  int32_t handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) override;
   uint8_t handleChannelConfig(TSD_ChannelConfig *config,
                               bool local = false) override;
   uint8_t handleWeeklySchedule(TSD_ChannelConfig *newWeeklySchedule,
@@ -65,8 +65,6 @@ class HvacBase : public ChannelElement, public ActionHandler {
 
   void handleAction(int event, int action) override;
 
-  // 0 = off, >= 1 enable heating, <= -1 enable cooling
-  void setOutput(int value, bool force = false);
   void setTargetMode(int mode, bool keepSchedule = false);
   void clearTemperatureSetpointHeat();
   void clearTemperatureSetpointCool();
@@ -91,6 +89,8 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void setDrySupported(bool supported);
 
   void addAvailableAlgorithm(unsigned _supla_int16_t algorithm);
+  void removeAvailableAlgorithm(unsigned _supla_int16_t algorithm);
+  bool isOutputControlledInternally() const;
   // use this function to set value based on local config change
   bool setUsedAlgorithm(unsigned _supla_int16_t newAlgorithm);
   unsigned _supla_int16_t getUsedAlgorithm() const;
@@ -121,6 +121,10 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void setTemperatureSetpointChangeSwitchesToManualMode(bool enabled);
   bool isTemperatureSetpointChangeSwitchesToManualMode() const;
 
+  // only for HEAT_COOL thremostats:
+  void setUseSeparateHeatCoolOutputs(bool enabled);
+  bool isUseSeparateHeatCoolOutputs() const;
+
   // use this function to set value based on local config change
   bool setMinOnTimeS(uint16_t seconds);
   uint16_t getMinOnTimeS() const;
@@ -134,9 +138,9 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool setOutputValueOnError(signed char value);
   signed char getOutputValueOnError() const;
 
-  void setDefaultTemperatureRoomMin(int channelFunction,
+  void setDefaultTemperatureRoomMin(int32_t channelFunction,
                                     _supla_int16_t temperature);
-  void setDefaultTemperatureRoomMax(int channelFunction,
+  void setDefaultTemperatureRoomMax(int32_t channelFunction,
                                     _supla_int16_t temperature);
   _supla_int16_t getDefaultTemperatureRoomMin() const;
   _supla_int16_t getDefaultTemperatureRoomMax() const;
@@ -260,7 +264,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   static void clearTemperatureInStruct(THVACTemperatureCfg *temperatures,
                               unsigned _supla_int_t index);
 
-  static int getArrayIndex(int bitIndex);
+  static int32_t getArrayIndex(int32_t bitIndex);
 
   bool isTemperatureInRoomConstrain(_supla_int16_t temperature) const;
   bool isTemperatureInAuxConstrain(_supla_int16_t temperature) const;
@@ -338,7 +342,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void copyFullChannelConfigTo(TChannelConfig_HVAC *hvac) const;
   void turnOn();
   bool turnOnWeeklySchedlue();
-  void changeFunction(int newFunction, bool changedLocally);
+  void changeFunction(int32_t newFunction, bool changedLocally);
   _supla_int_t getChannelFunction();
 
   void addPrimaryOutput(Supla::Control::OutputInterface *output);
@@ -364,6 +368,10 @@ class HvacBase : public ChannelElement, public ActionHandler {
   uint8_t getBinarySensorChannelNo() const;
 
   static void debugPrintConfigStruct(const TChannelConfig_HVAC *config, int id);
+  static void debugPrintConfigDiff(const TChannelConfig_HVAC *configCurrent,
+                                   const TChannelConfig_HVAC *configNew,
+                                   int id);
+  static const char* temperatureName(int32_t index);
   static void debugPrintProgram(const TWeeklyScheduleProgram *program, int id);
 
   _supla_int16_t getPrimaryTemp();
@@ -379,6 +387,19 @@ class HvacBase : public ChannelElement, public ActionHandler {
   // returns Linux timestamp in seconds when current countdown timer will end.
   // It return 1 if countdown timer is not set
   time_t getCountDownTimerEnds() const;
+  int32_t getRemainingCountDownTimeSec() const;
+  void stopCountDownTimer();
+
+  HvacParameterFlags parameterFlags = {};
+
+ protected:
+  // 0 = off, >= 1 enable heating, <= -1 enable cooling
+  void setOutput(int value, bool force = false);
+  void updateChannelState();
+  // Implement this method to apply additional validations and corrections
+  // to HVAC configuration. Return true when correction was done and it will
+  // be shared with server.
+  virtual bool applyAdditionalValidation(TChannelConfig_HVAC *hvacConfig);
 
  private:
   _supla_int16_t getTemperature(int channelNo);
@@ -390,7 +411,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
   bool checkAuxProtection(_supla_int16_t t);
   bool isAuxProtectionEnabled() const;
   bool processWeeklySchedule();
-  void setSetpointTemperaturesForCurrentMode(int tHeat, int tCool);
+  void setSetpointTemperaturesForCurrentMode(int16_t tHeat, int16_t tCool);
   bool checkThermometersStatusForCurrentMode(_supla_int16_t t1,
                                              _supla_int16_t t2) const;
   int evaluateHeatOutputValue(_supla_int16_t tMeasured,
@@ -401,49 +422,61 @@ class HvacBase : public ChannelElement, public ActionHandler {
   void clearLastOutputValue();
   void storeLastWorkingMode();
   void applyConfigWithoutValidation(TChannelConfig_HVAC *hvacConfig);
-  int channelFunctionToIndex(int channelFunction) const;
+  int32_t channelFunctionToIndex(int32_t channelFunction) const;
   void changeTemperatureSetpointsBy(int16_t tHeat, int16_t tCool);
   void updateTimerValue();
+  bool fixReadonlyParameters(TChannelConfig_HVAC *hvacConfig);
+  bool fixReadonlyTemperature(int32_t temperatureIndex,
+                              THVACTemperatureCfg *newTemp);
 
   TChannelConfig_HVAC config = {};
   TChannelConfig_HVAC *initialConfig = nullptr;
-  TChannelConfig_WeeklySchedule weeklySchedule = {};
-  TChannelConfig_WeeklySchedule altWeeklySchedule = {};
-  bool isWeeklyScheduleConfigured = false;
-  uint8_t channelConfigChangedOffline = 0;
-  uint8_t weeklyScheduleChangedOffline = 0;
-  bool configFinishedReceived = true;
-  bool defaultConfigReceived = false;
-  bool weeklyScheduleReceived = false;
-  bool altWeeklyScheduleReceived = false;
-  bool initDone = false;
   // primaryOutput can be used for heating or cooling (cooling is supported
   // when secondaryOutput is not used, in such case "AUTO" mode is not
   // available)
   Supla::Control::OutputInterface *primaryOutput = nullptr;
   // secondaryOutput can be used only for cooling
   Supla::Control::OutputInterface *secondaryOutput = nullptr;
+
+  TChannelConfig_WeeklySchedule weeklySchedule = {};
+  TChannelConfig_WeeklySchedule altWeeklySchedule = {};
+
   THVACValue lastWorkingMode = {};
-  int16_t lastManualSetpointHeat = INT16_MIN;
-  int16_t lastManualSetpointCool = INT16_MIN;
+
+  bool isWeeklyScheduleConfigured = false;
+  bool configFinishedReceived = true;
+  bool defaultConfigReceived = false;
+  bool weeklyScheduleReceived = false;
+  bool altWeeklyScheduleReceived = false;
+  bool initDone = false;
+  bool serverChannelFunctionValid = true;
+  bool wrapAroundTemperatureSetpoints = false;
+
+  uint8_t channelConfigChangedOffline = 0;
+  uint8_t weeklyScheduleChangedOffline = 0;
   uint8_t lastManualMode = 0;
   uint8_t previousSubfunction = 0;
   uint8_t defaultSubfunction = 0;
-
   uint8_t defaultMainThermometer = 0;
   uint8_t defaultAuxThermometer = 0;
   uint8_t defaultBinarySensor = 0;
 
-  time_t countdownTimerEnds = 1;
+  int8_t lastProgramManualOverride = -1;
+  int8_t lastValue = -111;  // set out of output value range
+
+  int16_t lastManualSetpointHeat = INT16_MIN;
+  int16_t lastManualSetpointCool = INT16_MIN;
+  int16_t lastTemperature = 0;
+  int16_t buttonTemperatureStep = 50;  // 0.5 degrees
+
   uint32_t lastConfigChangeTimestampMs = 0;
   uint32_t lastIterateTimestampMs = 0;
   uint32_t lastOutputStateChangeTimestampMs = 0;
-  int lastValue = -1000;  // set out of output value range
-  _supla_int16_t lastTemperature = 0;
-  int lastProgramManualOverride = -1;
-  int16_t buttonTemperatureStep = 50;  // 0.5 degrees
+  uint32_t timerUpdateTimestamp = 0;
 
-  _supla_int16_t defaultTemperatureRoomMin[6] = {
+  time_t countdownTimerEnds = 1;
+
+  int16_t defaultTemperatureRoomMin[6] = {
       500,  // default min temperature for all other functions or when value is
              // set to INT16_MIN
       500,  // HVAC_THERMOSTAT (heat or cool)
@@ -451,7 +484,7 @@ class HvacBase : public ChannelElement, public ActionHandler {
       -5000,  // DIFFERENTIAL
       1000,   // DOMESTIC_HOT_WATER
   };
-  _supla_int16_t defaultTemperatureRoomMax[6] = {
+  int16_t defaultTemperatureRoomMax[6] = {
       4000,  // default max temperature for all other functions or when value is
              // set to INT16_MIN
       4000,  // HVAC_THERMOSTAT (heat or cool)
@@ -459,10 +492,6 @@ class HvacBase : public ChannelElement, public ActionHandler {
       5000,  // DIFFERENTIAL
       7500,   // DOMESTIC_HOT_WATER
   };
-
-  uint32_t timerUpdateTimestamp = 0;
-  bool serverChannelFunctionValid = true;
-  bool wrapAroundTemperatureSetpoints = false;
 };
 
 }  // namespace Control

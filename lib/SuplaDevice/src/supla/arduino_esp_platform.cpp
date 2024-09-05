@@ -122,7 +122,7 @@ class ArduinoEspClient : public Client {
         ipArr[i] = (srcIp >> (i * 8)) & 0xFF;
       }
 
-      SUPLA_LOG_INFO("Connected via IP %d.%d.%d.%d", ipArr[0], ipArr[1],
+      SUPLA_LOG_DEBUG("Connected via IP %d.%d.%d.%d", ipArr[0], ipArr[1],
           ipArr[2], ipArr[3]);
     }
     if (clientSec) {
@@ -184,9 +184,30 @@ void deviceSoftwareReset() {
   ESP.restart();
 }
 
+bool isDeviceSoftwareResetSupported() {
+  return true;
+}
+
 bool isLastResetSoft() {
-  // TODO(klew): implement
+#ifdef ARDUINO_ARCH_ESP8266
+  rst_info *resetInfo = ESP.getResetInfoPtr();
+  return resetInfo->reason == REASON_SOFT_RESTART;
+#elif defined(ARDUINO_ARCH_ESP32)
+  return esp_reset_reason() == ESP_RST_SW;
+#else
   return false;
+#endif
+}
+
+bool Supla::isLastResetPower() {
+#ifdef ARDUINO_ARCH_ESP8266
+  rst_info *resetInfo = ESP.getResetInfoPtr();
+  return resetInfo->reason == REASON_DEFAULT_RST;
+#elif defined(ARDUINO_ARCH_ESP32)
+  return esp_reset_reason() == ESP_RST_POWERON;
+#else
+  return false;
+#endif
 }
 
 Supla::Client *Supla::ClientBuilder() {

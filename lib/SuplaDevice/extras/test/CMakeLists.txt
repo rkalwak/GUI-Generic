@@ -63,6 +63,7 @@ file(GLOB TEST_SRC
   NotifTests/*.cpp
   RelayTests/*.cpp
   GpmTests/*.cpp
+  ../../src/supla-common/proto_check.cpp
   )
 
 file(GLOB DOUBLE_SRC doubles/*.cpp)
@@ -79,5 +80,5 @@ target_link_libraries(supladevicetests
 add_test(NAME supladevicetests
   COMMAND supladevicetests)
 
-target_compile_options(supladevicelib PRIVATE -Werror -Wall -Wextra -DSUPLA_TEST)
-target_compile_options(supladevicetests PRIVATE -DSUPLA_TEST)
+target_compile_options(supladevicelib PRIVATE -Werror -Wall -Wextra -DSUPLA_TEST -DSUPLA_DEVICE)
+target_compile_options(supladevicetests PRIVATE -DSUPLA_TEST -DSUPLA_DEVICE)

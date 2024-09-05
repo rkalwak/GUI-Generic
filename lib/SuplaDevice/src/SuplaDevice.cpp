@@ -39,6 +39,7 @@
 #include <supla/device/register_device.h>
 #include <supla/mutex.h>
 #include <supla/auto_lock.h>
+#include <supla/device/subdevice_pairing_handler.h>
 
 #ifndef ARDUINO
 #ifndef F
@@ -150,13 +151,19 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
   }
   initializationDone = true;
 
-  SUPLA_LOG_DEBUG("Supla - starting initialization");
+  SUPLA_LOG_DEBUG("Supla - starting initialization (platform %d)",
+                  Supla::getPlatformId());
 
   if (protoVersion >= 21) {
     addFlags(SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED);
   }
   if (protoVersion < 23) {
-    SUPLA_LOG_ERROR("Minimum supported protocol version is 23!");
+    SUPLA_LOG_ERROR(
+        "Minimum supported protocol version is 23! Setting to 23 anyway");
+    protoVersion = 23;
+  }
+  if (isDeviceSoftwareResetSupported()) {
+    addFlags(SUPLA_DEVICE_FLAG_CALCFG_RESTART_DEVICE);
   }
 
   // Initialize protocol layers
@@ -297,8 +304,8 @@ bool SuplaDeviceClass::begin(unsigned char protoVersion) {
 
   SUPLA_LOG_DEBUG("Initializing network layer");
   char hostname[32] = {};
-  generateHostname(hostname, 6);
-  Supla::Network::SetHostname(hostname, 6);
+  generateHostname(hostname, macLengthInHostname);
+  Supla::Network::SetHostname(hostname, macLengthInHostname);
 
   for (auto proto = Supla::Protocol::ProtocolLayer::first(); proto != nullptr;
        proto = proto->next()) {
@@ -367,7 +374,7 @@ void SuplaDeviceClass::iterate(void) {
 
   // in allowOfflineMode(2) device starts in "offline" mode with cfg mode
   // enabled for 1h. After that time, it will switch to full offline mode.
-  if (goToOfflineModeTimeout == 0 && _millis > 60*60*1000) {
+  if (goToOfflineModeTimeout == 0 && _millis > 60ULL*60*1000) {
     SUPLA_LOG_INFO("Offline mode timeout triggered");
     goToOfflineModeTimeout = 1;
     leaveConfigModeWithoutRestart();
@@ -822,7 +829,8 @@ void SuplaDeviceClass::removeFlags(int32_t flags) {
   Supla::RegisterDevice::removeFlags(flags);
 }
 
-int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
+int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request,
+                                             TDS_DeviceCalCfgResult *result) {
   if (request) {
     if (request->SuperUserAuthorized != 1) {
       return SUPLA_CALCFG_RESULT_UNAUTHORIZED;
@@ -831,6 +839,11 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
       case SUPLA_CALCFG_CMD_ENTER_CFG_MODE: {
         SUPLA_LOG_INFO("CALCFG ENTER CFGMODE received");
         requestCfgMode(Supla::Device::WithTimeout);
+        return SUPLA_CALCFG_RESULT_DONE;
+      }
+      case SUPLA_CALCFG_CMD_RESTART_DEVICE: {
+        SUPLA_LOG_INFO("CALCFG RESTART DEVICE received");
+        scheduleSoftRestart(1);
         return SUPLA_CALCFG_RESULT_DONE;
       }
       case SUPLA_CALCFG_CMD_SET_TIME: {
@@ -849,6 +862,29 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
           return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
         }
       }
+      case SUPLA_CALCFG_CMD_START_SUBDEVICE_PAIRING: {
+        SUPLA_LOG_INFO("CALCFG START SUBDEVICE PAIRING received");
+        if (subdevicePairingHandler &&
+            Supla::RegisterDevice::isPairingSubdeviceEnabled()) {
+          TCalCfg_SubdevicePairingResult pairingResult = {};
+          subdevicePairingHandler->startPairing(getSrpcLayer(), &pairingResult);
+          if (result && sizeof(pairingResult) <= SUPLA_CALCFG_DATA_MAXSIZE) {
+            memcpy(result->Data, &pairingResult, sizeof(pairingResult));
+            result->DataSize = sizeof(pairingResult);
+          } else {
+            SUPLA_LOG_WARNING(
+                "No result buffer provided, or size is too big %d > %d",
+                sizeof(pairingResult),
+                SUPLA_CALCFG_DATA_MAXSIZE);
+            return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+          }
+          return SUPLA_CALCFG_RESULT_TRUE;
+        } else {
+          SUPLA_LOG_WARNING("No SubdevicePairingHandler configured");
+          return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+        }
+      }
+
       default:
         break;
     }
@@ -953,7 +989,7 @@ void SuplaDeviceClass::disableCfgModeTimeout() {
 }
 
 void SuplaDeviceClass::scheduleSoftRestart(int timeout) {
-  SUPLA_LOG_INFO("Triggering soft restart");
+  SUPLA_LOG_INFO("Scheduling soft restart in %d ms", timeout);
   status(STATUS_SOFTWARE_RESET, F("Software reset"));
   if (timeout <= 0) {
     forceRestartTimeMs = 1;
@@ -961,6 +997,16 @@ void SuplaDeviceClass::scheduleSoftRestart(int timeout) {
     forceRestartTimeMs = timeout;
   }
   deviceRestartTimeoutTimestamp = millis();
+}
+
+void SuplaDeviceClass::scheduleProtocolsRestart(int timeout) {
+  SUPLA_LOG_INFO("Scheduling protocols restart in %d ms", timeout);;
+  if (timeout <= 0) {
+    protocolRestartTimeMs = 1;
+  } else {
+    protocolRestartTimeMs = timeout;
+  }
+  protocolRestartTimeoutTimestamp = millis();
 }
 
 void SuplaDeviceClass::addLastStateLog(const char *msg) {
@@ -1112,6 +1158,13 @@ void SuplaDeviceClass::checkIfRestartIsNeeded(uint32_t _millis) {
       softRestart();
     }
   }
+  if (protocolRestartTimeoutTimestamp != 0 &&
+      _millis - protocolRestartTimeoutTimestamp > protocolRestartTimeMs) {
+    SUPLA_LOG_INFO("Restarting connections...");
+    protocolRestartTimeoutTimestamp = 0;
+    protocolRestartTimeMs = 0;
+    Supla::Network::DisconnectProtocols();
+  }
 }
 
 const uint8_t *SuplaDeviceClass::getRsaPublicKey() {
@@ -1262,6 +1315,27 @@ bool SuplaDeviceClass::isOfflineModeDuringConfig() const {
 
 Supla::Mutex *SuplaDeviceClass::getTimerAccessMutex() {
   return timerAccessMutex;
+}
+
+void SuplaDeviceClass::setChannelConflictResolver(
+    Supla::Device::ChannelConflictResolver *resolver) {
+  createSrpcLayerIfNeeded();
+  srpcLayer->setChannelConflictResolver(resolver);
+}
+
+void SuplaDeviceClass::setSubdevicePairingHandler(
+      Supla::Device::SubdevicePairingHandler *handler) {
+  subdevicePairingHandler = handler;
+}
+
+void SuplaDeviceClass::setMacLengthInHostname(int value) {
+  if (value < 0) {
+    value = 0;
+  }
+  if (value > 6) {
+    value = 6;
+  }
+  macLengthInHostname = value;
 }
 
 SuplaDeviceClass SuplaDevice;

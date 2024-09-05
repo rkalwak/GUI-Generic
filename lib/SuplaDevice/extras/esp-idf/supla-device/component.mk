@@ -49,6 +49,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/network/html/wifi_parameters.o \
   ../../../src/supla/network/html/protocol_parameters.o \
   ../../../src/supla/network/html/status_led_parameters.o \
+  ../../../src/supla/network/html/power_status_led_parameters.o \
   ../../../src/supla/network/html/custom_sw_update.o \
   ../../../src/supla/network/html/sw_update_beta.o \
   ../../../src/supla/network/html/sw_update.o \
@@ -66,6 +67,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/network/html/screen_delay_parameters.o \
   ../../../src/supla/network/html/screen_delay_type_parameters.o \
   ../../../src/supla/network/html/screen_brightness_parameters.o \
+	../../../src/supla/network/html/home_screen_content.o \
   ../../../src/supla/network/html/em_phase_led.o \
   ../../../src/supla/network/html/em_ct_type.o \
   ../../../src/supla/network/client.o \
@@ -131,6 +133,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/sensor/virtual_binary.o \
   ../../../src/supla/sensor/distance.o \
   ../../../src/supla/sensor/HC_SR04.o \
+  ../../../src/supla/sensor/temperature_drop_sensor.o \
 	\
   ../../../src/nettle/bignum.o \
   ../../../src/nettle/gmp-glue.o \

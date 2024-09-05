@@ -32,6 +32,7 @@ enum class HomeScreenContent {
   HOME_SCREEN_TIME_DATE,
   HOME_SCREEN_TEMPERATURE_TIME,
   HOME_SCREEN_MAIN_AND_AUX_TEMPERATURE,
+  HOME_SCREEN_MODE_OR_TEMPERATURE,
 };
 
 namespace Device {
@@ -46,6 +47,7 @@ class RemoteDeviceConfig {
   // Configures screen saver available modes. Set all available modes
   // in single call (this method overwrites previous values)
   static void SetHomeScreenContentAvailable(uint64_t allValues);
+  static uint64_t GetHomeScreenContentAvailable();
   static enum HomeScreenContent HomeScreenContentBitToEnum(uint64_t fieldBit);
   static uint64_t HomeScreenEnumToBit(enum HomeScreenContent type);
   static uint64_t HomeScreenIntToBit(int mode);
@@ -65,6 +67,8 @@ class RemoteDeviceConfig {
  private:
   void processStatusLedConfig(uint64_t fieldBit,
                               TDeviceConfig_StatusLed *config);
+  void processPowerStatusLedConfig(uint64_t fieldBit,
+                              TDeviceConfig_PowerStatusLed *config);
   void processScreenBrightnessConfig(uint64_t fieldBit,
                                     TDeviceConfig_ScreenBrightness *config);
   void processButtonVolumeConfig(uint64_t fieldBit,
@@ -81,6 +85,7 @@ class RemoteDeviceConfig {
       uint64_t fieldBit, TDeviceConfig_HomeScreenOffDelayType *config);
 
   void fillStatusLedConfig(TDeviceConfig_StatusLed *config) const;
+  void fillPowerStatusLedConfig(TDeviceConfig_PowerStatusLed *config) const;
   void fillScreenBrightnessConfig(TDeviceConfig_ScreenBrightness *config) const;
   void fillButtonVolumeConfig(TDeviceConfig_ButtonVolume *config) const;
   void fillHomeScreenContentConfig(

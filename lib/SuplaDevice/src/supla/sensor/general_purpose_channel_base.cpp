@@ -309,7 +309,7 @@ void GeneralPurposeChannelBase::setChannelRefreshIntervalMs(
                   refreshIntervalMs);
 }
 
-void GeneralPurposeChannelBase::setRefreshIntervalMs(int intervalMs,
+void GeneralPurposeChannelBase::setRefreshIntervalMs(int32_t intervalMs,
                                                      bool local) {
   // RefreshIntervalMs in config contain value from server/Cloud. We don't
   // adjust it to internal value.
@@ -321,7 +321,7 @@ void GeneralPurposeChannelBase::setRefreshIntervalMs(int intervalMs,
   auto oldIntervalMs = getRefreshIntervalMs();
   commonConfig.refreshIntervalMs = intervalMs;
   setChannelRefreshIntervalMs(intervalMs);
-  if (intervalMs != oldIntervalMs && local) {
+  if (static_cast<uint16_t>(intervalMs) != oldIntervalMs && local) {
     channelConfigState = Supla::ChannelConfigState::LocalChangePending;
     saveConfig();
     saveConfigChangeFlag();
@@ -457,6 +457,10 @@ uint8_t GeneralPurposeChannelBase::applyChannelConfig(
   if (result->ConfigType != SUPLA_CONFIG_TYPE_DEFAULT) {
     return SUPLA_CONFIG_RESULT_DATA_ERROR;
   }
+  if (result->ConfigSize == 0) {
+    return SUPLA_CONFIG_RESULT_TRUE;
+  }
+
   if (result->ConfigSize != sizeof(TChannelConfig_GeneralPurposeMeasurement)) {
     return SUPLA_CONFIG_RESULT_DATA_ERROR;
   }

@@ -30,7 +30,8 @@ TDS_SuplaRegisterDeviceHeader *getRegDevHeaderPtr();
 // Returns pointer to structure, which is filled with values from channel
 // at given index. Next call will return exactly the same pointer, but with
 // data from another channel, so please be careful when using this function
-TDS_SuplaDeviceChannel_D *getChannelPtr(int index);
+TDS_SuplaDeviceChannel_D *getChannelPtr_D(int index);
+TDS_SuplaDeviceChannel_E *getChannelPtr_E(int index);
 
 // Device parameters
 bool isGUIDEmpty();
@@ -44,6 +45,7 @@ const char *getGUID();
 const char *getAuthKey();
 const char *getSoftVer();
 const char *getName();
+void fillGUIDText(char text[37]);
 
 void setGUID(const char *GUID);
 void setAuthKey(const char *AuthKey);
@@ -59,6 +61,7 @@ const char *getServerName();
 bool isSuplaPublicServerConfigured();
 bool isSleepingDeviceEnabled();
 bool isRemoteDeviceConfigEnabled();
+bool isPairingSubdeviceEnabled();
 
 void setManufacturerId(int16_t mfrId);
 void setProductId(int16_t productId);
@@ -75,6 +78,7 @@ bool isChannelNumberFree(int channelNumber);
 void addChannel(int channelNumber);
 void removeChannel(int channelNumber);
 int getChannelCount();
+int getMaxChannelNumberUsed();
 
 #ifdef SUPLA_TEST
 void resetToDefaults();

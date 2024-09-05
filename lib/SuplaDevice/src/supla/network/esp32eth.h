@@ -87,47 +87,52 @@ class ESPETH : public Supla::LAN {
     }
   }
 
+  static void networkEventHandler(arduino_event_id_t event) {
+    switch (event) {
+      case ARDUINO_EVENT_ETH_GOT_IP: {
+        Serial.print(F("[Ethernet] local IP: "));
+        Serial.println(ETH.localIP());
+        Serial.print(F("subnetMask: "));
+        Serial.println(ETH.subnetMask());
+        Serial.print(F("gatewayIP: "));
+        Serial.println(ETH.gatewayIP());
+        Serial.print(F("ETH MAC: "));
+        Serial.println(ETH.macAddress());
+        if (ETH.fullDuplex()) {
+          Serial.print(F("FULL_DUPLEX , "));
+        }
+        Serial.print(ETH.linkSpeed());
+        Serial.println(F("Mbps"));
+        if (thisEth) {
+          thisEth->setIpv4Addr(ETH.localIP());
+        }
+        break;
+      }
+      case ARDUINO_EVENT_ETH_DISCONNECTED: {
+        Serial.println(F("[Ethernet] Disconnected"));
+        if (thisEth) {
+          thisEth->setIpv4Addr(0);
+        }
+        break;
+      }
+    }
+  }
+
+
   void setup() override {
     allowDisable = true;
     if (initDone) {
       return;
     }
 
-    WiFi.onEvent(
-        [](WiFiEvent_t event, WiFiEventInfo_t info) {
-          Serial.print(F("[Ethernet] local IP: "));
-          Serial.println(ETH.localIP());
-          Serial.print(F("subnetMask: "));
-          Serial.println(ETH.subnetMask());
-          Serial.print(F("gatewayIP: "));
-          Serial.println(ETH.gatewayIP());
-          Serial.print(F("ETH MAC: "));
-          Serial.println(ETH.macAddress());
-          if (ETH.fullDuplex()) {
-            Serial.print(F("FULL_DUPLEX , "));
-          }
-          Serial.print(ETH.linkSpeed());
-          Serial.println(F("Mbps"));
-          if (thisEth) {
-            thisEth->setIpv4Addr(ETH.localIP());
-          }
-        },
-        WiFiEvent_t::ARDUINO_EVENT_ETH_GOT_IP);
-    WiFi.onEvent(
-        [](WiFiEvent_t event, WiFiEventInfo_t info) {
-          Serial.println(F("[Ethernet] Disconnected"));
-          if (thisEth) {
-            thisEth->setIpv4Addr(0);
-          }
-        },
-        WiFiEvent_t::ARDUINO_EVENT_ETH_DISCONNECTED);  // ESP core 2.0.2
+    ::Network.onEvent(Supla::ESPETH::networkEventHandler);
 
     Serial.println(F("[Ethernet] establishing LAN connection"));
-    ETH.begin(ETH_ADDRESS,
-              ETH_POWER_PIN,
+    ETH.begin(ETH_TYPE,
+              ETH_ADDRESS,
               ETH_MDC_PIN,
               ETH_MDIO_PIN,
-              ETH_TYPE,
+              ETH_POWER_PIN,
               ETH_CLK_MODE);
     initDone = true;
 
@@ -160,7 +165,7 @@ class ESPETH : public Supla::LAN {
     macSizeForHostname = macSize;
     strncpy(hostname, prefix, sizeof(hostname) - 1);
     SUPLA_LOG_DEBUG("[%s] Network AP/hostname: %s", getIntfName(), hostname);
-}
+  }
 
  protected:
   uint8_t ETH_ADDRESS = {};

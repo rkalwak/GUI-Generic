@@ -58,6 +58,8 @@ class SrpcInterface {
   virtual void srpc_set_proto_version(void *_srpc, unsigned char version) = 0;
   virtual _supla_int_t srpc_ds_async_registerdevice_in_chunks(
       void *_srpc, TDS_SuplaRegisterDeviceHeader *registerdevice) = 0;
+  virtual _supla_int_t srpc_ds_async_registerdevice_in_chunks_g(
+      void *_srpc, TDS_SuplaRegisterDeviceHeader *registerdevice) = 0;
   virtual _supla_int_t srpc_dcs_async_ping_server(void *_srpc) = 0;
   virtual _supla_int_t srpc_csd_async_channel_state_result(
       void *_srpc, TDSC_ChannelState *state) = 0;
@@ -81,6 +83,11 @@ class SrpcInterface {
       unsigned char TitleSize,
       unsigned char BodySize,
       const signed char *TitleAndBody) = 0;
+  virtual _supla_int_t setSubdeviceDetails(int subDeviceId,
+                                           char *name,
+                                           char *productCode,
+                                           char *serialNumber,
+                                           char *softwareVersion) = 0;
 
   virtual _supla_int_t setChannelCaption(int channelNumber,
                                          const char *caption) = 0;
@@ -129,6 +136,10 @@ class SrpcMock : public SrpcInterface {
               srpc_ds_async_registerdevice_in_chunks,
               (void *, TDS_SuplaRegisterDeviceHeader *),
               (override));
+  MOCK_METHOD(_supla_int_t,
+              srpc_ds_async_registerdevice_in_chunks_g,
+              (void *, TDS_SuplaRegisterDeviceHeader *),
+              (override));
   MOCK_METHOD(_supla_int_t, srpc_dcs_async_ping_server, (void *), (override));
   MOCK_METHOD(_supla_int_t,
               srpc_csd_async_channel_state_result,
@@ -169,6 +180,14 @@ class SrpcMock : public SrpcInterface {
               setChannelCaption,
               (int channelNumber,
                const char *caption),
+              (override));
+  MOCK_METHOD(_supla_int_t,
+              setSubdeviceDetails,
+              (int subDeviceId,
+               char *name,
+               char *productCode,
+               char *serialNumber,
+               char *softwareVersion),
               (override));
 };
 

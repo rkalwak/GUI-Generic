@@ -1151,6 +1151,12 @@ char SRPC_ICACHE_FLASH srpc_getdata(void *_srpc, TsrpcReceivedData *rd,
                   sizeof(TSDS_SetDeviceConfigResult));
         }
         break;
+      case SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS:
+        if (srpc->sdp.data_size == sizeof(TDS_SubdeviceDetails)) {
+          rd->data.ds_subdevice_details =
+              (TDS_SubdeviceDetails *)malloc(sizeof(TDS_SubdeviceDetails));
+        }
+        break;
 #endif /*#ifndef SRPC_EXCLUDE_DEVICE*/
 
 #ifndef SRPC_EXCLUDE_CLIENT
@@ -1780,6 +1786,7 @@ srpc_call_min_version_required(void *_srpc, unsigned _supla_int_t call_id) {
       return 23;
     case SUPLA_DS_CALL_REGISTER_DEVICE_G:
     case SUPLA_SD_CALL_REGISTER_DEVICE_RESULT_B:
+    case SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS:
       return 25;
   }
 
@@ -2158,6 +2165,63 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_ds_async_registerdevice_in_chunks(
   return lck_unlock_r(srpc->lck, SUPLA_RESULT_FALSE);
 }
 
+_supla_int_t SRPC_ICACHE_FLASH srpc_ds_async_registerdevice_in_chunks_g(
+    void *_srpc, TDS_SuplaRegisterDeviceHeader *registerdevice,
+    TDS_SuplaDeviceChannel_E *(*get_channel_data_callback)(int)) {
+  if (_srpc == NULL) {
+    return SUPLA_RESULT_FALSE;
+  }
+
+  _supla_int_t full_size =
+      sizeof(TDS_SuplaRegisterDeviceHeader) +
+      (sizeof(TDS_SuplaDeviceChannel_E) * registerdevice->channel_count);
+
+  Tsrpc *srpc = (Tsrpc *)_srpc;
+  const int call_id = SUPLA_DS_CALL_REGISTER_DEVICE_G;
+
+  if (!srpc_call_allowed(_srpc, call_id)) {
+    if (srpc->params.on_min_version_required != NULL) {
+      srpc->params.on_min_version_required(
+          _srpc, call_id, srpc_call_min_version_required(_srpc, call_id),
+          srpc->params.user_params);
+    }
+    return SUPLA_RESULT_FALSE;
+  }
+
+  if (srpc->params.before_async_call != NULL) {
+    srpc->params.before_async_call(_srpc, call_id, srpc->params.user_params);
+  }
+
+  lck_lock(srpc->lck);
+
+  sproto_sdp_init(srpc->proto, &srpc->sdp);
+
+  if (SUPLA_RESULT_TRUE ==
+      sproto_set_data(&srpc->sdp, (char *)registerdevice,
+                      sizeof(TDS_SuplaRegisterDeviceHeader), call_id)) {
+    srpc->sdp.data_size = full_size;
+
+    unsigned _supla_int_t header_size = sizeof(TSuplaDataPacket);
+    header_size -= SUPLA_MAX_DATA_SIZE;
+    header_size += sizeof(TDS_SuplaRegisterDeviceHeader);
+    srpc->params.data_write((char *)&srpc->sdp, header_size,
+                            srpc->params.user_params);
+    // send channels here
+    const unsigned _supla_int_t channel_size = sizeof(TDS_SuplaDeviceChannel_E);
+    for (int i = 0; i < registerdevice->channel_count; i++) {
+      TDS_SuplaDeviceChannel_E *data = get_channel_data_callback(i);
+      if (data == NULL) continue;
+      srpc->params.data_write((char *)data, channel_size,
+                              srpc->params.user_params);
+    }
+    srpc->params.data_write(sproto_tag, SUPLA_TAG_SIZE,
+                            srpc->params.user_params);
+
+    return lck_unlock_r(srpc->lck, srpc->sdp.rr_id);
+  }
+  return lck_unlock_r(srpc->lck, SUPLA_RESULT_FALSE);
+}
+
 _supla_int_t SRPC_ICACHE_FLASH srpc_ds_async_registerdevice_f(
     void *_srpc, TDS_SuplaRegisterDevice_F *registerdevice) {
   _supla_int_t size =
@@ -2489,6 +2553,16 @@ srpc_ds_async_send_push_notification(void *_srpc, TDS_PushNotification *push) {
 
   return srpc_async_call(_srpc, SUPLA_DS_CALL_SEND_PUSH_NOTIFICATION,
                          (char *)push, size);
+}
+
+_supla_int_t SRPC_ICACHE_FLASH srpc_ds_async_set_subdevice_details(
+    void *_srpc, TDS_SubdeviceDetails *reg) {
+  if (!reg) {
+    return 0;
+  }
+
+  return srpc_async_call(_srpc, SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS,
+                         (char *)reg, sizeof(TDS_SubdeviceDetails));
 }
 
 #endif /*SRPC_EXCLUDE_DEVICE*/
@@ -3292,89 +3366,105 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_sc_async_device_config_update_or_result(
 
 #ifndef SRPC_EXCLUDE_EXTENDEDVALUE_TOOLS
 
+#define RETURN_EMEXTENDED2EXTENDED(type_of_em_ev, ev_type, em_ev, ev)         \
+  if (em_ev == NULL || ev == NULL || em_ev->m_count > EM_MEASUREMENT_COUNT || \
+      em_ev->m_count < 0) {                                                   \
+    return 0;                                                                 \
+  }                                                                           \
+                                                                              \
+  memset(ev, 0, sizeof(TSuplaChannelExtendedValue));                          \
+  ev->type = ev_type;                                                         \
+                                                                              \
+  ev->size = sizeof(type_of_em_ev) -                                          \
+             sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +   \
+             sizeof(TElectricityMeter_Measurement) * em_ev->m_count;          \
+                                                                              \
+  if (ev->size > 0 && ev->size <= SUPLA_CHANNELEXTENDEDVALUE_SIZE) {          \
+    memcpy(ev->value, em_ev, ev->size);                                       \
+    return 1;                                                                 \
+  }                                                                           \
+                                                                              \
+  ev->size = 0;                                                               \
+  return 0
+
+#define RETURN_EXTENDED2EMEXTENDED(ev, type_of_em_ev, ev_type, em_ev)        \
+  if (em_ev == NULL || ev == NULL || ev->type != ev_type || ev->size == 0 || \
+      ev->size > sizeof(type_of_em_ev)) {                                    \
+    return 0;                                                                \
+  }                                                                          \
+                                                                             \
+  memset(em_ev, 0, sizeof(type_of_em_ev));                                   \
+  memcpy(em_ev, ev->value, ev->size);                                        \
+                                                                             \
+  _supla_int_t expected_size = 0;                                            \
+                                                                             \
+  if (em_ev->m_count <= EM_MEASUREMENT_COUNT) {                              \
+    expected_size =                                                          \
+        sizeof(type_of_em_ev) -                                              \
+        sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +       \
+        sizeof(TElectricityMeter_Measurement) * em_ev->m_count;              \
+  }                                                                          \
+                                                                             \
+  if (ev->size != expected_size) {                                           \
+    memset(em_ev, 0, sizeof(type_of_em_ev));                                 \
+    return 0;                                                                \
+  }                                                                          \
+                                                                             \
+  return 1;
+
+#define EMEV_COPY(source, type_of_dest, dest)                       \
+  if (source == NULL || dest == NULL) {                             \
+    return 0;                                                       \
+  }                                                                 \
+  memset(dest, 0, sizeof(type_of_dest));                            \
+                                                                    \
+  for (int a = 0; a < 3; a++) {                                     \
+    dest->total_forward_active_energy[a] =                          \
+        source->total_forward_active_energy[a];                     \
+    dest->total_reverse_active_energy[a] =                          \
+        source->total_reverse_active_energy[a];                     \
+    dest->total_forward_reactive_energy[a] =                        \
+        source->total_forward_reactive_energy[a];                   \
+    dest->total_reverse_reactive_energy[a] =                        \
+        source->total_reverse_reactive_energy[a];                   \
+  }                                                                 \
+                                                                    \
+  dest->total_cost = source->total_cost;                            \
+  dest->price_per_unit = source->price_per_unit;                    \
+  memcpy(dest->currency, source->currency, sizeof(dest->currency)); \
+  dest->measured_values = source->measured_values;                  \
+  dest->period = source->period;                                    \
+  dest->m_count = source->m_count;                                  \
+                                                                    \
+  memcpy(dest->m, source->m,                                        \
+         sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT);
+
+#ifdef USE_DEPRECATED_EMEV_V2
 #ifdef USE_DEPRECATED_EMEV_V1
 _supla_int_t SRPC_ICACHE_FLASH
 srpc_evtool_v1_emextended2extended(const TElectricityMeter_ExtendedValue *em_ev,
                                    TSuplaChannelExtendedValue *ev) {
-  if (em_ev == NULL || ev == NULL || em_ev->m_count > EM_MEASUREMENT_COUNT ||
-      em_ev->m_count < 0) {
-    return 0;
-  }
-
-  memset(ev, 0, sizeof(TSuplaChannelExtendedValue));
-  ev->type = EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V1;
-
-  ev->size = sizeof(TElectricityMeter_ExtendedValue) -
-             sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +
-             sizeof(TElectricityMeter_Measurement) * em_ev->m_count;
-
-  if (ev->size > 0 && ev->size <= SUPLA_CHANNELEXTENDEDVALUE_SIZE) {
-    memcpy(ev->value, em_ev, ev->size);
-    return 1;
-  }
-
-  ev->size = 0;
-  return 0;
+  RETURN_EMEXTENDED2EXTENDED(TElectricityMeter_ExtendedValue,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V1, em_ev,
+                             ev);
 }
 
 _supla_int_t SRPC_ICACHE_FLASH
 srpc_evtool_v1_extended2emextended(const TSuplaChannelExtendedValue *ev,
                                    TElectricityMeter_ExtendedValue *em_ev) {
-  if (em_ev == NULL || ev == NULL ||
-      ev->type != EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V1 || ev->size == 0 ||
-      ev->size > sizeof(TElectricityMeter_ExtendedValue)) {
-    return 0;
-  }
-
-  memset(em_ev, 0, sizeof(TElectricityMeter_ExtendedValue));
-  memcpy(em_ev, ev->value, ev->size);
-
-  _supla_int_t expected_size = 0;
-
-  if (em_ev->m_count <= EM_MEASUREMENT_COUNT) {
-    expected_size =
-        sizeof(TElectricityMeter_ExtendedValue) -
-        sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +
-        sizeof(TElectricityMeter_Measurement) * em_ev->m_count;
-  }
-
-  if (ev->size != expected_size) {
-    memset(em_ev, 0, sizeof(TElectricityMeter_ExtendedValue));
-    return 0;
-  }
-
-  return 1;
+  RETURN_EXTENDED2EMEXTENDED(ev, TElectricityMeter_ExtendedValue,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V1, em_ev);
 }
 
 _supla_int_t SRPC_ICACHE_FLASH
 srpc_evtool_emev_v1to2(const TElectricityMeter_ExtendedValue *v1,
                        TElectricityMeter_ExtendedValue_V2 *v2) {
-  if (v1 == NULL || v2 == NULL) {
-    return 0;
-  }
-  memset(v2, 0, sizeof(TElectricityMeter_ExtendedValue_V2));
-
-  for (int a = 0; a < 3; a++) {
-    v2->total_forward_active_energy[a] = v1->total_forward_active_energy[a];
-    v2->total_reverse_active_energy[a] = v1->total_reverse_active_energy[a];
-    v2->total_forward_reactive_energy[a] = v1->total_forward_reactive_energy[a];
-    v2->total_reverse_reactive_energy[a] = v1->total_reverse_reactive_energy[a];
-  }
-
-  v2->total_cost = v1->total_cost;
-  v2->price_per_unit = v1->price_per_unit;
-  memcpy(v2->currency, v1->currency, sizeof(v2->currency));
-  v2->measured_values = v1->measured_values;
-  v2->period = v1->period;
-  v2->m_count = v1->m_count;
-
-  memcpy(v2->m, v1->m,
-         sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT);
+  EMEV_COPY(v1, TElectricityMeter_ExtendedValue_V2, v2);
 
   v2->measured_values ^=
-      v1->measured_values & EM_VAR_FORWARD_ACTIVE_ENERGY_BALANCED;
+      v2->measured_values & EM_VAR_FORWARD_ACTIVE_ENERGY_BALANCED;
   v2->measured_values ^=
-      v1->measured_values & EM_VAR_REVERSE_ACTIVE_ENERGY_BALANCED;
+      v2->measured_values & EM_VAR_REVERSE_ACTIVE_ENERGY_BALANCED;
 
   return 1;
 }
@@ -3382,27 +3472,7 @@ srpc_evtool_emev_v1to2(const TElectricityMeter_ExtendedValue *v1,
 _supla_int_t SRPC_ICACHE_FLASH
 srpc_evtool_emev_v2to1(const TElectricityMeter_ExtendedValue_V2 *v2,
                        TElectricityMeter_ExtendedValue *v1) {
-  if (v1 == NULL || v2 == NULL) {
-    return 0;
-  }
-  memset(v1, 0, sizeof(TElectricityMeter_ExtendedValue));
-
-  for (int a = 0; a < 3; a++) {
-    v1->total_forward_active_energy[a] = v2->total_forward_active_energy[a];
-    v1->total_reverse_active_energy[a] = v2->total_reverse_active_energy[a];
-    v1->total_forward_reactive_energy[a] = v2->total_forward_reactive_energy[a];
-    v1->total_reverse_reactive_energy[a] = v2->total_reverse_reactive_energy[a];
-  }
-
-  v1->total_cost = v2->total_cost;
-  v1->price_per_unit = v2->price_per_unit;
-  memcpy(v1->currency, v2->currency, sizeof(v2->currency));
-  v1->measured_values = v2->measured_values;
-  v1->period = v2->period;
-  v1->m_count = v2->m_count;
-
-  memcpy(v1->m, v2->m,
-         sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT);
+  EMEV_COPY(v2, TElectricityMeter_ExtendedValue, v1);
 
   v1->measured_values ^=
       v1->measured_values & EM_VAR_FORWARD_ACTIVE_ENERGY_BALANCED;
@@ -3417,54 +3487,100 @@ srpc_evtool_emev_v2to1(const TElectricityMeter_ExtendedValue_V2 *v2,
 _supla_int_t SRPC_ICACHE_FLASH srpc_evtool_v2_emextended2extended(
     const TElectricityMeter_ExtendedValue_V2 *em_ev,
     TSuplaChannelExtendedValue *ev) {
-  if (em_ev == NULL || ev == NULL || em_ev->m_count > EM_MEASUREMENT_COUNT ||
-      em_ev->m_count < 0) {
-    return 0;
-  }
-
-  memset(ev, 0, sizeof(TSuplaChannelExtendedValue));
-  ev->type = EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V2;
-
-  ev->size = sizeof(TElectricityMeter_ExtendedValue_V2) -
-             sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +
-             sizeof(TElectricityMeter_Measurement) * em_ev->m_count;
-
-  if (ev->size > 0 && ev->size <= SUPLA_CHANNELEXTENDEDVALUE_SIZE) {
-    memcpy(ev->value, em_ev, ev->size);
-    return 1;
-  }
-
-  ev->size = 0;
-  return 0;
+  RETURN_EMEXTENDED2EXTENDED(TElectricityMeter_ExtendedValue_V2,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V2, em_ev,
+                             ev);
 }
 
 _supla_int_t SRPC_ICACHE_FLASH
 srpc_evtool_v2_extended2emextended(const TSuplaChannelExtendedValue *ev,
                                    TElectricityMeter_ExtendedValue_V2 *em_ev) {
-  if (em_ev == NULL || ev == NULL ||
-      ev->type != EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V2 || ev->size == 0 ||
-      ev->size > sizeof(TElectricityMeter_ExtendedValue_V2)) {
-    return 0;
-  }
+  RETURN_EXTENDED2EMEXTENDED(ev, TElectricityMeter_ExtendedValue_V2,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V2, em_ev);
+}
 
-  memset(em_ev, 0, sizeof(TElectricityMeter_ExtendedValue_V2));
-  memcpy(em_ev, ev->value, ev->size);
+_supla_int_t SRPC_ICACHE_FLASH
+srpc_evtool_emev_v2to3(const TElectricityMeter_ExtendedValue_V2 *v2,
+                       TElectricityMeter_ExtendedValue_V3 *v3) {
+  EMEV_COPY(v2, TElectricityMeter_ExtendedValue_V3, v3);
 
-  _supla_int_t expected_size = 0;
+  v3->total_forward_active_energy_balanced =
+      v2->total_forward_active_energy_balanced;
+  v3->total_reverse_active_energy_balanced =
+      v2->total_reverse_active_energy_balanced;
+  v3->total_cost_balanced = v2->total_cost_balanced;
 
-  if (em_ev->m_count <= EM_MEASUREMENT_COUNT) {
-    expected_size =
-        sizeof(TElectricityMeter_ExtendedValue_V2) -
-        sizeof(TElectricityMeter_Measurement) * EM_MEASUREMENT_COUNT +
-        sizeof(TElectricityMeter_Measurement) * em_ev->m_count;
-  }
-
-  if (ev->size != expected_size) {
-    memset(em_ev, 0, sizeof(TElectricityMeter_ExtendedValue_V2));
-    return 0;
-  }
+  v3->measured_values ^= v3->measured_values & EM_VAR_VOLTAGE_PHASE_ANGLE_12;
+  v3->measured_values ^= v3->measured_values & EM_VAR_VOLTAGE_PHASE_ANGLE_13;
+  v3->measured_values ^= v3->measured_values & EM_VAR_VOLTAGE_PHASE_SEQUENCE;
+  v3->measured_values ^= v3->measured_values & EM_VAR_CURRENT_PHASE_SEQUENCE;
 
   return 1;
+}
+
+_supla_int_t SRPC_ICACHE_FLASH
+srpc_evtool_emev_v3to2(const TElectricityMeter_ExtendedValue_V3 *v3,
+                       TElectricityMeter_ExtendedValue_V2 *v2) {
+  EMEV_COPY(v3, TElectricityMeter_ExtendedValue_V2, v2);
+
+  v2->total_forward_active_energy_balanced =
+      v3->total_forward_active_energy_balanced;
+  v2->total_reverse_active_energy_balanced =
+      v3->total_reverse_active_energy_balanced;
+  v2->total_cost_balanced = v3->total_cost_balanced;
+
+  v2->measured_values ^= v2->measured_values & EM_VAR_VOLTAGE_PHASE_ANGLE_12;
+  v2->measured_values ^= v2->measured_values & EM_VAR_VOLTAGE_PHASE_ANGLE_13;
+  v2->measured_values ^= v2->measured_values & EM_VAR_VOLTAGE_PHASE_SEQUENCE;
+  v2->measured_values ^= v2->measured_values & EM_VAR_CURRENT_PHASE_SEQUENCE;
+
+  return 1;
+}
+
+#endif /*USE_DEPRECATED_EMEV_V2*/
+
+_supla_int_t SRPC_ICACHE_FLASH srpc_evtool_v3_emextended2extended(
+    const TElectricityMeter_ExtendedValue_V3 *em_ev,
+    TSuplaChannelExtendedValue *ev) {
+  RETURN_EMEXTENDED2EXTENDED(TElectricityMeter_ExtendedValue_V3,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V3, em_ev,
+                             ev);
+}
+
+_supla_int_t SRPC_ICACHE_FLASH
+srpc_evtool_v3_extended2emextended(const TSuplaChannelExtendedValue *ev,
+                                   TElectricityMeter_ExtendedValue_V3 *em_ev) {
+  RETURN_EXTENDED2EMEXTENDED(ev, TElectricityMeter_ExtendedValue_V3,
+                             EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V3, em_ev);
+}
+
+_supla_int_t srpc_evtool_extended2emextended_latest(
+    const TSuplaChannelExtendedValue *ev,
+    TElectricityMeter_ExtendedValue_V3 *em_ev) {
+  if (srpc_evtool_v3_extended2emextended(ev, em_ev)) {
+    return 1;
+  }
+
+#ifdef USE_DEPRECATED_EMEV_V2
+  if (ev->type == EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V2) {
+    TElectricityMeter_ExtendedValue_V2 em_ev2 = {};
+    return srpc_evtool_v2_extended2emextended(ev, &em_ev2) &&
+           srpc_evtool_emev_v2to3(&em_ev2, em_ev);
+  }
+#endif /*USE_DEPRECATED_EMEV_V2*/
+
+#ifdef USE_DEPRECATED_EMEV_V1
+  if (ev->type == EV_TYPE_ELECTRICITY_METER_MEASUREMENT_V1) {
+    TElectricityMeter_ExtendedValue em_ev1 = {};
+    TElectricityMeter_ExtendedValue_V2 em_ev2 = {};
+
+    return srpc_evtool_v1_extended2emextended(ev, &em_ev1) &&
+           srpc_evtool_emev_v1to2(&em_ev1, &em_ev2) &&
+           srpc_evtool_emev_v2to3(&em_ev2, em_ev);
+  }
+#endif /*USE_DEPRECATED_EMEV_V1*/
+
+  return 0;
 }
 
 _supla_int_t SRPC_ICACHE_FLASH srpc_evtool_v1_extended2thermostatextended(

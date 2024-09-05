@@ -232,7 +232,8 @@ TEST_F(SuplaDeviceTestsFullStartup, SuccessfulStartup) {
       .WillOnce([](void *, TDS_SuplaRegisterDeviceHeader *regDevHeader) {
         EXPECT_EQ(regDevHeader->channel_count, 0);
         EXPECT_EQ(regDevHeader->Flags,
-                  SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED);
+                  SUPLA_DEVICE_FLAG_DEVICE_CONFIG_SUPPORTED |
+                  SUPLA_DEVICE_FLAG_CALCFG_RESTART_DEVICE);
         EXPECT_EQ(regDevHeader->ManufacturerID, 0);
         EXPECT_EQ(regDevHeader->ProductID, 0);
         EXPECT_STREQ(regDevHeader->Email, "superman@supla.org");
@@ -315,7 +316,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
@@ -394,7 +395,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
@@ -469,7 +470,7 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
@@ -549,11 +550,12 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
-  EXPECT_TRUE(sd.begin(GUID, "ok.supla.org", "superman@supla.org", AUTHKEY, 18));
+  EXPECT_TRUE(
+      sd.begin(GUID, "ok.supla.org", "superman@supla.org", AUTHKEY, 18));
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
 
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
@@ -628,11 +630,12 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
-  EXPECT_TRUE(sd.begin(GUID, "supla.rulez", "superman@supla.priv", AUTHKEY, 18));
+  EXPECT_TRUE(
+      sd.begin(GUID, "supla.rulez", "superman@supla.priv", AUTHKEY, 18));
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
 
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
@@ -707,11 +710,12 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
-  EXPECT_TRUE(sd.begin(GUID, "supla.rulez", "superman@supla.priv", AUTHKEY, 18));
+  EXPECT_TRUE(
+      sd.begin(GUID, "supla.rulez", "superman@supla.priv", AUTHKEY, 18));
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
 
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
@@ -786,11 +790,12 @@ TEST_F(SuplaDeviceTestsFullStartupManual,
   EXPECT_CALL(timer, initTimers());
   EXPECT_CALL(srpc, srpc_params_init(_));
   EXPECT_CALL(srpc, srpc_init(_)).WillOnce(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 18));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, 23));
 
   char GUID[SUPLA_GUID_SIZE] = {1};
   char AUTHKEY[SUPLA_AUTHKEY_SIZE] = {2};
-  EXPECT_TRUE(sd.begin(GUID, "test.supla.org", "superman@supla.org", AUTHKEY, 18));
+  EXPECT_TRUE(
+      sd.begin(GUID, "test.supla.org", "superman@supla.org", AUTHKEY, 18));
   EXPECT_EQ(sd.getCurrentStatus(), STATUS_INITIALIZED);
 
   EXPECT_CALL(net, isReady()).WillRepeatedly(Return(true));
@@ -856,7 +861,8 @@ TEST_F(SuplaDeviceTestsFullStartup, SuccessfulStartupDoubleChannel) {
   EXPECT_CALL(srpc, srpc_params_init(_)).Times(AtLeast(1));
   int dummy;
   EXPECT_CALL(srpc, srpc_init(_)).WillRepeatedly(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, defaultProtoVersion)).Times(AtLeast(1));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, defaultProtoVersion))
+      .Times(AtLeast(1));
   EXPECT_CALL(srpc, srpc_free(_)).Times(0);
 
   EXPECT_CALL(el1, iterateAlways()).Times(35);
@@ -917,7 +923,8 @@ TEST_F(SuplaDeviceTestsFullStartup, SleepingChannelDoubleChannel) {
   EXPECT_CALL(srpc, srpc_params_init(_)).Times(AtLeast(1));
   int dummy;
   EXPECT_CALL(srpc, srpc_init(_)).WillRepeatedly(Return(&dummy));
-  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, defaultProtoVersion)).Times(AtLeast(1));
+  EXPECT_CALL(srpc, srpc_set_proto_version(&dummy, defaultProtoVersion))
+      .Times(AtLeast(1));
   EXPECT_CALL(srpc, srpc_free(_)).Times(0);
 
   EXPECT_CALL(el1, iterateAlways()).Times(35);

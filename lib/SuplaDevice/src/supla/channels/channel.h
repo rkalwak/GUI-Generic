@@ -43,6 +43,7 @@ class Channel : public LocalAction {
   static void resetToDefaults();
 #endif
   void fillDeviceChannelStruct(TDS_SuplaDeviceChannel_D *deviceChannelStruct);
+  void fillDeviceChannelStruct(TDS_SuplaDeviceChannel_E *deviceChannelStruct);
 
   bool setChannelNumber(int newChannelNumber);
 
@@ -77,7 +78,7 @@ class Channel : public LocalAction {
   uint8_t getValueBrightness();
   double getLastTemperature();
 
-  void setHvacIsOn(uint8_t isOn);
+  void setHvacIsOn(int8_t isOn);
   void setHvacMode(uint8_t mode);
   void setHvacSetpointTemperatureHeat(int16_t setpointTemperatureHeat);
   void setHvacSetpointTemperatureCool(int16_t setpointTemperatureCool);
@@ -96,6 +97,7 @@ class Channel : public LocalAction {
   void setHvacFlagForcedOffBySensor(bool value);
   void setHvacFlagCoolSubfunction(enum HvacCoolSubfunctionFlag flag);
   void setHvacFlagWeeklyScheduleTemporalOverride(bool value);
+  void clearHvacState();
 
   uint8_t getHvacIsOn();
   uint8_t getHvacMode() const;
@@ -138,6 +140,7 @@ class Channel : public LocalAction {
                                             int16_t setpointTemperatureCool);
 
   THVACValue *getValueHvac();
+  static bool isHvacValueValid(THVACValue *hvacValue);
 
   virtual bool isExtended() const;
   bool isUpdateReady() const;
@@ -200,28 +203,37 @@ class Channel : public LocalAction {
   void fillRawValue(void *value);
   char *getValuePtr();
 
+  void setSubDeviceId(uint8_t subDeviceId);
+  uint8_t getSubDeviceId() const;
+
  protected:
   static Channel *firstPtr;
   Channel *nextPtr = nullptr;
 
   char *initialCaption = nullptr;
+
+  uint64_t channelFlags = 0;
+  uint32_t functionsBitmap = 0;
+  uint32_t validityTimeSec = 0;
+
+  int16_t channelNumber = -1;
+
+  uint16_t defaultFunction =
+      0;  // function in proto use 32 bit, but there are no functions defined so
+          // far that use more than 16 bits
+
   bool valueChanged = false;
   bool channelConfig = false;
+
   unsigned char batteryLevel = 255;          // 0 - 100%; 255 - not used
   unsigned char bridgeSignalStrength = 255;  // 0 - 100%; 255 - not used
 
   // registration parameter
-  int16_t channelNumber = -1;
   ChannelType channelType = ChannelType::NOT_SET;
 
-  uint32_t functionsBitmap = 0;
-  uint16_t defaultFunction =
-      0;  // function in proto use 32 bit, but there are no functions defined so
-          // far that use more than 16 bits
-  uint64_t channelFlags = 0;
   bool offline = false;
-  uint32_t validityTimeSec = 0;
   uint8_t defaultIcon = 0;
+  uint8_t subDeviceId = 0;
 
   union {
     char value[SUPLA_CHANNELVALUE_SIZE] = {};

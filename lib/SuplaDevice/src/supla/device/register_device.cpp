@@ -24,15 +24,21 @@
 #include <supla/log_wrapper.h>
 #include <supla/channels/channel.h>
 
+#include <stdio.h>
+
 namespace {
 TDS_SuplaRegisterDeviceHeader reg_dev = {};
-TDS_SuplaDeviceChannel_D deviceChannelStruct = {};
+union {
+  TDS_SuplaDeviceChannel_E version_E = {};
+  TDS_SuplaDeviceChannel_D version_D;
+} deviceChannelStruct;
 }  // namespace
 
 #ifdef SUPLA_TEST
 void Supla::RegisterDevice::resetToDefaults() {
   memset(&reg_dev, 0, sizeof(reg_dev));
-  memset(&deviceChannelStruct, 0, sizeof(deviceChannelStruct));
+  memset(
+      &deviceChannelStruct.version_E, 0, sizeof(deviceChannelStruct.version_E));
 }
 
 int32_t Supla::RegisterDevice::getChannelType(int channelNumber) {
@@ -100,11 +106,23 @@ uint64_t Supla::RegisterDevice::getChannelFlags(int channelNumber) {
 
 #endif
 
+int Supla::RegisterDevice::getMaxChannelNumberUsed() {
+  int max = -1;
+  for (Supla::Channel *ch = Supla::Channel::Begin(); ch != nullptr;
+      ch = ch->next()) {
+    if (ch->getChannelNumber() > max) {
+      max = ch->getChannelNumber();
+    }
+  }
+
+  return max;
+}
+
 TDS_SuplaRegisterDeviceHeader *Supla::RegisterDevice::getRegDevHeaderPtr() {
   return &reg_dev;
 }
 
-TDS_SuplaDeviceChannel_D *Supla::RegisterDevice::getChannelPtr(int index) {
+TDS_SuplaDeviceChannel_D *Supla::RegisterDevice::getChannelPtr_D(int index) {
   if (index >= reg_dev.channel_count || index == -1) {
     return nullptr;
   }
@@ -114,9 +132,24 @@ TDS_SuplaDeviceChannel_D *Supla::RegisterDevice::getChannelPtr(int index) {
     channel = channel->next();
   }
 
-  channel->fillDeviceChannelStruct(&deviceChannelStruct);
+  channel->fillDeviceChannelStruct(&deviceChannelStruct.version_D);
 
-  return &deviceChannelStruct;
+  return &deviceChannelStruct.version_D;
+}
+
+TDS_SuplaDeviceChannel_E *Supla::RegisterDevice::getChannelPtr_E(int index) {
+  if (index >= reg_dev.channel_count || index == -1) {
+    return nullptr;
+  }
+
+  auto channel = Supla::Channel::Begin();
+  for (int i = 0; i < reg_dev.channel_count && i < index && channel; i++) {
+    channel = channel->next();
+  }
+
+  channel->fillDeviceChannelStruct(&deviceChannelStruct.version_E);
+
+  return &deviceChannelStruct.version_E;
 }
 
 bool Supla::RegisterDevice::isGUIDEmpty() {
@@ -145,6 +178,30 @@ bool Supla::RegisterDevice::isEmailEmpty() {
 
 const char *Supla::RegisterDevice::getGUID() {
   return reg_dev.GUID;
+}
+
+void Supla::RegisterDevice::fillGUIDText(char text[37]) {
+  // GUID format used by server:
+  snprintf(
+      text,
+      37,
+      "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+      reg_dev.GUID[0],
+      reg_dev.GUID[1],
+      reg_dev.GUID[2],
+      reg_dev.GUID[3],
+      reg_dev.GUID[4],
+      reg_dev.GUID[5],
+      reg_dev.GUID[6],
+      reg_dev.GUID[7],
+      reg_dev.GUID[8],
+      reg_dev.GUID[9],
+      reg_dev.GUID[10],
+      reg_dev.GUID[11],
+      reg_dev.GUID[12],
+      reg_dev.GUID[13],
+      reg_dev.GUID[14],
+      reg_dev.GUID[15]);
 }
 
 const char *Supla::RegisterDevice::getAuthKey() {
@@ -297,6 +354,10 @@ void Supla::RegisterDevice::removeFlags(int32_t removedFlags) {
 
 bool Supla::RegisterDevice::isSleepingDeviceEnabled() {
   return (reg_dev.Flags & SUPLA_DEVICE_FLAG_SLEEP_MODE_ENABLED) != 0;
+}
+
+bool Supla::RegisterDevice::isPairingSubdeviceEnabled() {
+  return (reg_dev.Flags & SUPLA_DEVICE_FLAG_CALCFG_SUBDEVICE_PAIRING) != 0;
 }
 
 bool Supla::RegisterDevice::isRemoteDeviceConfigEnabled() {

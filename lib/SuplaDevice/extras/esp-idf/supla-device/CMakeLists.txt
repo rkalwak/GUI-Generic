@@ -3,6 +3,7 @@ set(SUPLA_COMMONM_SRCS
   ../../../src/supla-common/log.c
   ../../../src/supla-common/proto.c
   ../../../src/supla-common/srpc.c
+  ../../../src/supla-common/proto_check.cpp
 )
 
 set(SUPLA_DEVICE_SRCS
@@ -51,6 +52,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/network/html/ethernet_parameters.cpp
   ../../../src/supla/network/html/protocol_parameters.cpp
   ../../../src/supla/network/html/status_led_parameters.cpp
+  ../../../src/supla/network/html/power_status_led_parameters.cpp
   ../../../src/supla/network/html/custom_sw_update.cpp
   ../../../src/supla/network/html/sw_update_beta.cpp
   ../../../src/supla/network/html/sw_update.cpp
@@ -74,6 +76,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/network/html/volume_parameters.cpp
   ../../../src/supla/network/html/screen_delay_parameters.cpp
   ../../../src/supla/network/html/screen_delay_type_parameters.cpp
+  ../../../src/supla/network/html/home_screen_content.cpp
   ../../../src/supla/network/html/disable_user_interface_parameter.cpp
   ../../../src/supla/network/html/h2_tag.cpp
   ../../../src/supla/network/html/h3_tag.cpp
@@ -136,6 +139,8 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/sensor/electricity_meter.cpp
   ../../../src/supla/sensor/hygro_meter.cpp
   ../../../src/supla/sensor/impulse_counter.cpp
+  ../../../src/supla/sensor/virtual_impulse_counter.cpp
+  ../../../src/supla/sensor/ocr_impulse_counter.cpp
   ../../../src/supla/sensor/therm_hygro_meter.cpp
   ../../../src/supla/sensor/therm_hygro_press_meter.cpp
   ../../../src/supla/sensor/thermometer.cpp
@@ -147,6 +152,7 @@ set(SUPLA_DEVICE_SRCS
   ../../../src/supla/sensor/distance.cpp
   ../../../src/supla/sensor/HC_SR04.cpp
   ../../../src/supla/sensor/ntc10k.cpp
+  ../../../src/supla/sensor/temperature_drop_sensor.cpp
   ../../../src/supla/pv/fronius.cpp
 )
 

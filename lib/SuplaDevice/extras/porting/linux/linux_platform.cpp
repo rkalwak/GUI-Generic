@@ -23,7 +23,16 @@ void deviceSoftwareReset() {
   std::exit(1);
 }
 
+bool isDeviceSoftwareResetSupported() {
+  return true;
+}
+
 bool isLastResetSoft() {
+  // TODO(klew): implement
+  return false;
+}
+
+bool Supla::isLastResetPower() {
   // TODO(klew): implement
   return false;
 }

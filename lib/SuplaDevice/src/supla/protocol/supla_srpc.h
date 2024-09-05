@@ -31,6 +31,7 @@ namespace Supla {
 class Client;
 
 namespace Device {
+class ChannelConflictResolver;
 class RemoteDeviceConfig;
 }  // namespace Device
 
@@ -41,9 +42,9 @@ struct CalCfgResultPendingItem;
 class CalCfgResultPending {
  public:
   friend class SuplaSrpc;
-  void set(uint8_t channelNo, int32_t receiverId, int32_t command);
-  void clear(uint8_t channelNo);
-  CalCfgResultPendingItem *get(uint8_t channelNo);
+  void set(int16_t channelNo, int32_t receiverId, int32_t command);
+  void clear(int16_t channelNo);
+  CalCfgResultPendingItem *get(int16_t channelNo);
 
  protected:
   CalCfgResultPending();
@@ -55,7 +56,7 @@ class SuplaSrpc : public ProtocolLayer {
  public:
   static bool isSuplaSSLEnabled;
 
-  explicit SuplaSrpc(SuplaDeviceClass *sdc, int version = 16);
+  explicit SuplaSrpc(SuplaDeviceClass *sdc, int version = 23);
   ~SuplaSrpc();
 
   void setNetworkClient(Supla::Client *newClient);
@@ -78,6 +79,7 @@ class SuplaSrpc : public ProtocolLayer {
                       const char *title,
                       const char *message,
                       int soundId) override;
+  void sendSubdeviceDetails(TDS_SubdeviceDetails *subdeviceDetails) override;
   void getUserLocaltime() override;
   void sendChannelValueChanged(uint8_t channelNumber, char *value,
       unsigned char offline, uint32_t validityTimeSec) override;
@@ -103,8 +105,9 @@ class SuplaSrpc : public ProtocolLayer {
 
   void onVersionError(TSDC_SuplaVersionError *versionError);
   void onRegisterResult(TSD_SuplaRegisterDeviceResult *register_device_result);
-  void onSetActivityTimeoutResult(
-      TSDC_SuplaSetActivityTimeoutResult *result);
+  void onRegisterResultB(
+      TSD_SuplaRegisterDeviceResult_B *registerDeviceResultB);
+  void onSetActivityTimeoutResult(TSDC_SuplaSetActivityTimeoutResult *result);
   void setActivityTimeout(uint32_t activityTimeoutSec);
   uint32_t getActivityTimeout();
   void updateLastResponseTime();
@@ -124,13 +127,18 @@ class SuplaSrpc : public ProtocolLayer {
 
   Supla::Client *client = nullptr;
   CalCfgResultPending calCfgResultPending;
-  void sendPendingCalCfgResult(uint8_t channelNo,
+  void sendPendingCalCfgResult(int16_t channelNo,
                                int32_t result,
                                int32_t command,
                                int dataSize = 0,
                                void *data = nullptr);
 
+  void clearPendingCalCfgResult(int16_t channelNo);
+
   static const char *configResultToCStr(int result);
+
+  void setChannelConflictResolver(
+      Supla::Device::ChannelConflictResolver *resolver);
 
  protected:
   bool ping();
@@ -159,6 +167,7 @@ class SuplaSrpc : public ProtocolLayer {
   const char *supla3rdPartyCACert = nullptr;
   const char *selectedCertificate = nullptr;
   void *srpc = nullptr;
+  Supla::Device::ChannelConflictResolver *channelConflictResolver = nullptr;
 
  private:
   Supla::Device::RemoteDeviceConfig *remoteDeviceConfig = nullptr;

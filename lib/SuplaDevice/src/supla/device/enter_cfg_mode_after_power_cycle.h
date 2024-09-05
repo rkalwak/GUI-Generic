@@ -27,10 +27,13 @@ namespace Supla::Device {
 class EnterCfgModeAfterPowerCycle : public Supla::Element {
  public:
   explicit EnterCfgModeAfterPowerCycle(uint32_t timeoutMs = 5000,
-                                      uint32_t powerCycles = 3);
+                                      uint32_t powerCycles = 3,
+                                      bool alwaysEnabled = false);
 
   void onLoadConfig(SuplaDeviceClass *sdc) override;
   void iterateAlways() override;
+  void setAlwaysEnabled(bool alwaysEnabled);
+  void setIncrementOnlyOnPowerResetReason(bool value);
 
  private:
   SuplaDeviceClass *sdc = nullptr;
@@ -40,6 +43,8 @@ class EnterCfgModeAfterPowerCycle : public Supla::Element {
   uint32_t currentPowerCycle = 0;
   bool incremented = false;
   bool enabled = false;
+  bool alwaysEnabled = false;
+  bool incrementOnlyOnPowerResetReason = false;
 };
 
 }  // namespace Supla::Device

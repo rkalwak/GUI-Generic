@@ -154,7 +154,7 @@ void Element::onTimer() {}
 
 void Element::onFastTimer() {}
 
-int Element::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
+int32_t Element::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
   (void)(newValue);
   return -1;
 }
@@ -163,13 +163,30 @@ void Element::fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value) {
   (void)(value);
 }
 
-int Element::getChannelNumber() {
+int Element::getChannelNumber() const {
   int result = -1;
-  Channel *channel = getChannel();
+  auto channel = getChannel();
   if (channel) {
     result = channel->getChannelNumber();
   }
   return result;
+}
+
+int Element::getSecondaryChannelNumber() const {
+  int result = -1;
+  auto channel = getSecondaryChannel();
+  if (channel) {
+    result = channel->getChannelNumber();
+  }
+  return result;
+}
+
+const Channel *Element::getChannel() const {
+  return nullptr;
+}
+
+const Channel *Element::getSecondaryChannel() const {
+  return nullptr;
 }
 
 Channel *Element::getChannel() {

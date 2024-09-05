@@ -127,6 +127,7 @@
 #ifdef SUPLA_RGBW
 #include <supla/control/rgbw_leds.h>
 #include <supla/control/rgb_leds.h>
+#include <supla/control/rgbw_base.h>
 #include <supla/control/dimmer_leds.h>
 #include <supla/control/group_button_control_rgbw.h>
 #include <map>
@@ -289,7 +290,7 @@ struct ActionTrigger {
 extern ActionTrigger *actionTrigger;
 
 void addButtonActionTrigger(uint8_t nr);
-void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element);
+void addActionTriggerRelatedChannel(uint8_t nr, Supla::Control::Button *button, int eventButton, Supla::Element *element = nullptr);
 int calculateElementCountActionTrigger();
 #endif
 
@@ -331,6 +332,7 @@ void addImpulseCounter(uint8_t nr);
 
 #ifdef SUPLA_RGBW
 void addRGBWLeds(uint8_t nr);
+ bool isRGBWButtonGroupOverloaded(uint8_t nrButton);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 

@@ -666,67 +666,66 @@ void addRGBWLeds(uint8_t nr) {
   int brightnessPin = ConfigESP->getGpio(nr, FUNCTION_RGBW_BRIGHTNESS);
 
 #ifdef ARDUINO_ARCH_ESP8266
-  // https://forum.supla.org/viewtopic.php?p=116483#p116483
-  analogWriteFreq(400);
+  analogWriteFreq(400);  // ESP8266 wymaga tego, aby ustawić częstotliwość PWM
 #endif
 
-  Supla::Control::RGBWBase *rgbw = nullptr;
+  bool hasRGB = (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO);
+  bool hasBrightness = (brightnessPin != OFF_GPIO);
+  bool hasRGBW = hasRGB && hasBrightness;
 
-  if (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO && brightnessPin != OFF_GPIO) {
+  Supla::Control::RGBWBase *rgbw = nullptr;
+  Supla::Control::RGBBase::ButtonControlType buttonControlType = Supla::Control::RGBBase::BUTTON_NOT_USED;
+
+  if (hasRGBW) {
     rgbw = new Supla::Control::RGBWLeds(redPin, greenPin, bluePin, brightnessPin);
+    buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_RGBW;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-  }
-  else if (redPin != OFF_GPIO && greenPin != OFF_GPIO && bluePin != OFF_GPIO) {
+  } 
+  else if (hasRGB) {
     rgbw = new Supla::Control::RGBLeds(redPin, greenPin, bluePin);
+    buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_RGB;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(redPin));
-  }
-  else if (brightnessPin != OFF_GPIO) {
+  } 
+  else if (hasBrightness) {
     rgbw = new Supla::Control::DimmerLeds(brightnessPin);
+    buttonControlType = Supla::Control::RGBBase::BUTTON_FOR_W;
     setRGBWDefaultState(rgbw, ConfigESP->getMemory(brightnessPin));
   }
 
-  if (rgbw != nullptr) {
-    uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr);
-    int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
-    int pullupButton = ConfigESP->getPullUp(buttonPin);
-    int inversedButton = ConfigESP->getInversed(buttonPin);
-    int buttonEvent = ConfigESP->getEvent(buttonPin);
+  if (!rgbw) return;
 
-    Supla::Control::GroupButtonControlRgbw *buttonGroup = nullptr;
+  uint8_t nrButton = ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr);
+  int buttonPin = ConfigESP->getGpio(nrButton, FUNCTION_BUTTON);
 
-    if (rgbwButtonManager.buttonGroups.find(nrButton) != rgbwButtonManager.buttonGroups.end()) {
-      buttonGroup = rgbwButtonManager.buttonGroups[nrButton];
+  if (buttonPin != OFF_GPIO) {
+    Supla::Control::GroupButtonControlRgbw *buttonGroup = rgbwButtonManager.buttonGroups[nrButton];
 
-      if (rgbwButtonManager.buttonRGBW.find(nrButton) != rgbwButtonManager.buttonRGBW.end()) {
-        buttonGroup->attach(rgbwButtonManager.buttonRGBW[nrButton]);
-      }
-    }
-    else {
+    if (!buttonGroup) {
       buttonGroup = new Supla::Control::GroupButtonControlRgbw;
       rgbwButtonManager.buttonGroups[nrButton] = buttonGroup;
-
-      if (buttonPin != OFF_GPIO) {
-        auto button = new Supla::Control::Button(buttonPin, pullupButton, inversedButton);
-
-        if (buttonEvent == Supla::Event::ON_CHANGE) {
-          button->setButtonType(Supla::Control::Button::ButtonType::BISTABLE);
-        }
-        else {
-          button->setButtonType(Supla::Control::Button::ButtonType::MONOSTABLE);
-        }
-
-        button->setMulticlickTime(300);
-        button->setHoldTime(400);
-        button->repeatOnHoldEvery(100);
-        buttonGroup->attach(button);
-        rgbwButtonManager.buttonRGBW[nrButton] = button;
-      }
     }
 
+    if (rgbwButtonManager.buttonRGBW.find(nrButton) == rgbwButtonManager.buttonRGBW.end()) {
+      auto button = new Supla::Control::Button(buttonPin, ConfigESP->getPullUp(buttonPin), ConfigESP->getInversed(buttonPin));
+
+      button->setButtonType(ConfigESP->getEvent(buttonPin) == Supla::Event::ON_CHANGE
+                           ? Supla::Control::Button::ButtonType::BISTABLE
+                           : Supla::Control::Button::ButtonType::MONOSTABLE);
+      button->setMulticlickTime(300);
+      button->setHoldTime(400);
+      button->repeatOnHoldEvery(100);
+
+      rgbwButtonManager.buttonRGBW[nrButton] = button;
+      buttonGroup->attach(button);
+    }
+
+    buttonGroup->setButtonControlType(nrButton, buttonControlType);
     buttonGroup->addToGroup(rgbw);
 
 #ifdef SUPLA_ACTION_TRIGGER
-    addActionTriggerRelatedChannel(nr, rgbwButtonManager.buttonRGBW[nrButton], buttonEvent, rgbw);
+    if (!isRGBWButtonGroupOverloaded(nrButton)) {
+      addActionTriggerRelatedChannel(nr, rgbwButtonManager.buttonRGBW[nrButton], ConfigESP->getEvent(buttonPin), rgbw);
+    }
 #endif
   }
 
@@ -734,6 +733,23 @@ void addRGBWLeds(uint8_t nr) {
   Supla::GUI::Conditions::addConditionsExecutive(CONDITIONS::EXECUTIVE_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
   Supla::GUI::Conditions::addConditionsSensor(SENSOR_RGBW, S_RGBW_RGB_DIMMER, rgbw, nr);
 #endif
+}
+
+bool isRGBWButtonGroupOverloaded(uint8_t nrButton) {
+  int count = 0;
+  int maxRgbw = ConfigManager->get(KEY_MAX_RGBW)->getValueInt();
+
+  for (int nr = 0; nr < maxRgbw; nr++) {
+    if (ConfigESP->getNumberButtonAdditional(BUTTON_RGBW, nr) == nrButton) {
+      count++;
+    }
+
+    if (count > 1) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory) {

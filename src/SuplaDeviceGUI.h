@@ -232,6 +232,10 @@
 #include "src/sensor/SDM_120.h"
 #endif
 
+#ifdef SUPLA_MODBUS_SDM_72_V2
+#include "src/sensor/SDM_72.h"
+#endif
+
 #ifdef SUPLA_DEEP_SLEEP
 #include "src/control/deepSleep.h"
 #endif
@@ -332,7 +336,7 @@ void addImpulseCounter(uint8_t nr);
 
 #ifdef SUPLA_RGBW
 void addRGBWLeds(uint8_t nr);
- bool isRGBWButtonGroupOverloaded(uint8_t nrButton);
+bool isRGBWButtonGroupOverloaded(uint8_t nrButton);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 
@@ -361,6 +365,10 @@ extern std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
 
 #ifdef SUPLA_MODBUS_SDM
 extern Supla::Sensor::SDM630 *smd;
+#endif
+
+#ifdef SUPLA_MODBUS_SDM_72_V2
+extern Supla::Sensor::SDM72V2 *smd;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM_ONE_PHASE

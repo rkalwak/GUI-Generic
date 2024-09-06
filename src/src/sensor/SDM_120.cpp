@@ -36,11 +36,7 @@ void SDM120::readValuesFromDevice() {
   clearErrCode();
 
   float energy = ReadValuesSDM::getFwdActEnergy();
-  // float energyTotal = ReadValuesSDM::getFwdActEnergyTotal();
-
   float reactEnergy = ReadValuesSDM::getFwdReactEnergy();
-  // float reactEnergyTotal = ReadValuesSDM::getFwdReactEnergyTotal();
-
   float rvrActEnergy = ReadValuesSDM::getRvrActEnergy();
   float rvrReactEnergy = ReadValuesSDM::getRvrReactEnergy();
 

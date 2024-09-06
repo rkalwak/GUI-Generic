@@ -420,7 +420,7 @@ enum BAUDRATE_UART
   BAUDRATE_38400
 };
 
-#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE)
+#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE) || defined(SUPLA_MODBUS_SDM_72_V2)
 const char* const BAUDRATE_UART_LIST_P[] PROGMEM = {"1200", "2400", "4800", "9600", "19200", "38400"};
 #endif
 

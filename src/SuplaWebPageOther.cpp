@@ -152,7 +152,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE)
+#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE) || defined(SUPLA_MODBUS_SDM_72_V2)
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + "MODBUS SDM");
   addListGPIOBox(INPUT_SDM630_RX, S_RX, FUNCTION_SDM_RX);
   addListGPIOBox(INPUT_SDM630_TX, S_TX, FUNCTION_SDM_TX);
@@ -365,7 +365,7 @@ void handleOtherSave() {
   }
 #endif
 
-#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE)
+#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE) || defined(SUPLA_MODBUS_SDM_72_V2)
   if (!WebServer->saveGPIO(INPUT_SDM630_RX, FUNCTION_SDM_RX) || !WebServer->saveGPIO(INPUT_SDM630_TX, FUNCTION_SDM_TX)) {
     handleOther(6);
     return;

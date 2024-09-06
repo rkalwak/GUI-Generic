@@ -49,12 +49,13 @@ void handlePageHome(int save) {
 
   if (getCountSensorChannels() > 0) {
     addFormHeader();
-#ifdef SUPLA_MODBUS_SDM
+#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_72_V2)
     if (Supla::GUI::smd) {
       addLabel("SuccCount:" + String(Supla::GUI::smd->getSuccCount()) + " ErrCount:" + String(Supla::GUI::smd->getErrCount()) +
                " ErrCode:" + String(Supla::GUI::smd->getErrCode()));
     }
 #endif
+
 #ifdef SUPLA_MODBUS_SDM_ONE_PHASE
     if (Supla::GUI::smd120) {
       addLabel("SuccCount:" + String(Supla::GUI::smd120->getSuccCount()) + " ErrCount:" + String(Supla::GUI::smd120->getErrCount()) +

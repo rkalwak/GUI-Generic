@@ -833,6 +833,10 @@ std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
 Supla::Sensor::SDM630 *smd;
 #endif
 
+#ifdef SUPLA_MODBUS_SDM_72_V2
+Supla::Sensor::SDM72V2 *smd;
+#endif
+
 #ifdef SUPLA_MODBUS_SDM_ONE_PHASE
 Supla::Sensor::SDM120 *smd120;
 #endif

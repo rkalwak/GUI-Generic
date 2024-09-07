@@ -40,6 +40,7 @@ void SDM72V2::readValuesFromDevice() {
   float reactEnergy = ReadValuesSDM::getFwdReactEnergy();
   float rvrActEnergy = ReadValuesSDM::getRvrActEnergy();
   float rvrReactEnergy = ReadValuesSDM::getRvrReactEnergy();
+  float freq = ReadValuesSDM::getFreq();
 
   if (!isnan(energy))
     setFwdActEnergy(0, energy * 100000);
@@ -53,8 +54,10 @@ void SDM72V2::readValuesFromDevice() {
   if (!isnan(rvrReactEnergy))
     setRvrReactEnergy(0, rvrReactEnergy * 100000);
 
+  if (!isnan(freq))
+    setFreq(freq * 100);
+
   // Odczyty z podziałem na fazy dla pozostałych parametrów
-  float freq = ReadValuesSDM::getFreq();
   for (int i = 0; i < MAX_PHASES; i++) {
     float voltage = ReadValuesSDM::getVoltage(i);
     float current = ReadValuesSDM::getCurrent(i);
@@ -75,9 +78,6 @@ void SDM72V2::readValuesFromDevice() {
 
     if (!isnan(powerFactor))
       setPowerFactor(i, powerFactor * 1000);
-
-    if (!isnan(freq))
-      setFreq(freq * 100);
 
     if (!isnan(powerReactive))
       setPowerReactive(i, powerReactive * 100000);

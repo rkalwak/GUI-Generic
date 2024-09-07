@@ -19,14 +19,13 @@
 
 #include <Arduino.h>
 #include <SDM.h>
-#include <supla/sensor/one_phase_electricity_meter.h>
-
+#include <supla/sensor/electricity_meter.h>
 #include "SDM_ReadValues.h"
 
 namespace Supla {
 namespace Sensor {
 
-class SDM72V2 : public ReadValuesSDM, public OnePhaseElectricityMeter {
+class SDM72V2 : public ReadValuesSDM, public ElectricityMeter {
  public:
 #if defined(ESP8266)
   SDM72V2(int8_t pinRX, int8_t pinTX, long baud = 9600);

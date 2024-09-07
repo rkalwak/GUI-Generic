@@ -16,6 +16,10 @@
 //#undef USE_HARDWARESERIAL
 //#define USE_HARDWARESERIAL
 
+#if defined(ESP32)
+#define USE_HARDWARESERIAL
+#endif
+
 //------------------------------------------------------------------------------
 
 /*

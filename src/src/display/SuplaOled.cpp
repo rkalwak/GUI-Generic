@@ -35,6 +35,7 @@ struct oledStruct {
 };
 
 oledStruct* oled;
+int oledType;
 
 String getTempString(double temperature) {
   if (temperature == TEMPERATURE_NOT_AVAILABLE) {
@@ -263,9 +264,9 @@ void displayUiThreeValues(
   display->setColor(WHITE);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
 
-  String valueStr1 = (value1 >= 100) ? String(value1, 0) : String(value1, 1);
-  String valueStr2 = (value2 >= 100) ? String(value2, 0) : String(value2, 1);
-  String valueStr3 = (value3 >= 100) ? String(value3, 0) : String(value3, 1);
+  String valueStr1 = (abs(value1) >= 100) ? String(value1, 0) : String(value1, 1);
+  String valueStr2 = (abs(value2) >= 100) ? String(value2, 0) : String(value2, 1);
+  String valueStr3 = (abs(value3) >= 100) ? String(value3, 0) : String(value3, 1);
 
   String name = ConfigManager->get(KEY_NAME_SENSOR)->getElement(state->currentFrame);
   if (!name.isEmpty()) {
@@ -394,7 +395,7 @@ void displayEnergyVoltage(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     displayUiGeneral(display, state, x, y, String(voltage, 0), "V");
   }
   else {
-    if (display->getWidth() < 64) {
+    if (oledType == OLED_SSD1306_0_66) {
       double averageVoltage = (emValue->m[0].voltage[0] + emValue->m[0].voltage[1] + emValue->m[0].voltage[2]) / 3;
       displayUiGeneral(display, state, x, y, String(averageVoltage / 100.0, 0), "V");
     }
@@ -422,7 +423,7 @@ void displayEnergyCurrent(OLEDDisplay* display, OLEDDisplayUiState* state, int16
     displayUiGeneral(display, state, x, y, String(current, 1), "A");
   }
   else {
-    if (display->getWidth() < 64) {
+    if (oledType == OLED_SSD1306_0_66) {
       double sumCurrent = emValue->m[0].current[0] + emValue->m[0].current[1] + emValue->m[0].current[2];
       displayUiGeneral(display, state, x, y, String(sumCurrent / 1000.0, 1), "A");
     }
@@ -449,7 +450,7 @@ void displayEnergyPowerActive(OLEDDisplay* display, OLEDDisplayUiState* state, i
     displayUiGeneral(display, state, x, y, String(powerActive, 1), "W");
   }
   else {
-    if (display->getWidth() < 64) {
+    if (oledType == OLED_SSD1306_0_66) {
       double sumPowerActive = emValue->m[0].power_active[0] + emValue->m[0].power_active[1] + emValue->m[0].power_active[2];
       displayUiGeneral(display, state, x, y, String(sumPowerActive / 100000.0, 1), "W");
     }
@@ -600,16 +601,20 @@ void SuplaOled::onInit() {
   if ((ConfigESP->getGpio(FUNCTION_SDA) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL) != OFF_GPIO) ||
       (ConfigESP->getGpio(FUNCTION_SDA_2) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL_2) != OFF_GPIO)) {
     HW_I2C i2cBus = (ConfigESP->getGpio(FUNCTION_SDA_2) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL_2) != OFF_GPIO) ? I2C_TWO : I2C_ONE;
+    int oledSensor = ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt();
 
-    switch (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
+    switch (oledSensor) {
       case OLED_SSD1306_0_96:
         display = new SSD1306Wire(0x3c, ConfigESP->getGpio(FUNCTION_SDA), ConfigESP->getGpio(FUNCTION_SCL), GEOMETRY_128_64, i2cBus);
+        oledType = OLED_SSD1306_0_96;
         break;
       case OLED_SH1106_1_3:
         display = new SH1106Wire(0x3c, ConfigESP->getGpio(FUNCTION_SDA), ConfigESP->getGpio(FUNCTION_SCL), GEOMETRY_128_64, i2cBus);
+        oledType = OLED_SH1106_1_3;
         break;
       case OLED_SSD1306_0_66:
         display = new SSD1306Wire(0x3c, ConfigESP->getGpio(FUNCTION_SDA), ConfigESP->getGpio(FUNCTION_SCL), GEOMETRY_64_48, i2cBus);
+        oledType = OLED_SSD1306_0_66;
         break;
     }
 

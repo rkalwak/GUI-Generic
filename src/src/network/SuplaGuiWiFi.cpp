@@ -62,9 +62,9 @@ void GUIESPWifi::setup() {
   if (!wifiConfigured) {
     WiFi.setHostname(hostname);  // ESP32 requires setHostname to be called before begin...
     WiFi.softAPdisconnect(true);
-    WiFi.setAutoConnect(true);
     WiFi.persistent(true);
 #ifdef ARDUINO_ARCH_ESP8266
+    WiFi.setAutoConnect(true);
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
     // https://github.com/esp8266/Arduino/issues/8412
     // https://forum.supla.org/viewtopic.php?t=11999

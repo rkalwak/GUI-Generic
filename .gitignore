@@ -15,3 +15,4 @@ src/GUI-Generic.ino.cpp
 /.idea/
 #### SuplaDevice ####
 lib/SuplaDevice/src/supla/supla_lib_config.h
+lib/SuplaDevice/src/supla/network/html/

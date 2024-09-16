@@ -20,7 +20,7 @@ namespace Supla
                 channel.setDefault(SUPLA_CHANNELFNC_IC_WATER_METER);
             };
 
-            void setNewValue(int value)
+            void setNewValue(double value)
             {
                 channel.setNewValue(value);
             };

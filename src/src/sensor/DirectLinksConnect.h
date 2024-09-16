@@ -23,7 +23,9 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <WiFiClientSecure.h>
+#include <WiFi.h>           
+#include <WiFiClientSecure.h> 
+
 #include <supla/element.h>
 #include <supla/network/network.h>
 

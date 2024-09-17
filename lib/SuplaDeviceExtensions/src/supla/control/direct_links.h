@@ -21,6 +21,7 @@
 
 #ifdef SUPLA_DIRECT_LINKS
 #include <Arduino.h>
+#include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>

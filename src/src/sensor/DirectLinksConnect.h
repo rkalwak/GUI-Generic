@@ -23,7 +23,11 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <WiFi.h>           
+
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
+
 #include <WiFiClientSecure.h> 
 
 #include <supla/element.h>

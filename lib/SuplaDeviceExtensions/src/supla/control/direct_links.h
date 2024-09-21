@@ -21,7 +21,11 @@
 
 #ifdef SUPLA_DIRECT_LINKS
 #include <Arduino.h>
-#include <WiFiClient.h>
+
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
+
 #include <WiFiClientSecure.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>

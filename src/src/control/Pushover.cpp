@@ -16,8 +16,6 @@
 #ifdef SUPLA_PUSHOVER
 #include "Pushover.h"
 
-#include <Arduino.h>
-
 namespace Supla {
 namespace Control {
 

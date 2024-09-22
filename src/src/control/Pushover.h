@@ -25,6 +25,9 @@
 
 #ifdef SUPLA_PUSHOVER
 #include <Arduino.h>
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
 #include <WiFiClientSecure.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>

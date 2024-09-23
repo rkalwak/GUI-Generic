@@ -1,4 +1,4 @@
-name: Build GUI_Generic_ESP32 Project
+name: Build GUI_Generic_ESP32 Manual
 
 # Workflow może być uruchomiony ręcznie i automatycznie przy pushu lub pull request
 on:

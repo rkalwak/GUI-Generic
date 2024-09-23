@@ -22,44 +22,12 @@
 #include "../../SuplaDeviceGUI.h"
 
 namespace Supla {
-GUI_WT32_ETH01::GUI_WT32_ETH01(uint8_t ethmode, unsigned char *ip) : Supla::WT32_ETH01(ethmode, ip) {
+GUI_WT32_ETH01::GUI_WT32_ETH01(uint8_t ethmode) : Supla::WT32_ETH01(ethmode) {
 }
 
 void GUI_WT32_ETH01::setup() {
-  if (!ethConfigured) {
-    ethConfigured = true;
+  WT32_ETH01::setup();
 
-    WiFiEventId_t event_gotIP = WiFi.onEvent(
-        [](WiFiEvent_t event, WiFiEventInfo_t info) {
-          Serial.print(F("local IP: "));
-          Serial.println(ETH.localIP());
-          Serial.print(F("subnetMask: "));
-          Serial.println(ETH.subnetMask());
-          Serial.print(F("gatewayIP: "));
-          Serial.println(ETH.gatewayIP());
-          Serial.print(F("ETH MAC: "));
-          Serial.println(ETH.macAddress());
-          if (ETH.fullDuplex()) {
-            Serial.print(F("FULL_DUPLEX , "));
-          }
-          Serial.print(ETH.linkSpeed());
-          Serial.println(F("Mbps"));
-          eth_connected = true;
-        },
-        WiFiEvent_t::ARDUINO_EVENT_ETH_GOT_IP);  // ESP core 2.0.2
-    (void)(event_gotIP);
-    WiFiEventId_t event_disconnected = WiFi.onEvent(
-        [](WiFiEvent_t event, WiFiEventInfo_t info) {
-          Serial.println(F("Station disconnected"));
-          eth_connected = false;
-        },
-        WiFiEvent_t::ARDUINO_EVENT_ETH_DISCONNECTED);  // ESP core 2.0.2
-    (void)(event_disconnected);
-
-    Serial.println(F("establishing Lan connection"));
-    ETH.begin(ETH_ADDRESS, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN, ETH_TYPE, ETH_CLK_MODE);
-  }
-  
   if (mode == Supla::DEVICE_MODE_CONFIG) {
     uint8_t mac[6] = {};
     WiFi.macAddress(mac);

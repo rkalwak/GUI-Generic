@@ -33,12 +33,8 @@
 namespace Supla {
 class GUI_WT32_ETH01 : public Supla::WT32_ETH01 {
  public:
-  explicit GUI_WT32_ETH01(uint8_t ethmode, unsigned char *ip = nullptr);
-
+  explicit GUI_WT32_ETH01(uint8_t ethmode);
   void setup();
-
- private:
-  bool ethConfigured = false;
 };
 };  // namespace Supla
 

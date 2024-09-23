@@ -1,4 +1,4 @@
-name: Build GUI_Generic_ESP32 Project
+name: Build GUI_Generic_ESP32 Automat
 
 # Workflow uruchamiany przy pushu lub pull request do gałęzi main
 on:

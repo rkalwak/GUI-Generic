@@ -27,21 +27,26 @@ namespace Supla {
 namespace Sensor {
 class AHTX0 : public ThermHygroMeter {
  public:
-  AHTX0(uint8_t address, uint8_t id):_address(address), _id(id){}
+  AHTX0(uint8_t address, uint8_t id) : _address(address), _id(id) {
+  }
   void onInit() {
     aht.begin(&Wire, _id, _address);
   }
 
   double getTemp() {
     double value = TEMPERATURE_NOT_AVAILABLE;
-    aht.getEvent(&humidity, &temp);
+    if (aht.getEvent(&humidity, &temp)) {
+      aht.getEvent(&humidity, &temp);
+    }
     value = temp.temperature;
     return value;
   }
 
   double getHumi() {
     double value = HUMIDITY_NOT_AVAILABLE;
-    value = humidity.relative_humidity;
+    if (aht.getEvent(&humidity, &temp)) {
+      value = humidity.relative_humidity;
+    }
     return value;
   }
 
@@ -59,7 +64,7 @@ class AHTX0 : public ThermHygroMeter {
   sensors_event_t temp;
   sensors_event_t humidity;
 };
-};      // namespace Sensor
-};      // namespace Supla
+};  // namespace Sensor
+};  // namespace Supla
 #endif  // SRC_SUPLA_SENSOR_AHT_H_
 #endif

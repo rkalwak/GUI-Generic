@@ -826,7 +826,7 @@ Supla::Sensor::MPX_5XXX *mpx = nullptr;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP
-std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
+std::vector<Supla::Sensor::AnalogReading *> analogSensorData;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM

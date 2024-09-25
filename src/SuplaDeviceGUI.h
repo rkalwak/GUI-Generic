@@ -360,7 +360,7 @@ extern Supla::Sensor::MPX_5XXX *mpx;
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP
-extern std::vector<Supla::Sensor::AnalogReding *> analogSensorData;
+extern std::vector<Supla::Sensor::AnalogReading *> analogSensorData;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM

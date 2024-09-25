@@ -24,73 +24,98 @@
 #include <supla/storage/storage.h>
 
 #ifdef ARDUINO_ARCH_ESP32
-#include <driver/adc.h>
-#include <esp_adc_cal.h>
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 #endif
 
 namespace Supla {
 namespace Sensor {
 
 #define NO_OF_SAMPLES 10
-
-class AnalogReding : public GeneralPurposeMeasurement {
+class AnalogReading : public GeneralPurposeMeasurement {
  public:
-  AnalogReding(uint8_t pin) : GeneralPurposeMeasurement(nullptr, false), pin(pin), min(0), max(0), minDesired(0), maxDesired(0) {
+  AnalogReading(uint8_t pin) : GeneralPurposeMeasurement(nullptr, false), pin(pin), min(0), max(0), minDesired(0), maxDesired(0) {
   }
 
 #ifdef ARDUINO_ARCH_ESP32
-  adc1_channel_t get_adc1_chanel(uint8_t pin) {
-    adc1_channel_t chan;
+  adc_channel_t get_ADC_channel(uint8_t pin) {
+    adc_channel_t chan;
     switch (pin) {
       case 32:
-        chan = ADC1_CHANNEL_4;
+        chan = ADC_CHANNEL_4;
         break;
 #ifndef CONFIG_IDF_TARGET_ESP32C3
       case 33:
-        chan = ADC1_CHANNEL_5;
+        chan = ADC_CHANNEL_5;
         break;
       case 34:
-        chan = ADC1_CHANNEL_6;
+        chan = ADC_CHANNEL_6;
         break;
       case 35:
-        chan = ADC1_CHANNEL_7;
+        chan = ADC_CHANNEL_7;
         break;
 #endif
       case 36:
-        chan = ADC1_CHANNEL_0;
+        chan = ADC_CHANNEL_0;
         break;
       case 37:
-        chan = ADC1_CHANNEL_1;
+        chan = ADC_CHANNEL_1;
         break;
       case 38:
-        chan = ADC1_CHANNEL_2;
+        chan = ADC_CHANNEL_2;
         break;
       case 39:
-        chan = ADC1_CHANNEL_3;
+        chan = ADC_CHANNEL_3;
         break;
     }
     return chan;
   }
 #endif
-
   void onInit() {
     pinMode(pin, INPUT);
     channel.setNewValue(getValue());
     this->setRefreshIntervalMs(1000);
+
+    // Initialize ADC with new driver
+#ifdef ARDUINO_ARCH_ESP32
+    adc_oneshot_unit_init_cfg_t init_config = {
+        .unit_id = ADC_UNIT_1,  // Używamy ADC1
+    };
+    adc_oneshot_new_unit(&init_config, &adc_handle);
+
+    adc_oneshot_chan_cfg_t chan_config = {.atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
+    adc_oneshot_config_channel(adc_handle, get_ADC_channel(pin), &chan_config);
+
+    // Initialize ADC calibration
+    adc_cali_line_fitting_config_t cali_config = {.unit_id = ADC_UNIT_1, .atten = ADC_ATTEN_DB_12, .bitwidth = ADC_BITWIDTH_DEFAULT};
+    adc_cali_create_scheme_line_fitting(&cali_config, &cali_handle);
+#endif
   }
 
   uint16_t readValuesFromDevice() {
+    uint16_t average = 0;
+    int raw_value = 0;
+
 #ifdef ARDUINO_ARCH_ESP32
-    adc1_config_channel_atten(get_adc1_chanel(pin), ADC_ATTEN_DB_11);
+    int calibrated_value = 0;
+
+    for (int i = 0; i < NO_OF_SAMPLES; i++) {
+      adc_oneshot_read(adc_handle, get_ADC_channel(pin), &raw_value);
+
+      // Convert raw value to calibrated voltage
+      adc_cali_raw_to_voltage(cali_handle, raw_value, &calibrated_value);
+
+      average += calibrated_value;
+    }
+#else
+    for (int i = 0; i < NO_OF_SAMPLES; i++) {
+      raw_value = analogRead(pin);
+      average += raw_value;
+    }
 #endif
 
-    uint16_t average = 0;
-    for (int i = 0; i < NO_OF_SAMPLES; i++) {
-      average += analogRead(pin);
-    }
-
     average /= NO_OF_SAMPLES;
-
     return average;
   }
 
@@ -181,6 +206,11 @@ class AnalogReding : public GeneralPurposeMeasurement {
   float max;
   float minDesired;
   float maxDesired;
+
+#ifdef ARDUINO_ARCH_ESP32
+  adc_oneshot_unit_handle_t adc_handle;  // ADC unit handle for oneshot mode
+  adc_cali_handle_t cali_handle;         // Handle for calibration
+#endif
 };
 
 };  // namespace Sensor

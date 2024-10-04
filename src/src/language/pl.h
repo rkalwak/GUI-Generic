@@ -241,4 +241,6 @@
 #define S_WMBUS_SENSOR_PROP "Sensor property"
 #endif
 
+#define S_SET "Ustaw"
+
 #endif  // _LANGUAGE_PL_S_H_

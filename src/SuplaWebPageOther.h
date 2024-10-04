@@ -85,6 +85,20 @@ void handleCounterCalibrateSave();
 #if defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR)
 #define INPUT_PZEM_RX "iprx"
 #define INPUT_PZEM_TX "iptx"
+
+#define ARG_PARM_PZEM "pzem"
+
+enum PZEMAddress
+{
+  ADDRESS_1 = 0x01,
+  ADDRESS_2 = 0x02,
+  ADDRESS_3 = 0x03,
+  ADDRESS_F8 = 0xF8
+};
+
+#ifdef SUPLA_PZEM_ADR
+void changePZEMAddress(uint8_t address);
+#endif
 #endif
 
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP

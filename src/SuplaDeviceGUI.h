@@ -114,7 +114,7 @@
 #ifdef SUPLA_DEBUG_MODE
 #include <supla/sensor/esp_free_heap.h>
 #endif
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 #include "src/sensor/HLW_8012.h"
 #endif
 #ifdef SUPLA_CSE7766
@@ -340,7 +340,7 @@ bool isRGBWButtonGroupOverloaded(uint8_t nrButton);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 extern Supla::Sensor::HLW_8012 *counterHLW8012;
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL);
 #endif

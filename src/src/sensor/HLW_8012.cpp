@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 
 #include "HLW_8012.h"
 
@@ -62,37 +62,55 @@ void HLW_8012::readValuesFromDevice() {
   }
 
   if (currentChanelRelay) {
-    energy = _energy + (sensor->getEnergy() / 36);  // current energy value = value at start
+    energy = _energy + (sensor->getEnergy() / 36);
   }
 
+  bool valid;
   float _reactive = 0;
   float _pf = 0;
-  float _current = sensor->getCurrent();
-  float _voltage = sensor->getVoltage();
-  float _active = sensor->getActivePower();
+
+  float _current = sensor->getCurrent(valid);
+  if (valid) {
+    setCurrent(0, _current * 1000);
+  }
+
+  float _voltage = sensor->getVoltage(valid);
+  if (valid) {
+    setVoltage(0, _voltage * 100);
+  }
+
+  float _active = sensor->getActivePower(valid);
+  if (valid) {
+    setPowerActive(0, _active * 100000);
+  }
+
   float _apparent = _voltage * _current;
+
   if (_apparent > _active) {
     _reactive = sqrt(_apparent * _apparent - _active * _active);
   }
-  else {
-    _reactive = 0;
-  }
+
   if (_active > _apparent) {
     _pf = 1;
   }
-  if (_apparent == 0) {
+  else if (_apparent == 0) {
     _pf = 0;
   }
   else {
-    _pf = (float)_active / _apparent;
+    _pf = _active / _apparent;
   }
-  setVoltage(0, _voltage * 100);            // voltage in 0.01 V
-  setCurrent(0, _current * 1000);           // current in 0.001 A
-  setPowerActive(0, _active * 100000);      // power in 0.00001 kW
-  setFwdActEnergy(0, energy);               // energy in 0.00001 kWh
-  setPowerApparent(0, _apparent * 100000);  // power in 0.00001 kVA
-  setPowerReactive(0, _reactive * 100000);  // power in 0.00001 kvar
-  setPowerFactor(0, _pf * 1000);            // power in 0.001
+
+  setFwdActEnergy(0, energy);
+
+  if (_apparent > 0) {
+    setPowerApparent(0, _apparent * 100000);
+  }
+
+  if (_reactive > 0) {
+    setPowerReactive(0, _reactive * 100000);
+  }
+
+  setPowerFactor(0, _pf * 1000);
 }
 
 void HLW_8012::onSaveState() {
@@ -184,12 +202,25 @@ void HLW_8012::calibrate(float calibPower, float calibVoltage) {
     delay(10);
   }
 
-  Serial.print(F("[HLW] Active Power (W)    : "));
-  Serial.println(sensor->getActivePower());
-  Serial.print(F("[HLW] Voltage (V)         : "));
-  Serial.println(sensor->getVoltage());
-  Serial.print(F("[HLW] Current (A)         : "));
-  Serial.println(sensor->getCurrent());
+  // bool valid;
+
+  // float activePower = sensor->getActivePower(valid);
+  // if (valid) {
+  //   Serial.print(F("[HLW] Active Power (W)    : "));
+  //   Serial.println(activePower);
+  // }
+
+  // float voltage = sensor->getVoltage(valid);
+  // if (valid) {
+  //   Serial.print(F("[HLW] Voltage (V)         : "));
+  //   Serial.println(voltage);
+  // }
+
+  // float current = sensor->getCurrent(valid);
+  // if (valid) {
+  //   Serial.print(F("[HLW] Current (A)         : "));
+  //   Serial.println(current);
+  // }
 
   sensor->expectedActivePower(calibPower);
   sensor->expectedVoltage(calibVoltage);
@@ -210,6 +241,7 @@ void HLW_8012::calibrate(float calibPower, float calibVoltage) {
   Serial.println(voltageMultiplier);
   Serial.print(F("[HLW] New power multiplier   : "));
   Serial.println(powerMultiplier);
+
   Supla::Storage::ScheduleSave(2000);
   delay(0);
 }

@@ -954,7 +954,7 @@ void addButtonCFG(uint8_t gpio) {
   ConfigESP->setGpio(gpio, FUNCTION_CFG_BUTTON);
 }
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL) {
   ConfigESP->setGpio(pinCF, FUNCTION_CF);
   ConfigESP->setGpio(pinCF1, FUNCTION_CF1);
@@ -1138,7 +1138,7 @@ void chooseTemplateBoard(uint8_t board) {
       addButton(13);
       addRelay(15);
       addLed(0);
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
       addHLW8012(5, 4, 12);
       // Supla::GUI::counterHLW8012->setCurrentMultiplier(18388);
       // Supla::GUI::counterHLW8012->setVoltageMultiplier(247704);
@@ -1168,7 +1168,7 @@ void chooseTemplateBoard(uint8_t board) {
       addButton(13);
       addRelay(15);
       addLed(0);
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
       addHLW8012(5, 14, 12);
       // Supla::GUI::counterHLW8012->setCurrentMultiplier(18388);
       // Supla::GUI::counterHLW8012->setVoltageMultiplier(247704);

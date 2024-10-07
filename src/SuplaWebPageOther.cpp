@@ -56,7 +56,7 @@ void createWebPageOther() {
   });
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
   if ((ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) ||
       ConfigESP->getGpio(FUNCTION_CSE7766_RX) != OFF_GPIO) {
     WebServer->httpServer->on(getURL(PATH_CALIBRATE), [&]() {
@@ -106,7 +106,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_HLW8012);
   addListGPIOBox(INPUT_CF, F("CF"), FUNCTION_CF);
   addListGPIOBox(INPUT_CF1, F("CF1"), FUNCTION_CF1);
@@ -335,7 +335,7 @@ void handleOtherSave() {
   }
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   if (!WebServer->saveGPIO(INPUT_CF, FUNCTION_CF) || !WebServer->saveGPIO(INPUT_CF1, FUNCTION_CF1) || !WebServer->saveGPIO(INPUT_SEL, FUNCTION_SEL)) {
     handleOther(6);
     return;
@@ -624,17 +624,17 @@ void handleImpulseCounterSaveSet() {
 }
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
 void handleCounterCalibrate(int save) {
   String couter;
-  double curent = 0, voltage = 0, power = 0;
+  float curent = 0, voltage = 0, power = 0;
 
   couter = WebServer->httpServer->arg(ARG_PARM_URL);
   WebServer->sendHeaderStart();
   SuplaSaveResult(save);
   SuplaJavaScript(getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, couter));
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   if (couter == PATH_HLW8012) {
     curent = Supla::GUI::counterHLW8012->getCurrentMultiplier();
     voltage = Supla::GUI::counterHLW8012->getVoltageMultiplier();
@@ -675,7 +675,7 @@ void handleCounterCalibrate(int save) {
 }
 
 void handleCounterCalibrateSave() {
-  double calibPower = 0, calibVoltage = 0;
+  float calibPower = 0, calibVoltage = 0;
   String couter = WebServer->httpServer->arg(ARG_PARM_URL);
 
   String input = INPUT_CALIB_POWER;
@@ -695,7 +695,7 @@ void handleCounterCalibrateSave() {
     }
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
     if (couter == PATH_HLW8012)
       Supla::GUI::counterHLW8012->calibrate(calibPower, calibVoltage);
 #endif

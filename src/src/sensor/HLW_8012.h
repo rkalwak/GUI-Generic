@@ -63,9 +63,9 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   int8_t pinSEL;
 
   bool useInterrupts;
-  float currentMultiplier;
-  float voltageMultiplier;
-  float powerMultiplier;
+  double currentMultiplier;
+  double voltageMultiplier;
+  double powerMultiplier;
   bool currentWhen;
 
   unsigned _supla_int64_t energy = 0;

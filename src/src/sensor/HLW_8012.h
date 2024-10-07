@@ -39,22 +39,22 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   void onSaveState();
   void onLoadState();
 
-  double getCurrentMultiplier();
-  double getVoltageMultiplier();
-  double getPowerMultiplier();
+  float getCurrentMultiplier();
+  float getVoltageMultiplier();
+  float getPowerMultiplier();
   bool getMode();
   _supla_int64_t getCounter();
 
-  void setCurrentMultiplier(double value);
-  void setVoltageMultiplier(double value);
-  void setPowerMultiplier(double value);
+  void setCurrentMultiplier(float value);
+  void setVoltageMultiplier(float value);
+  void setPowerMultiplier(float value);
   void setMode(bool value);
   void setCounter(_supla_int64_t value);
   int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request);
 
   static IRAM_ATTR void hjl01_cf1_interrupt();
   static IRAM_ATTR void hjl01_cf_interrupt();
-  void calibrate(double calibPower, double calibVoltage);
+  void calibrate(float calibPower, float calibVoltage);
 
  protected:
   static HLW8012 *sensor;
@@ -63,9 +63,9 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   int8_t pinSEL;
 
   bool useInterrupts;
-  double currentMultiplier;
-  double voltageMultiplier;
-  double powerMultiplier;
+  float currentMultiplier;
+  float voltageMultiplier;
+  float powerMultiplier;
   bool currentWhen;
 
   unsigned _supla_int64_t energy = 0;

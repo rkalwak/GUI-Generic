@@ -20,10 +20,7 @@
 namespace Supla {
 namespace Sensor {
 
-HLW_8012::HLW_8012(int8_t pinCF,
-                   int8_t pinCF1,
-                   int8_t pinSEL,
-                   bool useInterrupts)
+HLW_8012::HLW_8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL, bool useInterrupts)
     : pinCF(pinCF),
       pinCF1(pinCF1),
       pinSEL(pinSEL),
@@ -53,31 +50,31 @@ void HLW_8012::onInit() {
 void HLW_8012::readValuesFromDevice() {
   bool currentChanelRelay = false;
 
-  for (auto element = Supla::Element::begin(); element != nullptr;
-       element = element->next()) {
+  for (auto element = Supla::Element::begin(); element != nullptr; element = element->next()) {
     if (element->getChannel()) {
       auto channel = element->getChannel();
 
       if (channel->getChannelType() == SUPLA_CHANNELTYPE_RELAY) {
-        if (channel->getValueBool()) currentChanelRelay = true;
+        if (channel->getValueBool())
+          currentChanelRelay = true;
       }
     }
   }
 
   if (currentChanelRelay) {
-    energy = _energy + (sensor->getEnergy() /
-                        36);  // current energy value = value at start
+    energy = _energy + (sensor->getEnergy() / 36);  // current energy value = value at start
   }
 
-  unsigned int _reactive = 0;
-  double _pf = 0;
-  double _current = sensor->getCurrent();
-  unsigned int _voltage = sensor->getVoltage();
-  unsigned int _active = sensor->getActivePower();
-  unsigned int _apparent = _voltage * _current;
+  float _reactive = 0;
+  float _pf = 0;
+  float _current = sensor->getCurrent();
+  float _voltage = sensor->getVoltage();
+  float _active = sensor->getActivePower();
+  float _apparent = _voltage * _current;
   if (_apparent > _active) {
     _reactive = sqrt(_apparent * _apparent - _active * _active);
-  } else {
+  }
+  else {
     _reactive = 0;
   }
   if (_active > _apparent) {
@@ -85,8 +82,9 @@ void HLW_8012::readValuesFromDevice() {
   }
   if (_apparent == 0) {
     _pf = 0;
-  } else {
-    _pf = (double)_active / _apparent;
+  }
+  else {
+    _pf = (float)_active / _apparent;
   }
   setVoltage(0, _voltage * 100);            // voltage in 0.01 V
   setCurrent(0, _current * 1000);           // current in 0.001 A
@@ -99,38 +97,31 @@ void HLW_8012::readValuesFromDevice() {
 
 void HLW_8012::onSaveState() {
   Supla::Storage::WriteState((unsigned char *)&energy, sizeof(energy));
-  Supla::Storage::WriteState((unsigned char *)&currentMultiplier,
-                             sizeof(currentMultiplier));
-  Supla::Storage::WriteState((unsigned char *)&voltageMultiplier,
-                             sizeof(voltageMultiplier));
-  Supla::Storage::WriteState((unsigned char *)&powerMultiplier,
-                             sizeof(powerMultiplier));
-  Supla::Storage::WriteState((unsigned char *)&currentWhen,
-                             sizeof(currentWhen));
+  Supla::Storage::WriteState((unsigned char *)&currentMultiplier, sizeof(currentMultiplier));
+  Supla::Storage::WriteState((unsigned char *)&voltageMultiplier, sizeof(voltageMultiplier));
+  Supla::Storage::WriteState((unsigned char *)&powerMultiplier, sizeof(powerMultiplier));
+  Supla::Storage::WriteState((unsigned char *)&currentWhen, sizeof(currentWhen));
 }
 
 void HLW_8012::onLoadState() {
   if (Supla::Storage::ReadState((unsigned char *)&energy, sizeof(energy))) {
     setCounter(energy);
   }
-  Supla::Storage::ReadState((unsigned char *)&currentMultiplier,
-                            sizeof(currentMultiplier));
-  Supla::Storage::ReadState((unsigned char *)&voltageMultiplier,
-                            sizeof(voltageMultiplier));
-  Supla::Storage::ReadState((unsigned char *)&powerMultiplier,
-                            sizeof(powerMultiplier));
+  Supla::Storage::ReadState((unsigned char *)&currentMultiplier, sizeof(currentMultiplier));
+  Supla::Storage::ReadState((unsigned char *)&voltageMultiplier, sizeof(voltageMultiplier));
+  Supla::Storage::ReadState((unsigned char *)&powerMultiplier, sizeof(powerMultiplier));
   Supla::Storage::ReadState((unsigned char *)&currentWhen, sizeof(currentWhen));
 }
 
-double HLW_8012::getCurrentMultiplier() {
+float HLW_8012::getCurrentMultiplier() {
   return currentMultiplier;
 }
 
-double HLW_8012::getVoltageMultiplier() {
+float HLW_8012::getVoltageMultiplier() {
   return voltageMultiplier;
 }
 
-double HLW_8012::getPowerMultiplier() {
+float HLW_8012::getPowerMultiplier() {
   return powerMultiplier;
 }
 
@@ -142,17 +133,17 @@ _supla_int64_t HLW_8012::getCounter() {
   return energy;
 }
 
-void HLW_8012::setCurrentMultiplier(double value) {
+void HLW_8012::setCurrentMultiplier(float value) {
   currentMultiplier = value;
   sensor->setCurrentMultiplier(value);
 }
 
-void HLW_8012::setVoltageMultiplier(double value) {
+void HLW_8012::setVoltageMultiplier(float value) {
   voltageMultiplier = value;
   sensor->setVoltageMultiplier(value);
 }
 
-void HLW_8012::setPowerMultiplier(double value) {
+void HLW_8012::setPowerMultiplier(float value) {
   powerMultiplier = value;
   sensor->setPowerMultiplier(value);
 }
@@ -187,7 +178,7 @@ void IRAM_ATTR HLW_8012::hjl01_cf_interrupt() {
   sensor->cf_interrupt();
 }
 
-void HLW_8012::calibrate(double calibPower, double calibVoltage) {
+void HLW_8012::calibrate(float calibPower, float calibVoltage) {
   unsigned long timeout1 = millis();
   while ((millis() - timeout1) < 10000) {
     delay(10);

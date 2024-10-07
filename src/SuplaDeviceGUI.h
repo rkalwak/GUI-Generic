@@ -115,7 +115,7 @@
 #include <supla/sensor/esp_free_heap.h>
 #endif
 #ifdef SUPLA_HLW8012
-#include <supla/sensor/HLW_8012.h>
+#include <src/sensor/HLW_8012.h>
 #endif
 #ifdef SUPLA_CSE7766
 #include <supla/sensor/CSE_7766.h>

@@ -92,17 +92,11 @@ void HLW_8012::readValuesFromDevice() {
   else {
     _pf = _active / _apparent;
   }
+  
   setPowerFactor(0, _pf * 1000);
-
   setFwdActEnergy(0, energy);
-
-  if (_apparent >= 0) {
-    setPowerApparent(0, _apparent * 100000);
-  }
-
-  if (_reactive >= 0) {
-    setPowerReactive(0, _reactive * 100000);
-  }
+  setPowerApparent(0, _apparent * 100000);
+  setPowerReactive(0, _reactive * 100000);
 }
 
 void HLW_8012::onSaveState() {

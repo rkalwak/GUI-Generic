@@ -565,6 +565,17 @@ void addButton(const String& name, const String& url) {
   WebServer->sendContent(F("<br><br>"));
 }
 
+void addButtonWithConfirmation(const String& name, const String& url, const String& confirmMessage) {
+  WebServer->sendContent(F("<a href='#' onclick=\"if (confirm('"));
+  WebServer->sendContent(confirmMessage);
+  WebServer->sendContent(F("')) { window.location.href='"));
+  WebServer->sendContent(getURL(url));
+  WebServer->sendContent(F("'; }\"><button>"));
+  WebServer->sendContent(name);
+  WebServer->sendContent(F("</button></a>"));
+  WebServer->sendContent(F("<br><br>"));
+}
+
 void addButtonSubmit(const String& name) {
   WebServer->sendContent(F("<button type='submit'>"));
   WebServer->sendContent(name);

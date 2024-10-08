@@ -102,6 +102,8 @@ void addListLinkBox(
 void addButton(const String& name, const String& url);
 void addButton(const String& name, const String& url);
 
+void addButtonWithConfirmation(const String& name, const String& url, const String& confirmMessage);
+
 void addButtonSubmit(const String& name);
 
 String getURL(const String& url);

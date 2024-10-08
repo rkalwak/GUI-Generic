@@ -70,22 +70,15 @@ void HLW_8012::readValuesFromDevice() {
   float _pf = 0;
 
   float _current = sensor->getCurrent(valid);
-  // if (valid) {
-  setCurrent(0, _current * 1000);
-  // }
+  setCurrent(0, valid ? _current * 1000 : 0);
 
   float _voltage = sensor->getVoltage(valid);
-  // if (valid) {
-  setVoltage(0, _voltage * 100);
-  // }
+  setVoltage(0, valid ? _voltage * 100 : 0);
 
   float _active = sensor->getActivePower(valid);
-  // if (valid) {
-  setPowerActive(0, _active * 100000);
-  // }
+  setPowerActive(0, valid ? _active * 100000 : 0);
 
   float _apparent = _voltage * _current;
-
   if (_apparent > _active) {
     _reactive = sqrt(_apparent * _apparent - _active * _active);
   }
@@ -99,18 +92,17 @@ void HLW_8012::readValuesFromDevice() {
   else {
     _pf = _active / _apparent;
   }
+  setPowerFactor(0, _pf * 1000);
 
   setFwdActEnergy(0, energy);
 
-  if (_apparent > 0) {
+  if (_apparent >= 0) {
     setPowerApparent(0, _apparent * 100000);
   }
 
-  if (_reactive > 0) {
+  if (_reactive >= 0) {
     setPowerReactive(0, _reactive * 100000);
   }
-
-  setPowerFactor(0, _pf * 1000);
 }
 
 void HLW_8012::onSaveState() {

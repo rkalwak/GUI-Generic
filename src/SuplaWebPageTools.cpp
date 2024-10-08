@@ -95,8 +95,8 @@ void handleTools(int save) {
 #ifdef SUPLA_OTA
   addButton(S_UPDATE, PATH_UPDATE_HENDLE);
 #endif
-  addButton(S_RESET_CONFIGURATION, getParameterRequest(PATH_TOOLS, ARG_PARM_URL, PATH_RESET));
-  addButton(S_RESTORE_FACTORY_SETTING, getParameterRequest(PATH_TOOLS, ARG_PARM_URL, PATH_FACTORY_RESET));
+  addButtonWithConfirmation(S_RESET_CONFIGURATION, getParameterRequest(PATH_TOOLS, ARG_PARM_URL, PATH_RESET), "Czy zrestartować?");
+  addButtonWithConfirmation(S_RESTORE_FACTORY_SETTING, getParameterRequest(PATH_TOOLS, ARG_PARM_URL, PATH_FACTORY_RESET), "Czy zrestartować?");
   addFormHeaderEnd();
   addButton(S_RETURN, "");
   addButton(S_DEVICE_SETTINGS, PATH_DEVICE_SETTINGS);

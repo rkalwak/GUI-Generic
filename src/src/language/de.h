@@ -35,7 +35,7 @@
 #define S_SENSORS_I2C                                          "i2c SENSOREN"
 #define S_SENSORS_SPI                                          "SPI SENSOREN"
 #define S_SENSORS_OTHER                                        "ANDERE SENSOREN"
-#define S_CONFIGURATION                                       "LED, TASTENKONFIGURATION"
+#define S_CONFIGURATION                                        "LED, TASTENKONFIGURATION"
 #define S_CFG_MODE                                             "Modus"
 #define S_QUANTITY                                             "MENGE"
 #define S_GPIO_SETTINGS_FOR_RELAYS                             "GPIO-Parameter für Relais"
@@ -230,11 +230,13 @@
 #endif
 
 #ifdef SUPLA_CC1101
-#define S_WMBUS_METER "Meter"
+#define S_WMBUS_METER       "Meter"
 #define S_WMBUS_SENSOR_TYPE "Sensor type"
-#define S_WMBUS_SENSOR_ID "Sensor id"
-#define S_WMBUS_SENSOR_KEY "Sensor key"
+#define S_WMBUS_SENSOR_ID   "Sensor id"
+#define S_WMBUS_SENSOR_KEY  "Sensor key"
 #define S_WMBUS_SENSOR_PROP "Sensor property"
 #endif
+
+#define S_SET "Einstellen"
 
 #endif  // _LANGUAGE_DE_S_H_

@@ -479,7 +479,7 @@ void setup() {
   }
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   if (ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) {
     Supla::GUI::addHLW8012(ConfigESP->getGpio(FUNCTION_CF), ConfigESP->getGpio(FUNCTION_CF1), ConfigESP->getGpio(FUNCTION_SEL));
     improvSerialComponent->disable();

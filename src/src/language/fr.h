@@ -238,4 +238,5 @@
 #define S_WMBUS_SENSOR_PROP "Sensor property"
 #endif
 
+#define S_SET "Définir"
 #endif  // _LANGUAGE_FR_S_H_

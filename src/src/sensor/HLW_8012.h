@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 #ifndef _hlw8012_h
 #define _hlw8012_h
 
@@ -29,32 +29,29 @@ namespace Sensor {
 
 class HLW_8012 : public OnePhaseElectricityMeter {
  public:
-  HLW_8012(int8_t pinCF,
-           int8_t pinCF1,
-           int8_t pinSEL,
-           bool useInterrupts = true);
+  HLW_8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL, bool useInterrupts = true);
 
   void onInit();
   void readValuesFromDevice();
   void onSaveState();
   void onLoadState();
 
-  double getCurrentMultiplier();
-  double getVoltageMultiplier();
-  double getPowerMultiplier();
+  float getCurrentMultiplier();
+  float getVoltageMultiplier();
+  float getPowerMultiplier();
   bool getMode();
   _supla_int64_t getCounter();
 
-  void setCurrentMultiplier(double value);
-  void setVoltageMultiplier(double value);
-  void setPowerMultiplier(double value);
+  void setCurrentMultiplier(float value);
+  void setVoltageMultiplier(float value);
+  void setPowerMultiplier(float value);
   void setMode(bool value);
   void setCounter(_supla_int64_t value);
   int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request);
 
   static IRAM_ATTR void hjl01_cf1_interrupt();
   static IRAM_ATTR void hjl01_cf_interrupt();
-  void calibrate(double calibPower, double calibVoltage);
+  void calibrate(float calibPower, float calibVoltage);
 
  protected:
   static HLW8012 *sensor;
@@ -63,14 +60,13 @@ class HLW_8012 : public OnePhaseElectricityMeter {
   int8_t pinSEL;
 
   bool useInterrupts;
-  double currentMultiplier;
-  double voltageMultiplier;
-  double powerMultiplier;
+  float currentMultiplier;
+  float voltageMultiplier;
+  float powerMultiplier;
   bool currentWhen;
 
   unsigned _supla_int64_t energy = 0;
-  unsigned _supla_int64_t _energy =
-      0;  // energy value read from memory at startup
+  unsigned _supla_int64_t _energy = 0;  // energy value read from memory at startup
 };
 
 };  // namespace Sensor

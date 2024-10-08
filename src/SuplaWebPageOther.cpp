@@ -16,12 +16,26 @@
 
 #include "SuplaWebPageOther.h"
 
+#ifdef SUPLA_PZEM_ADR
+#include <PZEM004Tv30.h>
+#include <SoftwareSerial.h>
+#endif
+
 void createWebPageOther() {
 #ifdef GUI_OTHER
   WebServer->httpServer->on(getURL(PATH_OTHER), [&]() {
     if (!WebServer->isLoggedIn()) {
       return;
     }
+#ifdef SUPLA_PZEM_ADR
+    String urlParam = WebServer->httpServer->arg(ARG_PARM_PZEM);
+    int address = urlParam.toInt();
+
+    if (address == ADDRESS_1 || address == ADDRESS_2 || address == ADDRESS_3 || address == ADDRESS_F8) {
+      changePZEMAddress(address);
+      handleOther(SaveResult::DATA_SAVE);
+    }
+#endif
 
     if (WebServer->httpServer->method() == HTTP_GET)
       handleOther();
@@ -42,7 +56,7 @@ void createWebPageOther() {
   });
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
   if ((ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) ||
       ConfigESP->getGpio(FUNCTION_CSE7766_RX) != OFF_GPIO) {
     WebServer->httpServer->on(getURL(PATH_CALIBRATE), [&]() {
@@ -92,7 +106,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_HLW8012);
   addListGPIOBox(INPUT_CF, F("CF"), FUNCTION_CF);
   addListGPIOBox(INPUT_CF1, F("CF1"), FUNCTION_CF1);
@@ -138,17 +152,21 @@ void handleOther(int save) {
   addListGPIOBox(INPUT_PZEM_RX, F("RX"), FUNCTION_PZEM_RX, 1, true, "", true);
   addListGPIOBox(INPUT_PZEM_TX, F("TX"), FUNCTION_PZEM_TX, 1, true, "", true);
   addLabel(F("Domyślny adres PZEM: 0xF8"));
+  if (ConfigESP->getGpio(1, FUNCTION_PZEM_RX) != OFF_GPIO && ConfigESP->getGpio(1, FUNCTION_PZEM_TX) != OFF_GPIO) {
+    addLinkBox(String(S_SET) + S_SPACE + S_ADDRESS + S_SPACE + "0xF8", getParameterRequest(PATH_OTHER, ARG_PARM_PZEM) + String(ADDRESS_F8));
+  }
   addFormHeaderEnd();
 
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + F("PZEM-004T 3F (Adresowany)"));
 
   addListGPIOBox(INPUT_PZEM_RX, F("RX"), FUNCTION_PZEM_RX, 2, true, "", true);
   addListGPIOBox(INPUT_PZEM_TX, F("TX"), FUNCTION_PZEM_TX, 2, true, "", true);
-  addLabel(
-      F("Domyślne adresy PZEM:<br>"
-        "1F: 0x01<br>"
-        "2F: 0x02<br>"
-        "3F: 0x03"));
+  addLabel(F("Domyślne adresy PZEM: 1F:0x01 2F:0x02 3F:0x03"));
+  if (ConfigESP->getGpio(2, FUNCTION_PZEM_RX) != OFF_GPIO && ConfigESP->getGpio(2, FUNCTION_PZEM_TX) != OFF_GPIO) {
+    addLinkBox(String(S_SET) + S_SPACE + S_ADDRESS + S_SPACE + "0x01", getParameterRequest(PATH_OTHER, ARG_PARM_PZEM) + String(ADDRESS_1));
+    addLinkBox(String(S_SET) + S_SPACE + S_ADDRESS + S_SPACE + "0x02", getParameterRequest(PATH_OTHER, ARG_PARM_PZEM) + String(ADDRESS_2));
+    addLinkBox(String(S_SET) + S_SPACE + S_ADDRESS + S_SPACE + "0x03", getParameterRequest(PATH_OTHER, ARG_PARM_PZEM) + String(ADDRESS_3));
+  }
   addFormHeaderEnd();
 #endif
 
@@ -317,7 +335,7 @@ void handleOtherSave() {
   }
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   if (!WebServer->saveGPIO(INPUT_CF, FUNCTION_CF) || !WebServer->saveGPIO(INPUT_CF1, FUNCTION_CF1) || !WebServer->saveGPIO(INPUT_SEL, FUNCTION_SEL)) {
     handleOther(6);
     return;
@@ -606,17 +624,17 @@ void handleImpulseCounterSaveSet() {
 }
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
 void handleCounterCalibrate(int save) {
   String couter;
-  double curent = 0, voltage = 0, power = 0;
+  float curent = 0, voltage = 0, power = 0;
 
   couter = WebServer->httpServer->arg(ARG_PARM_URL);
   WebServer->sendHeaderStart();
   SuplaSaveResult(save);
   SuplaJavaScript(getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, couter));
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
   if (couter == PATH_HLW8012) {
     curent = Supla::GUI::counterHLW8012->getCurrentMultiplier();
     voltage = Supla::GUI::counterHLW8012->getVoltageMultiplier();
@@ -657,7 +675,7 @@ void handleCounterCalibrate(int save) {
 }
 
 void handleCounterCalibrateSave() {
-  double calibPower = 0, calibVoltage = 0;
+  float calibPower = 0, calibVoltage = 0;
   String couter = WebServer->httpServer->arg(ARG_PARM_URL);
 
   String input = INPUT_CALIB_POWER;
@@ -677,7 +695,7 @@ void handleCounterCalibrateSave() {
     }
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
     if (couter == PATH_HLW8012)
       Supla::GUI::counterHLW8012->calibrate(calibPower, calibVoltage);
 #endif
@@ -745,5 +763,42 @@ void receiveCodeRFBridge() {
   addButton(S_RETURN, PATH_OTHER);
   WebServer->sendHeaderEnd();
 }
+#endif
 
+#ifdef SUPLA_PZEM_ADR
+void changePZEMAddress(uint8_t address) {
+  int8_t pinRX = OFF_GPIO;
+  int8_t pinTX = OFF_GPIO;
+
+  if (address == ADDRESS_F8) {
+    pinRX = ConfigESP->getGpio(1, FUNCTION_PZEM_RX);
+    pinTX = ConfigESP->getGpio(1, FUNCTION_PZEM_TX);
+  }
+  else {
+    pinRX = ConfigESP->getGpio(2, FUNCTION_PZEM_RX);
+    pinTX = ConfigESP->getGpio(2, FUNCTION_PZEM_TX);
+  }
+
+  if (pinRX != OFF_GPIO && pinTX != OFF_GPIO) {
+    Serial.print("Using address: 0x");
+    Serial.println(address, HEX);
+#if defined(ARDUINO_ARCH_ESP32)
+    PZEM004Tv30 pzem(&Serial, pinRX, pinTX);
+#else
+    SoftwareSerial pzemSWSerial(pinRX, pinTX);
+    PZEM004Tv30 pzem(pzemSWSerial);
+#endif
+
+    if (pzem.setAddress(address)) {
+      Serial.print("Address set to: ");
+      Serial.println(address);
+    }
+    else {
+      Serial.println("Error setting address!");
+    }
+
+    Serial.print("Current address: 0x");
+    Serial.println(pzem.getAddress(), HEX);
+  }
+}
 #endif

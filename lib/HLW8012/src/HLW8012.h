@@ -57,6 +57,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ICACHE_RAM_ATTR     
 #endif
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 // CF1 mode
 typedef enum {
     MODE_CURRENT,
@@ -67,8 +71,13 @@ class HLW8012 {
 
     public:
 
+    // #if ESP_IDF_VERSION_MAJOR >= 5
         void cf_interrupt();
         void cf1_interrupt();
+    // #else
+    //     void IRAM_ATTR cf_interrupt();
+    //     void IRAM_ATTR cf1_interrupt();
+    // #endif
 
         void begin(
             unsigned char cf_pin,
@@ -79,63 +88,91 @@ class HLW8012 {
             unsigned long pulse_timeout = PULSE_TIMEOUT);
 
         void setMode(hlw8012_mode_t mode);
+
         hlw8012_mode_t getMode();
         hlw8012_mode_t toggleMode();
 
-        double getCurrent();
-        double getVoltage();
-        double getActivePower();
-        double getApparentPower();
-        double getPowerFactor();
-        unsigned int getReactivePower();
-        unsigned long getEnergy(); //in Ws
+        float getCurrent(bool &valid);
+        float getVoltage(bool &valid);
+        float getActivePower(bool &valid);
+        float getApparentPower(bool &valid);
+        float getPowerFactor(bool &valid);
+        float getReactivePower(bool &valid);
+        float getEnergy(); //in Ws
         void resetEnergy();
 
-        void setResistors(double current, double voltage_upstream, double voltage_downstream);
+        void setResistors(float current, float voltage_upstream, float voltage_downstream);
 
-        void expectedCurrent(double current);
-        void expectedVoltage(double current);
-        void expectedActivePower(double power);
+        void expectedCurrent(float current);
+        void expectedVoltage(float current);
+        void expectedActivePower(float power);
 
-        double getCurrentMultiplier() { return _current_multiplier; };
-        double getVoltageMultiplier() { return _voltage_multiplier; };
-        double getPowerMultiplier() { return _power_multiplier; };
+        float getCurrentMultiplier() { return _current_multiplier; };
+        float getVoltageMultiplier() { return _voltage_multiplier; };
+        float getPowerMultiplier() { return _power_multiplier; };
 
-        void setCurrentMultiplier(double current_multiplier) { _current_multiplier = current_multiplier; };
-        void setVoltageMultiplier(double voltage_multiplier) { _voltage_multiplier = voltage_multiplier; };
-        void setPowerMultiplier(double power_multiplier) { _power_multiplier = power_multiplier; };
+        void setCurrentMultiplier(float current_multiplier) { _current_multiplier = current_multiplier; };
+        void setVoltageMultiplier(float voltage_multiplier) { _voltage_multiplier = voltage_multiplier; };
+        void setPowerMultiplier(float power_multiplier) { _power_multiplier = power_multiplier; };
         void resetMultipliers();
 
     private:
 
-        unsigned char _cf_pin;
-        unsigned char _cf1_pin;
-        unsigned char _sel_pin;
+        // Perform some IIR filtering
+        // new = (old + 3 * new) / 4
+        // static unsigned long filter(unsigned long oldvalue, unsigned long newvalue) IRAM_ATTR;
 
-        double _current_resistor = R_CURRENT;
-        double _voltage_resistor = R_VOLTAGE;
+        unsigned char _cf_pin{};
+        unsigned char _cf1_pin{};
+        unsigned char _sel_pin{};
 
-        double _current_multiplier; // Unit: us/A
-        double _voltage_multiplier; // Unit: us/V
-        double _power_multiplier;   // Unit: us/W
+        float _current_resistor = R_CURRENT;
+        float _voltage_resistor = R_VOLTAGE;
 
-        unsigned long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
+        float _current_multiplier{}; // Unit: us/A
+        float _voltage_multiplier{}; // Unit: us/V
+        float _power_multiplier{};   // Unit: us/W
+
+        long _pulse_timeout = PULSE_TIMEOUT;    //Unit: us
         volatile unsigned long _voltage_pulse_width = 0; //Unit: us
         volatile unsigned long _current_pulse_width = 0; //Unit: us
         volatile unsigned long _power_pulse_width = 0;   //Unit: us
-        volatile unsigned long _pulse_count = 0;
 
-        double _current = 0;
-        double _voltage = 0;
-        double _power = 0;
+        float _current{};
+        float _voltage{};
+        float _power{};
 
         unsigned char _current_mode = HIGH;
-        volatile unsigned char _mode;
+        volatile unsigned char _mode = 0;
 
         bool _use_interrupts = true;
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf_pulse_count_total{};
+        #else
+        volatile unsigned long _cf_pulse_count_total = 0;
+        #endif
+
+        // CF = Active power
+        volatile unsigned long _first_cf_interrupt = 0;
         volatile unsigned long _last_cf_interrupt = 0;
-        volatile unsigned long _last_cf1_interrupt = 0;
+
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf_pulse_count{};
+        #else
+        volatile unsigned long _cf_pulse_count = 0;
+        #endif
+
+
+        // CF1 toggles between voltage and current measurement
         volatile unsigned long _first_cf1_interrupt = 0;
+        volatile unsigned long _last_cf1_interrupt = 0;
+
+        #if ESP_IDF_VERSION_MAJOR >= 5
+        std::atomic<unsigned long> _cf1_pulse_count{};
+        #else
+        volatile unsigned long _cf1_pulse_count = 0;
+        #endif
+
 
         void _checkCFSignal();
         void _checkCF1Signal();

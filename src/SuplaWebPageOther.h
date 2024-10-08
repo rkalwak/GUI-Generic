@@ -24,7 +24,7 @@
 #define GUI_SENSOR_OTHER
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR) || defined(SUPLA_CSE7766) || defined(SUPLA_MODBUS_SDM) || \
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR) || defined(SUPLA_CSE7766) || defined(SUPLA_MODBUS_SDM) || \
     defined(SUPLA_MODBUS_SDM_ONE_PHASE) || defined(SUPLA_MODBUS_SDM_72_V2)
 #define GUI_OTHER_ENERGY
 #endif
@@ -56,7 +56,7 @@ void handleImpulseCounterSet(int save = 0);
 void handleImpulseCounterSaveSet();
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 #define INPUT_CF  "cf"
 #define INPUT_CF1 "cf1"
 #define INPUT_SEL "sel"
@@ -73,7 +73,7 @@ void handleImpulseCounterSaveSet();
 #define PATH_CSE7766                       "cse7766"
 #endif
 
-#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
 #define PATH_CALIBRATE      "calibrate"
 #define INPUT_CALIB_POWER   "power"
 #define INPUT_CALIB_VOLTAGE "voltage"
@@ -85,6 +85,20 @@ void handleCounterCalibrateSave();
 #if defined(SUPLA_PZEM_V_3) || defined(SUPLA_PZEM_ADR)
 #define INPUT_PZEM_RX "iprx"
 #define INPUT_PZEM_TX "iptx"
+
+#define ARG_PARM_PZEM "pzem"
+
+enum PZEMAddress
+{
+  ADDRESS_1 = 0x01,
+  ADDRESS_2 = 0x02,
+  ADDRESS_3 = 0x03,
+  ADDRESS_F8 = 0xF8
+};
+
+#ifdef SUPLA_PZEM_ADR
+void changePZEMAddress(uint8_t address);
+#endif
 #endif
 
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP

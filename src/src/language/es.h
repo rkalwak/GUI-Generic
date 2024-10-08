@@ -240,4 +240,6 @@
 #define S_WMBUS_SENSOR_PROP "Sensor property"
 #endif
 
+#define S_SET "Establecer"
+
 #endif  // _LANGUAGE_ES_S_H_

@@ -776,7 +776,7 @@ std::vector<Supla::Control::Relay *> relay;
 std::vector<DS18B20 *> sensorDS;
 #endif
 
-#ifdef SUPLA_HLW8012
+#ifdef SUPLA_HLW8012_V2
 Supla::Sensor::HLW_8012 *counterHLW8012 = nullptr;
 
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL) {

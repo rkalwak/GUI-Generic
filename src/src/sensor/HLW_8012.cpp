@@ -70,19 +70,19 @@ void HLW_8012::readValuesFromDevice() {
   float _pf = 0;
 
   float _current = sensor->getCurrent(valid);
-  if (valid) {
-    setCurrent(0, _current * 1000);
-  }
+  // if (valid) {
+  setCurrent(0, _current * 1000);
+  // }
 
   float _voltage = sensor->getVoltage(valid);
-  if (valid) {
-    setVoltage(0, _voltage * 100);
-  }
+  // if (valid) {
+  setVoltage(0, _voltage * 100);
+  // }
 
   float _active = sensor->getActivePower(valid);
-  if (valid) {
-    setPowerActive(0, _active * 100000);
-  }
+  // if (valid) {
+  setPowerActive(0, _active * 100000);
+  // }
 
   float _apparent = _voltage * _current;
 

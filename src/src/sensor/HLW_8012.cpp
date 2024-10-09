@@ -92,7 +92,7 @@ void HLW_8012::readValuesFromDevice() {
   else {
     _pf = _active / _apparent;
   }
-  
+
   setPowerFactor(0, _pf * 1000);
   setFwdActEnergy(0, energy);
   setPowerApparent(0, _apparent * 100000);
@@ -183,30 +183,32 @@ void IRAM_ATTR HLW_8012::hjl01_cf_interrupt() {
 }
 
 void HLW_8012::calibrate(float calibPower, float calibVoltage) {
+  sensor->resetMultipliers();
+
   unsigned long timeout1 = millis();
   while ((millis() - timeout1) < 10000) {
-    delay(10);
+    delay(20);
   }
 
-  // bool valid;
+  bool valid;
 
-  // float activePower = sensor->getActivePower(valid);
-  // if (valid) {
-  //   Serial.print(F("[HLW] Active Power (W)    : "));
-  //   Serial.println(activePower);
-  // }
+  float activePower = sensor->getActivePower(valid);
+  if (valid) {
+    Serial.print(F("[HLW] Active Power (W)    : "));
+    Serial.println(activePower);
+  }
 
-  // float voltage = sensor->getVoltage(valid);
-  // if (valid) {
-  //   Serial.print(F("[HLW] Voltage (V)         : "));
-  //   Serial.println(voltage);
-  // }
+  float voltage = sensor->getVoltage(valid);
+  if (valid) {
+    Serial.print(F("[HLW] Voltage (V)         : "));
+    Serial.println(voltage);
+  }
 
-  // float current = sensor->getCurrent(valid);
-  // if (valid) {
-  //   Serial.print(F("[HLW] Current (A)         : "));
-  //   Serial.println(current);
-  // }
+  float current = sensor->getCurrent(valid);
+  if (valid) {
+    Serial.print(F("[HLW] Current (A)         : "));
+    Serial.println(current);
+  }
 
   sensor->expectedActivePower(calibPower);
   sensor->expectedVoltage(calibVoltage);
@@ -228,7 +230,7 @@ void HLW_8012::calibrate(float calibPower, float calibVoltage) {
   Serial.print(F("[HLW] New power multiplier   : "));
   Serial.println(powerMultiplier);
 
-  Supla::Storage::ScheduleSave(2000);
+  Supla::Storage::ScheduleSave(1000);
   delay(0);
 }
 

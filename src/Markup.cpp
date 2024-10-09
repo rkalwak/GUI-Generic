@@ -672,3 +672,8 @@ void SuplaSaveResult(int save) {
   }
   WebServer->sendContent(F("</div>"));
 }
+
+float getFloatFromInput(const String& input) {
+  String arg = WebServer->httpServer->arg(input);
+  return arg.length() > 0 ? arg.toFloat() : 0.0;
+}

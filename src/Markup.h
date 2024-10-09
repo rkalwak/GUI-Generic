@@ -118,4 +118,6 @@ void SuplaJavaScript(const String& java_return = PATH_START);
 
 void SuplaSaveResult(int save);
 
+float getFloatFromInput(const String& input);
+
 #endif  // Markup_h

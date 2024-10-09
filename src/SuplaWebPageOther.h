@@ -78,6 +78,13 @@ void handleImpulseCounterSaveSet();
 #define INPUT_CALIB_POWER   "power"
 #define INPUT_CALIB_VOLTAGE "voltage"
 
+#define INPUT_CURRENT_MULTIPLIER "current_multiplier"
+#define INPUT_VOLTAGE_MULTIPLIER "voltage_multiplier"
+#define INPUT_POWER_MULTIPLIER   "power_multiplier"
+
+#define CSE7766_MULTIPLIER          "scemultiplier"
+#define HLW8012_MULTIPLIER          "hlwmultiplier"
+
 void handleCounterCalibrate(int save = 0);
 void handleCounterCalibrateSave();
 #endif

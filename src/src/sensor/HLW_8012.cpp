@@ -13,7 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
 
 #include "HLW_8012.h"
 
@@ -101,9 +101,16 @@ void HLW_8012::readValuesFromDevice() {
 
 void HLW_8012::onSaveState() {
   Supla::Storage::WriteState((unsigned char *)&energy, sizeof(energy));
-  Supla::Storage::WriteState((unsigned char *)&currentMultiplier, sizeof(currentMultiplier));
-  Supla::Storage::WriteState((unsigned char *)&voltageMultiplier, sizeof(voltageMultiplier));
-  Supla::Storage::WriteState((unsigned char *)&powerMultiplier, sizeof(powerMultiplier));
+
+  double tempValue = static_cast<double>(currentMultiplier);
+  Supla::Storage::WriteState((unsigned char *)&tempValue, sizeof(tempValue));
+
+  tempValue = static_cast<double>(voltageMultiplier);
+  Supla::Storage::WriteState((unsigned char *)&tempValue, sizeof(tempValue));
+
+  tempValue = static_cast<double>(powerMultiplier);
+  Supla::Storage::WriteState((unsigned char *)&tempValue, sizeof(tempValue));
+
   Supla::Storage::WriteState((unsigned char *)&currentWhen, sizeof(currentWhen));
 }
 
@@ -111,9 +118,17 @@ void HLW_8012::onLoadState() {
   if (Supla::Storage::ReadState((unsigned char *)&energy, sizeof(energy))) {
     setCounter(energy);
   }
-  Supla::Storage::ReadState((unsigned char *)&currentMultiplier, sizeof(currentMultiplier));
-  Supla::Storage::ReadState((unsigned char *)&voltageMultiplier, sizeof(voltageMultiplier));
-  Supla::Storage::ReadState((unsigned char *)&powerMultiplier, sizeof(powerMultiplier));
+
+  double tempValue;
+  Supla::Storage::ReadState((unsigned char *)&tempValue, sizeof(tempValue));
+  currentMultiplier = static_cast<float>(tempValue);
+
+  Supla::Storage::ReadState((unsigned char *)&tempValue, sizeof(tempValue));
+  voltageMultiplier = static_cast<float>(tempValue);
+
+  Supla::Storage::ReadState((unsigned char *)&tempValue, sizeof(tempValue));
+  powerMultiplier = static_cast<float>(tempValue);
+
   Supla::Storage::ReadState((unsigned char *)&currentWhen, sizeof(currentWhen));
 }
 

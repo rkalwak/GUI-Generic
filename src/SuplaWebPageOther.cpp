@@ -56,7 +56,7 @@ void createWebPageOther() {
   });
 #endif
 
-#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
   if ((ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) ||
       ConfigESP->getGpio(FUNCTION_CSE7766_RX) != OFF_GPIO) {
     WebServer->httpServer->on(getURL(PATH_CALIBRATE), [&]() {
@@ -106,7 +106,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_HLW8012);
   addListGPIOBox(INPUT_CF, F("CF"), FUNCTION_CF);
   addListGPIOBox(INPUT_CF1, F("CF1"), FUNCTION_CF1);
@@ -335,7 +335,7 @@ void handleOtherSave() {
   }
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   if (!WebServer->saveGPIO(INPUT_CF, FUNCTION_CF) || !WebServer->saveGPIO(INPUT_CF1, FUNCTION_CF1) || !WebServer->saveGPIO(INPUT_SEL, FUNCTION_SEL)) {
     handleOther(6);
     return;
@@ -624,7 +624,7 @@ void handleImpulseCounterSaveSet() {
 }
 #endif
 
-#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
 void handleCounterCalibrate(int save) {
   float currentMultiplier = 0, voltageMultiplier = 0, powerMultiplier = 0;
   String counter = WebServer->httpServer->arg(ARG_PARM_URL);
@@ -633,7 +633,7 @@ void handleCounterCalibrate(int save) {
   SuplaSaveResult(save);
   SuplaJavaScript(getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, counter));
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   if (counter == PATH_HLW8012 || counter == HLW8012_MULTIPLIER) {
     currentMultiplier = Supla::GUI::counterHLW8012->getCurrentMultiplier();
     voltageMultiplier = Supla::GUI::counterHLW8012->getVoltageMultiplier();
@@ -662,7 +662,7 @@ void handleCounterCalibrate(int save) {
   String postPath = "";
   String formHeader = "";
   String calibrationPath = "";
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   if (counter == PATH_HLW8012 || counter == HLW8012_MULTIPLIER) {
     calibrationPath = PATH_HLW8012;
     postPath = HLW8012_MULTIPLIER;
@@ -708,7 +708,7 @@ void handleCounterCalibrateSave() {
     float voltageMultiplier = getFloatFromInput(INPUT_VOLTAGE_MULTIPLIER);
     float powerMultiplier = getFloatFromInput(INPUT_POWER_MULTIPLIER);
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
     if (counter.equals(HLW8012_MULTIPLIER)) {
       Supla::GUI::counterHLW8012->setCurrentMultiplier(currentMultiplier);
       Supla::GUI::counterHLW8012->setVoltageMultiplier(voltageMultiplier);
@@ -736,7 +736,7 @@ void handleCounterCalibrateSave() {
         Supla::GUI::relay[i]->turnOn();
       }
 #endif
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
     if (counter.equals(PATH_HLW8012)) {
       Supla::GUI::counterHLW8012->calibrate(calibPower, calibVoltage);
     }

@@ -1071,7 +1071,7 @@
 		}
 	},
 	"ENERGY_METER": {
-		"SUPLA_HLW8012_V2": {
+		"SUPLA_HLW8012": {
 			"name": "Licznik energii HLW8012, BL0937",
 			"desc": "Ustawienia urządzenia->Inne. Umożliwia obsługę licznika energii HLW8012, BL0937.",
 			"defOn": false,

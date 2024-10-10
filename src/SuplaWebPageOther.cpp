@@ -731,10 +731,10 @@ void handleCounterCalibrateSave() {
   calibVoltage = getFloatFromInput(INPUT_CALIB_VOLTAGE);
 
   if (calibPower != 0 && calibVoltage != 0) {
-    #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
-      for (size_t i = 0; i < Supla::GUI::relay.size(); i++) {
-        Supla::GUI::relay[i]->turnOn();
-      }
+#if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
+    for (size_t i = 0; i < Supla::GUI::relay.size(); i++) {
+      Supla::GUI::relay[i]->turnOn();
+    }
 #endif
 #ifdef SUPLA_HLW8012
     if (counter.equals(PATH_HLW8012)) {
@@ -827,19 +827,30 @@ void changePZEMAddress(uint8_t address) {
   if (pinRX != OFF_GPIO && pinTX != OFF_GPIO) {
     Serial.print("Using address: 0x");
     Serial.println(address, HEX);
+
 #if defined(ARDUINO_ARCH_ESP32)
     PZEM004Tv30 pzem(&Serial, pinRX, pinTX);
 #else
     SoftwareSerial pzemSWSerial(pinRX, pinTX);
+    pzemSWSerial.begin(PZEM_BAUD_RATE);
     PZEM004Tv30 pzem(pzemSWSerial);
 #endif
 
-    if (pzem.setAddress(address)) {
-      Serial.print("Address set to: ");
-      Serial.println(address);
+    bool success = false;
+    for (int attempts = 0; attempts < 3; attempts++) {
+      if (pzem.setAddress(address)) {
+        Serial.print("Address set to: ");
+        Serial.println(address);
+        success = true;
+        break;
+      }
+      else {
+        Serial.println("Error setting address! Retrying...");
+      }
     }
-    else {
-      Serial.println("Error setting address!");
+
+    if (!success) {
+      Serial.println("Failed to set address after 3 attempts.");
     }
 
     Serial.print("Current address: 0x");

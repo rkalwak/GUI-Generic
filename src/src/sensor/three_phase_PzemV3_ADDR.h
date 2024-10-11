@@ -78,13 +78,13 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
       bool energyValid = !isnan(energy) && energy >= 0;
 
       float frequency = pzem[i].frequency();
-      bool frequencyValid = !isnan(frequency) && frequency > 0;
+      bool frequencyValid = !isnan(frequency) && frequency >= 0;
 
       float current = pzem[i].current();
       bool currentValid = !isnan(current) && current >= 0;
 
       float voltage = pzem[i].voltage();
-      bool voltageValid = !isnan(voltage) && voltage > 0;
+      bool voltageValid = !isnan(voltage) && voltage >= 0;
 
       float active = pzem[i].power();
       bool activeValid = !isnan(active) && active >= 0;

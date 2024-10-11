@@ -75,7 +75,10 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
 
     for (int i = 0; i < 3; i++) {
       float energy = pzem[i].energy();
+      bool energyValid = !isnan(energy) && energy >= 0;
+
       float frequency = pzem[i].frequency();
+      bool frequencyValid = !isnan(frequency) && frequency > 0;
 
       float current = pzem[i].current();
       bool currentValid = !isnan(current) && current >= 0;
@@ -88,14 +91,16 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
 
       float apparent = (voltageValid && currentValid) ? (voltage * current) : NAN;
       float reactive = (voltageValid && activeValid && apparent > active) ? sqrt(apparent * apparent - active * active) : 0;
+
       float powerFactor = pzem[i].pf();
       bool powerFactorValid = !isnan(powerFactor) && powerFactor >= 0 && powerFactor <= 1;
-      bool frequencyValid = !isnan(frequency) && frequency > 0;
 
       setCurrent(i, currentValid ? static_cast<int>(current * 1000) : 0);
       setVoltage(i, voltageValid ? static_cast<int>(voltage * 100) : 0);
       setPowerActive(i, activeValid ? static_cast<int>(active * 100000) : 0);
       setPowerFactor(i, powerFactorValid ? static_cast<int>(powerFactor * 1000) : 0);
+      setFreq(frequencyValid ? static_cast<unsigned short>(frequency * 100) : 0);
+
       if (voltageValid && currentValid) {
         setPowerApparent(i, static_cast<int>(apparent * 100000));
         setPowerReactive(i, static_cast<int>(reactive * 100000));
@@ -105,8 +110,9 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
         setPowerReactive(i, 0);
       }
 
-      setFwdActEnergy(i, static_cast<int>(energy * 100000));
-      setFreq(frequencyValid ? static_cast<unsigned short>(frequency * 100) : 0);
+      if (energyValid) {
+        setFwdActEnergy(i, static_cast<int>(energy * 100000));
+      }
 
       if (currentValid) {
         atLeastOnePzemWasRead = true;

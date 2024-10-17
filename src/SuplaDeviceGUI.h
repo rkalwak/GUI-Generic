@@ -258,6 +258,21 @@
 #include "src/sensor/SPS30.h"
 #endif
 
+#ifdef SUPLA_MDNS
+#ifdef ARDUINO_ARCH_ESP8266
+#include <cont.h>
+#include <user_interface.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
+#endif
+
+#elif ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#ifdef SUPLA_MDNS
+#include <ESPmDNS.h>
+#endif
+
+#endif
 
 #include "src/storage/SPIFFS_config.h"
 

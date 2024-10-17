@@ -75,19 +75,19 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
 
     for (int i = 0; i < 3; i++) {
       float energy = pzem[i].energy();
-      bool energyValid = !isnan(energy) && energy >= 0;
+      bool energyValid = !isnan(energy);
 
       float frequency = pzem[i].frequency();
-      bool frequencyValid = !isnan(frequency) && frequency >= 0;
+      bool frequencyValid = !isnan(frequency);
 
       float current = pzem[i].current();
-      bool currentValid = !isnan(current) && current >= 0;
+      bool currentValid = !isnan(current);
 
       float voltage = pzem[i].voltage();
-      bool voltageValid = !isnan(voltage) && voltage >= 0;
+      bool voltageValid = !isnan(voltage);
 
       float active = pzem[i].power();
-      bool activeValid = !isnan(active) && active >= 0;
+      bool activeValid = !isnan(active);
 
       float apparent = (voltageValid && currentValid) ? (voltage * current) : NAN;
       float reactive = (voltageValid && activeValid && apparent > active) ? sqrt(apparent * apparent - active * active) : 0;

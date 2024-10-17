@@ -951,8 +951,8 @@ void setup() {
 #endif
 
 #ifdef SUPLA_INA219
-    if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
-      new Supla::Sensor::INA_219(0x40);
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
+      new Supla::Sensor::INA_219(selectedAddress);
     }
 #endif
 

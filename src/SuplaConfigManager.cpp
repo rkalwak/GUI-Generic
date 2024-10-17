@@ -806,6 +806,15 @@ bool SuplaConfigManager::setElement(uint8_t key, int index, const String &newval
   return setElementInternal(key, index, newvalue);
 }
 
+bool SuplaConfigManager::setElementHex(uint8_t key, int index, const String &newvalue) {
+  int value = strtol(newvalue.c_str(), NULL, 16);
+
+  char valueBuffer[12];
+  itoa(value, valueBuffer, 10);
+
+  return setElementInternal(key, index, valueBuffer);
+}
+
 bool SuplaConfigManager::setElementInternal(uint8_t key, int index, const String &newvalue) {
   for (int i = 0; i < _optionCount; i++) {
     if (key == _options[i]->getKey()) {

@@ -142,6 +142,10 @@ boneIO::boneIO() {
     atDown->attach(rollerShutterButtonPairs[i].closeButton);
   }
 #endif
+
+#ifdef SUPLA_INA219
+  new Supla::Sensor::INA_219(0x40, &Wire);
+#endif
 }
 
 RollerShutterButtonPair

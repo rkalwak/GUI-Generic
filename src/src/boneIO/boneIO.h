@@ -45,6 +45,9 @@
 #include "../expander/ExpanderPCF8574.h"
 #include "../expander/ExpanderPCF8575.h"
 #include "display/SSD1306.h"
+#ifdef SUPLA_INA219
+#include "../sensor/INA_219.h"
+#endif
 
 #define P00 0
 #define P01 1

@@ -17,8 +17,6 @@
 #include "SuplaDeviceGUI.h"
 #include <HardwareSerial.h>
 
-#include <Arduino.h>
-
 SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 

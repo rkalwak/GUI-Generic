@@ -37,7 +37,9 @@ extern "C" {
 #include <supla/sensor/direct_link_sensor_thermometer.h>
 #endif
 
+#ifdef SUPLA_DIRECT_LINKS_MULTI_SENSOR
 #include "src/sensor/DirectLinks.h"
+#endif
 
 #ifdef SUPLA_CC1101
 #include "src/sensor/WmbusMeter.h"
@@ -70,7 +72,7 @@ void setup() {
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
   if (ConfigESP->getGpio(FUNCTION_SDA) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL) != OFF_GPIO) {
-    bool force400khz = false;
+    [[maybe_unused]] bool force400khz = false;
 
     Wire.begin(ConfigESP->getGpio(FUNCTION_SDA), ConfigESP->getGpio(FUNCTION_SCL));
   }
@@ -894,15 +896,6 @@ void setup() {
     }
 #endif
 
-    if (force400khz)
-      Wire.setClock(400000);
-  }
-#endif
-
-#if defined(GUI_SENSOR_I2C_2)
-  if (ConfigESP->getGpio(FUNCTION_SDA) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL) != OFF_GPIO) {
-    bool force400khz = false;
-
 #ifdef SUPLA_MS5611
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_MS5611).toInt()) {
       auto ms5611 = new Supla::Sensor::MS5611Sensor(ConfigManager->get(KEY_ALTITUDE_MS5611)->getValueInt());
@@ -956,6 +949,15 @@ void setup() {
       auto spsPM10 = new Supla::Sensor::SPS30_PM10(sps30);
     }
 #endif
+
+#ifdef SUPLA_INA219
+    if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
+      new Supla::Sensor::INA_219(0x40);
+    }
+#endif
+
+    if (force400khz)
+      Wire.setClock(400000);
   }
 #endif
 

@@ -20,15 +20,16 @@
 #include "SuplaDeviceGUI.h"
 #include <Wire.h>
 
-#if defined(SUPLA_BME280) || defined(SUPLA_SHT3x) || defined(SUPLA_SI7021) || defined(SUPLA_OLED) || defined(GUI_SENSOR_I2C_EXPENDER) || \
-    defined(SUPLA_BMP280) || defined(SUPLA_VL53L0X) || defined(SUPLA_HDC1080) || defined(SUPLA_LCD_HD44780) || defined(SUPLA_BH1750_KPOP) ||  \
-    defined(SUPLA_MAX44009_KPOP) || defined(SUPLA_SHT_AUTODETECT)
-#define GUI_SENSOR_I2C
+/* Define GUI_SENSOR_I2C_2 if any of these sensors are selected. */
+#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP) || defined(SUPLA_INA219)
+#define GUI_SENSOR_I2C_2
 #endif
 
-/* Another one to support more sensors settings.*/
-#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP)
-#define GUI_SENSOR_I2C_2
+/* Define GUI_SENSOR_I2C if any of these sensors or GUI_SENSOR_I2C_2 is selected. */
+#if defined(SUPLA_BME280) || defined(SUPLA_SHT3x) || defined(SUPLA_SI7021) || defined(SUPLA_OLED) || defined(GUI_SENSOR_I2C_EXPENDER) ||     \
+    defined(SUPLA_BMP280) || defined(SUPLA_VL53L0X) || defined(SUPLA_HDC1080) || defined(SUPLA_LCD_HD44780) || defined(SUPLA_BH1750_KPOP) || \
+    defined(SUPLA_MAX44009_KPOP) || defined(SUPLA_SHT_AUTODETECT) || defined(GUI_SENSOR_I2C_2)
+#define GUI_SENSOR_I2C
 #endif
 
 #if defined(SUPLA_ADE7953)
@@ -60,9 +61,10 @@ enum _sensor2
   SENSOR_SPI_CC1101,
   SENSOR_I2C_AHTX0,
   SENSOR_I2C_SPS30,
+  SENSOR_I2C_INA219
 };
 
-#if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER) || defined(GUI_SENSOR_I2C_2)
+#if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
 
 #if defined(SUPLA_BME280) || defined(SUPLA_BMP280)
 enum _bmeAdress
@@ -150,7 +152,7 @@ void webPageI2CScanner(TwoWire* wire);
 #endif
 
 #ifdef SUPLA_MS5611
-#define INPUT_MS5611 "ms5611"
+#define INPUT_MS5611          "ms5611"
 #define INPUT_ALTITUDE_MS5611 "ams5611"
 #endif
 
@@ -167,9 +169,6 @@ void webPageI2CScanner(TwoWire* wire);
 #define INPUT_SUPLA_SHT_AUTODETECT "issa"
 #endif
 
-#endif
-
-#if defined(GUI_SENSOR_I2C_2)
 #ifdef SUPLA_AHTX0
 #define INPUT_AHTX0 "aht"
 enum _ahtAdress
@@ -184,6 +183,10 @@ enum _ahtAdress
 #define INPUT_SPS30 "sps30"
 #endif
 
-#endif // defined(GUI_SENSOR_I2C)
+#ifdef SUPLA_INA219
+#define INPUT_INA219 "iina"
+#endif
+
+#endif  // defined(GUI_SENSOR_I2C)
 
 #endif  // ifndef SuplaWebPageSensorI2c_h

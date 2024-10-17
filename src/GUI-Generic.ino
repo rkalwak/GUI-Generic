@@ -47,8 +47,6 @@ uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
 
 void setup() {
-  [[maybe_unused]] uint8_t nr, gpio;
-
   Serial.begin(115200);
   eeprom.setStateSavePeriod(5000);
 
@@ -92,7 +90,7 @@ void setup() {
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
   uint8_t rollershutters = ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt();
 
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_RELAY)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_RELAY)->getValueInt(); nr++) {
     if (rollershutters > 0) {
 #ifdef SUPLA_ROLLERSHUTTER
       Supla::GUI::addRolleShutter(nr);
@@ -134,8 +132,8 @@ void setup() {
 #endif
 
 #ifdef SUPLA_LIMIT_SWITCH
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_LIMIT_SWITCH)->getValueInt(); nr++) {
-    gpio = ConfigESP->getGpio(nr, FUNCTION_LIMIT_SWITCH);
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_LIMIT_SWITCH)->getValueInt(); nr++) {
+    uint8_t gpio = ConfigESP->getGpio(nr, FUNCTION_LIMIT_SWITCH);
 
     Supla::Sensor::Binary *binary = nullptr;
 
@@ -156,7 +154,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_WAKE_ON_LAN
-  for (nr = 0; nr < ConfigManager->get(KEY_WAKE_ON_LAN_MAX)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_WAKE_ON_LAN_MAX)->getValueInt(); nr++) {
     if (strcmp(ConfigManager->get(KEY_WAKE_ON_LAN_MAC)->getElement(nr).c_str(), "") != 0) {
       new Supla::Control::WakeOnLanRelay(ConfigManager->get(KEY_WAKE_ON_LAN_MAC)->getElement(nr).c_str());
     }
@@ -174,7 +172,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_DIRECT_LINKS_MULTI_SENSOR
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_DIRECT_LINKS_SENSOR)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_DIRECT_LINKS_SENSOR)->getValueInt(); nr++) {
     if (strcmp(ConfigManager->get(KEY_DIRECT_LINKS_SENSOR)->getElement(nr).c_str(), "") != 0) {
       switch (ConfigManager->get(KEY_DIRECT_LINKS_TYPE)->getElement(nr).toInt()) {
         case DIRECT_LINKS_TYPE_TEMP: {
@@ -221,7 +219,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_DIRECT_LINKS_SENSOR)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_DIRECT_LINKS_SENSOR)->getValueInt(); nr++) {
     if (strcmp(ConfigManager->get(KEY_DIRECT_LINKS_SENSOR)->getElement(nr).c_str(), "") != 0) {
       auto directLinkSensorThermometer = new Supla::Sensor::DirectLinksSensorThermometer(ConfigManager->get(KEY_SUPLA_SERVER)->getValue());
       directLinkSensorThermometer->setUrl(ConfigManager->get(KEY_DIRECT_LINKS_SENSOR)->getElement(nr).c_str());
@@ -235,7 +233,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_DHT11
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_DHT11)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_DHT11)->getValueInt(); nr++) {
     if (ConfigESP->getGpio(nr, FUNCTION_DHT11) != OFF_GPIO) {
       auto dht11 = new Supla::Sensor::DHT(ConfigESP->getGpio(nr, FUNCTION_DHT11), DHT11);
 
@@ -247,7 +245,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_DHT22
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_DHT22)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_DHT22)->getValueInt(); nr++) {
     if (ConfigESP->getGpio(nr, FUNCTION_DHT22) != OFF_GPIO) {
       auto dht22 = new Supla::Sensor::DHT(ConfigESP->getGpio(nr, FUNCTION_DHT22), DHT22);
 
@@ -412,12 +410,12 @@ void setup() {
 #endif
 
 #ifdef SUPLA_ANALOG_READING_KPOP
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_ANALOG_READING)->getValueInt(); nr++) {
 #ifdef ARDUINO_ARCH_ESP8266
-    gpio = ConfigESP->getGpio(FUNCTION_ANALOG_READING);
+    uint8_t gpio = ConfigESP->getGpio(FUNCTION_ANALOG_READING);
 #endif
 #ifdef ARDUINO_ARCH_ESP32
-    gpio = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
+    uint8_t gpio = ConfigESP->getGpio(nr, FUNCTION_ANALOG_READING);
 #endif
 
     if (gpio != OFF_GPIO) {
@@ -466,13 +464,13 @@ void setup() {
 #endif
 
 #ifdef SUPLA_RGBW
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_RGBW)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_RGBW)->getValueInt(); nr++) {
     Supla::GUI::addRGBWLeds(nr);
   }
 #endif
 
 #ifdef SUPLA_IMPULSE_COUNTER
-  for (nr = 0; nr < ConfigManager->get(KEY_MAX_IMPULSE_COUNTER)->getValueInt(); nr++) {
+  for (uint8_t nr = 0; nr < ConfigManager->get(KEY_MAX_IMPULSE_COUNTER)->getValueInt(); nr++) {
     if (ConfigESP->getGpio(nr, FUNCTION_IMPULSE_COUNTER) != OFF_GPIO) {
       Supla::GUI::addImpulseCounter(nr);
     }
@@ -962,7 +960,7 @@ void setup() {
 #endif
 
 #ifdef SUPLA_ACTION_TRIGGER
-  for (nr = 0; nr < Supla::GUI::calculateElementCountActionTrigger(); nr++) {
+  for (uint8_t nr = 0; nr < Supla::GUI::calculateElementCountActionTrigger(); nr++) {
     Supla::GUI::addButtonActionTrigger(nr);
   }
 #endif

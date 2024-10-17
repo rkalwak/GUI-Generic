@@ -677,7 +677,7 @@ void setup() {
 
 #ifdef SUPLA_BMP280
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_BMP280).toInt()) {
-      Supla::Sensor::BMP280 *bmp280 = nullptr;
+      Supla::Sensor::BMP280 *bmp280 [[maybe_unused]] = nullptr;
 
       switch (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_BMP280).toInt()) {
         case BMx280_ADDRESS_0X76:
@@ -696,7 +696,7 @@ void setup() {
           break;
         case BMx280_ADDRESS_0X76_AND_0X77:
           bmp280 = new Supla::Sensor::BMP280(0x76, ConfigManager->get(KEY_ALTITUDE_BMX280)->getValueInt());
-          Supla::Sensor::BMP280 *bmp280_1 = new Supla::Sensor::BMP280(0x77, ConfigManager->get(KEY_ALTITUDE_BMX280)->getValueInt());
+          Supla::Sensor::BMP280 *bmp280_1 [[maybe_unused]] = new Supla::Sensor::BMP280(0x77, ConfigManager->get(KEY_ALTITUDE_BMX280)->getValueInt());
 
 #ifdef SUPLA_CONDITIONS
           Supla::GUI::Conditions::addConditionsSensor(SENSOR_BMP280, S_BMP280, bmp280);
@@ -751,7 +751,7 @@ void setup() {
 
 #ifdef SUPLA_SI7021
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_SI7021).toInt()) {
-      auto si7021 = new Supla::Sensor::Si7021();
+      auto si7021 [[maybe_unused]] = new Supla::Sensor::Si7021();
 
 #ifdef SUPLA_CONDITIONS
       Supla::GUI::Conditions::addConditionsSensor(SENSOR_SI7021, S_SI702, si7021);
@@ -818,7 +818,7 @@ void setup() {
 
 #ifdef SUPLA_OLED
     if (ConfigManager->get(KEY_ACTIVE_SENSOR)->getElement(SENSOR_I2C_OLED).toInt()) {
-      SuplaOled *oled = new SuplaOled();
+      SuplaOled *oled [[maybe_unused]] = new SuplaOled();
 #ifdef SUPLA_BUTTON
 #ifdef SUPLA_THERMOSTAT
       new Supla::Control::GUI::OledButtonController(oled, Supla::GUI::thermostatArray);

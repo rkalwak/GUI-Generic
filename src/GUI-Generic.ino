@@ -47,7 +47,7 @@ uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
 
 void setup() {
-  uint8_t nr, gpio;
+  [[maybe_unused]] uint8_t nr, gpio;
 
   Serial.begin(115200);
   eeprom.setStateSavePeriod(5000);

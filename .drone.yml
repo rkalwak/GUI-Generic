@@ -9,7 +9,7 @@ steps:
   - platformio run -e GUI_Generic_ESP32
 
 - name: pio_esp32_compilation_check_SUPLA_CC1101_flag
-  image: gui-generic/platformio
+  image: gui-generic/platformio:local
   pull: never
   commands:
   - export PLATFORMIO_BUILD_FLAGS="-DSUPLA_CC1101"

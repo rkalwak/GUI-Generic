@@ -1,0 +1,16 @@
+kind: pipeline
+name: default
+
+steps:
+- name: pio_esp32_compilation_check_default_flags
+  image: gui-generic/platformio
+  pull: never
+  commands:
+  - platformio run -e GUI_Generic_ESP32
+
+- name: pio_esp32_compilation_check_SUPLA_CC1101_flag
+  image: gui-generic/platformio
+  pull: never
+  commands:
+  - export PLATFORMIO_BUILD_FLAGS="-DSUPLA_CC1101"
+  - platformio run -e GUI_Generic_ESP32

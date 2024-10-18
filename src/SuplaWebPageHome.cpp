@@ -142,8 +142,10 @@ void handlePageHome(int save) {
 
   addForm(F("post"));
 
-#ifdef SUPLA_WT32_ETH01_LAN8720
-
+#if defined(SUPLA_WT32_ETH01_LAN8720) || defined(SUPLA_ETH01_LAN8720)
+  addFormHeader("LAN");
+  addTextBox(INPUT_HOSTNAME, S_HOST_NAME, KEY_HOST_NAME, 0, MAX_HOSTNAME, true);
+  addFormHeaderEnd();
 #else
   addFormHeader(S_SETTING_WIFI_SSID);
   addTextBox(INPUT_WIFI_SSID, S_WIFI_SSID, KEY_WIFI_SSID, 0, MAX_SSID, true);
@@ -168,9 +170,11 @@ void handlePageHome(int save) {
   addListBox(INPUT_RELAY_LEVEL, S_STATE_CONTROL, LEVEL_P, 2, selected);
   selected = ConfigESP->getMemory(BONEIO_RELAY_CONFIG);
   addListBox(INPUT_RELAY_MEMORY, S_REACTION_AFTER_RESET, MEMORY_P, 3, selected);
-  addFormHeaderEnd();
+#ifdef SUPLA_ROLLERSHUTTER
+  addNumberBox(INPUT_ROLLERSHUTTER, S_ROLLERSHUTTERS, KEY_MAX_ROLLERSHUTTER, 16);
 #endif
-
+  addFormHeaderEnd();
+#else
 #ifdef SUPLA_ROLLERSHUTTER
   uint8_t maxrollershutter = ConfigManager->get(KEY_MAX_RELAY)->getValueInt();
   if (maxrollershutter >= 2) {
@@ -179,7 +183,7 @@ void handlePageHome(int save) {
     addFormHeaderEnd();
   }
 #endif
-
+#endif
   addButtonSubmit(S_SAVE);
   addFormEnd();
 

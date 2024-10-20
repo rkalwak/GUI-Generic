@@ -4,7 +4,7 @@
 #ifdef SUPLA_INA219
 
 #include <Wire.h>
-#include <INA219.h>
+#include <Adafruit_INA219.h>
 #include <supla/log_wrapper.h>
 #include <supla/sensor/one_phase_electricity_meter.h>
 
@@ -13,14 +13,13 @@ namespace Sensor {
 
 class INA_219 : public OnePhaseElectricityMeter {
  public:
-  INA_219(uint8_t address = 0x40, TwoWire *wire = &Wire, float maxAmp = 3.4, float shuntRes = 0.1) : INA(address, wire) {
-    if (!INA.begin()) {
+  INA_219(uint8_t address = INA219_ADDRESS, TwoWire *wire = &Wire) : INA(address) {
+    if (!INA.begin(wire)) {
       SUPLA_LOG_DEBUG("Unable to find INA219");
     }
     else {
       SUPLA_LOG_DEBUG("INA219 is connected at address: 0x%x", address);
     }
-    INA.setMaxCurrentShunt(maxAmp, shuntRes);
   }
 
   void onInit() override {
@@ -29,13 +28,13 @@ class INA_219 : public OnePhaseElectricityMeter {
   }
 
   virtual void readValuesFromDevice() {
-    setVoltage(0, INA.getBusVoltage() * 100);
-    setCurrent(0, INA.getCurrent() * 1000);
-    setPowerActive(0, INA.getPower() * 100000);
+    setVoltage(0, INA.getBusVoltage_V() * 100);  // Convert V to mV
+    setCurrent(0, INA.getCurrent_mA() * 1);      // Current in 0.001 A
+    setPowerActive(0, INA.getPower_mW() * 10);   // Power in 0.00001 W
   }
 
  protected:
-  ::INA219 INA;
+  Adafruit_INA219 INA;
 };
 
 };  // namespace Sensor

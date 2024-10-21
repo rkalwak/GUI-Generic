@@ -73,7 +73,7 @@ class ThermostatGUI : public Supla::Control::HvacBase, public Supla::Protocol::P
   }
 
   virtual void sendActionTrigger(uint8_t channelNumber, uint32_t actionId) override{};
-  virtual void sendChannelValueChanged(uint8_t channelNumber, char *value, unsigned char offline, uint32_t validityTimeSec) override{};
+  virtual void sendChannelValueChanged(uint8_t channelNumber, int8_t *value, uint8_t offline, uint32_t validityTimeSec) override{};
   virtual void sendExtendedChannelValueChanged(uint8_t channelNumber, TSuplaChannelExtendedValue *value) override{};
 
  private:

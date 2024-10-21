@@ -454,6 +454,54 @@ void addListBox(const String& input_id, const String& name, const char* const* a
   WebServer->sendContent(F("</select></i>"));
 }
 
+void addListBox(const String& input_id, const String& name, const uint8_t* addresses, uint8_t size, uint8_t selected, uint8_t nr, bool underline) {
+  if (underline) {
+    WebServer->sendContent(F("<i>"));
+  }
+  else {
+    WebServer->sendContent(F("<i style='border-bottom:none !important;'>"));
+  }
+
+  WebServer->sendContent(F("<label>"));
+
+  if (nr != 0) {
+    WebServer->sendContent(nr);
+    WebServer->sendContent(F(". "));
+  }
+
+  WebServer->sendContent(name);
+  WebServer->sendContent(F("</label><select name='"));
+  WebServer->sendContent(input_id);
+
+  if (nr != 0) {
+    WebServer->sendContent(nr);
+  }
+
+  WebServer->sendContent(F("'>"));
+
+  // Dodanie opcji "Wyłącz" na początku
+  WebServer->sendContent(F("<option value='0'"));
+  if (selected == 0) {
+    WebServer->sendContent(F(" selected"));
+  }
+  WebServer->sendContent(F(">Wyłącz</option>"));
+  for (uint8_t i = 0; i < size; i++) {
+    WebServer->sendContent(F("<option value='0x"));
+    WebServer->sendContent(String(addresses[i], HEX)); 
+    WebServer->sendContent(F("'"));
+
+    if (selected == addresses[i]) {
+      WebServer->sendContent(F(" selected"));
+    }
+
+    WebServer->sendContent(F(">0x"));
+    WebServer->sendContent(String(addresses[i], HEX));
+    WebServer->sendContent(F("</option>"));
+  }
+
+  WebServer->sendContent(F("</select></i>"));
+}
+
 void addListNumbersBox(const String& input_id, const String& name, uint8_t size, uint8_t selected) {
   WebServer->sendContent(F("<i><label>"));
   WebServer->sendContent(name);
@@ -671,4 +719,9 @@ void SuplaSaveResult(int save) {
       break;
   }
   WebServer->sendContent(F("</div>"));
+}
+
+float getFloatFromInput(const String& input) {
+  String arg = WebServer->httpServer->arg(input);
+  return arg.length() > 0 ? arg.toFloat() : 0.0;
 }

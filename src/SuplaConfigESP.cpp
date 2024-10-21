@@ -17,8 +17,6 @@
 #include "SuplaDeviceGUI.h"
 #include <HardwareSerial.h>
 
-#include <Arduino.h>
-
 SuplaConfigESP::SuplaConfigESP() {
   configModeESP = Supla::DEVICE_MODE_NORMAL;
 
@@ -826,6 +824,7 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 #endif
 
 #ifdef SUPLA_BONEIO
+    ConfigESP->setGpio(OFF_GPIO, FUNCTION_CFG_BUTTON);
     ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
 #ifdef USE_MCP_OUTPUT
     ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);

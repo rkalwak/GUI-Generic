@@ -114,7 +114,7 @@
 #ifdef SUPLA_DEBUG_MODE
 #include <supla/sensor/esp_free_heap.h>
 #endif
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
 #include "src/sensor/HLW_8012.h"
 #endif
 #ifdef SUPLA_CSE7766
@@ -258,6 +258,22 @@
 #include "src/sensor/SPS30.h"
 #endif
 
+#ifdef SUPLA_INA219
+#include "src/sensor/INA_219.h"
+#endif
+
+// #ifdef SUPLA_MDNS
+// #ifdef ARDUINO_ARCH_ESP8266
+// #include <cont.h>
+// #include <user_interface.h>
+// #include <ESP8266WiFi.h>
+// #include <ESP8266mDNS.h>
+// #elif ARDUINO_ARCH_ESP32
+// #include <WiFi.h>
+// #include <ESPmDNS.h>
+// #endif
+// #endif
+
 #include "src/storage/SPIFFS_config.h"
 
 #define TIME_SAVE_PERIOD_SEK                 30   // the time is given in seconds
@@ -340,7 +356,7 @@ bool isRGBWButtonGroupOverloaded(uint8_t nrButton);
 void setRGBWDefaultState(Supla::Control::RGBWBase *rgbw, uint8_t memory);
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
 extern Supla::Sensor::HLW_8012 *counterHLW8012;
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL);
 #endif

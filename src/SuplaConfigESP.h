@@ -30,23 +30,6 @@
 
 #include <Ticker.h>
 
-#ifdef ARDUINO_ARCH_ESP8266
-#include <cont.h>
-#include <user_interface.h>
-#include <ESP8266WiFi.h>
-
-#ifdef SUPLA_MDNS
-#include <ESP8266mDNS.h>
-#endif
-
-#elif ARDUINO_ARCH_ESP32
-#include <WiFi.h>
-#ifdef SUPLA_MDNS
-#include <ESPmDNS.h>
-#endif
-
-#endif
-
 enum _ConfigMode
 {
   CONFIG_MODE_10_ON_PRESSES,

@@ -26,10 +26,8 @@ static const char serverIndex[] PROGMEM =
          <input type='file' accept='.bin,.bin.gz' name='firmware'>
          </br>
          <input type='submit' value='{b}'>
-     </form>
-     {g})";
+     </form>)";
 static const char successResponse[] PROGMEM = "<META http-equiv='refresh' content='5'>{m}";
 static const char twoStepResponse[] PROGMEM = "<META http-equiv='refresh' content='5'><b>{w}</b> {o} {gg}";
-static const char twoStepButton[] PROGMEM = "<a href='update?url={gu}'><br><button>{gg}</button></a>";
 
 #endif

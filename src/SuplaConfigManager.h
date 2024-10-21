@@ -285,54 +285,55 @@ enum _button_additional
 class ConfigOption {
  public:
   ConfigOption(uint8_t key, const char *value, int maxLength, bool loadKey);
-  uint8_t     getKey();
+  uint8_t getKey();
   const char *getValue();
-  int         getValueInt();
-  float       getValueFloat();
-  bool        getValueBool();
-  void        getValueHex(char *buffer, size_t bufferSize);
-  int         getValueElement(int element);
+  int getValueInt();
+  float getValueFloat();
+  bool getValueBool();
+  void getValueHex(char *buffer, size_t bufferSize);
+  int getValueElement(int element);
 
-  int  getLength();
+  int getLength();
   void setLength(int maxLength);
   bool getLoadKey();
 
-  void         setValue(const char *value);
+  void setValue(const char *value);
   const String getElement(int index);
   const String replaceElement(int index, int value);
   const String replaceElement(int index, const char *newvalue);
 
  private:
-  uint8_t  _key;
-  char *   _value;
+  uint8_t _key;
+  char *_value;
   uint16_t _maxLength;
-  bool     _loadKey;
+  bool _loadKey;
 };
 
 class SuplaConfigManager : public Supla::KeyValue {
  public:
   explicit SuplaConfigManager();
-  bool    SPIFFSbegin();
-  bool    migrationConfig();
+  bool SPIFFSbegin();
+  bool migrationConfig();
   uint8_t addKey(uint8_t key, int maxLength, bool loadKey = true);
   uint8_t addKey(uint8_t key, const char *value, int maxLength, bool loadKey = true);
   uint8_t deleteKey(uint8_t key);
 
   uint8_t load(bool configParse = true);
   uint8_t save();
-  void    showAllValue();
-  void    deleteAllValues();
-  void    deleteDeviceValues();
-  void    deleteWifiSuplaAdminValues();
-  void    deleteGPIODeviceValues();
+  void showAllValue();
+  void deleteAllValues();
+  void deleteDeviceValues();
+  void deleteWifiSuplaAdminValues();
+  void deleteGPIODeviceValues();
 
   ConfigOption *get(uint8_t key);
-  bool          set(uint8_t key, int value);
-  bool          set(uint8_t key, const char *value);
+  bool set(uint8_t key, int value);
+  bool set(uint8_t key, const char *value);
 
   bool setElement(uint8_t key, int index, int newvalue);
   bool setElement(uint8_t key, int index, double newvalue);
   bool setElement(uint8_t key, int index, const String &newvalue);
+  bool setElementHex(uint8_t key, int index, const String &newvalue);
 
   bool isDeviceConfigured();
   void setGUIDandAUTHKEY();
@@ -364,7 +365,7 @@ class SuplaConfigManager : public Supla::KeyValue {
   bool getUInt8(const char *key, uint8_t *result) override;
 
  private:
-  int           _optionCount;
+  int _optionCount;
   ConfigOption *_options[CONFIG_MAX_OPTIONS];
 
   bool setElementInternal(uint8_t key, int index, const String &newvalue);

@@ -78,4 +78,7 @@
 #endif
 #endif
 
+// #ifdef SUPLA_HLW8012
+// #error "Flaga SUPLA_HLW8012 jest nie wpierana."
+// #endif
 #endif

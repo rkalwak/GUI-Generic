@@ -191,19 +191,19 @@ void HLW8012::resetEnergy() {
 void HLW8012::expectedCurrent(float value) {
     bool valid = false;
     if (static_cast<int>(_current) == 0) getCurrent(valid);
-    if (valid && static_cast<int>(_current) > 0) _current_multiplier *= (value / _current);
+    if (static_cast<int>(_current) > 0) _current_multiplier *= (value / _current);
 }
 
 void HLW8012::expectedVoltage(float value) {
     bool valid = false;
     if (static_cast<int>(_voltage) == 0) getVoltage(valid);
-    if (valid && static_cast<int>(_voltage) > 0) _voltage_multiplier *= (value / _voltage);
+    if (static_cast<int>(_voltage) > 0) _voltage_multiplier *= (value / _voltage);
 }
 
 void HLW8012::expectedActivePower(float value) {
     bool valid = false;
     if (static_cast<int>(_power) == 0) getActivePower(valid);
-    if (valid && static_cast<int>(_power) > 0) _power_multiplier *= (value / _power);
+    if (static_cast<int>(_power) > 0) _power_multiplier *= (value / _power);
 }
 
 void HLW8012::resetMultipliers() {

@@ -64,7 +64,7 @@
 // ##### Other #####
 // #define SUPLA_HC_SR04
 // #define SUPLA_IMPULSE_COUNTER
-// #define SUPLA_HLW8012_V2
+// #define SUPLA_HLW8012
 // #define SUPLA_RGBW
 // #define SUPLA_PUSHOVER
 // #define SUPLA_DIRECT_LINKS

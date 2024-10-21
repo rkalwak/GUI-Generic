@@ -111,9 +111,12 @@ boneIO::boneIO() {
 #endif
 
 #ifdef BONEIO_ROLLER_SHUTTER_CHANNEL
-  RollerShutterButtonPair rollerShutterButtonPairs[32];
+  uint8_t rollerShutters = ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt();
+  RollerShutterButtonPair rollerShutterButtonPairs[rollerShutters];
+  RelayButtonPair relayButtonPairs[deviceRelaySize];
 
-  for (int i = 0; i < deviceRelaySize / 2; i++) {
+  // ======================== ROLETY =========================
+  for (int i = 0; i < rollerShutters; i++) {
     int shutterRelayUpIndex = i * 2;
     int shutterRelayDownIndex = i * 2 + 1;
     int openButtonIndex = i * 2;
@@ -128,11 +131,7 @@ boneIO::boneIO() {
     PCT2075->addAction(Supla::STOP, rollerShutterButtonPairs[i].shutter, OnGreater(80.0));
   }
 
-  for (int i = 0; i < deviceBinarySize; i++) {
-    new Supla::Sensor::Binary(deviceBinary->io, deviceBinary->pin, false, true);
-  }
-
-  for (int i = 0; i < deviceRelaySize / 2; i++) {
+  for (int i = 0; i < rollerShutters; i++) {
     auto atUP = new Supla::Control::ActionTrigger();
     atUP->setRelatedChannel(rollerShutterButtonPairs[i].shutter);
     atUP->attach(rollerShutterButtonPairs[i].openButton);
@@ -141,6 +140,30 @@ boneIO::boneIO() {
     atDown->setRelatedChannel(rollerShutterButtonPairs[i].shutter);
     atDown->attach(rollerShutterButtonPairs[i].closeButton);
   }
+  // ==========================================================
+
+  // ====================== PRZEKAŹNIKI =======================
+  for (int i = rollerShutters * 2; i < deviceRelaySize; i++) {
+    relayButtonPairs[i] = createRelayChannel(deviceRelay[i], deviceButton[i], ConfigESP->getLevel(BONEIO_RELAY_CONFIG));
+    PCT2075->addAction(Supla::TURN_OFF, relayButtonPairs[i].relay, OnGreater(80.0));
+  }
+
+  for (int i = rollerShutters * 2; i < deviceRelaySize; i++) {
+    auto at = new Supla::Control::ActionTrigger();
+    at->setRelatedChannel(relayButtonPairs[i].relay);
+    at->attach(relayButtonPairs[i].button);
+  }
+  // ==========================================================
+
+  // ======================= BINARY SENSOR ====================
+  for (int i = 0; i < deviceBinarySize; i++) {
+    new Supla::Sensor::Binary(deviceBinary[i].io, deviceBinary[i].pin, false, true);
+  }
+  // ==========================================================
+#endif
+
+#ifdef SUPLA_INA219
+  new Supla::Sensor::INA_219(0x40, &Wire1);
 #endif
 }
 

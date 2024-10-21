@@ -56,7 +56,7 @@ void createWebPageOther() {
   });
 #endif
 
-#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
   if ((ConfigESP->getGpio(FUNCTION_CF) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CF1) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SEL) != OFF_GPIO) ||
       ConfigESP->getGpio(FUNCTION_CSE7766_RX) != OFF_GPIO) {
     WebServer->httpServer->on(getURL(PATH_CALIBRATE), [&]() {
@@ -106,7 +106,7 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_HLW8012);
   addListGPIOBox(INPUT_CF, F("CF"), FUNCTION_CF);
   addListGPIOBox(INPUT_CF1, F("CF1"), FUNCTION_CF1);
@@ -335,7 +335,7 @@ void handleOtherSave() {
   }
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
   if (!WebServer->saveGPIO(INPUT_CF, FUNCTION_CF) || !WebServer->saveGPIO(INPUT_CF1, FUNCTION_CF1) || !WebServer->saveGPIO(INPUT_SEL, FUNCTION_SEL)) {
     handleOther(6);
     return;
@@ -624,50 +624,74 @@ void handleImpulseCounterSaveSet() {
 }
 #endif
 
-#if defined(SUPLA_HLW8012_V2) || defined(SUPLA_CSE7766)
+#if defined(SUPLA_HLW8012) || defined(SUPLA_CSE7766)
 void handleCounterCalibrate(int save) {
-  String couter;
-  float curent = 0, voltage = 0, power = 0;
+  float currentMultiplier = 0, voltageMultiplier = 0, powerMultiplier = 0;
+  String counter = WebServer->httpServer->arg(ARG_PARM_URL);
 
-  couter = WebServer->httpServer->arg(ARG_PARM_URL);
   WebServer->sendHeaderStart();
   SuplaSaveResult(save);
-  SuplaJavaScript(getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, couter));
+  SuplaJavaScript(getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, counter));
 
-#ifdef SUPLA_HLW8012_V2
-  if (couter == PATH_HLW8012) {
-    curent = Supla::GUI::counterHLW8012->getCurrentMultiplier();
-    voltage = Supla::GUI::counterHLW8012->getVoltageMultiplier();
-    power = Supla::GUI::counterHLW8012->getPowerMultiplier();
+#ifdef SUPLA_HLW8012
+  if (counter == PATH_HLW8012 || counter == HLW8012_MULTIPLIER) {
+    currentMultiplier = Supla::GUI::counterHLW8012->getCurrentMultiplier();
+    voltageMultiplier = Supla::GUI::counterHLW8012->getVoltageMultiplier();
+    powerMultiplier = Supla::GUI::counterHLW8012->getPowerMultiplier();
   }
 #endif
-
 #ifdef SUPLA_CSE7766
-  if (couter == PATH_CSE7766) {
-    curent = Supla::GUI::counterCSE7766->getCurrentMultiplier();
-    voltage = Supla::GUI::counterCSE7766->getVoltageMultiplier();
-    power = Supla::GUI::counterCSE7766->getPowerMultiplier();
+  if (counter == PATH_CSE7766 || counter == CSE7766_MULTIPLIER) {
+    currentMultiplier = Supla::GUI::counterCSE7766->getCurrentMultiplier();
+    voltageMultiplier = Supla::GUI::counterCSE7766->getVoltageMultiplier();
+    powerMultiplier = Supla::GUI::counterCSE7766->getPowerMultiplier();
   }
 #endif
 
   addFormHeader();
-  String htmlCode = "<p style='color:#000;'>Current Multi: ";
-  htmlCode += String(curent);
-  htmlCode += "<br>Voltage Multi: ";
-  htmlCode += String(voltage);
-  htmlCode += "<br>Power Multi: ";
-  htmlCode += String(power);
+  String htmlCode = "<p style='color:#000;'>Current Multiplier: ";
+  htmlCode += String(currentMultiplier);
+  htmlCode += "<br>Voltage Multiplier: ";
+  htmlCode += String(voltageMultiplier);
+  htmlCode += "<br>Power Multiplier: ";
+  htmlCode += String(powerMultiplier);
   htmlCode += "</p>";
   addTextBox(htmlCode);
   addFormHeaderEnd();
 
-  addForm(F("post"), getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, couter));
+  String postPath = "";
+  String formHeader = "";
+  String calibrationPath = "";
+#ifdef SUPLA_HLW8012
+  if (counter == PATH_HLW8012 || counter == HLW8012_MULTIPLIER) {
+    calibrationPath = PATH_HLW8012;
+    postPath = HLW8012_MULTIPLIER;
+    formHeader = F("HLW8012 Multipliers");
+  }
+#endif
+#ifdef SUPLA_CSE7766
+  if (counter == PATH_CSE7766 || counter == CSE7766_MULTIPLIER) {
+    calibrationPath = PATH_CSE7766;
+    postPath = CSE7766_MULTIPLIER;
+    formHeader = F("CSE7766 Multipliers");
+  }
+#endif
+
+  addForm(F("post"), getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, calibrationPath));
   addFormHeader(S_CALIBRATION_SETTINGS);
   addNumberBox(INPUT_CALIB_POWER, S_BULB_POWER_W, F("25"), true);
   addNumberBox(INPUT_CALIB_VOLTAGE, S_VOLTAGE_V, F("230"), true);
   addFormHeaderEnd();
-
   addButtonSubmit(S_CALIBRATION);
+  addFormEnd();
+
+  addForm(F("post"), getParameterRequest(PATH_CALIBRATE, ARG_PARM_URL, postPath));
+  addFormHeader(formHeader);
+  addNumberBox(INPUT_CURRENT_MULTIPLIER, "Current Multiplier", S_EMPTY, false, String(currentMultiplier));
+  addNumberBox(INPUT_VOLTAGE_MULTIPLIER, "Voltage Multiplier", S_EMPTY, false, String(voltageMultiplier));
+  addNumberBox(INPUT_POWER_MULTIPLIER, "Power Multiplier", S_EMPTY, false, String(powerMultiplier));
+  addFormHeaderEnd();
+  addButtonSubmit(S_SAVE);
   addFormEnd();
 
   addButton(S_RETURN, PATH_OTHER);
@@ -676,17 +700,35 @@ void handleCounterCalibrate(int save) {
 
 void handleCounterCalibrateSave() {
   float calibPower = 0, calibVoltage = 0;
-  String couter = WebServer->httpServer->arg(ARG_PARM_URL);
+  String counter = WebServer->httpServer->arg(ARG_PARM_URL);
+  Serial.println(counter);
 
-  String input = INPUT_CALIB_POWER;
-  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    calibPower = WebServer->httpServer->arg(input).toDouble();
+  if (counter.equals(HLW8012_MULTIPLIER) || counter.equals(CSE7766_MULTIPLIER)) {
+    float currentMultiplier = getFloatFromInput(INPUT_CURRENT_MULTIPLIER);
+    float voltageMultiplier = getFloatFromInput(INPUT_VOLTAGE_MULTIPLIER);
+    float powerMultiplier = getFloatFromInput(INPUT_POWER_MULTIPLIER);
+
+#ifdef SUPLA_HLW8012
+    if (counter.equals(HLW8012_MULTIPLIER)) {
+      Supla::GUI::counterHLW8012->setCurrentMultiplier(currentMultiplier);
+      Supla::GUI::counterHLW8012->setVoltageMultiplier(voltageMultiplier);
+      Supla::GUI::counterHLW8012->setPowerMultiplier(powerMultiplier);
+    }
+#endif
+#ifdef SUPLA_CSE7766
+    if (counter.equals(CSE7766_MULTIPLIER)) {
+      Supla::GUI::counterCSE7766->setCurrentMultiplier(currentMultiplier);
+      Supla::GUI::counterCSE7766->setVoltageMultiplier(voltageMultiplier);
+      Supla::GUI::counterCSE7766->setPowerMultiplier(powerMultiplier);
+    }
+#endif
+
+    Supla::Storage::ScheduleSave(1000);
+    handleCounterCalibrate(SaveResult::DATA_SAVE);
   }
 
-  input = INPUT_CALIB_VOLTAGE;
-  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    calibVoltage = WebServer->httpServer->arg(input).toDouble();
-  }
+  calibPower = getFloatFromInput(INPUT_CALIB_POWER);
+  calibVoltage = getFloatFromInput(INPUT_CALIB_VOLTAGE);
 
   if (calibPower != 0 && calibVoltage != 0) {
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
@@ -694,15 +736,21 @@ void handleCounterCalibrateSave() {
       Supla::GUI::relay[i]->turnOn();
     }
 #endif
-
-#ifdef SUPLA_HLW8012_V2
-    if (couter == PATH_HLW8012)
+#ifdef SUPLA_HLW8012
+    if (counter.equals(PATH_HLW8012)) {
       Supla::GUI::counterHLW8012->calibrate(calibPower, calibVoltage);
+    }
 #endif
 
 #ifdef SUPLA_CSE7766
-    if (couter == PATH_CSE7766)
+    if (counter.equals(PATH_CSE7766)) {
+#if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
+      for (size_t i = 0; i < Supla::GUI::relay.size(); i++) {
+        Supla::GUI::relay[i]->turnOn();
+      }
+#endif
       Supla::GUI::counterCSE7766->calibrate(calibPower, calibVoltage);
+    }
 #endif
 
 #if defined(SUPLA_RELAY) || defined(SUPLA_ROLLERSHUTTER)
@@ -711,10 +759,7 @@ void handleCounterCalibrateSave() {
     }
 #endif
 
-    handleCounterCalibrate(1);
-  }
-  else {
-    handleCounterCalibrate(6);
+    handleCounterCalibrate(SaveResult::DATA_SAVE);
   }
 }
 #endif
@@ -782,19 +827,30 @@ void changePZEMAddress(uint8_t address) {
   if (pinRX != OFF_GPIO && pinTX != OFF_GPIO) {
     Serial.print("Using address: 0x");
     Serial.println(address, HEX);
+
 #if defined(ARDUINO_ARCH_ESP32)
     PZEM004Tv30 pzem(&Serial, pinRX, pinTX);
 #else
     SoftwareSerial pzemSWSerial(pinRX, pinTX);
+    pzemSWSerial.begin(PZEM_BAUD_RATE);
     PZEM004Tv30 pzem(pzemSWSerial);
 #endif
 
-    if (pzem.setAddress(address)) {
-      Serial.print("Address set to: ");
-      Serial.println(address);
+    bool success = false;
+    for (int attempts = 0; attempts < 3; attempts++) {
+      if (pzem.setAddress(address)) {
+        Serial.print("Address set to: ");
+        Serial.println(address);
+        success = true;
+        break;
+      }
+      else {
+        Serial.println("Error setting address! Retrying...");
+      }
     }
-    else {
-      Serial.println("Error setting address!");
+
+    if (!success) {
+      Serial.println("Failed to set address after 3 attempts.");
     }
 
     Serial.print("Current address: 0x");

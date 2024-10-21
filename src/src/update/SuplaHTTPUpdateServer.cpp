@@ -38,14 +38,6 @@ void HTTPUpdateServer::setup() {
     index.replace("{S}", S_SKETCH_UPLOAD_MAX_SIZE);
     index.replace("{U}", S_SKETCH_LOADED_SIZE);
     index.replace("{b}", S_UPDATE_FIRMWARE);
-    if ((ESP.getFlashChipSize() / 1024) == 1024) {
-      index.replace("{g}", twoStepButton);
-      index.replace("{gu}", PATH_UPDATE_HENDLE_2STEP);
-      index.replace("{gg}", S_GG_UPDATER);
-    }
-    else {
-      index.replace("{g}", "");
-    }
     WebServer->httpServer->send(200, PSTR("text/html"), index.c_str());
   });
 
@@ -167,7 +159,7 @@ void HTTPUpdateServer::suplaWebPageUpddate(int save, const String& location) {
 #ifdef OPTIONS_HASH
   addFormHeader(String(S_UPDATE) + S_SPACE + "automatyczna");
   addButton("Sprawdź aktualizację", getParameterRequest(PATH_UPDATE_HENDLE, ARG_PARM_URL, PATH_UPDATE_CHECK_BUILDER));
-  addButton(S_UPDATE_FIRMWARE, getParameterRequest(PATH_UPDATE_HENDLE, ARG_PARM_URL, PATH_UPDATE_BUILDER));
+  addButtonWithConfirmation(S_UPDATE_FIRMWARE, getParameterRequest(PATH_UPDATE_HENDLE, ARG_PARM_URL, PATH_UPDATE_BUILDER), "Czy zaktualizować?");
   addHyperlink("Pobierz", getUpdateBuilderUrl());
   addFormHeaderEnd();
 #endif
@@ -182,7 +174,14 @@ void HTTPUpdateServer::suplaWebPageUpddate(int save, const String& location) {
   addFormHeader(String(S_UPDATE) + S_SPACE + "ręczna");
   WebServer->sendContent(F("<iframe src='"));
   WebServer->sendContent(getURL(PATH_UPDATE));
-  WebServer->sendContent(F("' frameborder='0' width='330' height='200'></iframe>"));
+  WebServer->sendContent(F("' frameborder='0' width='330' height='160'></iframe>"));
+
+  if ((ESP.getFlashChipSize() / 1024) == 1024) {
+    addButtonWithConfirmation(String("Wgraj") + S_SPACE + S_GG_UPDATER,
+                              getParameterRequest(PATH_UPDATE_HENDLE, ARG_PARM_URL, PATH_UPDATE_HENDLE_2STEP),
+                              String("Czy wgrać") + S_SPACE + S_GG_UPDATER + "?");
+  }
+
   addFormHeaderEnd();
   addButton(S_RETURN, PATH_TOOLS);
   WebServer->sendHeaderEnd();

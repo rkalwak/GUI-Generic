@@ -41,13 +41,18 @@ void begin() {
 }
 
 void setupConnection() {
+  String suplaHostname = ConfigManager->get(KEY_HOST_NAME)->getValue();
+  suplaHostname.replace(" ", "_");
+
 #ifdef SUPLA_WT32_ETH01_LAN8720
   if (eth == nullptr) {
     eth = new Supla::GUI_WT32_ETH01(1);  // uint_t ETH_ADDR = I²C-address of Ethernet PHY (0 or 1)
+    eth->setHostname(suplaHostname.c_str(), 16);
   }
 #elif defined(SUPLA_ETH01_LAN8720)
   if (eth == nullptr) {
     eth = new Supla::GUI_ETH01(1);  // uint_t ETH_ADDR = I²C-address of Ethernet PHY (0 or 1)
+    eth->setHostname(suplaHostname.c_str(), 16);
   }
 #else
   if (wifi) {
@@ -58,9 +63,6 @@ void setupConnection() {
   else {
     wifi = new Supla::GUIESPWifi(ConfigManager->get(KEY_WIFI_SSID)->getValue(), ConfigManager->get(KEY_WIFI_PASS)->getValue());
   }
-
-  String suplaHostname = ConfigManager->get(KEY_HOST_NAME)->getValue();
-  suplaHostname.replace(" ", "_");
   wifi->setHostName(suplaHostname.c_str());
 
 #endif
@@ -776,7 +778,7 @@ std::vector<Supla::Control::Relay *> relay;
 std::vector<DS18B20 *> sensorDS;
 #endif
 
-#ifdef SUPLA_HLW8012_V2
+#ifdef SUPLA_HLW8012
 Supla::Sensor::HLW_8012 *counterHLW8012 = nullptr;
 
 void addHLW8012(int8_t pinCF, int8_t pinCF1, int8_t pinSEL) {

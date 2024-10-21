@@ -74,72 +74,51 @@ class ThreePhasePZEMv3_ADDR : public ElectricityMeter {
     bool atLeastOnePzemWasRead = false;
 
     for (int i = 0; i < 3; i++) {
-      float current = pzem[i].current();
-      bool currentValid = !isnan(current) && current >= 0;
-      if (!currentValid) {
-        Serial.printf("Error reading current from PZEM %d\n", i + 1);
-        continue;
-      }
+      float energy = pzem[i].energy();
+      bool energyValid = !isnan(energy);
 
-      atLeastOnePzemWasRead = true;
+      float frequency = pzem[i].frequency();
+      bool frequencyValid = !isnan(frequency);
+
+      float current = pzem[i].current();
+      bool currentValid = !isnan(current);
 
       float voltage = pzem[i].voltage();
-      bool voltageValid = !isnan(voltage) && voltage > 0;
-      if (!voltageValid) {
-        Serial.printf("Error reading voltage from PZEM %d\n", i + 1);
-      }
+      bool voltageValid = !isnan(voltage);
 
       float active = pzem[i].power();
-      bool activeValid = !isnan(active) && active >= 0;
-      if (!activeValid) {
-        Serial.printf("Error reading power from PZEM %d\n", i + 1);
-      }
+      bool activeValid = !isnan(active);
 
       float apparent = (voltageValid && currentValid) ? (voltage * current) : NAN;
       float reactive = (voltageValid && activeValid && apparent > active) ? sqrt(apparent * apparent - active * active) : 0;
 
-      float energy = pzem[i].energy();
-      bool energyValid = !isnan(energy) && energy >= 0;
-      if (!energyValid) {
-        Serial.printf("Error reading energy from PZEM %d\n", i + 1);
-      }
-
       float powerFactor = pzem[i].pf();
       bool powerFactorValid = !isnan(powerFactor) && powerFactor >= 0 && powerFactor <= 1;
-      if (!powerFactorValid) {
-        Serial.printf("Error reading power factor from PZEM %d\n", i + 1);
-      }
 
-      float frequency = pzem[i].frequency();
-      bool frequencyValid = !isnan(frequency) && frequency > 0;
-      if (!frequencyValid) {
-        Serial.printf("Error reading frequency from PZEM %d\n", i + 1);
-      }
+      setCurrent(i, currentValid ? static_cast<int>(current * 1000) : 0);
+      setVoltage(i, voltageValid ? static_cast<int>(voltage * 100) : 0);
+      setPowerActive(i, activeValid ? static_cast<int>(active * 100000) : 0);
+      setPowerFactor(i, powerFactorValid ? static_cast<int>(powerFactor * 1000) : 0);
+      setFreq(frequencyValid ? static_cast<unsigned short>(frequency * 100) : 0);
 
-      if (voltageValid) {
-        setVoltage(i, static_cast<int>(voltage * 100));
-      }
-      if (currentValid) {
-        setCurrent(i, static_cast<int>(current * 1000));
-      }
-      if (activeValid) {
-        setPowerActive(i, static_cast<int>(active * 100000));
-      }
-      if (energyValid) {
-        setFwdActEnergy(i, static_cast<int>(energy * 100000));
-      }
-      if (powerFactorValid) {
-        setPowerFactor(i, static_cast<int>(powerFactor * 1000));
-      }
       if (voltageValid && currentValid) {
         setPowerApparent(i, static_cast<int>(apparent * 100000));
         setPowerReactive(i, static_cast<int>(reactive * 100000));
       }
-      if (frequencyValid) {
-        setFreq(static_cast<unsigned short>(frequency * 100));
+      else {
+        setPowerApparent(i, 0);
+        setPowerReactive(i, 0);
       }
 
-      delay(UPDATE_TIME);  // Delay between readings
+      if (energyValid) {
+        setFwdActEnergy(i, static_cast<int>(energy * 100000));
+      }
+
+      if (currentValid) {
+        atLeastOnePzemWasRead = true;
+      }
+
+      delay(UPDATE_TIME);
     }
 
     if (!atLeastOnePzemWasRead) {

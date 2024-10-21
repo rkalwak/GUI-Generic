@@ -45,7 +45,8 @@ void Supla::Control::ButtonAnalog::onTimer() {
   if (!stateChanged) {
     if (!isBistable() && stateResult == PRESSED) {
       if (clickCounter <= 1 && holdTimeMs > 0 &&
-          timeDelta > (holdTimeMs + holdSend * repeatOnHoldMs) &&
+          timeDelta > (static_cast<unsigned int>(holdTimeMs) +
+                       holdSend * static_cast<unsigned int>(repeatOnHoldMs)) &&
           (repeatOnHoldMs == 0 ? !holdSend : true)) {
         runAction(ON_HOLD);
         ++holdSend;

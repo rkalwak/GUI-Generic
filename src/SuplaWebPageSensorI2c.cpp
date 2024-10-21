@@ -16,7 +16,7 @@
 
 #include "SuplaWebPageSensorI2c.h"
 
-#if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_2) || defined(GUI_SENSOR_I2C_ENERGY_METER)
+#if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
 void createWebPageSensorI2c() {
   WebServer->httpServer->on(getURL(PATH_I2C), [&]() {
     if (!WebServer->isLoggedIn()) {
@@ -63,8 +63,7 @@ void webPageI2CScanner(TwoWire* wire) {
 }
 
 void handleSensorI2c(int save) {
-  uint8_t selected;
-
+  [[maybe_unused]] uint8_t selected;
   WebServer->sendHeaderStart();
   SuplaSaveResult(save);
   SuplaJavaScript(PATH_I2C);
@@ -166,7 +165,15 @@ void handleSensorI2c(int save) {
 #ifdef SUPLA_SPS30_KPOP
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_SPS30).toInt();
     addFormHeader();
-    addListBox(INPUT_SPS30, F("SPS30"), STATE_P, 2, selected);;
+    addListBox(INPUT_SPS30, F("SPS30"), STATE_P, 2, selected);
+    addFormHeaderEnd();
+#endif
+
+#ifdef SUPLA_INA219
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt();
+    uint8_t ina219_addresses[] = {0x40, 0x44};
+    addFormHeader();
+    addListBox(INPUT_INA219, F("INA219 Address"), ina219_addresses, 2, selected, 0, true);
     addFormHeaderEnd();
 #endif
 
@@ -266,9 +273,8 @@ void handleSensorI2c(int save) {
 }
 
 void handleSensorI2cSave() {
-  String input;
-  uint8_t key;
-
+  [[maybe_unused]] String input;
+  [[maybe_unused]] uint8_t key;
   if (!WebServer->saveGPIO(INPUT_SDA, FUNCTION_SDA) || !WebServer->saveGPIO(INPUT_SCL, FUNCTION_SCL)) {
     handleSensorI2c(6);
     return;
@@ -285,7 +291,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_BME280;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BME280,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BME280, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
   key = KEY_ALTITUDE_BMX280;
@@ -299,7 +305,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_BMP280;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BMP280,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BMP280, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
   key = KEY_ALTITUDE_BMX280;
@@ -313,7 +319,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_SHT3x;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -321,7 +327,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_SUPLA_SHT_AUTODETECT;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -329,7 +335,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_SI7021;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SI7021,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SI7021, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -337,7 +343,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_VL53L0X;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_VL53L0X,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_VL53L0X, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -345,7 +351,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_HDC1080;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -353,7 +359,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_BH1750;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -361,7 +367,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR_2;
   input = INPUT_MS5611;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_MS5611,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_MS5611, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
   key = KEY_ALTITUDE_MS5611;
@@ -375,7 +381,7 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_MAX44009;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -383,13 +389,13 @@ void handleSensorI2cSave() {
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_OLED;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_OLED,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_OLED, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
 #ifdef SUPLA_BUTTON
   input = INPUT_BUTTON_OLED;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_OLED,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_OLED, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -404,7 +410,7 @@ void handleSensorI2cSave() {
   input = INPUT_OLED_BRIGHTNESS_LVL;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     int value = WebServer->httpServer->arg(input).toInt();
-ConfigESP->setBrightnessLevelOLED(value);
+    ConfigESP->setBrightnessLevelOLED(value);
   }
 
   for (uint8_t i = 0; i < getCountSensorChannels(); i++) {
@@ -420,13 +426,13 @@ ConfigESP->setBrightnessLevelOLED(value);
   key = KEY_ACTIVE_SENSOR;
   input = INPUT_LCD;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HD44780,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HD44780, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 
 #ifdef SUPLA_BUTTON
   input = INPUT_BUTTON_LCD;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_LCD,  static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(KEY_NUMBER_BUTTON_ADDITIONAL, BUTTON_LCD, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -469,7 +475,7 @@ ConfigESP->setBrightnessLevelOLED(value);
   key = KEY_ACTIVE_SENSOR_2;
   input = INPUT_AHTX0;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(key, SENSOR_I2C_AHTX0, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
   }
 #endif
 
@@ -477,7 +483,17 @@ ConfigESP->setBrightnessLevelOLED(value);
   key = KEY_ACTIVE_SENSOR_2;
   input = INPUT_SPS30;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
-    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    ConfigManager->setElement(key, SENSOR_I2C_SPS30, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
+
+#ifdef SUPLA_INA219
+  key = KEY_ACTIVE_SENSOR_2;
+  input = INPUT_INA219;
+
+  const char* selectedInput = WebServer->httpServer->arg(input).c_str();
+  if (strcmp(selectedInput, "") != 0) {
+    ConfigManager->setElementHex(key, SENSOR_I2C_INA219, selectedInput);
   }
 #endif
 

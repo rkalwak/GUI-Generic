@@ -92,6 +92,9 @@ RelayHvacAggregator *RelayHvacAggregator::GetInstance(int relayChannelNumber) {
 }
 
 void RelayHvacAggregator::registerHvac(HvacBase *hvac) {
+  SUPLA_LOG_DEBUG("RelayHvacAggregator[%d] hvac[%d] registered",
+                  relayChannelNumber,
+                  hvac->getChannelNumber());
   if (firstHvacPtr == nullptr) {
     firstHvacPtr = new HvacPtr;
     firstHvacPtr->hvac = hvac;
@@ -106,6 +109,9 @@ void RelayHvacAggregator::registerHvac(HvacBase *hvac) {
 }
 
 void RelayHvacAggregator::unregisterHvac(HvacBase *hvac) {
+  SUPLA_LOG_DEBUG("RelayHvacAggregator[%d] hvac[%d] unregistered",
+                  relayChannelNumber,
+                  hvac->getChannelNumber());
   auto *ptr = firstHvacPtr;
   HvacPtr *prevPtr = nullptr;
   while (ptr != nullptr) {
@@ -134,27 +140,63 @@ void RelayHvacAggregator::iterateAlways() {
   lastUpdateTimestamp = millis();
 
   bool state = false;
+  bool ignore = true;
   auto *ptr = firstHvacPtr;
   while (ptr != nullptr) {
     if (ptr->hvac != nullptr && ptr->hvac->getChannel()) {
-      state = state || ptr->hvac->getChannel()->isHvacFlagHeating() ||
-              ptr->hvac->getChannel()->isHvacFlagCooling();
-    }
-    if (state) {
-      break;
+      if (!ptr->hvac->ignoreAggregatorForRelay(relayChannelNumber)) {
+        ignore = false;
+        if (ptr->hvac->getChannel()->isHvacFlagHeating() ||
+            ptr->hvac->getChannel()->isHvacFlagCooling()) {
+          state = true;
+          break;
+        }
+      }
     }
     ptr = ptr->nextPtr;
   }
 
+  if (ignore && !turnOffWhenEmpty) {
+    return;
+  }
+
   if (state) {
-    if (!relay->isOn()) {
+    if (lastValueSend != 1) {
+      lastValueSend = 1;
       SUPLA_LOG_INFO("RelayHvacAggregator[%d] turn on", relayChannelNumber);
       relay->turnOn();
     }
   } else {
-    if (relay->isOn()) {
+    if (lastValueSend != 0) {
+      lastValueSend = 0;
       SUPLA_LOG_INFO("RelayHvacAggregator[%d] turn off", relayChannelNumber);
       relay->turnOff();
     }
   }
 }
+
+void RelayHvacAggregator::setTurnOffWhenEmpty(bool turnOffWhenEmpty) {
+  this->turnOffWhenEmpty = turnOffWhenEmpty;
+}
+
+bool RelayHvacAggregator::isHvacRegistered(HvacBase *hvac) const {
+  auto *ptr = firstHvacPtr;
+  while (ptr != nullptr) {
+    if (ptr->hvac == hvac) {
+      return true;
+    }
+    ptr = ptr->nextPtr;
+  }
+  return false;
+}
+
+int RelayHvacAggregator::getHvacCount() const {
+  int count = 0;
+  auto *ptr = firstHvacPtr;
+  while (ptr != nullptr) {
+    count++;
+    ptr = ptr->nextPtr;
+  }
+  return count;
+}
+

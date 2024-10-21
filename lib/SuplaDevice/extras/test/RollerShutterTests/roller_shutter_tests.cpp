@@ -60,15 +60,24 @@ TEST_F(RollerShutterFixture, basicTests) {
   TDSC_RollerShutterValue value = {};
   EXPECT_EQ(rs.getChannel()->getChannelType(), SUPLA_CHANNELTYPE_RELAY);
   EXPECT_EQ(rs.getChannel()->getFuncList(),
-            SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER);
+            SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER |
+                      SUPLA_BIT_FUNC_CONTROLLINGTHEROOFWINDOW |
+                      SUPLA_BIT_FUNC_TERRACE_AWNING |
+                      SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR |
+                      SUPLA_BIT_FUNC_CURTAIN |
+                      SUPLA_BIT_FUNC_PROJECTOR_SCREEN);
+
   EXPECT_EQ(rs.getChannel()->getDefaultFunction(),
             SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER);
   EXPECT_EQ(rs.getChannel()->getFlags(),
             SUPLA_CHANNEL_FLAG_CHANNELSTATE |
-                SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS);
-  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(number),
-                          &value,
-                          SUPLA_CHANNELVALUE_SIZE));
+                SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS |
+                SUPLA_CHANNEL_FLAG_RUNTIME_CHANNEL_CONFIG_UPDATE |
+                SUPLA_CHANNEL_FLAG_CALCFG_RECALIBRATE);
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(number),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
 }
 
 TEST_F(RollerShutterFixture, onInitHighIsOn) {
@@ -136,9 +145,11 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
   }
 
   TDSC_RollerShutterValue value = {};
-  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
-                          &value,
-                          SUPLA_CHANNELVALUE_SIZE));
+  value.position = -1;
+  TDSC_RollerShutterValue *valuePtr =
+      reinterpret_cast<TDSC_RollerShutterValue *>(
+          Supla::RegisterDevice::getChannelValuePtr(0));
+  EXPECT_EQ(0, memcmp(valuePtr, &value, SUPLA_CHANNELVALUE_SIZE));
 
   rs.handleAction(0, Supla::MOVE_DOWN);
   for (int i = 0; i < 10; i++) {
@@ -146,13 +157,12 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
     time.advance(100);
   }
 
-  value.position = -1;
   EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
                           &value,
                           SUPLA_CHANNELVALUE_SIZE));
 
   rs.handleAction(0, Supla::MOVE_UP);
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 100; i++) {
     rs.onTimer();
     time.advance(100);
   }

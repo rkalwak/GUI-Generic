@@ -28,19 +28,21 @@
 #include <supla/device/remote_device_config.h>
 #include <supla/mutex.h>
 #include <supla/auto_lock.h>
+#include <supla/storage/config_tags.h>
 
 Supla::Device::StatusLed::StatusLed(Supla::Io *io, uint8_t outPin, bool invert)
-    : StatusLed(outPin, invert) {
-  this->io = io;
+    : Supla::Control::BlinkingLed(io, outPin, invert) {
 }
 
 Supla::Device::StatusLed::StatusLed(uint8_t outPin, bool invert)
-    : outPin(outPin), invert(invert) {
-  mutex = Supla::Mutex::Create();
+    : Supla::Control::BlinkingLed(outPin, invert) {
 }
 
 void Supla::Device::StatusLed::onLoadConfig(SuplaDeviceClass *sdc) {
-  (void)(sdc);
+  if (sdc) {
+    sdc->setStatusLed(this);
+  }
+
   if (getMode() == LED_IN_CONFIG_MODE_ONLY || !useDeviceConfig) {
     return;
   }
@@ -48,9 +50,9 @@ void Supla::Device::StatusLed::onLoadConfig(SuplaDeviceClass *sdc) {
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     int8_t value = defaultMode;
-    if (!cfg->getInt8(StatusLedCfgTag, &value)) {
+    if (!cfg->getInt8(Supla::ConfigTag::StatusLedCfgTag, &value)) {
       // update default value in config if it is missing
-      cfg->setInt8(Supla::Device::StatusLedCfgTag, defaultMode);
+      cfg->setInt8(Supla::ConfigTag::StatusLedCfgTag, defaultMode);
     }
     switch (value) {
       default:
@@ -79,21 +81,21 @@ void Supla::Device::StatusLed::storeModeToConfig() {
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     int8_t currentCfgValue = 0;
-    cfg->getInt8(StatusLedCfgTag, &currentCfgValue);
+    cfg->getInt8(Supla::ConfigTag::StatusLedCfgTag, &currentCfgValue);
     if (currentCfgValue != ledMode) {
       switch (ledMode) {
         default:
         case 0: {
-          cfg->setInt8(Supla::Device::StatusLedCfgTag, 0);
+          cfg->setInt8(Supla::ConfigTag::StatusLedCfgTag, 0);
           break;
         }
         case 1: {
-          cfg->setInt8(Supla::Device::StatusLedCfgTag,
+          cfg->setInt8(Supla::ConfigTag::StatusLedCfgTag,
                        static_cast<int8_t>(ledMode));
           break;
         }
         case 2: {
-          cfg->setInt8(Supla::Device::StatusLedCfgTag,
+          cfg->setInt8(Supla::ConfigTag::StatusLedCfgTag,
                        static_cast<int8_t>(ledMode));
           break;
         }
@@ -104,27 +106,25 @@ void Supla::Device::StatusLed::storeModeToConfig() {
   }
 }
 
-void Supla::Device::StatusLed::onInit() {
-  Supla::AutoLock autoLock(mutex);
-  updatePin();
-  if (state == NOT_INITIALIZED) {
-    turnOn();
-  }
-  Supla::Io::pinMode(outPin, OUTPUT, io);
-}
-
 void Supla::Device::StatusLed::iterateAlways() {
   Supla::AutoLock autoLock(mutex);
   int currentStatus = SuplaDevice.getCurrentStatus();
   if (ledMode == LED_ALWAYS_OFF && currentStatus != STATUS_SW_DOWNLOAD &&
-      currentStatus != STATUS_CONFIG_MODE) {
+      currentStatus != STATUS_CONFIG_MODE &&
+      currentSequence != CUSTOM_SEQUENCE) {
     offDuration = 1000;
     onDuration = 0;
     return;
   }
 
   if (currentSequence == CUSTOM_SEQUENCE) {
-    return;
+    if (repeatLimit == 1 && onDuration == 0 && offDuration == 1000) {
+      autoLock.unlock();
+      setAutoSequence();
+      autoLock.lock();
+    } else {
+      return;
+    }
   }
 
   bool checkProtocolsStatus = false;
@@ -269,53 +269,14 @@ void Supla::Device::StatusLed::iterateAlways() {
   }
 }
 
-void Supla::Device::StatusLed::onTimer() {
-  Supla::AutoLock autoLock(mutex);
-  updatePin();
-}
-
-void Supla::Device::StatusLed::setInvertedLogic(bool invertedLogic) {
-  Supla::AutoLock autoLock(mutex);
-  invert = invertedLogic;
-  updatePin();
-}
-
-void Supla::Device::StatusLed::turnOn() {
-  lastUpdate = millis();
-  state = ON;
-  Supla::Io::digitalWrite(outPin, invert ? 0 : 1, io);
-}
-
-void Supla::Device::StatusLed::turnOff() {
-  lastUpdate = millis();
-  state = OFF;
-  Supla::Io::digitalWrite(outPin, invert ? 1 : 0, io);
-}
-
-void Supla::Device::StatusLed::updatePin() {
-  if (onDuration == 0 || offDuration == 0) {
-    if ((state == ON || state == NOT_INITIALIZED) && onDuration == 0) {
-      turnOff();
-    }
-    if ((state == OFF || state == NOT_INITIALIZED) && offDuration == 0) {
-      turnOn();
-    }
-    return;
-  }
-
-  if (state == ON && millis() - lastUpdate > onDuration) {
-    turnOff();
-  } else if (state == OFF && millis() - lastUpdate > offDuration) {
-    turnOn();
-  }
-}
-
-void Supla::Device::StatusLed::setCustomSequence(int onDurationMs,
-    int offDurationMs) {
-  Supla::AutoLock autoLock(mutex);
+void Supla::Device::StatusLed::setCustomSequence(uint32_t onDurationMs,
+                                                 uint32_t offDurationMs,
+                                                 uint32_t pauseDurrationMs,
+                                                 uint8_t onLimit,
+                                                 uint8_t repeatLimit) {
   currentSequence = CUSTOM_SEQUENCE;
-  onDuration = onDurationMs;
-  offDuration = offDurationMs;
+  Supla::Control::BlinkingLed::setCustomSequence(
+      onDurationMs, offDurationMs, pauseDurrationMs, onLimit, repeatLimit);
 }
 
 void Supla::Device::StatusLed::setAutoSequence() {
@@ -323,6 +284,7 @@ void Supla::Device::StatusLed::setAutoSequence() {
   // resetting to defaults will trigger automatic sequence update on
   // iterateAlways call
   currentSequence = NETWORK_CONNECTING;
+  repeatLimit = 0;
 }
 
 void Supla::Device::StatusLed::setMode(LedMode newMode) {
@@ -348,4 +310,8 @@ void Supla::Device::StatusLed::setDefaultMode(enum LedMode newMode) {
 
 void Supla::Device::StatusLed::setUseDeviceConfig(bool value) {
   useDeviceConfig = value;
+}
+
+void Supla::Device::StatusLed::identify() {
+  setCustomSequence(150, 150, 400, 3, 5);
 }

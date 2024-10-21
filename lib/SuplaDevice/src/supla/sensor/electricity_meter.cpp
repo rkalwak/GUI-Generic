@@ -42,7 +42,6 @@ void Supla::Sensor::ElectricityMeter::updateChannelValues() {
   }
   valueChanged = false;
 
-  emValue.m_count = 1;
   // Update current messurement precision based on last updates
   bool over65A = false;
   bool activePowerInKW = false;
@@ -52,13 +51,16 @@ void Supla::Sensor::ElectricityMeter::updateChannelValues() {
     if (rawCurrent[i] > UINT16_MAX - 1) {
       over65A = true;
     }
-    if (rawActivePower[i] > INT32_MAX) {
+    if (rawActivePower[i] > INT32_MAX ||
+        rawActivePower[i] < INT32_MIN) {
       activePowerInKW = true;
     }
-    if (rawReactivePower[i] > INT32_MAX) {
+    if (rawReactivePower[i] > INT32_MAX ||
+        rawReactivePower[i] < INT32_MIN) {
       reactivePowerInKvar = true;
     }
-    if (rawApparentPower[i] > INT32_MAX) {
+    if (rawApparentPower[i] > INT32_MAX ||
+        rawApparentPower[i] < INT32_MIN) {
       apparentPowerInKVA = true;
     }
   }
@@ -124,7 +126,8 @@ void Supla::Sensor::ElectricityMeter::updateChannelValues() {
   }
 
   // Prepare extended channel value
-  if (lastChannelUpdateTime == 0 || millis() - lastChannelUpdateTime >= 5000) {
+  if (lastChannelUpdateTime == 0 ||
+      millis() - lastChannelUpdateTime >= refreshRateSec * 1000) {
     lastChannelUpdateTime = millis();
     srpc_evtool_v2_emextended2extended(&emValue, extChannel.getExtValue());
     extChannel.setNewValue(emValue);
@@ -206,6 +209,7 @@ void Supla::Sensor::ElectricityMeter::setVoltage(
       valueChanged = true;
     }
     emValue.m[0].voltage[phase] = voltage;
+    emValue.m_count = 1;
     emValue.measured_values |= EM_VAR_VOLTAGE;
   }
 }
@@ -218,6 +222,7 @@ void Supla::Sensor::ElectricityMeter::setCurrent(
       valueChanged = true;
     }
     rawCurrent[phase] = current;
+    emValue.m_count = 1;
     currentMeasurementAvailable = true;
   }
 }
@@ -228,6 +233,7 @@ void Supla::Sensor::ElectricityMeter::setFreq(unsigned _supla_int16_t freq) {
     valueChanged = true;
   }
   emValue.m[0].freq = freq;
+  emValue.m_count = 1;
   emValue.measured_values |= EM_VAR_FREQ;
 }
 
@@ -238,6 +244,7 @@ void Supla::Sensor::ElectricityMeter::setPowerActive(int phase, int64_t power) {
       valueChanged = true;
       rawActivePower[phase] = power;
     }
+    emValue.m_count = 1;
     powerActiveMeasurementAvailable = true;
   }
 }
@@ -250,6 +257,7 @@ void Supla::Sensor::ElectricityMeter::setPowerReactive(int phase,
       valueChanged = true;
       rawReactivePower[phase] = power;
     }
+    emValue.m_count = 1;
     powerReactiveMeasurementAvailable = true;
   }
 }
@@ -262,6 +270,7 @@ void Supla::Sensor::ElectricityMeter::setPowerApparent(int phase,
       valueChanged = true;
       rawApparentPower[phase] = power;
     }
+    emValue.m_count = 1;
     powerApparentMeasurementAvailable = true;
   }
 }
@@ -274,6 +283,7 @@ void Supla::Sensor::ElectricityMeter::setPowerFactor(int phase,
       valueChanged = true;
     }
     emValue.m[0].power_factor[phase] = powerFactor;
+    emValue.m_count = 1;
     emValue.measured_values |= EM_VAR_POWER_FACTOR;
   }
 }
@@ -286,15 +296,14 @@ void Supla::Sensor::ElectricityMeter::setPhaseAngle(int phase,
       valueChanged = true;
     }
     emValue.m[0].phase_angle[phase] = phaseAngle;
+    emValue.m_count = 1;
     emValue.measured_values |= EM_VAR_PHASE_ANGLE;
   }
 }
 
 void Supla::Sensor::ElectricityMeter::resetReadParameters() {
+  emValue.m_count = 0;
   if (emValue.measured_values != 0) {
-    // we keep only energy counting registers/flags
-    emValue.measured_values &= EM_VAR_ALL_ENERGY_REGISTERS;
-
     memset(&emValue.m[0], 0, sizeof(TElectricityMeter_Measurement));
     memset(&rawCurrent, 0, sizeof(rawCurrent));
     memset(&rawActivePower, 0, sizeof(rawActivePower));
@@ -629,6 +638,7 @@ const Supla::Channel *Supla::Sensor::ElectricityMeter::getChannel() const {
 }
 
 void Supla::Sensor::ElectricityMeter::setRefreshRate(unsigned int sec) {
+  SUPLA_LOG_INFO("EM: setRefreshRate: %d", sec);
   refreshRateSec = sec;
   if (refreshRateSec == 0) {
     refreshRateSec = 1;
@@ -753,7 +763,7 @@ int Supla::Sensor::ElectricityMeter::handleCalcfgFromServer(
       return SUPLA_CALCFG_RESULT_DONE;
     }
   }
-  return SUPLA_CALCFG_RESULT_FALSE;
+  return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
 }
 
 void Supla::Sensor::ElectricityMeter::handleAction(int event, int action) {

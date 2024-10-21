@@ -40,8 +40,11 @@ class RelayHvacAggregator : public Element {
 
   void registerHvac(HvacBase *hvac);
   void unregisterHvac(HvacBase *hvac);
+  bool isHvacRegistered(HvacBase *hvac) const;
+  int getHvacCount() const;
 
   void iterateAlways() override;
+  void setTurnOffWhenEmpty(bool turnOffWhenEmpty);
 
  protected:
   explicit RelayHvacAggregator(int relayChannelNumber, Relay *relay);
@@ -53,6 +56,8 @@ class RelayHvacAggregator : public Element {
   Relay *relay = nullptr;
   int relayChannelNumber = 0;
   uint32_t lastUpdateTimestamp = 0;
+  bool turnOffWhenEmpty = true;
+  int8_t lastValueSend = -1;
 };
 
 }  // namespace Control

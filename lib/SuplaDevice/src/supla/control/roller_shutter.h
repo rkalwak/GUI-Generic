@@ -20,7 +20,6 @@
 #include <stdint.h>
 
 #include "../action_handler.h"
-#include "../actions.h"
 #include "../channel_element.h"
 
 #define UNKNOWN_POSITION   -1
@@ -34,7 +33,22 @@ class Io;
 
 namespace Control {
 
+class Button;
+
 enum Directions { STOP_DIR = 0, DOWN_DIR = 1, UP_DIR = 2 };
+
+#pragma pack(push, 1)
+struct RollerShutterConfig {
+  uint8_t motorUpsideDown = 1;    // 0 - not set/not used, 1 - false, 2 - true
+  uint8_t buttonsUpsideDown = 1;  // 0 - not set/not used, 1 - false, 2 - true
+  int8_t timeMargin = -1;  // -1 default (device specific), 0 - not set/not used
+                           // 1 - no margin,
+                           // > 1 - 51% of opening/closing time added on extreme
+                           // positions - value should be decremented by 1.
+  uint8_t visualizationType = 0;  // 0 - default, other values depends on
+                                    // Cloud and App support
+};
+#pragma pack(pop)
 
 class RollerShutter : public ChannelElement, public ActionHandler {
  public:
@@ -46,6 +60,15 @@ class RollerShutter : public ChannelElement, public ActionHandler {
 
   int32_t handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) override;
   void handleAction(int event, int action) override;
+  int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) override;
+  uint8_t applyChannelConfig(TSD_ChannelConfig *result,
+                             bool local = false) override;
+  void fillChannelConfig(void *channelConfig, int *size) override;
+
+  // Method is used by external integrations to prepare TSD_SuplaChannelNewValue
+  // value for specific channel type (i.e. to prefill durationMS field when
+  // required)
+  void fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value) override;
 
   void close();         // Sets target position to 100%
   void open();          // Sets target position to 0%
@@ -65,11 +88,40 @@ class RollerShutter : public ChannelElement, public ActionHandler {
 
   void onInit() override;
   void onTimer() override;
+  void onLoadConfig(SuplaDeviceClass *sdc) override;
+  void saveConfig();
   void onLoadState() override;
   void onSaveState() override;
 
   uint32_t getClosingTimeMs() const;
   uint32_t getOpeningTimeMs() const;
+
+  void attach(Supla::Control::Button *up, Supla::Control::Button *down);
+
+  void triggerCalibration();
+  void setCalibrationNeeded();
+  bool isCalibrationRequested() const;
+  bool isCalibrated() const;
+
+  void setRsConfigMotorUpsideDownEnabled(bool enable);
+  void setRsConfigButtonsUpsideDownEnabled(bool enable);
+  void setRsConfigTimeMarginEnabled(bool enable);
+
+  void setRsConfigMotorUpsideDownValue(uint8_t value);
+  void setRsConfigButtonsUpsideDownValue(uint8_t value);
+  void setRsConfigTimeMarginValue(int8_t value);
+
+  uint8_t getMotorUpsideDown() const;
+  uint8_t getButtonsUpsideDown() const;
+  int8_t getTimeMargin() const;
+
+  static void setRsStorageSaveDelay(int delayMs);
+  virtual bool inMove();
+
+  bool isFunctionSupported(int32_t channelFunction) const;
+  bool isAutoCalibrationSupported() const;
+
+  void setOpenCloseTime(uint32_t newClosingTimeMs, uint32_t newOpeningTimeMs);
 
  protected:
   virtual void stopMovement();
@@ -80,11 +132,13 @@ class RollerShutter : public ChannelElement, public ActionHandler {
   virtual void startClosing();
   virtual void startOpening();
   virtual void switchOffRelays();
-  void setOpenCloseTime(uint32_t newClosingTimeMs, uint32_t newOpeningTimeMs);
 
   bool lastDirectionWasOpen() const;
   bool lastDirectionWasClose() const;
-  virtual bool inMove();
+
+  void printConfig() const;
+  void setupButtonActions();
+  uint32_t getTimeMarginValue(uint32_t fullTime) const;
 
   uint32_t closingTimeMs = 0;
   uint32_t openingTimeMs = 0;
@@ -96,7 +150,7 @@ class RollerShutter : public ChannelElement, public ActionHandler {
   uint32_t calibrationTime = 0;
   Supla::Io *io = nullptr;
 
-  uint16_t operationTimeout = 0;
+  uint32_t operationTimeoutMs = 0;
 
   bool calibrate =
       true;  // set to true when new closing/opening time is given -
@@ -115,6 +169,13 @@ class RollerShutter : public ChannelElement, public ActionHandler {
   int8_t currentPosition = UNKNOWN_POSITION;  // 0 - closed; 100 - opened
   int8_t targetPosition = STOP_POSITION;      // 0-100
   int8_t lastPositionBeforeMovement = UNKNOWN_POSITION;  // 0-100
+
+  RollerShutterConfig rsConfig;
+
+  Supla::Control::Button *upButton = nullptr;
+  Supla::Control::Button *downButton = nullptr;
+
+  static int16_t rsStorageSaveDelay;
 };
 
 }  // namespace Control

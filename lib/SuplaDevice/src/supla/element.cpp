@@ -73,6 +73,19 @@ Element *Element::getElementByChannelNumber(int channelNumber) {
   return element;
 }
 
+Element *Element::getOwnerOfSubDeviceId(int subDeviceId) {
+  if (subDeviceId <= 0) {
+    return nullptr;
+  }
+
+  Element *element = begin();
+  while (element != nullptr && !element->isOwnerOfSubDeviceId(subDeviceId)) {
+    element = element->next();
+  }
+
+  return element;
+}
+
 bool Element::IsAnyUpdatePending() {
   Element *element = begin();
   while (element != nullptr) {
@@ -110,7 +123,9 @@ void Element::onRegistered(Supla::Protocol::SuplaSrpc *suplaSrpc) {
                                    ch->getInitialCaption());
     }
     if (ch->isSleepingEnabled()) {
-      suplaSrpc->sendChannelStateResult(0, ch->getChannelNumber());
+      if (isChannelStateEnabled()) {
+        suplaSrpc->sendChannelStateResult(0, ch->getChannelNumber());
+      }
       ch->setUpdateReady();
     }
 
@@ -120,6 +135,13 @@ void Element::onRegistered(Supla::Protocol::SuplaSrpc *suplaSrpc) {
       ch = getSecondaryChannel();
     }
   }
+}
+
+bool Element::isChannelStateEnabled() const {
+  if (getChannel() == nullptr) {
+    return false;
+  }
+  return getChannel()->getFlags() & SUPLA_CHANNEL_FLAG_CHANNELSTATE;
 }
 
 void Element::iterateAlways() {}
@@ -202,11 +224,15 @@ void Element::handleGetChannelState(TDSC_ChannelState *channelState) {
   while (channel) {
     if (channelState->ChannelNumber == channel->getChannelNumber()) {
       if (channel->isBatteryPowered()) {
-        channelState->Fields |= SUPLA_CHANNELSTATE_FIELD_BATTERYLEVEL
-          | SUPLA_CHANNELSTATE_FIELD_BATTERYPOWERED;
-
+        channelState->Fields |= SUPLA_CHANNELSTATE_FIELD_BATTERYPOWERED;
         channelState->BatteryPowered = 1;
+
         channelState->BatteryLevel = channel->getBatteryLevel();
+        if (channelState->BatteryLevel <= 100) {
+          channelState->Fields |= SUPLA_CHANNELSTATE_FIELD_BATTERYLEVEL;
+        } else {
+          channelState->BatteryLevel = 0;
+        }
       }
       if (channel->isBridgeSignalStrengthAvailable()) {
         channelState->Fields |=
@@ -319,6 +345,10 @@ void Element::setDefaultFunction(int32_t defaultFunction) {
   if (ch) {
     ch->setDefaultFunction(defaultFunction);
   }
+}
+
+bool Element::isOwnerOfSubDeviceId(int) const {
+  return false;
 }
 
 };  // namespace Supla

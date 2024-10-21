@@ -22,29 +22,49 @@
 namespace Supla {
 namespace ConfigTag {
 
+const char DeviceConfigChangeCfgTag[] = "devcfg_chng";
+
+const char ChannelFunctionTag[] = "fnc";
+const char ChannelConfigChangedFlagTag[] = "cfg_chng";
+
 const char ScreenBrightnessCfgTag[] = "bright";
 const char ScreenAdjustmentForAutomaticCfgTag[] = "adj_auto_br";
-const char PowerStatusLedCfgTag[] = "pwr_led";
+const char HomeScreenContentTag[] = "home_screen";
+const char ScreenDelayTypeCfgTag[] = "scr_delay_t";
 const char ScreenDelayCfgTag[] = "scr_delay";
-const char BtnTypeTag[] = "btn_type";
-const char BtnHoldTag[] = "btn_hold";
-const char VolumeCfgTag[] = "volume";
-const char EmCtTypeTag[] = "em_ct";
-const char RgbwButtonTag[] = "rgbw_btn";
-const char BtnMulticlickTag[] = "btn_multiclick";
 const char DisableUserInterfaceCfgTag[] = "disable_ui";
 const char MinTempUICfgTag[] = "min_temp_ui";
 const char MaxTempUICfgTag[] = "max_temp_ui";
+const char MinBrightTag[] = "min_bright";
+
+const char PowerStatusLedCfgTag[] = "pwr_led";
+const char StatusLedCfgTag[] = "statusled";
+
+const char BtnTypeTag[] = "btn_type";
+const char BtnHoldTag[] = "btn_hold";
+const char BtnMulticlickTag[] = "btn_multiclick";
 const char BtnConfigTag[] = "btn_cfg";
-const char HomeScreenContentTag[] = "home_screen";
-const char ScreenDelayTypeCfgTag[] = "scr_delay_t";
 const char BtnActionTriggerCfgTagPrefix[] = "mqtt_at";
+
+const char VolumeCfgTag[] = "volume";
+
+const char EmCtTypeTag[] = "em_ct";
 const char EmPhaseLedTag[] = "em_led";
 const char EmPhaseLedVoltageLowTag[] = "em_led_vl";
 const char EmPhaseLedVoltageHighTag[] = "em_led_vh";
 const char EmPhaseLedPowerLowTag[] = "em_led_pl";
 const char EmPhaseLedPowerHighTag[] = "em_led_ph";
-const char MinBrightTag[] = "min_bright";
+
+const char RgbwButtonTag[] = "rgbw_btn";
+
+const char RollerShutterTag[] = "rs_cfg";
+const char RollerShutterMotorUpsideDownTag[] = "usd";
+const char RollerShutterButtonsUpsideDownTag[] = "bud";
+const char RollerShutterTimeMarginTag[] = "rs_margin";
+const char RollerShutterOpeningTimeTag[] = "rs_ot";
+const char RollerShutterClosingTimeTag[] = "rs_ct";
+
+const char HvacCfgTag[] = "hvac_cfg";
 
 }  // namespace ConfigTag
 }  // namespace Supla

@@ -63,7 +63,9 @@ class Channel : public LocalAction {
 
   void setOffline();
   void setOnline();
+  void setOnlineAndNotAvailable();
   bool isOnline() const;
+  bool isOnlineAndNotAvailable() const;
 
   double getValueDouble();
   double getValueDoubleFirst();
@@ -77,6 +79,9 @@ class Channel : public LocalAction {
   uint8_t getValueColorBrightness();
   uint8_t getValueBrightness();
   double getLastTemperature();
+  uint8_t getValueClosingPercentage() const;
+  uint8_t getValueTilt() const;
+  bool getValueIsCalibrating() const;
 
   void setHvacIsOn(int8_t isOn);
   void setHvacMode(uint8_t mode);
@@ -97,6 +102,7 @@ class Channel : public LocalAction {
   void setHvacFlagForcedOffBySensor(bool value);
   void setHvacFlagCoolSubfunction(enum HvacCoolSubfunctionFlag flag);
   void setHvacFlagWeeklyScheduleTemporalOverride(bool value);
+  void setHvacFlagBatteryCoverOpen(bool value);
   void clearHvacState();
 
   uint8_t getHvacIsOn();
@@ -119,6 +125,7 @@ class Channel : public LocalAction {
   bool isHvacFlagForcedOffBySensor();
   enum HvacCoolSubfunctionFlag getHvacFlagCoolSubfunction();
   bool isHvacFlagWeeklyScheduleTemporalOverride();
+  bool isHvacFlagBatteryCoverOpen();
 
   static bool isHvacFlagSetpointTemperatureHeatSet(THVACValue *hvacValue);
   static bool isHvacFlagSetpointTemperatureCoolSet(THVACValue *hvacValue);
@@ -133,6 +140,7 @@ class Channel : public LocalAction {
   static enum HvacCoolSubfunctionFlag getHvacFlagCoolSubfunction(
       THVACValue *hvacValue);
   static bool isHvacFlagWeeklyScheduleTemporalOverride(THVACValue *hvacValue);
+  static bool isHvacFlagBatteryCoverOpen(THVACValue *hvacValue);
 
   static void setHvacSetpointTemperatureHeat(THVACValue *hvacValue,
                                              int16_t setpointTemperatureHeat);
@@ -183,7 +191,11 @@ class Channel : public LocalAction {
   uint8_t getBatteryLevel() const;
   // Sets battery level. Setting to 0..100 range will make isBatteryPowered
   // return true
-  void setBatteryLevel(unsigned char level);
+  void setBatteryLevel(int level);
+
+  // sets battery powered flag (internally use 101 battery level value)
+  // use only on channel initialization
+  void setBatteryPowered();
 
   // Sets bridge signal strength. Allowed values are 0..100, or 255 to disable
   void setBridgeSignalStrength(unsigned char level);
@@ -201,10 +213,12 @@ class Channel : public LocalAction {
 
   static uint32_t lastCommunicationTimeMs;
   void fillRawValue(void *value);
-  char *getValuePtr();
+  int8_t *getValuePtr();
 
   void setSubDeviceId(uint8_t subDeviceId);
   uint8_t getSubDeviceId() const;
+
+  bool isRollerShutterRelayType() const;
 
  protected:
   static Channel *firstPtr;
@@ -231,12 +245,12 @@ class Channel : public LocalAction {
   // registration parameter
   ChannelType channelType = ChannelType::NOT_SET;
 
-  bool offline = false;
+  uint8_t offline = 0;
   uint8_t defaultIcon = 0;
   uint8_t subDeviceId = 0;
 
   union {
-    char value[SUPLA_CHANNELVALUE_SIZE] = {};
+    int8_t value[SUPLA_CHANNELVALUE_SIZE] = {};
     TActionTriggerProperties actionTriggerProperties;
     THVACValue hvacValue;
   };

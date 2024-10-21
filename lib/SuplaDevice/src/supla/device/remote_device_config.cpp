@@ -21,7 +21,6 @@
 #include <supla/element.h>
 #include <supla/time.h>
 #include <supla/storage/config.h>
-#include <supla/device/status_led.h>
 #include <supla/log_wrapper.h>
 #include <supla/clock/clock.h>
 #include <supla/storage/config_tags.h>
@@ -377,10 +376,10 @@ void RemoteDeviceConfig::processStatusLedConfig(
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     int8_t value = -1;
-    cfg->getInt8(Supla::Device::StatusLedCfgTag, &value);
+    cfg->getInt8(Supla::ConfigTag::StatusLedCfgTag, &value);
     if (value >= 0 && value <= 2 && value != config->StatusLedType) {
       SUPLA_LOG_INFO("Setting StatusLedType to %d", config->StatusLedType);
-      cfg->setInt8(Supla::Device::StatusLedCfgTag, config->StatusLedType);
+      cfg->setInt8(Supla::ConfigTag::StatusLedCfgTag, config->StatusLedType);
       cfg->saveWithDelay(1000);
 
       Supla::Element::NotifyElementsAboutConfigChange(fieldBit);
@@ -394,11 +393,11 @@ void RemoteDeviceConfig::processPowerStatusLedConfig(
   if (cfg) {
     int8_t value = -1;
     cfg->getInt8(Supla::ConfigTag::PowerStatusLedCfgTag, &value);
-    if (value >= 0 && value <= 1 && value != config->PowerStatusLedType) {
-      SUPLA_LOG_INFO("Setting PowerStatusLedType to %d",
-                     config->PowerStatusLedType);
+    if (value >= 0 && value <= 1 && value != config->Disabled) {
+      SUPLA_LOG_INFO("Setting PowerStatusLed Disabled to %d",
+                     config->Disabled);
       cfg->setInt8(Supla::ConfigTag::PowerStatusLedCfgTag,
-                   config->PowerStatusLedType);
+                   config->Disabled);
       cfg->saveWithDelay(1000);
 
       Supla::Element::NotifyElementsAboutConfigChange(fieldBit);
@@ -605,7 +604,7 @@ void RemoteDeviceConfig::fillStatusLedConfig(
   auto cfg = Supla::Storage::ConfigInstance();
   if (cfg) {
     int8_t value = 0;
-    cfg->getInt8(Supla::Device::StatusLedCfgTag, &value);
+    cfg->getInt8(Supla::ConfigTag::StatusLedCfgTag, &value);
     if (value < 0 || value > 2) {
       value = 0;
     }
@@ -626,8 +625,9 @@ void RemoteDeviceConfig::fillPowerStatusLedConfig(
     if (value < 0 || value > 1) {
       value = 0;
     }
-    SUPLA_LOG_DEBUG("Setting PowerStatusLedType to %d (0x%X)", value, value);
-    config->PowerStatusLedType = value;
+    SUPLA_LOG_DEBUG(
+        "Setting PowerStatusLed Disabled to %d (0x%X)", value, value);
+    config->Disabled = value;
   }
 }
 

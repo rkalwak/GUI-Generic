@@ -44,7 +44,6 @@ class SHT3x : public ThermHygroMeter {
 
   void onInit() override {
     sht.begin(address);
-    sht.heaterDisable();
     channel.setNewValue(getTemp(), getHumi());
   }
 

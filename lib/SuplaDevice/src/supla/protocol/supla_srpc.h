@@ -81,8 +81,8 @@ class SuplaSrpc : public ProtocolLayer {
                       int soundId) override;
   void sendSubdeviceDetails(TDS_SubdeviceDetails *subdeviceDetails) override;
   void getUserLocaltime() override;
-  void sendChannelValueChanged(uint8_t channelNumber, char *value,
-      unsigned char offline, uint32_t validityTimeSec) override;
+  void sendChannelValueChanged(uint8_t channelNumber, int8_t *value,
+      uint8_t offline, uint32_t validityTimeSec) override;
   void sendExtendedChannelValueChanged(uint8_t channelNumber,
     TSuplaChannelExtendedValue *value) override;
 
@@ -113,7 +113,9 @@ class SuplaSrpc : public ProtocolLayer {
   void updateLastResponseTime();
   void updateLastSentTime();
   void onGetUserLocaltimeResult(TSDC_UserLocalTimeResult *result);
-  void sendChannelStateResult(int32_t receiverId, uint8_t channelNo);
+  void sendChannelStateResult(int32_t receiverId,
+                              uint8_t channelNo,
+                              bool sendAsExtended = false);
 
   void setServerPort(int value);
   void setVersion(int value);
@@ -160,6 +162,7 @@ class SuplaSrpc : public ProtocolLayer {
   uint32_t lastIterateTime = 0;
   uint32_t lastResponseMs = 0;
   uint32_t lastSentMs = 0;
+  uint32_t lastExtendedValueWithChannelStateMs = 0;
 
   int port = -1;
 

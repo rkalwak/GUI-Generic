@@ -27,10 +27,13 @@
 #include <supla/clock/clock.h>
 #include <supla/actions.h>
 #include <supla/sensor/thermometer.h>
+#include <supla/events.h>
+#include <supla/channels/channel.h>
+#include <supla/storage/config_tags.h>
 
 #include "output_interface.h"
-#include "supla/channels/channel.h"
-#include "supla/events.h"
+#include "relay_hvac_aggregator.h"
+#include "supla/device/status_led.h"
 
 #define SUPLA_HVAC_DEFAULT_TEMP_HEAT          2100  // 21.00 C
 #define SUPLA_HVAC_DEFAULT_TEMP_COOL          2500  // 25.00 C
@@ -241,7 +244,7 @@ void HvacBase::onLoadConfig(SuplaDeviceClass *sdc) {
     initDefaultConfig();
 
     // Generic HVAC configuration
-    generateKey(key, "hvac_cfg");
+    generateKey(key, Supla::ConfigTag::HvacCfgTag);
     TChannelConfig_HVAC storedConfig = {};
     if (cfg->getBlob(key,
                      reinterpret_cast<char *>(&storedConfig),
@@ -512,7 +515,7 @@ void HvacBase::onInit() {
     turnOn();
     setOutput(0, true);
   }
-  debugPrintConfigStruct(&config, getChannelNumber());
+//  debugPrintConfigStruct(&config, getChannelNumber());
   previousSubfunction = config.Subfunction;
 }
 
@@ -583,6 +586,53 @@ void HvacBase::iterateAlways() {
     return;
   }
   lastIterateTimestampMs = millis();
+
+  if (isMasterThermostatSet()) {
+    auto masterCh =
+        Supla::Channel::GetByChannelNumber(getMasterThermostatChannelNo());
+    if (masterCh) {
+      auto masterMode = masterCh->getHvacMode();
+      auto myMode = channel.getHvacMode();
+      auto masterSetpointHeat = masterCh->getHvacSetpointTemperatureHeat();
+      auto masterSetpointCool = masterCh->getHvacSetpointTemperatureCool();
+      auto mySetpointHeat = channel.getHvacSetpointTemperatureHeat();
+      auto mySetpointCool = channel.getHvacSetpointTemperatureCool();
+
+      switch (masterMode) {
+        case SUPLA_HVAC_MODE_HEAT: {
+          masterSetpointCool = INT16_MIN;
+          mySetpointCool = INT16_MIN;
+          break;
+        }
+        case SUPLA_HVAC_MODE_COOL: {
+          masterSetpointHeat = INT16_MIN;
+          mySetpointHeat = INT16_MIN;
+          break;
+        }
+        case SUPLA_HVAC_MODE_OFF: {
+          masterSetpointHeat = INT16_MIN;
+          masterSetpointCool = INT16_MIN;
+          mySetpointHeat = INT16_MIN;
+          mySetpointCool = INT16_MIN;
+          break;
+        }
+      }
+
+      if (myMode != masterMode || mySetpointHeat != masterSetpointHeat ||
+          mySetpointCool != masterSetpointCool) {
+        SUPLA_LOG_INFO("HVAC[%d]: Master thermostat settings changed "
+            "mode %d->%d, heat %d->%d, cool %d->%d",
+                       getChannelNumber(),
+                       myMode, masterMode,
+                       mySetpointHeat, masterSetpointHeat,
+                       mySetpointCool, masterSetpointCool);
+        if (!applyNewRuntimeSettings(
+                masterMode, masterSetpointHeat, masterSetpointCool)) {
+          setTargetMode(SUPLA_HVAC_MODE_OFF);
+        }
+      }
+    }
+  }
 
   if (Supla::Clock::IsReady()) {
     channel.setHvacFlagClockError(false);
@@ -874,6 +924,15 @@ uint8_t HvacBase::handleChannelConfig(TSD_ChannelConfig *newConfig,
 
   // Received config looks ok, so we apply it to channel
   if (applyServerConfig) {
+    if (config.PumpSwitchChannelNo != hvacConfig->PumpSwitchChannelNo) {
+      unregisterInAggregator(config.PumpSwitchChannelNo);
+    }
+    if (config.HeatOrColdSourceSwitchChannelNo !=
+        hvacConfig->HeatOrColdSourceSwitchChannelNo) {
+      unregisterInAggregator(config.HeatOrColdSourceSwitchChannelNo);
+    }
+    registerInAggregator(hvacConfig->PumpSwitchChannelNo);
+    registerInAggregator(hvacConfig->HeatOrColdSourceSwitchChannelNo);
     applyConfigWithoutValidation(hvacConfig);
     fixTempearturesConfig();
     fixTemperatureSetpoints();
@@ -2387,7 +2446,7 @@ void HvacBase::saveConfig() {
   if (cfg) {
     // Generic HVAC configuration
     char key[SUPLA_CONFIG_MAX_KEY_SIZE] = {};
-    generateKey(key, "hvac_cfg");
+    generateKey(key, Supla::ConfigTag::HvacCfgTag);
     if (cfg->setBlob(key,
                      reinterpret_cast<char *>(&config),
                      sizeof(TChannelConfig_HVAC))) {
@@ -2884,7 +2943,7 @@ _supla_int16_t HvacBase::getSecondaryTemp() {
   }
 
   return INT16_MIN;
-  }
+}
 
 _supla_int16_t HvacBase::getTemperature(int channelNo) {
   if (channelNo >= 0 && channelNo != getChannelNumber()) {
@@ -3307,6 +3366,12 @@ bool HvacBase::applyNewRuntimeSettings(int mode,
 }
 
 int32_t HvacBase::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
+  if (isMasterThermostatSet()) {
+    // ignore new value from server
+    SUPLA_LOG_DEBUG("HVAC[%d]: ignore new value from server (master is set)",
+                    getChannelNumber());
+    return 0;
+  }
   auto hvacValue = reinterpret_cast<THVACValue *>(newValue->value);
   SUPLA_LOG_DEBUG(
       "HVAC[%d]: new value from server: mode=%s tHeat=%d tCool=%d, "
@@ -4070,7 +4135,7 @@ void HvacBase::debugPrintConfigDiff(const TChannelConfig_HVAC *configCurrent,
       configNew->MasterThermostatIsSet ||
       configCurrent->MasterThermostatChannelNo !=
       configNew->MasterThermostatChannelNo) {
-    SUPLA_LOG_DEBUG("  MasterThermostatIsSet: %d%s -> %d%s",
+    SUPLA_LOG_DEBUG("  MasterThermostat: %d%s -> %d%s",
                     configCurrent->MasterThermostatChannelNo,
                     (configCurrent->MasterThermostatIsSet ?
                      "": " (disabled)"),
@@ -4083,7 +4148,7 @@ void HvacBase::debugPrintConfigDiff(const TChannelConfig_HVAC *configCurrent,
       configNew->HeatOrColdSourceSwitchIsSet ||
       configCurrent->HeatOrColdSourceSwitchChannelNo !=
       configNew->HeatOrColdSourceSwitchChannelNo) {
-    SUPLA_LOG_DEBUG("  HeatOrColdSourceSwitchIsSet: %d%s -> %d%s",
+    SUPLA_LOG_DEBUG("  HeatOrColdSourceSwitch: %d%s -> %d%s",
                     configCurrent->HeatOrColdSourceSwitchChannelNo,
                     (configCurrent->HeatOrColdSourceSwitchIsSet ?
                      "": " (disabled)"),
@@ -4096,7 +4161,7 @@ void HvacBase::debugPrintConfigDiff(const TChannelConfig_HVAC *configCurrent,
       configNew->PumpSwitchIsSet ||
       configCurrent->PumpSwitchChannelNo !=
       configNew->PumpSwitchChannelNo) {
-    SUPLA_LOG_DEBUG("  PumpSwitchIsSet: %d%s -> %d%s",
+    SUPLA_LOG_DEBUG("  PumpSwitch: %d%s -> %d%s",
                     configCurrent->PumpSwitchChannelNo,
                     (configCurrent->PumpSwitchIsSet ?
                      "": " (disabled)"),
@@ -5234,6 +5299,8 @@ bool HvacBase::setPumpSwitchChannelNo(uint8_t channelNo) {
     return true;
   }
 
+  unregisterInAggregator(config.PumpSwitchChannelNo);
+  registerInAggregator(channelNo);
   config.PumpSwitchChannelNo = channelNo;
   if (channelNo == getChannelNumber()) {
     config.PumpSwitchIsSet = 0;
@@ -5272,6 +5339,8 @@ bool HvacBase::setHeatOrColdSourceSwitchChannelNo(uint8_t channelNo) {
     return true;
   }
 
+  unregisterInAggregator(config.HeatOrColdSourceSwitchChannelNo);
+  registerInAggregator(channelNo);
   config.HeatOrColdSourceSwitchChannelNo = channelNo;
   if (channelNo == getChannelNumber()) {
     config.HeatOrColdSourceSwitchIsSet = 0;
@@ -5347,5 +5416,58 @@ void HvacBase::clearHeatOrColdSourceSwitchChannelNo() {
 void HvacBase::clearMasterThermostatChannelNo() {
   // setting to self will clear
   setMasterThermostatChannelNo(getChannelNumber());
+}
+
+bool HvacBase::ignoreAggregatorForRelay(int32_t relayChannelNumber) const {
+  if (relayChannelNumber == -1) {
+    return false;
+  }
+  if (defaultChannelsFlags & HVAC_BASE_FLAG_IGNORE_DEFAULT_PUMP &&
+      defaultPumpSwitch >= 0 &&
+      relayChannelNumber == defaultPumpSwitch) {
+    return true;
+  }
+  if (defaultChannelsFlags & HVAC_BASE_FLAG_IGNORE_DEFAULT_HEAT_OR_COLD &&
+      defaultHeatOrColdSourceSwitch >= 0 &&
+      relayChannelNumber == defaultHeatOrColdSourceSwitch) {
+    return true;
+  }
+  return false;
+}
+
+void HvacBase::setIgnoreDefaultPumpForAggregator(bool flag) {
+  if (flag) {
+    defaultChannelsFlags |= HVAC_BASE_FLAG_IGNORE_DEFAULT_PUMP;
+  } else {
+    defaultChannelsFlags &= ~HVAC_BASE_FLAG_IGNORE_DEFAULT_PUMP;
+  }
+}
+
+void HvacBase::setIgnoreDefaultHeatOrColdSourceForAggregator(bool flag) {
+  if (flag) {
+    defaultChannelsFlags |= HVAC_BASE_FLAG_IGNORE_DEFAULT_HEAT_OR_COLD;
+  } else {
+    defaultChannelsFlags &= ~HVAC_BASE_FLAG_IGNORE_DEFAULT_HEAT_OR_COLD;
+  }
+}
+
+void HvacBase::registerInAggregator(int16_t channelNo) {
+  if (channelNo < 0) {
+    return;
+  }
+  auto aggregator = Supla::Control::RelayHvacAggregator::GetInstance(channelNo);
+  if (aggregator) {
+    aggregator->registerHvac(this);
+  }
+}
+
+void HvacBase::unregisterInAggregator(int16_t channelNo) {
+  if (channelNo < 0) {
+    return;
+  }
+  auto aggregator = Supla::Control::RelayHvacAggregator::GetInstance(channelNo);
+  if (aggregator) {
+    aggregator->unregisterHvac(this);
+  }
 }
 

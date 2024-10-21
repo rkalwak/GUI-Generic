@@ -70,6 +70,7 @@ COMPONENT_OBJS := \
 	../../../src/supla/network/html/home_screen_content.o \
   ../../../src/supla/network/html/em_phase_led.o \
   ../../../src/supla/network/html/em_ct_type.o \
+  ../../../src/supla/network/html/roller_shutter_parameters.o \
   ../../../src/supla/network/client.o \
   ../../../src/supla/network/ip_address.o \
   \
@@ -100,6 +101,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/control/simple_button.o \
   ../../../src/supla/control/virtual_relay.o \
   ../../../src/supla/control/hvac_base.o \
+  ../../../src/supla/control/blinking_led.o \
 	\
   ../../../src/supla/condition.o \
   ../../../src/supla/condition_getter.o \

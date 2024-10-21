@@ -24,15 +24,16 @@ use library manager to install it
 
 #include <supla/log_wrapper.h>
 #include <time.h>
-#include "RTClib.h"
 
+#include "RTClib.h"
 #include "clock.h"
 
 namespace Supla {
 
 class DS3231RTC : public Clock {
  public:
-  DS3231RTC() {}
+  DS3231RTC() {
+  }
 
   void onInit() {
     if (!rtc.begin()) {
@@ -58,14 +59,7 @@ class DS3231RTC : public Clock {
 #elif defined(ARDUINO_ARCH_AVR)
       set_system_time(mktime(&timeinfo));
 #endif
-      SUPLA_LOG_DEBUG(
-              "Received local time from RTC: %d-%d-%d %d:%d:%d",
-              getYear(),
-              getMonth(),
-              getDay(),
-              getHour(),
-              getMin(),
-              getSec());
+      printCurrentTime("from RTC:");
 
       if (getYear() >= 2023) {
         isClockReady = true;
@@ -75,11 +69,11 @@ class DS3231RTC : public Clock {
     }
   }
 
-  bool rtcIsReady() {
+  bool rtcIsReady() const {
     return isRTCReady;
   }
 
-  bool getRTCLostPowerFlag() {
+  bool getRTCLostPowerFlag() const {
     return RTCLostPower;
   }
 
@@ -89,17 +83,8 @@ class DS3231RTC : public Clock {
 
   void parseLocaltimeFromServer(TSDC_UserLocalTimeResult *result) {
     struct tm timeinfo {};
-
     isClockReady = true;
-
-    SUPLA_LOG_DEBUG(
-              "Current local time: %d-%d-%d %d:%d:%d",
-              getYear(),
-              getMonth(),
-              getDay(),
-              getHour(),
-              getMin(),
-              getSec());
+    printCurrentTime("current");
 
     timeinfo.tm_year = result->year - 1900;
     timeinfo.tm_mon = result->month - 1;
@@ -116,27 +101,21 @@ class DS3231RTC : public Clock {
 #elif defined(ARDUINO_ARCH_AVR)
     set_system_time(mktime(&timeinfo));
 #endif
-    SUPLA_LOG_DEBUG(
-              "Received local time from server: %d-%d-%d %d:%d:%d",
-              getYear(),
-              getMonth(),
-              getDay(),
-              getHour(),
-              getMin(),
-              getSec());
 
+    printCurrentTime("new");
     //  Update RTC if minutes or seconds are different
     //  from the time obtained from the server
     if (isRTCReady) {
       DateTime now = rtc.now();
-      if ((now.minute() != getMin()) ||
-        (now.second() - getSec() > 5) || (now.second() - getSec() < -5)) {
-        rtc.adjust(DateTime(getYear(), getMonth(), getDay(),
-                            getHour(), getMin(), getSec()));
+      if ((now.year() != getYear()) || (now.month() != getMonth()) ||
+          (now.day() != getDay()) || (now.hour() != getHour()) ||
+          (now.minute() != getMin()) || (now.second() - getSec() > 5) ||
+          (now.second() - getSec() < -5)) {
+        rtc.adjust(DateTime(getTimeStamp()));
         SUPLA_LOG_DEBUG("Update RTC time from server");
       }
     }
-}
+  }
 
  protected:
   RTC_DS3231 rtc;

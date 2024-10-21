@@ -247,7 +247,7 @@ void Channel::setNewValue(bool value) {
 
   newValue[0] = value;
   if (setNewValue(newValue)) {
-    if (value) {
+    if (getValueBool()) {
       runAction(Supla::ON_TURN_ON);
     } else {
       runAction(Supla::ON_TURN_OFF);
@@ -616,6 +616,18 @@ uint8_t Channel::getValueBrightness() {
   return value[0];
 }
 
+uint8_t Channel::getValueClosingPercentage() const {
+  return value[0] >= 0 ? value[0] : 0;
+}
+
+bool Channel::getValueIsCalibrating() const {
+  return value[0] == -1;
+}
+
+uint8_t Channel::getValueTilt() const {
+  return value[1] >= 0 ? value[1] : 0;
+}
+
 #define TEMPERATURE_NOT_AVAILABLE -275.0
 
 double Channel::getLastTemperature() {
@@ -653,18 +665,24 @@ void Channel::requestChannelConfig() {
 }
 
 bool Channel::isBatteryPowered() const {
-  return (batteryLevel <= 100);
+  return (batteryLevel <= 101);
 }
 
 uint8_t Channel::getBatteryLevel() const {
-  if (isBatteryPowered()) {
+  if (isBatteryPowered() && batteryLevel <= 100) {
     return batteryLevel;
   }
   return 255;
 }
 
-void Channel::setBatteryLevel(unsigned char level) {
-  batteryLevel = level;
+void Channel::setBatteryPowered() {
+  batteryLevel = 101;
+}
+
+void Channel::setBatteryLevel(int level) {
+  if (level >= 0 && level <= 100) {
+    batteryLevel = level;
+  }
 }
 
 uint8_t Channel::getBridgeSignalStrength() const {
@@ -967,6 +985,20 @@ void Channel::setHvacFlagWeeklyScheduleTemporalOverride(bool value) {
   }
 }
 
+void Channel::setHvacFlagBatteryCoverOpen(bool value) {
+  auto hvacValue = getValueHvac();
+  if (hvacValue != nullptr && value != isHvacFlagBatteryCoverOpen()) {
+    setUpdateReady();
+    uint16_t flags = hvacValue->Flags;
+    if (value) {
+      flags |= SUPLA_HVAC_VALUE_FLAG_BATTERY_COVER_OPEN;
+    } else {
+      flags &= ~SUPLA_HVAC_VALUE_FLAG_BATTERY_COVER_OPEN;
+    }
+    setHvacFlags(flags);
+  }
+}
+
 void Channel::clearHvacState() {
   clearHvacSetpointTemperatureCool();
   clearHvacSetpointTemperatureHeat();
@@ -1027,6 +1059,10 @@ enum Supla::HvacCoolSubfunctionFlag Channel::getHvacFlagCoolSubfunction() {
 
 bool Channel::isHvacFlagWeeklyScheduleTemporalOverride() {
   return isHvacFlagWeeklyScheduleTemporalOverride(getValueHvac());
+}
+
+bool Channel::isHvacFlagBatteryCoverOpen() {
+  return isHvacFlagBatteryCoverOpen(getValueHvac());
 }
 
 bool Channel::isHvacFlagSetpointTemperatureHeatSet(THVACValue *value) {
@@ -1117,6 +1153,13 @@ bool Channel::isHvacFlagWeeklyScheduleTemporalOverride(THVACValue *value) {
   return false;
 }
 
+bool Channel::isHvacFlagBatteryCoverOpen(THVACValue *hvacValue) {
+  if (hvacValue != nullptr) {
+    return hvacValue->Flags & SUPLA_HVAC_VALUE_FLAG_BATTERY_COVER_OPEN;
+  }
+  return false;
+}
+
 uint8_t Channel::getHvacIsOn() {
   auto value = getValueHvac();
   if (value != nullptr) {
@@ -1185,23 +1228,36 @@ uint16_t Channel::getHvacFlags() {
 }
 
 void Channel::setOffline() {
-  if (offline == false) {
+  if (offline != 1) {
     SUPLA_LOG_DEBUG("Channel[%d] go offline", channelNumber);
-    offline = true;
+    offline = 1;
     setUpdateReady();
   }
 }
 
 void Channel::setOnline() {
-  if (offline == true) {
+  if (offline != 0) {
     SUPLA_LOG_DEBUG("Channel[%d] go online", channelNumber);
-    offline = false;
+    offline = 0;
     setUpdateReady();
   }
 }
 
+void Channel::setOnlineAndNotAvailable() {
+  if (offline != 2) {
+    SUPLA_LOG_DEBUG("Channel[%d] is online and NOT available", channelNumber);
+    offline = 2;
+    setUpdateReady();
+  }
+}
+
+
 bool Channel::isOnline() const {
-  return !offline;
+  return offline != 1;
+}
+
+bool Channel::isOnlineAndNotAvailable() const {
+  return offline == 2;
 }
 
 void Channel::setInitialCaption(const char *caption) {
@@ -1265,7 +1321,9 @@ void Channel::fillDeviceChannelStruct(
       getFuncList(),
       getDefaultFunction(),
       getFlags(),
-      offline ? "offline" : "online",
+      offline == 0   ? "online"
+      : offline == 1 ? "offline"
+                     : "online (not available)",
       validityTimeSec,
       getDefaultIcon(),
       static_cast<uint8_t>(value[0]),
@@ -1309,7 +1367,9 @@ void Channel::fillDeviceChannelStruct(
       getFuncList(),
       getDefaultFunction(),
       getFlags(),
-      offline ? "offline" : "online",
+      offline == 0   ? "online"
+      : offline == 1 ? "offline"
+                     : "online (not available)",
       validityTimeSec,
       getDefaultIcon(),
       static_cast<uint8_t>(value[0]),
@@ -1329,7 +1389,7 @@ void Channel::fillRawValue(void *valueToFill) {
   memcpy(valueToFill, value, SUPLA_CHANNELVALUE_SIZE);
 }
 
-char *Channel::getValuePtr() {
+int8_t *Channel::getValuePtr() {
   return value;
 }
 
@@ -1390,4 +1450,14 @@ bool Channel::isHvacValueValid(THVACValue *hvacValue) {
   }
 
   return true;
+}
+
+bool Channel::isRollerShutterRelayType() const {
+  return (functionsBitmap &
+          (SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER |
+           SUPLA_BIT_FUNC_CONTROLLINGTHEROOFWINDOW |
+           SUPLA_BIT_FUNC_TERRACE_AWNING | SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR |
+           SUPLA_BIT_FUNC_CURTAIN | SUPLA_BIT_FUNC_PROJECTOR_SCREEN |
+           SUPLA_BIT_FUNC_VERTICAL_BLIND |
+           SUPLA_BIT_FUNC_CONTROLLINGTHEFACADEBLIND)) != 0;
 }

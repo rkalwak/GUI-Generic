@@ -173,9 +173,9 @@ boneIO::createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutte
   auto openButton = new Supla::Control::Button(openButtonPin.io, openButtonPin.pin, false, true);
   auto closeButton = new Supla::Control::Button(closeButtonPin.io, closeButtonPin.pin, false, true);
 
-  openButton->addAction(Supla::OPEN_OR_STOP, shutter, Supla::ON_PRESS);
+  shutter->attach(openButton, closeButton);
+
   openButton->dontUseOnLoadConfig();
-  closeButton->addAction(Supla::CLOSE_OR_STOP, shutter, Supla::ON_PRESS);
   closeButton->dontUseOnLoadConfig();
 
   return {shutter, openButton, closeButton};

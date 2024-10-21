@@ -234,40 +234,40 @@ void handleRelaySaveSet() {
       }
 
       input = INPUT_THERMOSTAT_HISTERESIS;
-      String histeresis = WebServer->httpServer->arg(input).c_str();
-      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, histeresis.c_str());
+      short histeresis = static_cast<short>(WebServer->httpServer->arg(input).toDouble() * 100.0);
+      ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, thermostatIndex, String(histeresis).c_str());
       if (thermostat) {
-        thermostat->setTemperatureHisteresis(static_cast<short>(histeresis.toDouble() * 100.0));
+        thermostat->setTemperatureHisteresis(histeresis);
       }
 
       input = INPUT_THERMOSTAT_MAIN_THERMOMETER_CHANNEL;
-      uint8_t thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+      uint8_t thermometerChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, thermostatIndex, thermometerChannel);
       if (thermostat) {
-        thermostat->setMainThermometerChannelNo(thermomeetrChannel);
+        thermostat->setMainThermometerChannelNo(thermometerChannel);
       }
 
       input = INPUT_THERMOSTAT_AUX_THERMOMETER_CHANNEL;
-      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermomeetrChannel);
+      thermometerChannel = WebServer->httpServer->arg(input).toInt();
+      ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, thermostatIndex, thermometerChannel);
       if (thermostat) {
-        thermostat->setAuxThermometerChannelNo(thermomeetrChannel);
+        thermostat->setAuxThermometerChannelNo(thermometerChannel);
       }
 
       input = INPUT_THERMOSTAT_TEMPERATURE_MIN;
-      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, thermostatIndex, thermomeetrChannel);
+      short tempMin = static_cast<short>(WebServer->httpServer->arg(input).toInt());
+      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, thermostatIndex, tempMin);
       if (thermostat) {
-        thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, thermomeetrChannel * 100);
-        //   thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, thermomeetrChannel * 100);
+        thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, tempMin * 100);
+        // thermostat->setDefaultTemperatureRoomMin(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, tempMin * 100);
       }
 
       input = INPUT_THERMOSTAT_TEMPERATURE_MAX;
-      thermomeetrChannel = WebServer->httpServer->arg(input).toInt();
-      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, thermostatIndex, thermomeetrChannel);
+      short tempMax = static_cast<short>(WebServer->httpServer->arg(input).toInt());
+      ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, thermostatIndex, tempMax);
       if (thermostat) {
-        thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, thermomeetrChannel * 100);
-        // thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, thermomeetrChannel * 100);
+        thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT, tempMax * 100);
+        // thermostat->setDefaultTemperatureRoomMax(SUPLA_CHANNELFNC_HVAC_THERMOSTAT_AUTO, tempMax * 100);
       }
     }
   }

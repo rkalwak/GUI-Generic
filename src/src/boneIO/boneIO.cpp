@@ -144,7 +144,7 @@ boneIO::boneIO() {
 
   // ====================== PRZEKAŹNIKI =======================
   for (int i = rollerShutters * 2; i < deviceRelaySize; i++) {
-    relayButtonPairs[i] = createRelayChannel(deviceRelay[i], deviceButton[i], ConfigESP->getLevel(BONEIO_RELAY_CONFIG));
+    relayButtonPairs[i] = createRelayChannel(deviceRelay[i], deviceButton[i]);
     PCT2075->addAction(Supla::TURN_OFF, relayButtonPairs[i].relay, OnGreater(80.0));
   }
 
@@ -169,7 +169,8 @@ boneIO::boneIO() {
 
 RollerShutterButtonPair
 boneIO::createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutterRelayDownPin, DevicePin openButtonPin, DevicePin closeButtonPin) {
-  auto shutter = new Supla::Control::RollerShutter(shutterRelayUpPin.io, shutterRelayUpPin.pin, shutterRelayDownPin.pin, false);
+  auto shutter = new Supla::Control::RollerShutter(shutterRelayUpPin.io, shutterRelayUpPin.pin, shutterRelayDownPin.pin,
+                                                   ConfigESP->getLevel(BONEIO_RELAY_CONFIG));
   auto openButton = new Supla::Control::Button(openButtonPin.io, openButtonPin.pin, false, true);
   auto closeButton = new Supla::Control::Button(closeButtonPin.io, closeButtonPin.pin, false, true);
 
@@ -181,8 +182,8 @@ boneIO::createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutte
   return {shutter, openButton, closeButton};
 }
 
-RelayButtonPair boneIO::createRelayChannel(DevicePin relayPin, DevicePin buttonPin, bool highIsOn) {
-  auto relay = new Supla::Control::Relay(relayPin.io, relayPin.pin, highIsOn);
+RelayButtonPair boneIO::createRelayChannel(DevicePin relayPin, DevicePin buttonPin) {
+  auto relay = new Supla::Control::Relay(relayPin.io, relayPin.pin, ConfigESP->getLevel(BONEIO_RELAY_CONFIG));
   relay->getChannel()->setDefault(SUPLA_CHANNELFNC_POWERSWITCH);
 
   switch (ConfigESP->getMemory(BONEIO_RELAY_CONFIG)) {

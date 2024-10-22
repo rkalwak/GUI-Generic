@@ -94,7 +94,7 @@ class boneIO {
  private:
   RollerShutterButtonPair
   createRollerShutterChannel(DevicePin shutterRelayUpPin, DevicePin shutterRelayDownPin, DevicePin openButtonPin, DevicePin closeButtonPin);
-  RelayButtonPair createRelayChannel(DevicePin relayPin, DevicePin buttonPin, bool highIsOn);
+  RelayButtonPair createRelayChannel(DevicePin relayPin, DevicePin buttonPin);
 };
 
 };  // namespace Supla

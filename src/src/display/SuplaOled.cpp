@@ -781,22 +781,24 @@ void SuplaOled::iterateAlways() {
       return;
     }
 
+    int backlightTime = ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt();
+    int screenTime = ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt();
+
     if (ConfigESP->getLastStatusSupla() == STATUS_REGISTERED_AND_READY || ConfigESP->getLastStatusSupla() == STATUS_NETWORK_DISCONNECTED ||
         ConfigESP->getLastStatusSupla() == STATUS_INITIALIZED || ConfigESP->getLastStatusSupla() == STATUS_REGISTER_IN_PROGRESS) {
-      // setupAnimate();
-
-      if (millis() - timeLastChangeOled > (unsigned long)(ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() * 1000) &&
-          this->isDisplayEnabled() && ConfigManager->get(KEY_OLED_BACK_LIGHT_TIME)->getValueInt() != 0) {
+      if (millis() - timeLastChangeOled > (unsigned long)(backlightTime * 1000) && this->isDisplayEnabled() && backlightTime != 0) {
         this->enableDisplay(false);
+      }
 
-        if (getFrameCount() > 1 && ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() > 0) {
-          ui->enableAutoTransition();
-          ui->setTimePerFrame(ConfigManager->get(KEY_OLED_ANIMATION)->getValueInt() * 1000);
-        }
+      if (screenTime > 0 && getFrameCount() > 1) {
+        ui->enableAutoTransition();
+        ui->setTimePerFrame(screenTime * 1000);
+      }
+      else {
+        ui->disableAutoTransition();
       }
 
       int remainingTimeBudget = ui->update();
-
       if (remainingTimeBudget > 0)
         delay(remainingTimeBudget);
     }

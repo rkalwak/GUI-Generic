@@ -825,11 +825,11 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 
 #ifdef SUPLA_BONEIO
     ConfigESP->setGpio(OFF_GPIO, FUNCTION_CFG_BUTTON);
-    ConfigESP->setMemory(BONEIO_RELAY_CONFIG, true);
+    ConfigESP->setMemory(BONEIO_RELAY_CONFIG, MEMORY_RESTORE);
 #ifdef USE_MCP_OUTPUT
-    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
-#else
     ConfigESP->setLevel(BONEIO_RELAY_CONFIG, LOW);
+#else
+    ConfigESP->setLevel(BONEIO_RELAY_CONFIG, HIGH);
 #endif
 #else
     if (resetType == RESET_FACTORY_DATA) {

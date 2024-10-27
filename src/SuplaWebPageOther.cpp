@@ -18,7 +18,10 @@
 
 #ifdef SUPLA_PZEM_ADR
 #include <PZEM004Tv30.h>
+
+#if defined(ESP8266)
 #include <SoftwareSerial.h>
+#endif
 #endif
 
 void createWebPageOther() {

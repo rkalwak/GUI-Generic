@@ -30,7 +30,7 @@ class INA_219 : public OnePhaseElectricityMeter {
   virtual void readValuesFromDevice() {
     setVoltage(0, INA.getBusVoltage_V() * 100);  // Convert V to mV
     setCurrent(0, INA.getCurrent_mA() * 1);      // Current in 0.001 A
-    setPowerActive(0, INA.getPower_mW() * 10);   // Power in 0.00001 W
+    setPowerActive(0, INA.getPower_mW() * 100);   // Power in 0.00001 W
   }
 
  protected:

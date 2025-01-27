@@ -405,7 +405,15 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define TX1 16
 #endif
 #endif
-#endif /* SOC_UART_NUM > 1 */
+
+#if defined(RX1) && defined(TX1)
+  if (rxPin == RX1 || txPin == TX1) {
+    return Serial1;
+  }
+#else
+  return Serial;
+#endif
+#endif
 
 #if SOC_UART_NUM > 2
 #ifndef RX2
@@ -423,22 +431,19 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define TX2 20
 #endif
 #endif
-#endif /* SOC_UART_NUM > 2 */
 
-#if SOC_UART_NUM > 1
-  if (rxPin == RX1 || txPin == RX1) {
-    return Serial1;
-  }
-#endif
-
-#if SOC_UART_NUM > 2
+#if defined(RX2) && defined(TX2)
   if (rxPin == RX2 || txPin == TX2) {
     return Serial2;
   }
+#else
+  return Serial;
+#endif
 #endif
 
-#else
-  // toggle between use of GPIO13/GPIO15 or GPIO3/GPIO(1/2) as RX and TX
+#endif
+
+#ifdef ARDUINO_ARCH_ESP8266
   if (rxPin == 13 || txPin == 15) {
     Serial.swap();
     return Serial;
@@ -449,8 +454,6 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
   }
 #endif
 
-  // ESP8266 rxPin == 3 || txPin == 1 || txPin == 2
-  // ESP32 rxPin == SOC_RX0 || txPin == SOC_TX0
   return Serial;
 }
 

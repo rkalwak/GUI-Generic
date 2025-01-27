@@ -62,6 +62,10 @@ void setup() {
   new Supla::boneIO();
 #endif
 
+#ifdef SUPLA_ZIGBEE_GATEWAY
+Supla::SuplaZigbeeGateway zigbeeGateway(JSON_DEVICES);
+#endif
+
 #ifdef GUI_SENSOR_I2C_EXPENDER
   Expander = new Supla::Control::ConfigExpander();
 #endif

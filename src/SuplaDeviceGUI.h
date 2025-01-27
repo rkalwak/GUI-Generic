@@ -262,6 +262,10 @@
 #include "src/sensor/INA_219.h"
 #endif
 
+#ifdef SUPLA_ZIGBEE_GATEWAY
+#include "src/ZigbeeGateway/SuplaZigbeeGateway.h"
+#endif
+
 // #ifdef SUPLA_MDNS
 // #ifdef ARDUINO_ARCH_ESP8266
 // #include <cont.h>

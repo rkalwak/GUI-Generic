@@ -182,7 +182,7 @@ void SuplaWebServer::sendHeaderEnd() {
 #ifdef ARDUINO_ARCH_ESP8266
     tcpCleanup();
 #endif
-    httpServer->client().flush();
+    httpServer->client().clear();
     httpServer->client().stop();
     chunkedSendHeader = false;
   }

@@ -290,17 +290,14 @@ void SuplaZigbeeGateway::handleAction(int event, int action) {
 #include <ArduinoJson.h>
 
 void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
-  // Tworzymy dynamiczny bufor JSON
   DynamicJsonBuffer jsonBuffer;
 
-  // Parujemy dane JSON
   JsonObject& doc = jsonBuffer.parseObject(json);
   if (!doc.success()) {
     Serial.println("Deserialization failed");
     return;
   }
 
-  // Odczytujemy tablicę "devices"
   JsonArray& devicesArray = doc["devices"];
 
   if (devicesArray.size() == 0) {

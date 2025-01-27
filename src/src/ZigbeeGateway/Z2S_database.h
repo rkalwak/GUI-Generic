@@ -1,44 +1,46 @@
-// #ifdef SUPLA_ZIGBEE_GATEWAY
-// #ifndef Z2S_DATABASE_H_
-// #define Z2S_DATABASE_H_
-// #include <Arduino.h>
-// #include <Z2S_devices_database.h>
+#ifdef SUPLA_ZIGBEE_GATEWAY
+#ifndef Z2S_DATABASE_H_
+#define Z2S_DATABASE_H_
+#include <Arduino.h>
+#include <Z2S_devices_database.h>
 
-// const char* JSON_DEVICES = R"({"devices": [
-//     {
-//       "manufacturer_name": "_TZ3000_akqdg6g7",
-//       "model_name": "TS0201",
-//       "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR",
-//       "z2s_device_endpoints_count": 1
-//     },
-//     {
-//       "manufacturer_name": "Xiaomi",
-//       "model_name": "LYWSD03MMC-z",
-//       "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR_1",
-//       "z2s_device_endpoints_count": 1
-//     },
-//     {
-//       "manufacturer_name": "_TZ3000_0hkmcrza",
-//       "model_name": "TS0203",
-//       "z2s_device_desc_id": "IAS_ZONE_SENSOR",
-//       "z2s_device_endpoints_count": 1
-//     },
-//     {
-//       "manufacturer_name": "_TZ3000_cehuw1lw",
-//       "model_name": "TS011F",
-//       "z2s_device_desc_id": "RELAY_ELECTRICITY_METER",
-//       "z2s_device_endpoints_count": 1
-//     },
-//     {
-//       "manufacturer_name": "_TZ3000_wkai4ga5",
-//       "model_name": "TS0044",
-//       "z2s_device_desc_id": "ON_OFF",
-//       "z2s_device_endpoints_count": 4,
-//       "endpoints": [1, 2, 3, 4]
-//     }
-//   ]
-// }
-// })";
+#ifndef JSON_DEVICES
+const char* JSON_DEVICES = R"({"devices": [
+    {
+      "manufacturer_name": "_TZ3000_akqdg6g7",
+      "model_name": "TS0201",
+      "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR",
+      "z2s_device_endpoints_count": 1
+    },
+    {
+      "manufacturer_name": "Xiaomi",
+      "model_name": "LYWSD03MMC-z",
+      "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR_1",
+      "z2s_device_endpoints_count": 1
+    },
+    {
+      "manufacturer_name": "_TZ3000_0hkmcrza",
+      "model_name": "TS0203",
+      "z2s_device_desc_id": "IAS_ZONE_SENSOR",
+      "z2s_device_endpoints_count": 1
+    },
+    {
+      "manufacturer_name": "_TZ3000_cehuw1lw",
+      "model_name": "TS011F",
+      "z2s_device_desc_id": "RELAY_ELECTRICITY_METER",
+      "z2s_device_endpoints_count": 1
+    },
+    {
+      "manufacturer_name": "_TZ3000_wkai4ga5",
+      "model_name": "TS0044",
+      "z2s_device_desc_id": "ON_OFF",
+      "z2s_device_endpoints_count": 4,
+      "endpoints": [1, 2, 3, 4]
+    }
+  ]
+}
+})";
+#endif
 
 // static const z2s_device_entity_t Z2S_DEVICES[] PROGMEM = {
 //     // Temperatury i wilgotności
@@ -82,5 +84,5 @@
 //     {"IKEA of Sweden", "Remote Control N2", Z2S_DEVICE_DESC_ON_OFF, 1},
 // };
 
-// #endif
-// #endif
+#endif
+#endif

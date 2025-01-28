@@ -16,6 +16,7 @@
 
 #ifndef _SSD1306_OLED_H
 #define _SSD1306_OLED_H
+#ifdef SUPLA_BONEIO
 
 #include <supla/action_handler.h>
 #include <supla/element.h>
@@ -87,5 +88,6 @@ class SSD1306 : public Supla::ActionHandler, public Supla::Element {
 };
 }  // namespace Display
 }  // namespace Supla
+#endif
 #endif
 #endif

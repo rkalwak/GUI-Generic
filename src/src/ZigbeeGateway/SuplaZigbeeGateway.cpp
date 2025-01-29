@@ -318,15 +318,21 @@ void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
     newDevice.z2s_device_endpoints_count = device["z2s_device_endpoints_count"];
 
     Z2S_DEVICES.push_back(newDevice);
+
+    Serial.printf("Added JSON: %s - %s (ID: %d, Endpoints: %d)\n", newDevice.manufacturer_name, newDevice.model_name, newDevice.z2s_device_desc_id,
+                  newDevice.z2s_device_endpoints_count);
   }
 }
 
 void SuplaZigbeeGateway::loadDevicesFromProgMem(const z2s_device_entity_t* deviceList) {
-  size_t deviceCount = sizeof(deviceList) / sizeof(deviceList[0]);
+  size_t deviceCount = sizeof(Z2S_DEVICES_LIST) / sizeof(Z2S_DEVICES_LIST[0]);
   for (size_t i = 0; i < deviceCount; ++i) {
     z2s_device_entity_t device;
     memcpy_P(&device, &deviceList[i], sizeof(z2s_device_entity_t));
     Z2S_DEVICES.push_back(device);
+
+    Serial.printf("Added PROG: %s - %s (ID: %d, Endpoints: %d)\n", device.manufacturer_name, device.model_name, device.z2s_device_desc_id,
+                  device.z2s_device_endpoints_count);
   }
 }
 

@@ -17,10 +17,8 @@ namespace Supla {
 
 class SuplaZigbeeGateway : public Supla::Element, public Supla::ActionHandler {
  public:
-  SuplaZigbeeGateway(const char* jsonDevices);
-  SuplaZigbeeGateway(const z2s_device_entity_t* devices);
-  SuplaZigbeeGateway(const char* jsonDevices, int factoryResetButtonPin);
-  SuplaZigbeeGateway(const z2s_device_entity_t* devices, int factoryResetButtonPin);
+  SuplaZigbeeGateway(const char* jsonDevices, int factoryResetButtonPin = -1);
+  SuplaZigbeeGateway(const z2s_device_entity_t* devices, int factoryResetButtonPin = -1);
   ~SuplaZigbeeGateway();
   void onInit() override;
   void iterateAlways() override;

@@ -13,22 +13,6 @@
 ZigbeeGateway zbGateway = ZigbeeGateway(GATEWAY_ENDPOINT_NUMBER);
 
 namespace Supla {
-SuplaZigbeeGateway::SuplaZigbeeGateway(const char* jsonDevices)
-    : zbInit(true), startTime(0), printTime(0), zbInitDelay(5000), gatewayDevice(nullptr), joinedDevice(nullptr) {
-  memset(zbdModelName, 0, sizeof(zbdModelName));
-  memset(zbdManufName, 0, sizeof(zbdManufName));
-
-  parseDevicesFromJson(jsonDevices);
-  loadDevicesFromProgMem(Z2S_DEVICES_LIST);
-}
-
-SuplaZigbeeGateway::SuplaZigbeeGateway(const z2s_device_entity_t* devices)
-    : zbInit(true), startTime(0), printTime(0), zbInitDelay(5000), gatewayDevice(nullptr), joinedDevice(nullptr) {
-  memset(zbdModelName, 0, sizeof(zbdModelName));
-  memset(zbdManufName, 0, sizeof(zbdManufName));
-
-  loadDevicesFromProgMem(devices);
-}
 SuplaZigbeeGateway::SuplaZigbeeGateway(const char* jsonDevices, int factoryResetButtonPin)
     : factoryResetButtonPin(factoryResetButtonPin),
       zbInit(true),

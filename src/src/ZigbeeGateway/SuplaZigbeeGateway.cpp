@@ -283,12 +283,6 @@ void SuplaZigbeeGateway::handleAction(int event, int action) {
   }
 }
 
-#include <ArduinoJson.h>
-
-#include <ArduinoJson.h>
-
-#include <ArduinoJson.h>
-
 void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
   DynamicJsonBuffer jsonBuffer;
 

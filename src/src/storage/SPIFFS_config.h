@@ -21,13 +21,15 @@
 
 #ifndef SUPLA_EXCLUDE_SPIFFS_CONFIG
 
+#define SUPLA_LITTLEFS_CONFIG_BUF_SIZE 1024
+
 #include <supla/storage/key_value.h>
 
 namespace Supla {
 
 class SPIFFSConfig : public KeyValue {
  public:
-  SPIFFSConfig();
+  SPIFFSConfig(int configMaxSize = SUPLA_LITTLEFS_CONFIG_BUF_SIZE);
   virtual ~SPIFFSConfig();
   bool init() override;
   void commit() override;
@@ -44,6 +46,7 @@ class SPIFFSConfig : public KeyValue {
  protected:  
  int getBlobSize(const char* key) override;
  bool initSPIFFS();
+ int configMaxSize = SUPLA_LITTLEFS_CONFIG_BUF_SIZE;
 };
 };  // namespace Supla
 

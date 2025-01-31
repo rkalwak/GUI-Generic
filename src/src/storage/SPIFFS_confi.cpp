@@ -1,21 +1,3 @@
-/*
-  Copyright (C) krycha88
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
-
 #ifndef SUPLA_EXCLUDE_SPIFFS_CONFIG
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -31,17 +13,19 @@
 
 #include "SPIFFS_config.h"
 #include <supla/log_wrapper.h>
+#include <supla/storage/key_value.h>
+#include <supla/log_wrapper.h>
+#include <string.h>
 
 namespace Supla {
 const char ConfigFileName[] = "/supla-dev.cfg";
+const char BackupConfigFileName[] = "/supla-dev.cfg.bak";
 const char CustomCAFileName[] = "/custom_ca.pem";
 };  // namespace Supla
 
-#define SUPLA_SPIFFS_CONFIG_BUF_SIZE 1024
-
 #define BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE 32
 
-Supla::SPIFFSConfig::SPIFFSConfig() {
+Supla::SPIFFSConfig::SPIFFSConfig(int configMaxSize) : configMaxSize(configMaxSize) {
 }
 
 Supla::SPIFFSConfig::~SPIFFSConfig() {
@@ -58,64 +42,93 @@ bool Supla::SPIFFSConfig::init() {
     return false;
   }
 
-  if (SPIFFS.exists(ConfigFileName)) {
-    File cfg = SPIFFS.open(ConfigFileName, "r");
-    if (!cfg) {
-      SUPLA_LOG_ERROR("SPIFFSConfig: failed to open config file");
-      SPIFFS.end();
-      return false;
-    }
+  auto files = {ConfigFileName, BackupConfigFileName};
+  bool result = false;
 
-    int fileSize = cfg.size();
+  for (auto file : files) {
+    if (SPIFFS.exists(file)) {
+      File cfg = SPIFFS.open(file, "r");
+      if (!cfg) {
+        SUPLA_LOG_ERROR("SPIFFSConfig: failed to open \"%s\"", file);
+        continue;
+      }
 
-    SUPLA_LOG_DEBUG("SPIFFSConfig: config file size %d", fileSize);
-    if (fileSize > SUPLA_SPIFFS_CONFIG_BUF_SIZE) {
-      SUPLA_LOG_ERROR("SPIFFSConfig: config file is too big");
+      int fileSize = cfg.size();
+
+      SUPLA_LOG_DEBUG("SPIFFSConfig: file \"%s\" size %d", file, fileSize);
+      if (fileSize > configMaxSize) {
+        SUPLA_LOG_ERROR("SPIFFSConfig: config file is too big");
+        cfg.close();
+        continue;
+      }
+
+      uint8_t* buf = new uint8_t[configMaxSize];
+      if (buf == nullptr) {
+        SUPLA_LOG_ERROR("SPIFFSConfig: failed to allocate memory");
+        cfg.close();
+        continue;
+      }
+
+      memset(buf, 0, configMaxSize);
+      int bytesRead = cfg.read(buf, fileSize);
       cfg.close();
-      SPIFFS.end();
-      return false;
+      if (bytesRead != fileSize) {
+        SUPLA_LOG_DEBUG("SPIFFSConfig: read bytes %d, while file is %d bytes", bytesRead, fileSize);
+        delete[] buf;
+        continue;
+      }
+
+      SUPLA_LOG_DEBUG("SPIFFSConfig: initializing storage from file...");
+      result = initFromMemory(buf, fileSize);
+      delete[] buf;
+      SUPLA_LOG_DEBUG("SPIFFSConfig: init result %s", result ? "success" : "failure");
+
+      if (!result) {
+        continue;
+      }
+      else {
+        break;
+      }
     }
-
-    uint8_t buf[SUPLA_SPIFFS_CONFIG_BUF_SIZE] = {};
-    int bytesRead = cfg.read(buf, fileSize);
-
-    cfg.close();
-    SPIFFS.end();
-    if (bytesRead != fileSize) {
-      SUPLA_LOG_DEBUG("SPIFFSConfig: read bytes %d, while file is %d bytes", bytesRead, fileSize);
-      return false;
+    else {
+      SUPLA_LOG_DEBUG("SPIFFSConfig:: config file \"%s\" missing", file);
     }
-
-    SUPLA_LOG_DEBUG("SPIFFSConfig: initializing storage from file...");
-    auto result = initFromMemory(buf, fileSize);
-    SUPLA_LOG_DEBUG("SPIFFSConfig: init result %d", result);
-    return result;
-  }
-  else {
-    SUPLA_LOG_DEBUG("SPIFFSConfig:: config file missing");
   }
   SPIFFS.end();
-  return true;
+  return result;
 }
 
 void Supla::SPIFFSConfig::commit() {
-  uint8_t buf[SUPLA_SPIFFS_CONFIG_BUF_SIZE] = {};
+  uint8_t* buf = new uint8_t[configMaxSize];
+  if (buf == nullptr) {
+    SUPLA_LOG_ERROR("SPIFFSConfig: failed to allocate memory");
+    return;
+  }
 
-  size_t dataSize = serializeToMemory(buf, SUPLA_SPIFFS_CONFIG_BUF_SIZE);
+  memset(buf, 0, configMaxSize);
+
+  size_t dataSize = serializeToMemory(buf, configMaxSize);
 
   if (!initSPIFFS()) {
     return;
   }
 
-  File cfg = SPIFFS.open(ConfigFileName, "w");
-  if (!cfg) {
-    SUPLA_LOG_ERROR("SPIFFSConfig: failed to open config file for write");
-    SPIFFS.end();
-    return;
-  }
+  auto files = {ConfigFileName, BackupConfigFileName};
+  bool result = false;
 
-  cfg.write(buf, dataSize);
-  cfg.close();
+  for (auto file : files) {
+    SUPLA_LOG_DEBUG("SPIFFSConfig: writing to file \"%s\"", file);
+    File cfg = SPIFFS.open(file, "w");
+    if (!cfg) {
+      SUPLA_LOG_ERROR("SPIFFSConfig: failed to open config file \"%s\"for write", file);
+      SPIFFS.end();
+      return;
+    }
+
+    cfg.write(buf, dataSize);
+    cfg.close();
+  }
+  delete[] buf;
   SPIFFS.end();
 }
 
@@ -292,7 +305,6 @@ bool Supla::SPIFFSConfig::getBlob(const char* key, char* value, size_t blobSize)
     SPIFFS.end();
     return false;
   }
-
   size_t fileSize = file.size();
   if (fileSize > blobSize) {
     SUPLA_LOG_ERROR("SPIFFSConfig: blob file is too big");
@@ -301,7 +313,7 @@ bool Supla::SPIFFSConfig::getBlob(const char* key, char* value, size_t blobSize)
     return false;
   }
 
-  size_t bytesRead = file.read(reinterpret_cast<uint8_t*>(value), fileSize);
+  int bytesRead = file.read(reinterpret_cast<uint8_t*>(value), fileSize);
 
   file.close();
   SPIFFS.end();

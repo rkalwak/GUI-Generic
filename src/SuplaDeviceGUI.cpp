@@ -16,7 +16,6 @@
 #include "SuplaDeviceGUI.h"
 #include "SuplaConfigManager.h"
 
-Supla::SPIFFSConfig configSupla;
 Supla::Eeprom eeprom(STORAGE_OFFSET);
 
 namespace Supla {

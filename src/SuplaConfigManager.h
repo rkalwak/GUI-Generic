@@ -19,15 +19,18 @@
 
 #ifdef ARDUINO_ARCH_ESP8266
 #include "FS.h"
+#define CONFIG_MAX_SIZE 1048 
 #elif ARDUINO_ARCH_ESP32
 #include "SPIFFS.h"
 #include <os.h>
 #include <esp_wifi.h>
 #include <time.h>
+#define CONFIG_MAX_SIZE 4096
 #endif
 
 #include <supla/storage/key_value.h>
 #include <supla/storage/storage.h>
+#include "src/storage/SPIFFS_config.h"
 
 #define CURENT_VERSION   1
 #define CONFIG_FILE_PATH "/dat"
@@ -309,7 +312,7 @@ class ConfigOption {
   bool _loadKey;
 };
 
-class SuplaConfigManager : public Supla::KeyValue {
+class SuplaConfigManager : public Supla::SPIFFSConfig {
  public:
   explicit SuplaConfigManager();
   bool SPIFFSbegin();
@@ -337,10 +340,6 @@ class SuplaConfigManager : public Supla::KeyValue {
 
   bool isDeviceConfigured();
   void setGUIDandAUTHKEY();
-
-  bool init() override;
-  void commit() override;
-  void removeAll() override;
 
   // Supla protocol config
   virtual bool setSuplaServer(const char *server) override;

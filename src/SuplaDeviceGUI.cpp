@@ -35,8 +35,8 @@ void begin() {
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
     Supla::Network::SetConfigMode();
 
-  if (getCountChannels() == 0)
-    ConfigESP->configModeInit();
+  // if (getCountChannels() == 0)
+  //   ConfigESP->configModeInit();
 }
 
 void setupConnection() {

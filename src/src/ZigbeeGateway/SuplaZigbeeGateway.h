@@ -3,6 +3,7 @@
 #define CUSTOM_ZIGBEE_GATEWAY_H
 
 #include <Supla/element.h>
+#include <Supla/action_handler.h>
 #include <ZigbeeGateway.h>
 #include <../examples/Z2S_Gateway/Z2S_Devices_Table.h>
 #include <../examples/Z2S_Gateway/Z2S_devices_database.h>
@@ -17,7 +18,7 @@ namespace Supla {
 
 class SuplaZigbeeGateway : public Supla::Element, public Supla::ActionHandler {
  public:
-  SuplaZigbeeGateway(const char* jsonDevices, int factoryResetButtonPin = -1);
+  SuplaZigbeeGateway(const char* jsonDevices = "", int factoryResetButtonPin = -1);
   SuplaZigbeeGateway(const z2s_device_entity_t* devices, int factoryResetButtonPin = -1);
   ~SuplaZigbeeGateway();
   void onInit() override;
@@ -27,14 +28,10 @@ class SuplaZigbeeGateway : public Supla::Element, public Supla::ActionHandler {
  private:
   std::vector<z2s_device_entity_t> Z2S_DEVICES;
   int factoryResetButtonPin;
-
-  uint32_t startTime;
-  uint32_t printTime;
-  uint32_t zbInitDelay;
   bool zbInit;
 
-  zb_device_params_t* gatewayDevice;
-  zb_device_params_t* joinedDevice;
+  zb_device_params_t* gateway_device;
+  zb_device_params_t* joined_device;
 
   uint8_t counter = 0;
   uint8_t tuya_dp_data[10];

@@ -4,43 +4,28 @@
 #include <Arduino.h>
 #include <Z2S_devices_database.h>
 
-#ifndef JSON_DEVICES
-const char* JSON_DEVICES = R"({"devices": [
-    {
-      "manufacturer_name": "_TZ3000_akqdg6g7",
-      "model_name": "TS0201",
-      "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR",
-      "z2s_device_endpoints_count": 1
-    },
-    {
-      "manufacturer_name": "Xiaomi",
-      "model_name": "LYWSD03MMC-z",
-      "z2s_device_desc_id": "TEMPHUMIDITY_SENSOR_1",
-      "z2s_device_endpoints_count": 1
-    },
-    {
-      "manufacturer_name": "_TZ3000_0hkmcrza",
-      "model_name": "TS0203",
-      "z2s_device_desc_id": "IAS_ZONE_SENSOR",
-      "z2s_device_endpoints_count": 1
-    },
-    {
-      "manufacturer_name": "_TZ3000_cehuw1lw",
-      "model_name": "TS011F",
-      "z2s_device_desc_id": "RELAY_ELECTRICITY_METER",
-      "z2s_device_endpoints_count": 1
-    },
-    {
-      "manufacturer_name": "_TZ3000_wkai4ga5",
-      "model_name": "TS0044",
-      "z2s_device_desc_id": "ON_OFF",
-      "z2s_device_endpoints_count": 4,
-      "endpoints": [1, 2, 3, 4]
-    }
-  ]
-}
-})";
-#endif
+// #ifndef JSON_DEVICES_GUI
+// const char* JSON_DEVICES_GUI = R"({
+//   "devices": [
+//     {
+//       "manuf": "_TZ3000_fllyghyj",
+//       "model": "TS0201",
+//       "desc_id": "0x1000",
+//       "endpoints": 1
+//     },
+//     {
+//       "manuf": "Xiaomi",
+//       "model": "LYWSD03MMC-z",
+//       "desc_id": "0x1001",
+//       "endpoints": 1
+//     }
+//   ]
+// })";
+// #endif
+
+// #ifndef JSON_DEVICES_GUI
+// #define JSON_DEVICES_GUI R"({"devices":[]})"
+// #endif
 
 // static const z2s_device_entity_t Z2S_DEVICES[] PROGMEM = {
 //     // Temperatury i wilgotności
@@ -83,6 +68,5 @@ const char* JSON_DEVICES = R"({"devices": [
 //     {"_TZ3000_abrsvsou", "TS004F", Z2S_DEVICE_DESC_ON_OFF, 1},
 //     {"IKEA of Sweden", "Remote Control N2", Z2S_DEVICE_DESC_ON_OFF, 1},
 // };
-
 #endif
 #endif

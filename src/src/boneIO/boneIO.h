@@ -13,6 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_BONEIO
 #ifndef _bone_IO_h
 #define _bone_IO_h
 
@@ -98,5 +99,6 @@ class boneIO {
 };
 
 };  // namespace Supla
+#endif
 #endif
 #endif

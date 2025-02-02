@@ -14,9 +14,9 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifdef SUPLA_BONEIO
 #ifndef _SSD1306_OLED_H
 #define _SSD1306_OLED_H
-#ifdef SUPLA_BONEIO
 
 #include <supla/action_handler.h>
 #include <supla/element.h>
@@ -32,7 +32,6 @@
 #include "../../../SuplaDeviceGUI.h"
 #include "../boneIO.h"
 
-#ifdef SUPLA_BONEIO
 #define supla_logo_width  48
 #define supla_logo_height 48
 const uint8_t supla_logo_bits[] PROGMEM = {
@@ -88,6 +87,5 @@ class SSD1306 : public Supla::ActionHandler, public Supla::Element {
 };
 }  // namespace Display
 }  // namespace Supla
-#endif
 #endif
 #endif

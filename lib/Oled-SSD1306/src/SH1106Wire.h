@@ -31,6 +31,7 @@
 #ifndef SH1106Wire_h
 #define SH1106Wire_h
 
+#include "Arduino.h"
 #include "OLEDDisplay.h"
 #include <Wire.h>
 

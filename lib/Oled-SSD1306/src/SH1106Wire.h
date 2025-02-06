@@ -84,7 +84,7 @@ class SH1106Wire : public OLEDDisplay {
 // #else
 //     this->_wire = (_i2cBus == I2C_ONE) ? &Wire : &Wire1;
 // #endif
-#endif
+// #endif
       this->_frequency = _frequency;
     }
 

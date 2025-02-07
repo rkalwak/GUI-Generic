@@ -4,9 +4,10 @@
 
 #include <Supla/element.h>
 #include <Supla/action_handler.h>
+
 #include <ZigbeeGateway.h>
-#include <../examples/Z2S_Gateway/Z2S_Devices_Table.h>
-#include <../examples/Z2S_Gateway/Z2S_devices_database.h>
+#include <Z2S_Devices_Table.h>
+#include <Z2S_devices_database.h>
 
 #include <vector>
 #include <ArduinoJson.h>

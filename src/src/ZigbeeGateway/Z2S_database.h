@@ -23,7 +23,7 @@
 // })";
 // #endif
 
-// #ifndef JSON_DEVICES_GUI
+// #ifndef JSON_DEVICES_GUITEMPLATE_JSON
 // #define JSON_DEVICES_GUI R"({"devices":[]})"
 // #endif
 

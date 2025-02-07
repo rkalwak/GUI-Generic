@@ -986,7 +986,7 @@ void setup() {
 
 #ifdef SUPLA_ZIGBEE_GATEWAY
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
-    new Supla::SuplaZigbeeGateway(JSON_DEVICES_GUI, 9);
+    new Supla::SuplaZigbeeGateway(TEMPLATE_JSON, 9);
   }
 #endif
 

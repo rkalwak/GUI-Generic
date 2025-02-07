@@ -2,8 +2,8 @@
 #ifndef CUSTOM_ZIGBEE_GATEWAY_H
 #define CUSTOM_ZIGBEE_GATEWAY_H
 
-#include <Supla/element.h>
-#include <Supla/action_handler.h>
+#include <supla/element.h>
+#include <supla/action_handler.h>
 
 #include <ZigbeeGateway.h>
 #include <Z2S_Devices_Table.h>

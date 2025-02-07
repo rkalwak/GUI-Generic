@@ -4,6 +4,13 @@
 #include <Arduino.h>
 #include <Z2S_devices_database.h>
 
+// const char* JSON_DEVICES_GUI = R"({
+//   "devices": [
+//     ["_TZ3000_akqdg6g7", "TS0201", "0x1000", 1],
+//     ["Xiaomi", "LYWSD03MMC-z", "0x1001", 1]
+//   ]
+// })";
+
 // #ifndef JSON_DEVICES_GUI
 // const char* JSON_DEVICES_GUI = R"({
 //   "devices": [

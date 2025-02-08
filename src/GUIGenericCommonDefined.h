@@ -17,11 +17,17 @@
 #ifndef GUI_GENERIC_COMMON_DEFINED_H
 #define GUI_GENERIC_COMMON_DEFINED_H
 
+#include "GUI-Generic_Config.h"
+
 #ifndef SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #define SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #endif
 
-#include "GUI-Generic_Config.h"
+#ifdef SUPLA_ZIGBEE_GATEWAY
+#define CORE_DEBUG_LEVEL 5
+#define ARDUINO_ESP32C6_DEV
+#define ZIGBEE_MODE_ZCZR
+#endif
 
 #if defined(SUPLA_MCP23017) || defined(SUPLA_PCF8575) || defined(SUPLA_PCF8574)
 #define GUI_SENSOR_I2C_EXPENDER

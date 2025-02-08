@@ -83,17 +83,22 @@ uint8_t PA_TABLE_915[10] {0x03,0x0E,0x1E,0x27,0x38,0x8E,0x84,0xCC,0xC3,0xC0,};  
 *INPUT        :none
 *OUTPUT       :none
 ****************************************************************/
-void ELECHOUSE_CC1101::SpiStart(void)
-{
-  // initialize the SPI pins
+void ELECHOUSE_CC1101::SpiStart(void) {
+  gpio_reset_pin((gpio_num_t)SCK_PIN);
+  gpio_reset_pin((gpio_num_t)MOSI_PIN);
+  gpio_reset_pin((gpio_num_t)MISO_PIN);
+  gpio_reset_pin((gpio_num_t)SS_PIN);
+
   pinMode(SCK_PIN, OUTPUT);
   pinMode(MOSI_PIN, OUTPUT);
   pinMode(MISO_PIN, INPUT);
   pinMode(SS_PIN, OUTPUT);
 
-  // enable SPI
+  SPI.end();
+
   #ifdef ESP32
   SPI.begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
+  SPI.setFrequency(1000000);
   #else
   SPI.begin();
   #endif

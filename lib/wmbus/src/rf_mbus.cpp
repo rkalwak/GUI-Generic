@@ -174,12 +174,16 @@ uint16_t verifyCrcBytesCmodeA_local(uint8_t* pByte, uint8_t* pPacket, uint16_t p
 bool rf_mbus::init(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t gdo0, uint8_t gdo2) {
   bool retVal = false;
   Serial.println("wMBus-lib: Initializing");
+
   this->gdo0 = gdo0;
   this->gdo2 = gdo2;
-  ::pinMode(this->gdo0, INPUT);
-  ::pinMode(this->gdo2, INPUT);
-  ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
 
+  gpio_reset_pin((gpio_num_t)this->gdo0);
+  gpio_reset_pin((gpio_num_t)this->gdo2);
+  pinMode(this->gdo0, INPUT);
+  pinMode(this->gdo2, INPUT);
+
+  ELECHOUSE_cc1101.setSpiPin(clk, miso, mosi, cs);
   ELECHOUSE_cc1101.Init();
 
   for (uint8_t i = 0; i < TMODE_RF_SETTINGS_LEN; i++) {
@@ -207,6 +211,7 @@ bool rf_mbus::init(uint8_t mosi, uint8_t miso, uint8_t clk, uint8_t cs, uint8_t 
 
   return retVal;
 }
+
 
 bool rf_mbus::task() {
   uint8_t bytesDecoded[2];

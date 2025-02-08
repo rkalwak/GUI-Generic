@@ -237,6 +237,7 @@ void SuplaZigbeeGateway::handleAction(int event, int action) {
     Zigbee.openNetwork(180);
   }
 }
+
 void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& doc = jsonBuffer.parseObject(json);
@@ -253,23 +254,56 @@ void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
   }
 
   for (JsonObject& device : devicesArray) {
-    z2s_device_entity_t newDevice;
+    z2s_device_entity_t newDevice = {};
 
-    strncpy(newDevice.manufacturer_name, device["manuf"], sizeof(newDevice.manufacturer_name) - 1);
+    strncpy(newDevice.manufacturer_name, device[0], sizeof(newDevice.manufacturer_name) - 1);
     newDevice.manufacturer_name[sizeof(newDevice.manufacturer_name) - 1] = '\0';
 
-    strncpy(newDevice.model_name, device["model"], sizeof(newDevice.model_name) - 1);
+    strncpy(newDevice.model_name, device[1], sizeof(newDevice.model_name) - 1);
     newDevice.model_name[sizeof(newDevice.model_name) - 1] = '\0';
 
-    newDevice.z2s_device_desc_id = (uint32_t)strtol(device["desc_id"], NULL, 16);
-    newDevice.z2s_device_endpoints_count = device["endpoints"];
+    newDevice.z2s_device_desc_id = strtoul(device[2], NULL, 16);
+    newDevice.z2s_device_endpoints_count = device[3];
 
-    Z2S_DEVICES.push_back(newDevice);
-
-    Serial.printf("Added JSON: %s - %s (ID: %d, Endpoints: %d)\n", newDevice.manufacturer_name, newDevice.model_name, newDevice.z2s_device_desc_id,
-                  newDevice.z2s_device_endpoints_count);
+    Serial.printf("Added JSON: %s - %s (ID: 0x%X, Endpoints: %d)\n", 
+                  newDevice.manufacturer_name, newDevice.model_name,
+                  newDevice.z2s_device_desc_id, newDevice.z2s_device_endpoints_count);
   }
 }
+
+// void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
+//   DynamicJsonBuffer jsonBuffer;
+//   JsonObject& doc = jsonBuffer.parseObject(json);
+
+//   if (!doc.success()) {
+//     Serial.println("Deserialization failed");
+//     return;
+//   }
+
+//   JsonArray& devicesArray = doc["devices"];
+//   if (devicesArray.size() == 0) {
+//     Serial.println("Error: 'devices' is null or not found");
+//     return;
+//   }
+
+//   for (JsonObject& device : devicesArray) {
+//     z2s_device_entity_t newDevice;
+
+//     strncpy(newDevice.manufacturer_name, device["manuf"], sizeof(newDevice.manufacturer_name) - 1);
+//     newDevice.manufacturer_name[sizeof(newDevice.manufacturer_name) - 1] = '\0';
+
+//     strncpy(newDevice.model_name, device["model"], sizeof(newDevice.model_name) - 1);
+//     newDevice.model_name[sizeof(newDevice.model_name) - 1] = '\0';
+
+//     newDevice.z2s_device_desc_id = (uint32_t)strtol(device["desc_id"], NULL, 16);
+//     newDevice.z2s_device_endpoints_count = device["endpoints"];
+
+//     Z2S_DEVICES.push_back(newDevice);
+
+//     Serial.printf("Added JSON: %s - %s (ID: %d, Endpoints: %d)\n", newDevice.manufacturer_name, newDevice.model_name, newDevice.z2s_device_desc_id,
+//                   newDevice.z2s_device_endpoints_count);
+//   }
+// }
 
 void SuplaZigbeeGateway::loadDevicesFromProgMem(const z2s_device_entity_t* deviceList) {
   size_t deviceCount = sizeof(Z2S_DEVICES_LIST) / sizeof(Z2S_DEVICES_LIST[0]);

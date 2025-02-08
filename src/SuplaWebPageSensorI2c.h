@@ -18,7 +18,6 @@
 #define SuplaWebPageSensorI2c_h
 
 #include "SuplaDeviceGUI.h"
-#include <Wire.h>
 
 /* Define GUI_SENSOR_I2C_2 if any of these sensors are selected. */
 #if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP) || defined(SUPLA_INA219)
@@ -65,7 +64,7 @@ enum _sensor2
 };
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
-
+#include <Wire.h>
 #if defined(SUPLA_BME280) || defined(SUPLA_BMP280)
 enum _bmeAdress
 {

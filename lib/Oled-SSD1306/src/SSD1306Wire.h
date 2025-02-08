@@ -31,6 +31,7 @@
 #ifndef SSD1306Wire_h
 #define SSD1306Wire_h
 
+#include "Arduino.h"
 #include "OLEDDisplay.h"
 #include <Wire.h>
 #include <algorithm>
@@ -78,11 +79,12 @@ class SSD1306Wire : public OLEDDisplay {
       this->_address = _address;
       this->_sda = _sda;
       this->_scl = _scl;
-#if !defined(ARDUINO_ARCH_ESP32)
       this->_wire = &Wire;
-#else
-      this->_wire = (_i2cBus==I2C_ONE) ? &Wire : &Wire1;
-#endif
+// #if defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C3)
+//     this->_wire = &Wire;
+// #else
+//     this->_wire = (_i2cBus == I2C_ONE) ? &Wire : &Wire1;
+// #endif
       this->_frequency = _frequency;
     }
 

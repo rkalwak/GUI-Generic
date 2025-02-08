@@ -83,10 +83,12 @@ void setup() {
   }
 
 #ifdef ARDUINO_ARCH_ESP32
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C3)
   if (ConfigESP->getGpio(FUNCTION_SDA_2) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL_2) != OFF_GPIO) {
     Wire1.begin(ConfigESP->getGpio(FUNCTION_SDA_2), ConfigESP->getGpio(FUNCTION_SCL_2));
     Wire1.setClock(100000);
   }
+#endif
 #endif
 #endif
 
@@ -984,7 +986,7 @@ void setup() {
 
 #ifdef SUPLA_ZIGBEE_GATEWAY
   if (ConfigESP->configModeESP == Supla::DEVICE_MODE_NORMAL) {
-    new Supla::SuplaZigbeeGateway(JSON_DEVICES_GUI, 9);
+    new Supla::SuplaZigbeeGateway(TEMPLATE_JSON, 9);
   }
 #endif
 

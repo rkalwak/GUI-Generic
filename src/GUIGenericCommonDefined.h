@@ -29,6 +29,10 @@
 #define ZIGBEE_MODE_ZCZR
 #endif
 
+#ifndef TEMPLATE_JSON
+#define TEMPLATE_JSON R"({"devices":[]})"
+#endif
+
 #if defined(SUPLA_MCP23017) || defined(SUPLA_PCF8575) || defined(SUPLA_PCF8574)
 #define GUI_SENSOR_I2C_EXPENDER
 #endif

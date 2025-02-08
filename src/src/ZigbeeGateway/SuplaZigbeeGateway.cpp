@@ -253,17 +253,29 @@ void SuplaZigbeeGateway::parseDevicesFromJson(const char* json) {
     return;
   }
 
-  for (JsonObject& device : devicesArray) {
+  for (JsonArray& device : devicesArray) {
     z2s_device_entity_t newDevice = {};
 
-    strncpy(newDevice.manufacturer_name, device[0], sizeof(newDevice.manufacturer_name) - 1);
-    newDevice.manufacturer_name[sizeof(newDevice.manufacturer_name) - 1] = '\0';
+    const char* manufacturer_name = device[0];
+    const char* model_name = device[1];
 
-    strncpy(newDevice.model_name, device[1], sizeof(newDevice.model_name) - 1);
-    newDevice.model_name[sizeof(newDevice.model_name) - 1] = '\0';
+    if (manufacturer_name && model_name) {
+      strncpy(newDevice.manufacturer_name, manufacturer_name, sizeof(newDevice.manufacturer_name) - 1);
+      newDevice.manufacturer_name[sizeof(newDevice.manufacturer_name) - 1] = '\0';
 
-    newDevice.z2s_device_desc_id = strtoul(device[2], NULL, 16);
-    newDevice.z2s_device_endpoints_count = device[3];
+      strncpy(newDevice.model_name, model_name, sizeof(newDevice.model_name) - 1);
+      newDevice.model_name[sizeof(newDevice.model_name) - 1] = '\0';
+    } else {
+      Serial.println("Error: Missing manufacturer_name or model_name");
+      continue;
+    }
+
+    const char* device_desc_id = device[2];
+    if (device_desc_id) {
+      newDevice.z2s_device_desc_id = strtoul(device_desc_id, NULL, 16);
+    }
+
+    newDevice.z2s_device_endpoints_count = device[3].as<int>();
 
     Serial.printf("Added JSON: %s - %s (ID: 0x%X, Endpoints: %d)\n", 
                   newDevice.manufacturer_name, newDevice.model_name,

@@ -1,3 +1,4 @@
+#ifdef SUPLA_OTA
 #include "SuplaHTTPUpdateServer.h"
 #include "UpdateURL.h"
 #include "UpdateBuilder.h"
@@ -349,4 +350,5 @@ void HTTPUpdateServer::updateManual() {
   }
   delay(0);
 }
+#endif
 #endif

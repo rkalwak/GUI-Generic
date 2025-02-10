@@ -1,6 +1,6 @@
 #ifndef __SUPLA_HTTP_UPDATE_SERVER_H
 #define __SUPLA_HTTP_UPDATE_SERVER_H
-
+#ifdef SUPLA_OTA
 #include <Arduino.h>
 
 #define PATH_UPDATE_HENDLE        "update"
@@ -39,4 +39,5 @@ class HTTPUpdateServer {
 #endif
   void updateManual();
 };
+#endif
 #endif

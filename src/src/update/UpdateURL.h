@@ -15,7 +15,7 @@
 */
 #ifndef _UPDATE_URL_H
 #define _UPDATE_URL_H
-
+#ifdef SUPLA_OTA
 #include <Arduino.h>
 
 #ifdef ARDUINO_ARCH_ESP8266
@@ -37,4 +37,5 @@ class UpdateURL {
  private:
   ParseURL* parseURL;
 };
+#endif
 #endif

@@ -13,6 +13,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#ifdef SUPLA_OTA
 #include "UpdateBuilder.h"
 #include "../../SuplaDeviceGUI.h"
 
@@ -104,3 +105,4 @@ int UpdateBuilder::check() {
 
   return BUILDER_UPDATE_FAILED;
 }
+#endif

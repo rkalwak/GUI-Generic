@@ -15,7 +15,7 @@
 */
 #ifndef _SUPLA_UPDATE_COMMON_H
 #define _SUPLA_UPDATE_COMMON_H
-
+#ifdef SUPLA_OTA
 #include <pgmspace.h>
 
 static const char serverIndex[] PROGMEM =
@@ -29,5 +29,5 @@ static const char serverIndex[] PROGMEM =
      </form>)";
 static const char successResponse[] PROGMEM = "<META http-equiv='refresh' content='5'>{m}";
 static const char twoStepResponse[] PROGMEM = "<META http-equiv='refresh' content='5'><b>{w}</b> {o} {gg}";
-
+#endif
 #endif

@@ -15,7 +15,7 @@
 */
 #ifndef _UPDATE_BUILDER_H
 #define _UPDATE_BUILDER_H
-
+#ifdef SUPLA_OTA
 #include <Arduino.h>
 
 #include "ParseURL.h"
@@ -41,4 +41,5 @@ class UpdateBuilder {
  private:
   ParseURL* parseURL;
 };
+#endif
 #endif

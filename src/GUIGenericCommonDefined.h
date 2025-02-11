@@ -23,12 +23,6 @@
 #define SUPLA_EXCLUDE_LITTLEFS_CONFIG
 #endif
 
-#ifdef SUPLA_ZIGBEE_GATEWAY
-#define CORE_DEBUG_LEVEL 5
-#define ARDUINO_ESP32C6_DEV
-#define ZIGBEE_MODE_ZCZR
-#endif
-
 #ifndef TEMPLATE_JSON
 #define TEMPLATE_JSON R"({"devices":[]})"
 #endif

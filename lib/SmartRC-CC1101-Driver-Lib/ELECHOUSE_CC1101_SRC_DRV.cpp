@@ -201,19 +201,23 @@ void ELECHOUSE_CC1101::Reset (void)
 *INPUT        :none
 *OUTPUT       :none
 ****************************************************************/
-void ELECHOUSE_CC1101::Init(void)
-{
-  // check if SPI Pins are set
-  setSpi();
+void ELECHOUSE_CC1101::Init(void) {
+  pinMode(SCK_PIN, OUTPUT);
+  pinMode(MISO_PIN, INPUT);
+  pinMode(MOSI_PIN, OUTPUT);
   pinMode(SS_PIN, OUTPUT);
-  // If there were no different SPI Instance, use This lib instance
-  if(cc_spi==nullptr || _begin_end_logic) {
+  
+  digitalWrite(SS_PIN, HIGH);
+
+  if (cc_spi == nullptr || _begin_end_logic) {
     DEBUG_CC1101("CC1101: Null pointer SPI instance or Begin/end");
-    _begin_end_logic=true;
-    cc_spi=&_cc_spi;
-    cc_spi->begin(SCK_PIN,MISO_PIN,MOSI_PIN,SS_PIN);
+    _begin_end_logic = true;
+    cc_spi = &_cc_spi;
+    cc_spi->begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
     delay(1);
-  } else { DEBUG_CC1101("CC1101: Using other instance"); }
+  } else {
+    DEBUG_CC1101("CC1101: Using other instance");
+  }
 
   SpiStart();                   //Start SPI Transaction
   digitalWrite(SS_PIN, HIGH);
@@ -221,6 +225,7 @@ void ELECHOUSE_CC1101::Init(void)
   RegConfigSettings();          //CC1101 register config
   SpiEnd();                     //Stops SPI Transaction
 }
+
 /****************************************************************
 *FUNCTION NAME:SpiWriteReg
 *FUNCTION     :CC1101 write data to register
@@ -338,20 +343,26 @@ byte ELECHOUSE_CC1101::SpiReadStatus(byte addr)
 *INPUT        :none
 *OUTPUT       :none
 ****************************************************************/
-void ELECHOUSE_CC1101::setSpi(void){
-  if (__spi == 0){
-  #if defined __AVR_ATmega168__ || defined __AVR_ATmega328P__
-  SCK_PIN = 13; MISO_PIN = 12; MOSI_PIN = 11; SS_PIN = 10;
-  #elif defined __AVR_ATmega1280__ || defined __AVR_ATmega2560__
-  SCK_PIN = 52; MISO_PIN = 50; MOSI_PIN = 51; SS_PIN = 53;
-  #elif ESP8266
-  SCK_PIN = 14; MISO_PIN = 12; MOSI_PIN = 13; SS_PIN = 15;
-  #elif ESP32
-  SCK_PIN = 18; MISO_PIN = 19; MOSI_PIN = 23; SS_PIN = 5;
-  #else
-  SCK_PIN = 13; MISO_PIN = 12; MOSI_PIN = 11; SS_PIN = 10;
-  #endif
-}
+void ELECHOUSE_CC1101::setSpi(void) {
+  if (__spi == 0) {
+#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
+    SCK_PIN = 13;  MISO_PIN = 12; MOSI_PIN = 11; SS_PIN = 10;
+#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    SCK_PIN = 52;  MISO_PIN = 50; MOSI_PIN = 51; SS_PIN = 53;
+#elif defined(ESP8266)
+    SCK_PIN = 14;  MISO_PIN = 12; MOSI_PIN = 13; SS_PIN = 15;
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+    SCK_PIN = 18;  MISO_PIN = 19; MOSI_PIN = 23; SS_PIN = 5;
+#elif defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+    SCK_PIN = 12;  MISO_PIN = 13; MOSI_PIN = 11; SS_PIN = 10;
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+    SCK_PIN = 6;   MISO_PIN = 2;  MOSI_PIN = 7;  SS_PIN = 10;
+#elif defined(CONFIG_IDF_TARGET_ESP32C6)
+    SCK_PIN = 18;  MISO_PIN = 19; MOSI_PIN = 23; SS_PIN = 5;
+#else
+    SCK_PIN = 13;  MISO_PIN = 12; MOSI_PIN = 11; SS_PIN = 10;
+#endif
+  }
 }
 /****************************************************************
 *FUNCTION NAME:COSTUM SPI

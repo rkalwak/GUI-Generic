@@ -1490,7 +1490,7 @@ TEST_F(ActionTriggerTests, RemoveSomeActionsFromATAttachWithStorage) {
   EXPECT_TRUE(b1.isEventAlreadyUsed(Supla::ON_PRESS, false));
   EXPECT_FALSE(b1.isEventAlreadyUsed(Supla::ON_RELEASE, false));
 
-  EXPECT_CALL(storage, scheduleSave(2000));
+  EXPECT_CALL(storage, scheduleSave(2000, 0));
 
   // updates of section preamble
   EXPECT_CALL(storage, writeStorage(8, _, 7)).WillRepeatedly(Return(7));
@@ -1500,7 +1500,7 @@ TEST_F(ActionTriggerTests, RemoveSomeActionsFromATAttachWithStorage) {
   EXPECT_CALL(storage, readStorage(_, _, 4, _))
       .Times(2)
       .WillRepeatedly(
-          [](uint32_t address, unsigned char *data, int size, bool) {
+          [](uint32_t, unsigned char *data, int, bool) {
           uint32_t storageData = 0;
           memcpy(data, &storageData, sizeof(storageData));
           return sizeof(storageData);
@@ -1751,7 +1751,7 @@ TEST_F(ActionTriggerTests, ActionHandlingType_PublishAllDisableAllTest) {
   EXPECT_TRUE(b1.isEventAlreadyUsed(Supla::ON_PRESS, false));
   EXPECT_FALSE(b1.isEventAlreadyUsed(Supla::ON_RELEASE, false));
 
-  EXPECT_CALL(storage, scheduleSave(2000));
+  EXPECT_CALL(storage, scheduleSave(2000, 0));
 
   storage.defaultInitialization();
 
@@ -1876,7 +1876,7 @@ TEST_F(ActionTriggerTests, ActionHandlingType_PublishAllDisableNoneTest) {
 
   storage.defaultInitialization(4);
 
-  EXPECT_CALL(storage, scheduleSave(2000)).Times(2);
+  EXPECT_CALL(storage, scheduleSave(2000, 0)).Times(2);
   // updates of section preamble
   EXPECT_CALL(storage, writeStorage(8, _, 7)).WillRepeatedly(Return(7));
   EXPECT_CALL(storage, commit()).WillRepeatedly(Return());
@@ -1885,7 +1885,7 @@ TEST_F(ActionTriggerTests, ActionHandlingType_PublishAllDisableNoneTest) {
   EXPECT_CALL(storage, readStorage(_, _, 4, _))
       .Times(2)
       .WillRepeatedly(
-          [](uint32_t address, unsigned char *data, int size, bool) {
+          [](uint32_t, unsigned char *data, int, bool) {
           uint32_t storageData = 0;
           memcpy(data, &storageData, sizeof(storageData));
           return sizeof(storageData);
@@ -2026,7 +2026,7 @@ TEST_F(ActionTriggerTests, ActionHandlingType_RelayOnSuplaServerTest) {
   EXPECT_TRUE(b1.isEventAlreadyUsed(Supla::ON_PRESS, false));
   EXPECT_FALSE(b1.isEventAlreadyUsed(Supla::ON_RELEASE, false));
 
-  EXPECT_CALL(storage, scheduleSave(2000)).Times(2);
+  EXPECT_CALL(storage, scheduleSave(2000, 0)).Times(2);
   storage.defaultInitialization(4);
 
   // updates of section preamble
@@ -2037,7 +2037,7 @@ TEST_F(ActionTriggerTests, ActionHandlingType_RelayOnSuplaServerTest) {
   EXPECT_CALL(storage, readStorage(_, _, 4, _))
       .Times(2)
       .WillRepeatedly(
-          [](uint32_t address, unsigned char *data, int size, bool) {
+          [](uint32_t, unsigned char *data, int, bool) {
           uint32_t storageData = 0;
           memcpy(data, &storageData, sizeof(storageData));
           return sizeof(storageData);

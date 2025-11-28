@@ -21,7 +21,7 @@
 
 Supla::Sensor::ThermHygroPressMeter::ThermHygroPressMeter() {
   pressureChannel.setType(SUPLA_CHANNELTYPE_PRESSURESENSOR);
-  pressureChannel.setDefault(SUPLA_CHANNELFNC_PRESSURESENSOR);
+  pressureChannel.setDefaultFunction(SUPLA_CHANNELFNC_PRESSURESENSOR);
 }
 
 Supla::Sensor::ThermHygroPressMeter::~ThermHygroPressMeter() {}
@@ -39,9 +39,7 @@ void Supla::Sensor::ThermHygroPressMeter::iterateAlways() {
 
 bool Supla::Sensor::ThermHygroPressMeter::iterateConnected() {
   bool response = true;
-  if (pressureChannel.isUpdateReady() &&
-      millis() - pressureChannel.lastCommunicationTimeMs > 100) {
-    pressureChannel.lastCommunicationTimeMs = millis();
+  if (pressureChannel.isUpdateReady()) {
     pressureChannel.sendUpdate();
     response = false;
   }

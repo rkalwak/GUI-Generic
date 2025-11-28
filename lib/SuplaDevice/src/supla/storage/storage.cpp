@@ -61,6 +61,8 @@ bool Storage::Init() {
     if (!storageInitDone) {
       storageInitDone = true;
       result = Instance()->init();
+    } else {
+      result = Instance()->getInitResult();
     }
   } else {
     SUPLA_LOG_DEBUG("Main storage not configured");
@@ -69,6 +71,8 @@ bool Storage::Init() {
     if (!configInitDone) {
       configInitDone = true;
       result = ConfigInstance()->init();
+    } else {
+      result = ConfigInstance()->getInitResult();
     }
   } else {
     SUPLA_LOG_DEBUG("Config storage not configured");
@@ -90,6 +94,12 @@ bool Storage::WriteState(const unsigned char *buf, int size) {
   return false;
 }
 
+void Storage::EraseSector(unsigned int offset, int size) {
+  if (Instance()) {
+    Instance()->eraseSector(offset, size);
+  }
+}
+
 bool Storage::SaveStateAllowed(uint32_t ms) {
   if (Instance()) {
     return Instance()->saveStateAllowed(ms);
@@ -97,9 +107,9 @@ bool Storage::SaveStateAllowed(uint32_t ms) {
   return false;
 }
 
-void Storage::ScheduleSave(uint32_t delayMs) {
+void Storage::ScheduleSave(uint32_t delayMsMax, uint32_t delayMsMin) {
   if (Instance()) {
-    Instance()->scheduleSave(delayMs);
+    Instance()->scheduleSave(delayMsMax, delayMsMin);
   }
 }
 
@@ -199,20 +209,25 @@ bool Storage::init() {
 
   if (stateStorage == nullptr) {
     SUPLA_LOG_WARNING("Storage: stateStorage is null, abort");
-    return false;
+    initResult = false;
+    return initResult;
   }
 
-  return stateStorage->loadPreambles(storageStartingOffset, availableSize);
+  initResult =
+      stateStorage->loadPreambles(storageStartingOffset, availableSize);
+  return initResult;
 }
 
 void Storage::deleteAll() {
-  char emptyTag[5] = {};
-  writeStorage(
-      storageStartingOffset, (unsigned char *)&emptyTag, sizeof(emptyTag));
-  if (stateStorage != nullptr) {
-    stateStorage->deleteAll();
+  if (deleteAllMethodEnabled) {
+    char emptyTag[5] = {};
+    writeStorage(
+        storageStartingOffset, (unsigned char *)&emptyTag, sizeof(emptyTag));
+    if (stateStorage != nullptr) {
+      stateStorage->deleteAll();
+    }
+    commit();
   }
-  commit();
 }
 
 int Storage::updateStorage(unsigned int offset,
@@ -252,12 +267,18 @@ bool Storage::saveStateAllowed(uint32_t ms) {
   return false;
 }
 
-void Storage::scheduleSave(uint32_t delayMs) {
-  uint32_t currentMs = millis();
-  uint32_t newTimestamp = currentMs - saveStatePeriod - 1 + delayMs;
-  if (currentMs - lastWriteTimestamp < currentMs - newTimestamp) {
-    lastWriteTimestamp = newTimestamp;
+void Storage::scheduleSave(uint32_t delayMsMax, uint32_t delayMsMin) {
+  uint32_t now = millis();
+  uint32_t next = lastWriteTimestamp + saveStatePeriod;
+  uint32_t desired = now + delayMsMax;
+  uint32_t target = static_cast<int32_t>(next - desired) < 0 ? next : desired;
+
+  if (delayMsMin != 0) {
+    desired = now + delayMsMin;
+    target = static_cast<int32_t>(target - desired) < 0 ? desired : target;
   }
+
+  lastWriteTimestamp = target - saveStatePeriod;
 }
 
 bool Storage::registerSection(int sectionId,
@@ -316,6 +337,7 @@ bool Storage::readSection(int sectionId, unsigned char *data, int size) {
             ptr->size, size);
         return false;
       }
+      unsigned char *buffer = new unsigned char[size];
       for (int entry = 0; entry < (ptr->addBackupCopy ? 2 : 1); entry++) {
         // offset is set to ptr->offset for first entry;
         // for backup entry we add section size and crc (if used)
@@ -326,9 +348,10 @@ bool Storage::readSection(int sectionId, unsigned char *data, int size) {
             " entry %d at offset %d, size %d",
             sectionId, entry, offset, ptr->size);
 
-        auto readBytes = readStorage(offset, data, size);
+        auto readBytes = readStorage(offset, buffer, size);
         if (readBytes != size) {
           SUPLA_LOG_ERROR("Storage: failed to read special section");
+          delete[] buffer;
           return false;
         }
         if (ptr->addCrc) {
@@ -337,7 +360,7 @@ bool Storage::readSection(int sectionId, unsigned char *data, int size) {
               reinterpret_cast<unsigned char *>(&readCrc), sizeof(readCrc));
           uint16_t calcCrc = 0xFFFF;
           for (int i = 0; i < size; i++) {
-            calcCrc = crc16_update(calcCrc, data[i]);
+            calcCrc = crc16_update(calcCrc, buffer[i]);
           }
           if (readCrc != calcCrc) {
             SUPLA_LOG_WARNING(
@@ -347,8 +370,11 @@ bool Storage::readSection(int sectionId, unsigned char *data, int size) {
             continue;
           }
         }
+        memcpy(data, buffer, size);
+        delete[] buffer;
         return true;
       }
+      delete[] buffer;
       return false;
     }
   }
@@ -562,6 +588,14 @@ void Storage::enableChannelNumbers() {
 
 bool Storage::isAddChannelNumbersEnabled() const {
   return addChannelNumbers;
+}
+
+void Storage::setDeleteAllMethodEnabled(bool value) {
+  deleteAllMethodEnabled = value;
+}
+
+bool Storage::getInitResult() const {
+  return initResult;
 }
 
 }  // namespace Supla

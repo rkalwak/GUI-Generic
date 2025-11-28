@@ -39,6 +39,7 @@ class ThermPressMeter : public Thermometer {
 
  protected:
   Channel pressureChannel;
+  unsigned long lastCommunicationTimeMs;
 };
 
 };  // namespace Sensor

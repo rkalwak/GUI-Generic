@@ -53,13 +53,21 @@ class Storage {
 
   static bool Init();
   static bool SaveStateAllowed(uint32_t);
-  static void ScheduleSave(uint32_t delayMs);
+  /**
+   * Schedules save of state storage in given time range
+   *
+   * @param delayMsMax - maximum delay in ms since now
+   * @param delayMsMin - minimum delay in ms since now
+   */
+  static void ScheduleSave(uint32_t delayMsMax, uint32_t delayMsMin = 0);
   static bool IsStateStorageValid();
   static void LoadStateStorage();
   static void WriteStateStorage();
 
   static bool ReadState(unsigned char *, int);
   static bool WriteState(const unsigned char *, int);
+
+  static void EraseSector(unsigned int offset, int size);
 
   // Register special section in storage data (outside of State storage)
   // sectionId - user selected sectionId
@@ -88,12 +96,23 @@ class Storage {
   virtual void setStateSavePeriod(uint32_t periodMs);
 
   virtual void deleteAll();
+  virtual void eraseSector(unsigned int address, int size);
 
   void enableChannelNumbers();
   bool isAddChannelNumbersEnabled() const;
 
+  /**
+   * Enables or disables delete all method which is called during factory reset.
+   * By default it's enabled. Disable it if you want to keep state storage
+   * intact after factory reset.
+   *
+   * @param value
+   */
+  void setDeleteAllMethodEnabled(bool value);
+
  protected:
   virtual bool init();
+  bool getInitResult() const;
   virtual int readStorage(unsigned int address,
                           unsigned char *buf,
                           int size,
@@ -101,13 +120,12 @@ class Storage {
   virtual int writeStorage(unsigned int address,
                            const unsigned char *buf,
                            int size) = 0;
-  virtual void eraseSector(unsigned int address, int size);
   virtual void commit() = 0;
 
   virtual int updateStorage(unsigned int, const unsigned char *, int);
 
   virtual bool saveStateAllowed(uint32_t);
-  virtual void scheduleSave(uint32_t delayMs);
+  virtual void scheduleSave(uint32_t delayMsMax, uint32_t delayMsMin);
 
   bool registerSection(
       int sectionId, int offset, int size, bool addCrc, bool addBackupCopy);
@@ -130,6 +148,8 @@ class Storage {
   static Storage *instance;
   static Config *configInstance;
   bool addChannelNumbers = false;
+  bool deleteAllMethodEnabled = true;
+  bool initResult = false;
 };
 
 #pragma pack(push, 1)

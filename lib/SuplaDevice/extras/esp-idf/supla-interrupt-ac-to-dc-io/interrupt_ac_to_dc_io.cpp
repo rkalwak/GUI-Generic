@@ -39,7 +39,7 @@ void IRAM_ATTR interruptHandler(void* arg) {
 
 }  // namespace
 
-InterruptAcToDcIo::InterruptAcToDcIo() : Supla::Io(false) {
+InterruptAcToDcIo::InterruptAcToDcIo() : Supla::Io::Base(false) {
   for (int i = 0; i < INTERRUPT_AC_TO_DC_IO_MAX_GPIOS; i++) {
     gpioState[i] = 255;
   }
@@ -61,6 +61,9 @@ void InterruptAcToDcIo::addGpio(int gpio,
   }
 
   gpioMinOffTimeout[gpio] = minOffTimeoutMs;
+  if (minOffTimeoutMs > initCounter) {
+    initCounter = minOffTimeoutMs;
+  }
   gpioState[gpio] = 0;
 }
 
@@ -74,7 +77,7 @@ void InterruptAcToDcIo::initialize() {
   gpio_config_t ioConf = {};
   ioConf.intr_type = GPIO_INTR_ANYEDGE;
   ioConf.mode = GPIO_MODE_INPUT;
-//  ioConf.pull_up_en = GPIO_PULLUP_ENABLE;
+//  ioConf.pull_down_en = GPIO_PULLDOWN_ENABLE;
   ioConf.pin_bit_mask = gpioMask;
   auto ret = gpio_config(&ioConf);
   if (ret != ESP_OK) {
@@ -92,6 +95,14 @@ void InterruptAcToDcIo::initialize() {
 
   for (int i = 0; i < INTERRUPT_AC_TO_DC_IO_MAX_GPIOS; i++) {
     if (gpioState[i] != 255) {
+      // configure initial state
+      if (gpio_get_level(static_cast<gpio_num_t>(i)) == offStateLevel) {
+        gpioState[i] = 0;
+        SUPLA_LOG_DEBUG(" *** GPIO %d is OFF (initial) ***", i);
+      } else {
+        gpioState[i] = 1;
+        SUPLA_LOG_DEBUG(" *** GPIO %d is ON (initial) ***", i);
+      }
       ret = gpio_isr_handler_add(static_cast<gpio_num_t>(i),
           interruptHandler,
           reinterpret_cast<void*>(i));
@@ -112,6 +123,10 @@ bool InterruptAcToDcIo::isInitialized() const {
   return initialized;
 }
 
+bool InterruptAcToDcIo::isReady() const {
+  return initialized && initCounter == 0;
+}
+
 int InterruptAcToDcIo::customDigitalRead(int channelNumber, uint8_t pin) {
   if (!isInitialized()) {
     SUPLA_LOG_ERROR("InterruptAcToDcIo: not initialized");
@@ -125,6 +140,11 @@ int InterruptAcToDcIo::customDigitalRead(int channelNumber, uint8_t pin) {
 
 void InterruptAcToDcIo::onFastTimer() {
   uint32_t now = millis();
+
+  if (initCounter > 0) {
+    initCounter--;
+  }
+
   for (int i = 0; i < INTERRUPT_AC_TO_DC_IO_MAX_GPIOS; i++) {
     if (gpioState[i] == 255) {
       continue;
@@ -135,7 +155,7 @@ void InterruptAcToDcIo::onFastTimer() {
         gpioState[i] = 2;
       } else if (gpioState[i] == 2) {
         // for "AC" case we update to ON after second interrupt
-        SUPLA_LOG_DEBUG(" *** GPIO %d is ON ***", i);
+        SUPLA_LOG_DEBUG(" *** GPIO %d is ON (AC) ***", i);
         gpioState[i] = 1;
       }
       gpioLastTimestampMs[i] = now;
@@ -144,16 +164,20 @@ void InterruptAcToDcIo::onFastTimer() {
     if (gpioLastTimestampMs[i] != 0 &&
         now - gpioLastTimestampMs[i] > gpioMinOffTimeout[i]) {
       gpioLastTimestampMs[i] = 0;
-      if (gpio_get_level(static_cast<gpio_num_t>(i)) == 0) {
+      if (gpio_get_level(static_cast<gpio_num_t>(i)) == offStateLevel) {
         gpioState[i] = 0;
         SUPLA_LOG_DEBUG(" *** GPIO %d is OFF ***", i);
       } else {
         // for "DC" case we update to ON after filtering timeout
         gpioState[i] = 1;
-        SUPLA_LOG_DEBUG(" *** GPIO %d is ON ***", i);
+        SUPLA_LOG_DEBUG(" *** GPIO %d is ON (DC)***", i);
       }
     }
   }
+}
+
+void InterruptAcToDcIo::setOffStateLevel(uint8_t level) {
+  offStateLevel = level;
 }
 
 void InterruptAcToDcIo::customPinMode(int channelNumber,

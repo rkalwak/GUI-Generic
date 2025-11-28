@@ -38,8 +38,8 @@ void Supla::Sensor::ThermPressMeter::iterateAlways() {
 bool Supla::Sensor::ThermPressMeter::iterateConnected() {
   bool response = true;
   if (pressureChannel.isUpdateReady() &&
-      millis() - pressureChannel.lastCommunicationTimeMs > 100) {
-    pressureChannel.lastCommunicationTimeMs = millis();
+      millis() - lastCommunicationTimeMs > 100) {
+    lastCommunicationTimeMs = millis();
     pressureChannel.sendUpdate();
     response = false;
   }

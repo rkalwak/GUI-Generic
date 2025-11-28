@@ -54,7 +54,6 @@ class RelayHvacFixture : public testing::Test {
   void TearDown() {
     Supla::Channel::resetToDefaults();
   }
-
 };
 
 TEST_F(RelayHvacFixture, heatingTest) {
@@ -79,6 +78,16 @@ TEST_F(RelayHvacFixture, heatingTest) {
   Supla::Control::HvacBase hvac2(&io2);
   Supla::Control::HvacBase hvac3(&io3);
 
+  EXPECT_CALL(ioMock, pinMode(gpio1, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio2, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio3, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio2, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio3, 0)).Times(2);
+  r1.onInit();
+  r2.onInit();
+  r3.onInit();
+
   EXPECT_FALSE(Supla::Control::RelayHvacAggregator::Remove(number1));
 
   auto aggregator = Supla::Control::RelayHvacAggregator::Add(number1, &r1);
@@ -94,6 +103,7 @@ TEST_F(RelayHvacFixture, heatingTest) {
 
   // hvacs are off, initial step of relay -> off
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -113,6 +123,7 @@ TEST_F(RelayHvacFixture, heatingTest) {
   hvac2.getChannel()->setHvacFlagHeating(true);
   // hvac1/2 is on and relay is off, so relay -> turn on
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 1)).Times(1);
   aggregator->iterateAlways();
 
@@ -123,7 +134,7 @@ TEST_F(RelayHvacFixture, heatingTest) {
 
   hvac2.getChannel()->setHvacFlagHeating(false);
   hvac3.getChannel()->setHvacFlagHeating(true);
-  // hvac1/2 is off and relay is off, so relay -> off
+  // hvac1/2 is off and relay is on, so relay -> off
   time.advance(2000);
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
@@ -131,6 +142,7 @@ TEST_F(RelayHvacFixture, heatingTest) {
   aggregator->registerHvac(&hvac3);
   // hvac3 is on and relay is off, so relay turn on
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 1)).Times(1);
   aggregator->iterateAlways();
 
@@ -148,6 +160,7 @@ TEST_F(RelayHvacFixture, heatingTest) {
   // turn on
   hvac2.getChannel()->setHvacFlagHeating(true);
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 1)).Times(1);
   aggregator->iterateAlways();
 
@@ -184,6 +197,16 @@ TEST_F(RelayHvacFixture, mixedTest) {
   Supla::Control::HvacBase hvac2(&io2);
   Supla::Control::HvacBase hvac3(&io3);
 
+  EXPECT_CALL(ioMock, pinMode(gpio1, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio2, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio3, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio2, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio3, 0)).Times(2);
+  r1.onInit();
+  r2.onInit();
+  r3.onInit();
+
   EXPECT_FALSE(Supla::Control::RelayHvacAggregator::Remove(number1));
 
   auto aggregator = Supla::Control::RelayHvacAggregator::Add(number1, &r1);
@@ -199,7 +222,7 @@ TEST_F(RelayHvacFixture, mixedTest) {
 
   // hvacs are off and relay initial off
   time.advance(2000);
-//  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -220,6 +243,7 @@ TEST_F(RelayHvacFixture, mixedTest) {
   hvac2.getChannel()->setHvacFlagHeating(true);
   // hvac2 is on and relay is off, so relay -> turn on
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 1)).Times(1);
   aggregator->iterateAlways();
 
@@ -232,6 +256,7 @@ TEST_F(RelayHvacFixture, mixedTest) {
   hvac3.getChannel()->setHvacFlagCooling(true);
   // hvac1/2 is off, so relay -> turn off
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -244,6 +269,7 @@ TEST_F(RelayHvacFixture, mixedTest) {
   aggregator->unregisterHvac(&hvac3);
   // hvac1/2 is off and relay is on, so relay turn off
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -284,6 +310,16 @@ TEST_F(RelayHvacFixture, turnOffWhenEmptyTest) {
   Supla::Control::HvacBase hvac2(&io2);
   Supla::Control::HvacBase hvac3(&io3);
 
+  EXPECT_CALL(ioMock, pinMode(gpio1, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio2, OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpio3, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio2, 0)).Times(2);
+  EXPECT_CALL(ioMock, digitalWrite(gpio3, 0)).Times(2);
+  r1.onInit();
+  r2.onInit();
+  r3.onInit();
+
   EXPECT_FALSE(Supla::Control::RelayHvacAggregator::Remove(number1));
 
   auto aggregator = Supla::Control::RelayHvacAggregator::Add(number1, &r1);
@@ -299,6 +335,7 @@ TEST_F(RelayHvacFixture, turnOffWhenEmptyTest) {
 
   // hvacs are off , intial turn off
   time.advance(2000);
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(0));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -313,7 +350,7 @@ TEST_F(RelayHvacFixture, turnOffWhenEmptyTest) {
   aggregator->unregisterHvac(&hvac2);
   // no hvac registered, but output is on -> turn off
   time.advance(2000);
-//  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(1));
+  EXPECT_CALL(ioMock, digitalRead(gpio1)).WillOnce(Return(1));
   EXPECT_CALL(ioMock, digitalWrite(gpio1, 0)).Times(1);
   aggregator->iterateAlways();
 
@@ -326,7 +363,6 @@ TEST_F(RelayHvacFixture, turnOffWhenEmptyTest) {
   // nothing should happen, regardless of relay output state
   aggregator->setTurnOffWhenEmpty(false);
   time.advance(2000);
-//  EXPECT_CALL(ioMock, digitalRead(gpio1)).Times(0);
   aggregator->iterateAlways();
 
   time.advance(2000);

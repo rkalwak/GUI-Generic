@@ -75,6 +75,19 @@ void handleDebug(int save) {
   // Device information
   addLabel(String(F("Max Relays: ")) + String(ConfigManager->get(KEY_MAX_RELAY)->getValueInt()));
   addLabel(String(F("Max Buttons: ")) + String(ConfigManager->get(KEY_MAX_BUTTON)->getValueInt()));
+
+  #ifdef SUPLA_DEBUG_Bool 
+ addLabel(String(F("Bool variable: ")) + String(SUPLA_DEBUG_Bool));
+  #endif
+
+  #ifdef SUPLA_DEBUG_Number
+ addLabel(String(F("Number variable: ")) + String(SUPLA_DEBUG_Number));
+  #endif
+
+  #ifdef SUPLA_DEBUG_Text
+  addLabel(String(F("Text variable: ")) + String(SUPLA_DEBUG_Text));
+  #endif
+
   
 #ifdef SUPLA_RGBW
   addLabel(String(F("Max RGBW: ")) + String(ConfigManager->get(KEY_MAX_RGBW)->getValueInt()));

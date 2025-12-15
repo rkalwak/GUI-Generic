@@ -14,17 +14,15 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef SuplaWebPageSensors_h
-#define SuplaWebPageSensors_h
+#ifndef SuplaWebPageDebug_h
+#define SuplaWebPageDebug_h
 
-#include "GUI-Generic_Config.h"
-#include "SuplaWebPageSensor1Wire.h"
-#include "SuplaWebPageSensorI2c.h"
-#include "SuplaWebPageSensorSpi.h"
-#include "SuplaWebPageSensorAnalog.h"
-#include "SuplaWebPageOther.h"
-#include "SuplaWebPageDebug.h"
+#include "SuplaDeviceGUI.h"
 
-void createWebPageSensors();
+#define PATH_DEBUG "debug"
 
-#endif  // SuplaWebPageSensors_h
+void createWebPageDebug();
+void handleDebug(int save = 0);
+void handleDebugSave();
+
+#endif  // SuplaWebPageDebug_h

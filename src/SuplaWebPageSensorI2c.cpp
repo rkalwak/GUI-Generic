@@ -144,7 +144,11 @@ void handleSensorI2c(int save) {
     addFormHeader();
     addListBox(INPUT_MS5611, F("MS5611"), STATE_P, 2, selected);
     if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_MS5611).toInt())
-      addNumberBox(INPUT_ALTITUDE_MS5611, S_ALTITUDE_ABOVE_SEA_LEVEL, KEY_ALTITUDE_MS5611, 9000);
+#ifdef SUPLA_MS5611_Altitude
+      addNumberBox(INPUT_ALTITUDE_MS5611, S_ALTITUDE_ABOVE_SEA_LEVEL, KEY_ALTITUDE_MS5611, SUPLA_MS5611_Altitude);
+#else
+      addNumberBox(INPUT_ALTITUDE_MS5611, S_ALTITUDE_ABOVE_SEA_LEVEL, KEY_ALTITUDE_MS5611, 0;
+#endif
     addFormHeaderEnd();
 #endif
 

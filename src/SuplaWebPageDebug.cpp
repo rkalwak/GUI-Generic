@@ -72,9 +72,6 @@ void handleDebug(int save) {
   addLabel(String(F("CPU Freq: ")) + String(ESP.getCpuFreqMHz()) + F(" MHz"));
 #endif
 
-  // Config information
-  addLabel(String(F("Config Size: ")) + String(ConfigManager->getSize()) + F(" bytes"));
-  
   // Device information
   addLabel(String(F("Max Relays: ")) + String(ConfigManager->get(KEY_MAX_RELAY)->getValueInt()));
   addLabel(String(F("Max Buttons: ")) + String(ConfigManager->get(KEY_MAX_BUTTON)->getValueInt()));
@@ -86,21 +83,6 @@ void handleDebug(int save) {
 #ifdef SUPLA_DS18B20
   addLabel(String(F("Max DS18B20: ")) + String(ConfigManager->get(KEY_MULTI_MAX_DS18B20)->getValueInt()));
 #endif
-
-  addFormHeaderEnd();
-
-  // GPIO Status
-  addFormHeader(F("GPIO Status"));
-  for (int i = 0; i < 40; i++) {
-    int gpio = ConfigESP->getGpio(i);
-    if (gpio != OFF_GPIO) {
-      String gpioInfo = String(F("GPIO ")) + String(gpio) + F(": ");
-      gpioInfo += ConfigESP->getFunctionName(i);
-      addLabel(gpioInfo);
-    }
-  }
-  addFormHeaderEnd();
-
   addButtonSubmit(S_SAVE);
   addFormEnd();
 

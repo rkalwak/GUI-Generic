@@ -78,14 +78,17 @@ void handleDebug(int save) {
 
   #ifdef SUPLA_DEBUG_Bool 
  addLabel(String(F("Bool variable: ")) + String(SUPLA_DEBUG_Bool));
+ addCheckBox("db", F("Set Bool variable"), SUPLA_DEBUG_Bool);
   #endif
 
   #ifdef SUPLA_DEBUG_Number
  addLabel(String(F("Number variable: ")) + String(SUPLA_DEBUG_Number));
+ addNumberBox("dn", F("Set Number variable"), F("Number"), false, String(SUPLA_DEBUG_Number));
   #endif
 
   #ifdef SUPLA_DEBUG_Text
   addLabel(String(F("Text variable: ")) + String(SUPLA_DEBUG_Text));
+  addTextBox("dt", F("Set Text variable"), String(SUPLA_DEBUG_Text), 0, 64, false);
   #endif
 
   

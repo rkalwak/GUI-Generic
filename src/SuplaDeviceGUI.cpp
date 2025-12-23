@@ -29,15 +29,11 @@ void begin() {
   ver.reserve(16);
   SuplaDevice.setSwVersion(ver.c_str());
 #endif
-  SuplaDevice.setInitialMode(Supla::InitialMode::StartInCfgMode);
+  SuplaDevice.allowWorkInOfflineMode(1);
+  SuplaDevice.setInitialMode(static_cast<Supla::InitialMode>(SUPLA_INITIAL_CONFIG_MODE_Mode));
+
   SuplaDevice.setLeaveCfgModeAfterInactivityMin(0);
   SuplaDevice.begin();
-
-  if (ConfigESP->configModeESP == Supla::DEVICE_MODE_CONFIG)
-    Supla::Network::SetConfigMode();
-
-  // if (getCountChannels() == 0)
-  //   ConfigESP->configModeInit();
 }
 
 void setupConnection() {

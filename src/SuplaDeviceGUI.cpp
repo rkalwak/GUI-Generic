@@ -29,10 +29,22 @@ void begin() {
   ver.reserve(16);
   SuplaDevice.setSwVersion(ver.c_str());
 #endif
-  SuplaDevice.allowWorkInOfflineMode(1);
-  SuplaDevice.setInitialMode(static_cast<Supla::InitialMode>(SUPLA_INITIAL_CONFIG_MODE_Mode));
 
-  SuplaDevice.setLeaveCfgModeAfterInactivityMin(0);
+Supla::InitialMode initialMode = Supla::InitialMode::StartInCfgMode;
+
+#ifdef SUPLA_INITIAL_CONFIG_MODE_Mode
+  initialMode = static_cast<Supla::InitialMode>(SUPLA_INITIAL_CONFIG_MODE_Mode);
+#endif
+
+  SuplaDevice.setInitialMode(initialMode);
+
+  int cfgModeTimeout = 0;
+
+#if defined(SUPLA_INITIAL_CONFIG_MODE_Mode) && defined(SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin) && (SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin > 0)
+  cfgModeTimeout = SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin;
+#endif
+
+  SuplaDevice.setLeaveCfgModeAfterInactivityMin(cfgModeTimeout);
   SuplaDevice.begin();
 }
 

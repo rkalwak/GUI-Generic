@@ -21,6 +21,7 @@ Supla::Eeprom eeprom(STORAGE_OFFSET);
 namespace Supla {
 namespace GUI {
 void begin() {
+  setupCredentialsIfAvailable();
   setupConnection();
   enableConnectionSSL(ConfigESP->checkSSL());
 
@@ -46,6 +47,36 @@ Supla::InitialMode initialMode = Supla::InitialMode::StartInCfgMode;
 
   SuplaDevice.setLeaveCfgModeAfterInactivityMin(cfgModeTimeout);
   SuplaDevice.begin();
+}
+
+/// @brief Set up initial credentials if they are defined in the build flags
+void setupCredentialsIfAvailable() {
+
+#ifdef SUPLA_INITIAL_CONFIG_MODE_WIFISsid
+    ConfigManager->setWiFiSSID(SUPLA_INITIAL_CONFIG_MODE_WIFISsid);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_WIFIPass
+    ConfigManager->setWiFiPassword(SUPLA_INITIAL_CONFIG_MODE_WIFIPass);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_Server
+    ConfigManager->setSuplaServer(SUPLA_INITIAL_CONFIG_MODE_Server);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_Email
+    ConfigManager->setEmail(SUPLA_INITIAL_CONFIG_MODE_Email);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_DeviceName
+    ConfigManager->setDeviceName(SUPLA_INITIAL_CONFIG_MODE_DeviceName);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_Login
+    ConfigManager->set(KEY_LOGIN, SUPLA_INITIAL_CONFIG_MODE_Login);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_Password
+    ConfigManager->set(KEY_LOGIN_PASS, SUPLA_INITIAL_CONFIG_MODE_Password);
+#endif
+#ifdef SUPLA_INITIAL_CONFIG_MODE_DeviceName
+    ConfigManager->set(KEY_HOST_NAME, SUPLA_INITIAL_CONFIG_MODE_DeviceName);
+#endif
+  ConfigManager->save();
 }
 
 void setupConnection() {

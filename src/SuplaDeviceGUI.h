@@ -287,6 +287,7 @@ namespace Supla {
 namespace GUI {
 
 void begin();
+void setupCredentialsIfAvailable();
 void setupConnection();
 void enableConnectionSSL(bool value);
 void crateWebServer();

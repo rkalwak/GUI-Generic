@@ -232,6 +232,51 @@ const char ADR38_ADR39[] PROGMEM = "0x38 & 0x39";
 const char* const AHTX0_P[] PROGMEM = {OFF, ADR38, ADR39, ADR38_ADR39};
 #endif
 
+#if defined(SUPLA_INA219)
+const char ADR40_INA219[] PROGMEM = "0x40";
+const char ADR41_INA219[] PROGMEM = "0x41";
+const char ADR44_INA219[] PROGMEM = "0x44";
+const char ADR45_INA219[] PROGMEM = "0x45";
+const char* const INA219_P[] PROGMEM = {OFF, ADR40_INA219, ADR41_INA219, ADR44_INA219, ADR45_INA219};
+#endif
+
+#if defined(SUPLA_INA226) || defined(SUPLA_INA228) || defined(SUPLA_INA236) || defined(SUPLA_INA238) | defined(SUPLA_INA260)
+const char ADR40_INA2xx[] PROGMEM = "0x40";
+const char ADR41_INA2xx[] PROGMEM = "0x41";
+const char ADR42_INA2xx[] PROGMEM = "0x42";
+const char ADR43_INA2xx[] PROGMEM = "0x43";
+const char ADR44_INA2xx[] PROGMEM = "0x44";
+const char ADR45_INA2xx[] PROGMEM = "0x45";
+const char ADR46_INA2xx[] PROGMEM = "0x46";
+const char ADR47_INA2xx[] PROGMEM = "0x47";
+const char ADR48_INA2xx[] PROGMEM = "0x48";
+const char ADR49_INA2xx[] PROGMEM = "0x49";
+const char ADR4A_INA2xx[] PROGMEM = "0x4A";
+const char ADR4B_INA2xx[] PROGMEM = "0x4B";
+const char ADR4C_INA2xx[] PROGMEM = "0x4C";
+const char ADR4D_INA2xx[] PROGMEM = "0x4D";
+const char ADR4E_INA2xx[] PROGMEM = "0x4E";
+const char ADR4F_INA2xx[] PROGMEM = "0x4F";
+const char* const INA2XX_P[] PROGMEM = {OFF,
+                                        ADR40_INA2xx,
+                                        ADR41_INA2xx,
+                                        ADR42_INA2xx,
+                                        ADR43_INA2xx,
+                                        ADR44_INA2xx,
+                                        ADR45_INA2xx,
+                                        ADR46_INA2xx,
+                                        ADR47_INA2xx,
+                                        ADR48_INA2xx,
+                                        ADR49_INA2xx,
+                                        ADR4A_INA2xx,
+                                        ADR4B_INA2xx,
+                                        ADR4C_INA2xx,
+                                        ADR4D_INA2xx,
+                                        ADR4E_INA2xx,
+                                        ADR4F_INA2xx};     
+
+#endif
+
 #if defined(GUI_SENSOR_I2C_EXPENDER) || defined(SUPLA_LCD_HD44780)
 const char ADR20[] PROGMEM = "0x20";
 const char ADR21[] PROGMEM = "0x21";

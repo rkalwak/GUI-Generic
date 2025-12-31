@@ -22,6 +22,7 @@ namespace Supla {
 namespace GUI {
 void begin() {
   setupCredentialsIfAvailable();
+  setupParametersIfAvailable();
   setupConnection();
   enableConnectionSSL(ConfigESP->checkSSL());
 
@@ -51,6 +52,7 @@ Supla::InitialMode initialMode = Supla::InitialMode::StartInCfgMode;
 
 /// @brief Set up initial credentials if they are defined in the build flags
 void setupCredentialsIfAvailable() {
+#if defined(SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration) && SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration > 0
 
 #ifdef SUPLA_INITIAL_CONFIG_MODE_WIFISsid
     ConfigManager->setWiFiSSID(SUPLA_INITIAL_CONFIG_MODE_WIFISsid);
@@ -77,6 +79,78 @@ void setupCredentialsIfAvailable() {
     ConfigManager->set(KEY_HOST_NAME, SUPLA_INITIAL_CONFIG_MODE_DeviceName);
 #endif
   ConfigManager->save();
+#endif
+}
+
+/// @brief Set up additional parameters if they are defined in the build flags
+void setupParametersIfAvailable() {
+
+#if defined(SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration) && SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration > 0
+
+#if defined(GlobalParameter_SCL) && defined(GlobalParameter_SDA)
+  ConfigESP->setGpio(GlobalParameter_SCL, FUNCTION_SCL);
+  ConfigESP->setGpio(GlobalParameter_SDA, FUNCTION_SDA);
+#endif
+
+#if defined(GlobalParameter_SCL2) && defined(GlobalParameter_SDA2)
+  ConfigESP->setGpio(GlobalParameter_SDA2, FUNCTION_SDA_2);
+  ConfigESP->setGpio(GlobalParameter_SCL2, FUNCTION_SCL_2);
+#endif
+
+#if defined(SUPLA_MS5611)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_MS5611, 1);
+  #if defined(SUPLA_MS5611_Altitude)
+    ConfigManager->set(KEY_ALTITUDE_MS5611, SUPLA_MS5611_Altitude);
+  #endif
+#endif
+
+#if defined(SUPLA_HDC1080)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080, 1);
+#endif
+
+#if defined(SUPLA_BH1750)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750, 1);
+#endif
+
+#if defined(SUPLA_MAX44009)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009, 1);
+#endif
+
+#if defined(SUPLA_AHTX0)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, 1);
+#endif
+
+#if defined(SUPLA_INA219)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA219, 1);
+#endif
+
+#if defined(SUPLA_INA226)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA226, 1);
+#endif
+
+#if defined(SUPLA_INA228)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA228, 1);
+#endif
+
+#if defined(SUPLA_INA236)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA236, 1);
+#endif
+
+#if defined(SUPLA_INA238)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA238, 1);
+#endif
+
+#if defined(SUPLA_INA260)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA260, 1);
+#endif
+
+#if defined(SUPLA_OLED)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_OLED, 1);
+#endif
+
+
+  ConfigManager->save();
+#endif
 }
 
 void setupConnection() {

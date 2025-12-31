@@ -394,6 +394,18 @@ void setup() {
   }
 #endif
 
+#ifdef SUPLA_INA229
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA229).toInt()) {
+    new Supla::Sensor::INA_229(ConfigESP->getGpio(FUNCTION_CS), &SPI);
+  }
+#endif
+
+#ifdef SUPLA_INA239
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA239).toInt()) {
+    new Supla::Sensor::INA_239(ConfigESP->getGpio(FUNCTION_CS), &SPI);
+  }
+#endif
+
 #ifdef SUPLA_NTC_10K
   if (ConfigESP->getGpio(FUNCTION_NTC_10K) != OFF_GPIO) {
     auto ntc10k = new Supla::Sensor::NTC10K(ConfigESP->getGpio(FUNCTION_NTC_10K));
@@ -967,6 +979,36 @@ void setup() {
 #ifdef SUPLA_INA219
     if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
       new Supla::Sensor::INA_219(selectedAddress);
+    }
+#endif
+
+#ifdef SUPLA_INA226
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA226).toInt()) {
+      new Supla::Sensor::INA_226(selectedAddress);
+    }
+#endif
+
+#ifdef SUPLA_INA228
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA228).toInt()) {
+      new Supla::Sensor::INA_228(selectedAddress);
+    }
+#endif
+
+#ifdef SUPLA_INA236
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA236).toInt()) {
+      new Supla::Sensor::INA_236(selectedAddress);
+    }
+#endif
+
+#ifdef SUPLA_INA238
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA238).toInt()) {
+      new Supla::Sensor::INA_238(selectedAddress);
+    }
+#endif
+
+#ifdef SUPLA_INA260
+    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA260).toInt()) {
+      new Supla::Sensor::INA_260(selectedAddress);
     }
 #endif
 

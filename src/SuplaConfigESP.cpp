@@ -799,6 +799,22 @@ bool SuplaConfigESP::checkGpio(int gpio) {
   return true;
 }
 
+uint8_t SuplaConfigESP::getDefaultLedGpio() {
+#if CONFIG_IDF_TARGET_ESP32C6
+  return 8;   // ESP32-C6 DevKitC-1 has LED on GPIO8
+#elif CONFIG_IDF_TARGET_ESP32C3
+  return 8;   // ESP32-C3 DevKitC-02 has LED on GPIO8
+#elif CONFIG_IDF_TARGET_ESP32S3
+  return 48;  // ESP32-S3 has RGB LED on GPIO48
+#elif CONFIG_IDF_TARGET_ESP32S2
+  return 15;  // ESP32-S2 Saola has LED on GPIO15
+#elif ARDUINO_ARCH_ESP8266
+  return 2;   // ESP8266 NodeMCU has LED on GPIO2
+#else
+  return 2;   // ESP32 classic has LED on GPIO2
+#endif
+}
+
 void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, bool forceReset) {
   struct KeyValuePair {
     uint8_t key;
@@ -837,8 +853,9 @@ void SuplaConfigESP::commonReset(const char *resetMessage, ResetType resetType, 
 #else
     if (resetType == RESET_FACTORY_DATA) {
       if (ConfigESP->getGpio(FUNCTION_CFG_LED) == OFF_GPIO) {
-        ConfigESP->setGpio(2, FUNCTION_CFG_LED);
-        ConfigESP->setLevel(2, LOW);
+        uint8_t ledGpio = getDefaultLedGpio();
+        ConfigESP->setGpio(ledGpio, FUNCTION_CFG_LED);
+        ConfigESP->setLevel(ledGpio, LOW);
       }
 
       if (ConfigESP->getGpio(FUNCTION_CFG_BUTTON) == OFF_GPIO) {

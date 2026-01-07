@@ -315,8 +315,7 @@ namespace Supla {
 namespace GUI {
 
 void begin();
-void setupCredentialsIfAvailable();
-void setupParametersIfAvailable();
+void setupPreConfiguredSettingsIfAvailable();
 void setupConnection();
 void enableConnectionSSL(bool value);
 void crateWebServer();

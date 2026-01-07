@@ -195,6 +195,7 @@ SuplaConfigManager::SuplaConfigManager() : Supla::SPIFFSConfig(CONFIG_MAX_SIZE) 
     this->addKey(KEY_ENABLE_SSL, 1);
 
     this->addKey(KEY_BOARD, 2);
+    this->addKey(KEY_PRECONFIGURED_STATE, 1);
 
 #ifdef ARDUINO_ARCH_ESP8266
     uint8_t nr, key;

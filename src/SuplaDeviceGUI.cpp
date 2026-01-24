@@ -34,16 +34,16 @@ void begin() {
 
   Supla::InitialMode initialMode = Supla::InitialMode::StartInCfgMode;
 
-#ifdef SUPLA_INITIAL_CONFIG_MODE_Mode
-  initialMode = static_cast<Supla::InitialMode>(SUPLA_INITIAL_CONFIG_MODE_Mode);
+#ifdef SUPLA_INITIALCONFIG_Mode
+  initialMode = static_cast<Supla::InitialMode>(SUPLA_INITIALCONFIG_Mode);
 #endif
 
   SuplaDevice.setInitialMode(initialMode);
 
   int cfgModeTimeout = 0;
 
-#if defined(SUPLA_INITIAL_CONFIG_MODE_Mode) && defined(SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin) && (SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin > 0)
-  cfgModeTimeout = SUPLA_INITIAL_CONFIG_MODE_TimeoutInMin;
+#if defined(SUPLA_INITIALCONFIG_Mode) && defined(SUPLA_INITIALCONFIG_TimeoutInMin) && (SUPLA_INITIALCONFIG_TimeoutInMin > 0)
+  cfgModeTimeout = SUPLA_INITIALCONFIG_TimeoutInMin;
 #endif
 
   SuplaDevice.setLeaveCfgModeAfterInactivityMin(cfgModeTimeout);
@@ -53,55 +53,70 @@ void begin() {
 /// @brief Set up initial credentials if they are defined in the build flags
 void setupPreConfiguredSettingsIfAvailable() {
   if (ConfigManager->get(KEY_PRECONFIGURED_STATE)->getValueInt() == 1) {
+    Serial.println(F("Preconfigured settings already applied."));
     return;
   }
 
-#if defined(SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration) && SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration > 0
-
-#ifdef SUPLA_INITIAL_CONFIG_MODE_WIFISsid
-  ConfigManager->setWiFiSSID(SUPLA_INITIAL_CONFIG_MODE_WIFISsid);
+#if defined(SUPLA_INITIALCONFIG_UseBuildConfiguration) && SUPLA_INITIALCONFIG_UseBuildConfiguration > 0
+  Serial.println(F("Applying preconfigured settings from build configuration..."));
+#ifdef SUPLA_INITIALCONFIG_WIFISsid
+  ConfigManager->setWiFiSSID(SUPLA_INITIALCONFIG_WIFISsid);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_WIFIPass
-  ConfigManager->setWiFiPassword(SUPLA_INITIAL_CONFIG_MODE_WIFIPass);
+#ifdef SUPLA_INITIALCONFIG_WIFIPass
+  ConfigManager->setWiFiPassword(SUPLA_INITIALCONFIG_WIFIPass);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_Server
-  ConfigManager->setSuplaServer(SUPLA_INITIAL_CONFIG_MODE_Server);
+#ifdef SUPLA_INITIALCONFIG_Server
+  ConfigManager->setSuplaServer(SUPLA_INITIALCONFIG_Server);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_Email
-  ConfigManager->setEmail(SUPLA_INITIAL_CONFIG_MODE_Email);
+#ifdef SUPLA_INITIALCONFIG_Email
+  ConfigManager->setEmail(SUPLA_INITIALCONFIG_Email);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_DeviceName
-  ConfigManager->setDeviceName(SUPLA_INITIAL_CONFIG_MODE_DeviceName);
+#ifdef SUPLA_INITIALCONFIG_DeviceName
+  ConfigManager->setDeviceName(SUPLA_INITIALCONFIG_DeviceName);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_Login
-  ConfigManager->set(KEY_LOGIN, SUPLA_INITIAL_CONFIG_MODE_Login);
+#ifdef SUPLA_INITIALCONFIG_Login
+  ConfigManager->set(KEY_LOGIN, SUPLA_INITIALCONFIG_Login);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_Password
-  ConfigManager->set(KEY_LOGIN_PASS, SUPLA_INITIAL_CONFIG_MODE_Password);
+#ifdef SUPLA_INITIALCONFIG_Password
+  ConfigManager->set(KEY_LOGIN_PASS, SUPLA_INITIALCONFIG_Password);
 #endif
-#ifdef SUPLA_INITIAL_CONFIG_MODE_DeviceName
-  ConfigManager->set(KEY_HOST_NAME, SUPLA_INITIAL_CONFIG_MODE_DeviceName);
-#endif
-
-#if defined(GlobalParameter_SCL) && defined(GlobalParameter_SDA)
-  ConfigESP->setGpio(GlobalParameter_SCL, FUNCTION_SCL);
-  ConfigESP->setGpio(GlobalParameter_SDA, FUNCTION_SDA);
+#ifdef SUPLA_INITIALCONFIG_DeviceName
+  ConfigManager->set(KEY_HOST_NAME, SUPLA_INITIALCONFIG_DeviceName);
 #endif
 
-#if defined(GlobalParameter_SCL2) && defined(GlobalParameter_SDA2)
-  ConfigESP->setGpio(GlobalParameter_SDA2, FUNCTION_SDA_2);
-  ConfigESP->setGpio(GlobalParameter_SCL2, FUNCTION_SCL_2);
+#if defined(GLOBALPARAMETERS_SCL) && defined(GLOBALPARAMETERS_SDA)
+  ConfigESP->setGpio(GLOBALPARAMETERS_SCL, FUNCTION_SCL);
+  ConfigESP->setGpio(GLOBALPARAMETERS_SDA, FUNCTION_SDA);
+#endif
+
+#if defined(GLOBALPARAMETERS_SCL2) && defined(GLOBALPARAMETERS_SDA2)
+  ConfigESP->setGpio(GLOBALPARAMETERS_SDA2, FUNCTION_SDA_2);
+  ConfigESP->setGpio(GLOBALPARAMETERS_SCL2, FUNCTION_SCL_2);
 #endif
 
 #if defined(SUPLA_MS5611)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_MS5611, 1);
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_MS5611, SUPLA_MS5611_Address);
   #if defined(SUPLA_MS5611_Altitude)
     ConfigManager->set(KEY_ALTITUDE_MS5611, SUPLA_MS5611_Altitude);
   #endif
 #endif
 
+#if defined(SUPLA_BMP280)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BMP280, SUPLA_BMP280_Address);
+  #if defined(SUPLA_BMP280_Altitude)
+    ConfigManager->set(KEY_ALTITUDE_BMX280, SUPLA_BMP280_Altitude);
+  #endif
+#endif
+
+#if defined(SUPLA_BME280)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BME280, SUPLA_BME280_Address);
+  #if defined(SUPLA_BME280_Altitude)
+    ConfigManager->set(KEY_ALTITUDE_BMX280, SUPLA_BME280_Altitude);
+  #endif
+#endif
+
 #if defined(SUPLA_HDC1080)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080, 1);
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080, SUPLA_HDC1080_Address);
 #endif
 
 #if defined(SUPLA_BH1750)
@@ -145,7 +160,7 @@ void setupPreConfiguredSettingsIfAvailable() {
 #endif
   ConfigManager->set(KEY_PRECONFIGURED_STATE, 1);
   ConfigManager->save();
-#endif // SUPLA_INITIAL_CONFIG_MODE_UseBuildConfiguration > 0
+#endif // SUPLA_INITIALCONFIG_UseBuildConfiguration > 0
 }
 
 void setupConnection() {

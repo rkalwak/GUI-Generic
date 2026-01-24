@@ -16,7 +16,7 @@
 
 #include "SuplaWebPageDebug.h"
 
-#ifdef SUPLA_DEBUG
+#ifdef SUPLA_DEBUG_MODE
 void createWebPageDebug() {
   WebServer->httpServer->on(getURL(PATH_DEBUG), [&]() {
     if (!WebServer->isLoggedIn()) {
@@ -76,19 +76,19 @@ void handleDebug(int save) {
   addLabel(String(F("Max Relays: ")) + String(ConfigManager->get(KEY_MAX_RELAY)->getValueInt()));
   addLabel(String(F("Max Buttons: ")) + String(ConfigManager->get(KEY_MAX_BUTTON)->getValueInt()));
 
-  #ifdef SUPLA_DEBUG_Bool 
- addLabel(String(F("Bool variable: ")) + String(SUPLA_DEBUG_Bool));
- addCheckBox("db", F("Set Bool variable"), SUPLA_DEBUG_Bool);
+  #ifdef SUPLA_DEBUG_MODE_Bool 
+ addLabel(String(F("Bool variable: ")) + String(SUPLA_DEBUG_MODE_Bool));
+ addCheckBox("db", F("Set Bool variable"), SUPLA_DEBUG_MODE_Bool);
   #endif
 
-  #ifdef SUPLA_DEBUG_Number
- addLabel(String(F("Number variable: ")) + String(SUPLA_DEBUG_Number));
- addNumberBox("dn", F("Set Number variable"), F("Number"), false, String(SUPLA_DEBUG_Number));
+  #ifdef SUPLA_DEBUG_MODE_Number
+ addLabel(String(F("Number variable: ")) + String(SUPLA_DEBUG_MODE_Number));
+ addNumberBox("dn", F("Set Number variable"), F("Number"), false, String(SUPLA_DEBUG_MODE_Number));
   #endif
 
-  #ifdef SUPLA_DEBUG_Text
-  addLabel(String(F("Text variable: ")) + String(SUPLA_DEBUG_Text));
-  addTextBox("dt", F("Set Text variable"), String(SUPLA_DEBUG_Text), 0, 64, false);
+  #ifdef SUPLA_DEBUG_MODE_Text
+  addLabel(String(F("Text variable: ")) + String(SUPLA_DEBUG_MODE_Text));
+  addTextBox("dt", F("Set Text variable"), String(SUPLA_DEBUG_MODE_Text), 0, 64, false);
   #endif
 
   

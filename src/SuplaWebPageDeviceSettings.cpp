@@ -70,7 +70,7 @@ void handleDeviceSettings() {
   addButton(S_CONFIGURATION, PATH_CONFIG);
 #endif
 
-#ifdef SUPLA_DEBUG
+#ifdef SUPLA_DEBUG_MODE
   addButton(F("Debug"), PATH_DEBUG);
 #endif
   addFormHeaderEnd();

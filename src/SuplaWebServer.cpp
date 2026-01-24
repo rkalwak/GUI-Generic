@@ -80,7 +80,7 @@ void SuplaWebServer::createWebServer() {
   createWebConditions();
 #endif
 
-#ifdef SUPLA_DEBUG
+#ifdef SUPLA_DEBUG_MODE
   createWebPageDebug();
 #endif
 }

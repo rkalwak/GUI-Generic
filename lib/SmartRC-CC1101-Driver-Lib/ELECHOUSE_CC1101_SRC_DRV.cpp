@@ -135,7 +135,15 @@ void ELECHOUSE_CC1101::SpiStart(void)
   digitalWrite(SS_PIN, HIGH);
   cc_spi->endTransaction();
   if(_begin_end_logic) cc_spi->end();
-  if(_begin_end_logic) cc_spi->begin(SCK_PIN,MISO_PIN,MOSI_PIN,SS_PIN);
+  if(_begin_end_logic)
+  {
+#ifdef ESP32
+    cc_spi->begin(SCK_PIN,MISO_PIN,MOSI_PIN,SS_PIN);
+#else
+    cc_spi->pins(SCK_PIN,MISO_PIN,MOSI_PIN,SS_PIN);
+    cc_spi->begin();
+#endif
+  } 
   digitalWrite(SS_PIN, LOW);
   cc_spi->beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
   
@@ -213,7 +221,14 @@ void ELECHOUSE_CC1101::Init(void) {
     DEBUG_CC1101("CC1101: Null pointer SPI instance or Begin/end");
     _begin_end_logic = true;
     cc_spi = &_cc_spi;
+
+#ifdef ESP32
     cc_spi->begin(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
+#else
+    cc_spi->pins(SCK_PIN, MISO_PIN, MOSI_PIN, SS_PIN);
+    cc_spi->begin();
+#endif
+
     delay(1);
   } else {
     DEBUG_CC1101("CC1101: Using other instance");

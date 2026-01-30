@@ -50,6 +50,21 @@ extern "C" {
 #include "src/ZigbeeGateway/Z2S_database.h"
 #endif
 
+/**
+ * @brief Converts INA sensor address enum to actual I2C address
+ * @param addressEnum The enum value from configuration (1-16 for INA_ADDRESS_0X40 to INA_ADDRESS_0X4F)
+ * @return The actual I2C address (0x40-0x4F), or 0 if invalid
+ */
+static uint8_t getINAAddress(int addressEnum) {
+  
+  // Handle enum values (INA_ADDRESS_0X40 = 1, INA_ADDRESS_0X41 = 2, etc.)
+  if (addressEnum >= 1 && addressEnum <= 16) {
+    return 0x40 + (addressEnum - 1);
+  }
+  
+  return 0; // Invalid address
+}
+
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
 
@@ -411,6 +426,18 @@ void setup() {
   }
 #endif
 
+#ifdef SUPLA_INA229
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA229).toInt()) {
+    new Supla::Sensor::INA_229(ConfigESP->getGpio(FUNCTION_CS), &SPI);
+  }
+#endif
+
+#ifdef SUPLA_INA239
+  if (ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA239).toInt()) {
+    new Supla::Sensor::INA_239(ConfigESP->getGpio(FUNCTION_CS), &SPI);
+  }
+#endif
+
 #ifdef SUPLA_NTC_10K
   if (ConfigESP->getGpio(FUNCTION_NTC_10K) != OFF_GPIO) {
     auto ntc10k = new Supla::Sensor::NTC10K(ConfigESP->getGpio(FUNCTION_NTC_10K));
@@ -530,7 +557,7 @@ void setup() {
   int8_t pinTX3 = ConfigESP->getGpio(3, FUNCTION_PZEM_TX);
 
   if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO && pinRX3 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C6)
     // For ESP32-C3, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(Serial, pinRX1, pinTX1, Serial, pinRX2, pinTX2, Serial, pinRX3, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -540,7 +567,7 @@ void setup() {
 #endif
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinTX2 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C6)
     // For ESP32-C3, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(Serial, pinRX1, pinTX1, Serial, pinRX1, pinTX2, Serial, pinRX1, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -982,8 +1009,56 @@ void setup() {
 #endif
 
 #ifdef SUPLA_INA219
-    if (int selectedAddress = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
-      new Supla::Sensor::INA_219(selectedAddress);
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_219(address);
+      }
+    }
+#endif
+
+#ifdef SUPLA_INA226
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA226).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_226(address);
+      }
+    }
+#endif
+
+#ifdef SUPLA_INA228
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA228).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_228(address);
+      }
+    }
+#endif
+
+#ifdef SUPLA_INA236
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA236).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_236(address);
+      }
+    }
+#endif
+
+#ifdef SUPLA_INA238
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA238).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_238(address);
+      }
+    }
+#endif
+
+#ifdef SUPLA_INA260
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA260).toInt()) {
+      uint8_t address = getINAAddress(addressEnum);
+      if (address != 0) {
+        new Supla::Sensor::INA_260(address);
+      }
     }
 #endif
 

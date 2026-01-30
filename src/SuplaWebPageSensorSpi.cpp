@@ -132,6 +132,21 @@ void handleSensorSpi(int save) {
   addFormHeaderEnd();
 #endif
 
+#if defined(SUPLA_INA229) || defined(SUPLA_INA239)
+  if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MISO) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MOSI) != OFF_GPIO) {
+    addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + "INA SPI Power Monitors");
+#ifdef SUPLA_INA229
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA229).toInt();
+    addListBox(INPUT_INA229, F("INA229 (85V 20-bit)"), STATE_P, 2, selected);
+#endif
+#ifdef SUPLA_INA239
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_SPI_INA239).toInt();
+    addListBox(INPUT_INA239, F("INA239 SPI (85V 16-bit)"), STATE_P, 2, selected);
+#endif
+    addFormHeaderEnd();
+  }
+#endif
+
   addButtonSubmit(S_SAVE);
   addFormEnd();
   addButton(S_RETURN, PATH_DEVICE_SETTINGS);
@@ -320,6 +335,20 @@ void handleSensorSpiSave() {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 0);
   }
 
+#endif
+
+#ifdef SUPLA_INA229
+  input = INPUT_INA229;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_SPI_INA229, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
+
+#ifdef SUPLA_INA239
+  input = INPUT_INA239;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_SPI_INA239, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
 #endif
 
   switch (ConfigManager->save()) {

@@ -860,7 +860,7 @@ Supla::Sensor::SDM630 *smd;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM_72_V2
-Supla::Sensor::SDM72V2 *smd;
+Supla::Sensor::SDM72V2 *smd72;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM_ONE_PHASE

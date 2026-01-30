@@ -659,19 +659,19 @@ void setup() {
 
 #if defined(SUPLA_MODBUS_SDM_72_V2)
 #ifdef ARDUINO_ARCH_ESP32
-    Supla::GUI::smd = new Supla::Sensor::SDM72V2(
+    Supla::GUI::smd72 = new Supla::Sensor::SDM72V2(
         ConfigESP->getHardwareSerial(ConfigESP->getGpio(FUNCTION_SDM_RX), ConfigESP->getGpio(FUNCTION_SDM_TX)), ConfigESP->getGpio(FUNCTION_SDM_RX),
         ConfigESP->getGpio(FUNCTION_SDM_TX), ConfigESP->getBaudRateSpeed(ConfigESP->getGpio(FUNCTION_SDM_RX)));
 #else
-    Supla::GUI::smd = new Supla::Sensor::SDM72V2(ConfigESP->getGpio(FUNCTION_SDM_RX), ConfigESP->getGpio(FUNCTION_SDM_TX),
+    Supla::GUI::smd72 = new Supla::Sensor::SDM72V2(ConfigESP->getGpio(FUNCTION_SDM_RX), ConfigESP->getGpio(FUNCTION_SDM_TX),
                                                  ConfigESP->getBaudRateSpeed(ConfigESP->getGpio(FUNCTION_SDM_RX)));
 
 #endif
     if (ConfigESP->getBaudRate(ConfigESP->getGpio(FUNCTION_SDM_RX)) == BAUDRATE_38400) {
-      Supla::GUI::smd->setRefreshRate(30);
+      Supla::GUI::smd72->setRefreshRate(30);
     }
     else {
-      Supla::GUI::smd->setRefreshRate(60);
+      Supla::GUI::smd72->setRefreshRate(60);
     }
 #endif
 

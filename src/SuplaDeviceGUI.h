@@ -415,7 +415,7 @@ extern Supla::Sensor::SDM630 *smd;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM_72_V2
-extern Supla::Sensor::SDM72V2 *smd;
+extern Supla::Sensor::SDM72V2 *smd72;
 #endif
 
 #ifdef SUPLA_MODBUS_SDM_ONE_PHASE

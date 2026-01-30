@@ -181,6 +181,13 @@ size_t KeyValue::serializeToMemory(uint8_t* output, size_t outputMaxSize) {
   size_t sizeCount = 0;
   for (auto element = first; element; element = element->getNext()) {
     size_t bytesWritten = element->serialize(output, outputMaxSize - sizeCount);
+    if (bytesWritten == 0) {
+      SUPLA_LOG_ERROR(
+          "Failed to serialize key-value element. outputMaxSize: %d, "
+          "sizeCount: %d",
+          outputMaxSize,
+          sizeCount);
+    }
     output += bytesWritten;
     sizeCount += bytesWritten;
   }
@@ -367,6 +374,9 @@ bool KeyValueElement::setString(const char* value) {
     size = newSize;
     data.charPtr = new char[size];
   }
+  if (data.charPtr == nullptr) {
+    return false;
+  }
   strncpy(data.charPtr, value, size);
   data.charPtr[size - 1] = '\0';
   return true;
@@ -405,6 +415,9 @@ bool KeyValueElement::setBlob(const char* value, size_t blobSize) {
     delete[] data.uint8ptr;
     size = blobSize;
     data.uint8ptr = new uint8_t[size];
+  }
+  if (data.uint8ptr == nullptr) {
+    return false;
   }
   memcpy(data.uint8ptr, value, blobSize);
   return true;
@@ -536,6 +549,8 @@ size_t KeyValueElement::serialize(uint8_t* destination, size_t maxSize) {
     SUPLA_LOG_ERROR(
         "KeyValue: serialized configuration size is too big. Config will not "
         "work and may be lost");
+    SUPLA_LOG_ERROR(
+        "Key %s, curBlockSize %d, maxSize %d", key, blockSize, maxSize);
     return 0;
   }
 
@@ -580,14 +595,18 @@ bool KeyValue::eraseKey(const char* key) {
     return false;
   }
 
-  // find previous:
-  auto previous = first;
-  while (previous) {
-    if (previous->getNext() == elementToDelete) {
-      previous->setNext(elementToDelete->getNext());
-      break;
+  if (first == elementToDelete) {
+    first = elementToDelete->getNext();
+  } else {
+    // find previous:
+    auto previous = first;
+    while (previous) {
+      if (previous->getNext() == elementToDelete) {
+        previous->setNext(elementToDelete->getNext());
+        break;
+      }
+      previous = previous->getNext();
     }
-    previous = previous->getNext();
   }
   delete elementToDelete;
   return true;

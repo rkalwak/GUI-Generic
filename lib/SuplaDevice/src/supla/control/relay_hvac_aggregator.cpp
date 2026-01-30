@@ -17,17 +17,20 @@
 */
 
 #include "relay_hvac_aggregator.h"
-#include <supla/control/relay.h>
+
 #include <supla/control/hvac_base.h>
-#include <supla/time.h>
+#include <supla/control/relay.h>
 #include <supla/log_wrapper.h>
+#include <supla/time.h>
 
 using Supla::Control::RelayHvacAggregator;
 
 namespace {
 RelayHvacAggregator *FirstInstance = nullptr;
-}
 
+// 15 minutes
+constexpr uint32_t IGNORE_OFFLINE_HVAC_TIMEOUT = 15 * 60 * 1000;
+}  // namespace
 
 RelayHvacAggregator::RelayHvacAggregator(int relayChannelNumber,
                                          Supla::Control::Relay *relay)
@@ -117,11 +120,15 @@ void RelayHvacAggregator::registerHvac(HvacBase *hvac) {
     }
     ptr->nextPtr = new HvacPtr;
     ptr->nextPtr->hvac = hvac;
+    if (hvac->getChannel()->isStateOnline()) {
+      ptr->nextPtr->lastSeenTimestamp = millis();
+    }
   }
-  SUPLA_LOG_DEBUG("RelayHvacAggregator[%d] hvac[%d @ %X] registered",
+  SUPLA_LOG_DEBUG("RelayHvacAggregator[%d] hvac[%d @ %X] registered (%s)",
                   relayChannelNumber,
                   hvac->getChannelNumber(),
-                  hvac);
+                  hvac,
+                  hvac->getChannel()->isStateOnline() ? "online" : "offline");
 }
 
 void RelayHvacAggregator::unregisterHvac(HvacBase *hvac) {
@@ -153,33 +160,46 @@ void RelayHvacAggregator::iterateAlways() {
     return;
   }
 
-  if (millis() - lastStateUpdateTimestamp > 5000 || lastRelayState == -1) {
+  bool state = false;
+  bool ignore = true;
+  auto *ptr = firstHvacPtr;
+  while (ptr != nullptr) {
+    if (ptr->hvac != nullptr && ptr->hvac->getChannel()) {
+      if (ptr->hvac->getChannel()->isStateOnline()) {
+        ptr->lastSeenTimestamp = millis();
+      }
+      if (!ptr->hvac->ignoreAggregatorForRelay(relayChannelNumber)) {
+        ignore = false;
+        if (ptr->hvac->getChannel()->isHvacFlagHeating() ||
+            ptr->hvac->getChannel()->isHvacFlagCooling()) {
+          if (millis() - ptr->lastSeenTimestamp < IGNORE_OFFLINE_HVAC_TIMEOUT) {
+            state = true;
+            break;
+          }
+        }
+      }
+    }
+    ptr = ptr->nextPtr;
+  }
+
+  if (millis() - lastStateUpdateTimestamp > relayInternalStateCheckIntervalMs ||
+      lastRelayState == -1) {
     if (relay->isOn()) {
+      if (lastRelayState != 1 && lastValueSend != -1 &&
+          (!ignore || turnOffSendOnEmpty == 0)) {
+        lastValueSend = 1;
+      }
       lastRelayState = 1;
     } else {
+      if (lastRelayState != 0 && lastValueSend != -1) {
+        lastValueSend = 0;
+      }
       lastRelayState = 0;
     }
     lastStateUpdateTimestamp = millis();
   }
 
   lastUpdateTimestamp = millis();
-
-  bool state = false;
-  bool ignore = true;
-  auto *ptr = firstHvacPtr;
-  while (ptr != nullptr) {
-    if (ptr->hvac != nullptr && ptr->hvac->getChannel()) {
-      if (!ptr->hvac->ignoreAggregatorForRelay(relayChannelNumber)) {
-        ignore = false;
-        if (ptr->hvac->getChannel()->isHvacFlagHeating() ||
-            ptr->hvac->getChannel()->isHvacFlagCooling()) {
-          state = true;
-          break;
-        }
-      }
-    }
-    ptr = ptr->nextPtr;
-  }
 
   if (ignore && (!turnOffWhenEmpty || state == lastValueSend)) {
     return;
@@ -193,13 +213,21 @@ void RelayHvacAggregator::iterateAlways() {
     if (lastValueSend != 1) {
       lastValueSend = 1;
       SUPLA_LOG_INFO("RelayHvacAggregator[%d] turn on", relayChannelNumber);
+      lastStateUpdateTimestamp = millis();
       relay->turnOn();
+      lastRelayState = 1;
+      turnOffSendOnEmpty = 0;
     }
   } else {
     if (lastValueSend != 0) {
       lastValueSend = 0;
       SUPLA_LOG_INFO("RelayHvacAggregator[%d] turn off", relayChannelNumber);
+      lastStateUpdateTimestamp = millis();
       relay->turnOff();
+      lastRelayState = 0;
+      if (ignore) {
+        turnOffSendOnEmpty++;
+      }
     }
   }
 }
@@ -229,3 +257,6 @@ int RelayHvacAggregator::getHvacCount() const {
   return count;
 }
 
+void RelayHvacAggregator::setInternalStateCheckInterval(uint32_t intervalMs) {
+  relayInternalStateCheckIntervalMs = intervalMs;
+}

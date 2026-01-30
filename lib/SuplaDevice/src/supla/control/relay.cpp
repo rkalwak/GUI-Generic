@@ -239,7 +239,6 @@ void Relay::onInit() {
     stateOn = true;
   }
 
-
   if (skipInitialStateSetting) {
     skipInitialStateSetting = false;
     for (auto buttonListElement = buttonList; buttonListElement;
@@ -305,7 +304,9 @@ void Relay::onInit() {
 
     // pin mode is set after setting pin value in order to
     // avoid problems with LOW trigger relays
-    Supla::Io::pinMode(channel.getChannelNumber(), pin, OUTPUT, io);
+    if (pin >= 0) {
+      Supla::Io::pinMode(channel.getChannelNumber(), pin, OUTPUT, io);
+    }
 
     if (stateOn) {
       turnOn(duration);
@@ -396,6 +397,7 @@ bool Relay::iterateConnected() {
 
 int32_t Relay::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
   auto channelFunction = getChannel()->getDefaultFunction();
+  bool zeroDurationAllowed = false;
   switch (channelFunction) {
     case SUPLA_CHANNELFNC_PUMPSWITCH:
     case SUPLA_CHANNELFNC_HEATORCOLDSOURCESWITCH: {
@@ -403,17 +405,23 @@ int32_t Relay::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
                         getChannelNumber());
       return 0;
     }
+    case SUPLA_CHANNELFNC_POWERSWITCH:
+    case SUPLA_CHANNELFNC_LIGHTSWITCH: {
+      zeroDurationAllowed = true;
+      break;
+    }
     default: {}
   }
 
   int result = -1;
   if (newValue->value[0] == 1) {
-    if (newValue->DurationMS < minimumAllowedDurationMs) {
+    if (!zeroDurationAllowed &&
+        newValue->DurationMS < minimumAllowedDurationMs) {
       SUPLA_LOG_DEBUG("Relay[%d] override duration with min value",
                       channel.getChannelNumber());
       newValue->DurationMS = minimumAllowedDurationMs;
     }
-    if (isImpulseFunction() && newValue->DurationMS > 0) {
+    if ((isImpulseFunction() || isCyclicMode()) && newValue->DurationMS > 0) {
       storedTurnOnDurationMs = newValue->DurationMS;
     }
 
@@ -424,7 +432,7 @@ int32_t Relay::handleNewValueFromServer(TSD_SuplaChannelNewValue *newValue) {
       storedTurnOnDurationMs = 0;
     }
 
-    turnOn(newValue->DurationMS);
+    turnOn(isCyclicMode() ? storedTurnOnDurationMs : newValue->DurationMS);
     storedTurnOnDurationMs = copyDurationMs;
     result = 1;
   } else if (newValue->value[0] == 0) {
@@ -463,28 +471,45 @@ void Relay::turnOn(_supla_int_t duration) {
             "Relay[%d] turn ON (duration %d ms)",
             channel.getChannelNumber(),
             duration);
+
+  applyDuration(duration, true);
+
+  if (pin >= 0) {
+    Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOnValue(), io);
+  }
+
+  channel.setRelayOvercurrentCutOff(false);
+  setNewChannelValue(true);
+
+  // Schedule save in 5 s after state change
+  Supla::Storage::ScheduleSave(relayStorageSaveDelay, 2000);
+}
+
+void Relay::applyDuration(int duration, bool turnOn) {
+  if (isCyclicMode() && duration > 0) {
+    if (turnOn) {
+      storedTurnOnDurationMs = duration;
+    } else {
+      turnOffDurationForCycle = duration;
+    }
+  }
   durationMs = duration;
 
-  if (minimumAllowedDurationMs > 0 && storedTurnOnDurationMs == 0) {
-    storedTurnOnDurationMs = durationMs;
+  if (turnOn) {
+    if (minimumAllowedDurationMs > 0 && storedTurnOnDurationMs == 0) {
+      storedTurnOnDurationMs = durationMs;
+    }
+
+    if (keepTurnOnDurationMs || isStaircaseFunction() || isImpulseFunction()) {
+      durationMs = storedTurnOnDurationMs;
+    }
   }
 
-  if (keepTurnOnDurationMs || isStaircaseFunction() || isImpulseFunction()) {
-    durationMs = storedTurnOnDurationMs;
-  }
   if (durationMs != 0) {
     durationTimestamp = millis();
   } else {
     durationTimestamp = 0;
   }
-
-  Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOnValue(), io);
-
-  channel.setRelayOvercurrentCutOff(false);
-  channel.setNewValue(true);
-
-  // Schedule save in 5 s after state change
-  Supla::Storage::ScheduleSave(relayStorageSaveDelay, 2000);
 }
 
 void Relay::turnOff(_supla_int_t duration) {
@@ -499,23 +524,25 @@ void Relay::turnOff(_supla_int_t duration) {
             "Relay[%d] turn OFF (duration %d ms)",
             channel.getChannelNumber(),
             duration);
-  durationMs = duration;
-  if (durationMs != 0) {
-    durationTimestamp = millis();
-  } else {
-    durationTimestamp = 0;
-  }
-  Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOffValue(), io);
 
-  channel.setNewValue(false);
+  applyDuration(duration, false);
+
+  if (pin >= 0) {
+    Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOffValue(), io);
+  }
+
+  setNewChannelValue(false);
 
   // Schedule save in 5 s after state change
   Supla::Storage::ScheduleSave(relayStorageSaveDelay, 2000);
 }
 
 bool Relay::isOn() {
-  return Supla::Io::digitalRead(channel.getChannelNumber(), pin, io) ==
-         pinOnValue();
+  if (pin >= 0) {
+    return Supla::Io::digitalRead(channel.getChannelNumber(), pin, io) ==
+           pinOnValue();
+  }
+  return false;
 }
 
 void Relay::toggle(_supla_int_t duration) {
@@ -524,9 +551,9 @@ void Relay::toggle(_supla_int_t duration) {
             channel.getChannelNumber(),
             duration);
   if (isOn()) {
-    turnOff(duration);
+    turnOff(isCyclicMode() ? turnOffDurationForCycle : duration);
   } else {
-    turnOn(duration);
+    turnOn(isCyclicMode() ? storedTurnOnDurationMs : duration);
   }
 }
 
@@ -579,7 +606,7 @@ void Relay::onSaveState() {
   } else if (isCountdownTimerFunctionEnabled() && stateOnInit < 0) {
     // for other functions we store remaining countdown timer value
     durationForState = 0;
-    if (durationMs) {
+    if (durationMs && durationTimestamp != 0) {
       uint32_t elapsedTimeMs = millis() - durationTimestamp;
       if (elapsedTimeMs < durationMs) {
         // remaining time should always be lower than durationMs in other cases
@@ -602,9 +629,13 @@ void Relay::onSaveState() {
 }
 
 void Relay::onLoadState() {
+  uint32_t storedDuration = 0;
   Supla::Storage::ReadState(
-      reinterpret_cast<unsigned char *>(&storedTurnOnDurationMs),
-      sizeof(storedTurnOnDurationMs));
+      reinterpret_cast<unsigned char *>(&storedDuration),
+      sizeof(storedDuration));
+  if (!isCyclicMode()) {
+    storedTurnOnDurationMs = storedDuration;
+  }
   uint8_t relayFlags = 0;
   Supla::Storage::ReadState(reinterpret_cast<unsigned char *>(&relayFlags),
                             sizeof(relayFlags));
@@ -667,7 +698,9 @@ void Relay::onLoadState() {
           channel.getChannelNumber(),
           durationMs);
     }
-    storedTurnOnDurationMs = 0;
+    if (!isCyclicMode()) {
+      storedTurnOnDurationMs = 0;
+    }
   }
 }
 
@@ -772,7 +805,9 @@ bool Relay::setAndSaveFunction(uint32_t newFunction) {
     }
   } else {
     keepTurnOnDurationMs = false;
-    storedTurnOnDurationMs = 0;
+    if (!isCyclicMode()) {
+      storedTurnOnDurationMs = 0;
+    }
   }
   if (isStaircaseFunction()) {
     usedConfigTypes.set(SUPLA_CONFIG_TYPE_EXTENDED);
@@ -792,7 +827,7 @@ void Relay::updateTimerValue() {
   uint8_t state = 0;
   int32_t senderId = 0;
 
-  if (durationMs != 0) {
+  if (durationMs != 0 && durationTimestamp != 0) {
     uint32_t elapsedTimeMs = millis() - durationTimestamp;
     if (elapsedTimeMs <= durationMs) {
       remainingTime = durationMs - elapsedTimeMs;
@@ -1030,3 +1065,21 @@ bool Relay::isFullyInitialized() const {
   return initDone && !skipInitialStateSetting;
 }
 
+void Relay::setNewChannelValue(bool value) {
+  channel.setNewValue(value);
+}
+
+void Relay::enableCyclicMode(uint32_t turnOnTimeMs, uint32_t turnOffTimeMs) {
+  SUPLA_LOG_ERROR("Relay[%d] cyclic mode enabled", channel.getChannelNumber());
+  storedTurnOnDurationMs = turnOnTimeMs;
+  turnOffDurationForCycle = turnOffTimeMs;
+}
+
+void Relay::disableCyclicMode() {
+  storedTurnOnDurationMs = 0;
+  turnOffDurationForCycle = 0;
+}
+
+bool Relay::isCyclicMode() const {
+  return storedTurnOnDurationMs > 0 && turnOffDurationForCycle > 0;
+}

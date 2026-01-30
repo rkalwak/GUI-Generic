@@ -18,10 +18,12 @@
 
 #ifdef ARDUINO
 
+#include "eeprom.h"
+
 #include <Arduino.h>
 #include <EEPROM.h>
-
-#include "eeprom.h"
+#include <stdio.h>
+#include <supla/log_wrapper.h>
 
 namespace Supla {
 
@@ -54,37 +56,41 @@ bool Eeprom::init() {
 
 int Eeprom::readStorage(unsigned int offset,
                         unsigned char *buf,
-                        int size,
+                        unsigned int size,
                         bool logs) {
-  if (logs) {
-    Serial.print(F("readStorage: "));
-    Serial.print(size);
-    Serial.print(F("; Read: ["));
-  }
   for (int i = 0; i < size; i++) {
     buf[i] = EEPROM.read(offset + i);
-    if (logs) {
-      Serial.print(static_cast<unsigned char *>(buf)[i], HEX);
-      Serial.print(F(" "));
-    }
   }
   if (logs) {
-    Serial.println(F("]"));
+    static constexpr uint8_t MaxLogBytes = 32;
+    static constexpr uint16_t LogBufferSize = MaxLogBytes * 3 + 1;
+
+    uint8_t sizeMax = (size > MaxLogBytes) ? MaxLogBytes : size;
+
+    char logBuffer[LogBufferSize];
+    int logSize = 0;
+
+    for (uint8_t i = 0; i < sizeMax && logSize < LogBufferSize - 1; i++) {
+      logSize += snprintf(
+          logBuffer + logSize, LogBufferSize - logSize, "%02X ", buf[i]);
+    }
+
+    SUPLA_LOG_INFO(
+        "EEPROM: Read %d bytes [%s] (offset %d)", sizeMax, logBuffer, offset);
   }
+
   return size;
 }
 
 int Eeprom::writeStorage(unsigned int offset,
                          const unsigned char *buf,
-                         int size) {
+                         unsigned int size) {
   dataChanged = true;
   for (int i = 0; i < size; i++) {
     EEPROM.write(offset + i, buf[i]);
   }
-  Serial.print(F("Wrote "));
-  Serial.print(size);
-  Serial.print(F(" bytes to storage at "));
-  Serial.println(offset);
+  SUPLA_LOG_INFO("EEPROM: Wrote %d bytes (offset %d)", size, offset);
+
   return size;
 }
 
@@ -92,7 +98,7 @@ void Eeprom::commit() {
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
   if (dataChanged) {
     EEPROM.commit();
-    Serial.println(F("Commit"));
+    SUPLA_LOG_INFO("EEPROM: Commit");
   }
 #endif
   dataChanged = false;

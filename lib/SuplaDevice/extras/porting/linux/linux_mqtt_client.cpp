@@ -23,8 +23,8 @@
 #include <cstdlib>
 #include <memory>
 #include <unordered_map>
-
-namespace Supla {
+#include <string>
+#include <cstdio>
 
 std::shared_ptr<Supla::LinuxMqttClient> Supla::LinuxMqttClient::instance =
     nullptr;
@@ -33,9 +33,9 @@ std::unordered_map<std::string, std::string> Supla::LinuxMqttClient::topics;
 
 Supla::LinuxMqttClient::LinuxMqttClient(
     const Supla::LinuxYamlConfig& yamlConfig)
-    : port(yamlConfig.getMqttClientPort()),
+    : useSSL(yamlConfig.getMqttClientUseSSL()),
       verifyCA(yamlConfig.getMqttClientVerifyCA()),
-      useSSL(yamlConfig.getMqttClientUseSSL()) {
+      port(yamlConfig.getMqttClientPort()) {
   char buffer[256];
   host = yamlConfig.getMqttClientHost(buffer) ? buffer : "";
   if (!yamlConfig.getMqttClientName(buffer)) {
@@ -64,7 +64,7 @@ void Supla::LinuxMqttClient::start() {
   }
 }
 
-std::shared_ptr<LinuxMqttClient>& LinuxMqttClient::getInstance() {
+std::shared_ptr<Supla::LinuxMqttClient>& Supla::LinuxMqttClient::getInstance() {
   if (!instance) {
     SUPLA_LOG_ERROR("Not find Linux MQTT client instance.");
   }
@@ -81,6 +81,7 @@ std::shared_ptr<Supla::LinuxMqttClient>& Supla::LinuxMqttClient::getInstance(
 }
 
 void Supla::LinuxMqttClient::subscribeTopic(const std::string& topic, int qos) {
+  (void)qos;
   topics[topic] = "";
 }
 
@@ -93,13 +94,13 @@ void Supla::LinuxMqttClient::unsubscribeTopic(const std::string& topic) {
   SUPLA_LOG_DEBUG("unsubscribing %s", topic.c_str());
 }
 
-int LinuxMqttClient::mqttClientInit() {
+int Supla::LinuxMqttClient::mqttClientInit() {
   SUPLA_LOG_DEBUG("Linux MQTT client init.");
   return mqtt_client_init(
       host, port, username, password, clientName, topics, publishCallback);
 }
 
-void LinuxMqttClient::publishCallback(void**,
+void Supla::LinuxMqttClient::publishCallback(void**,
                                       struct mqtt_response_publish* published) {
   auto* topic_name = reinterpret_cast<const char*>(published->topic_name);
   auto* application_message =
@@ -130,4 +131,4 @@ enum MQTTErrors Supla::LinuxMqttClient::publish(const std::string& topic,
                       payload.size(),
                       qos);
 }
-}  // namespace Supla
+

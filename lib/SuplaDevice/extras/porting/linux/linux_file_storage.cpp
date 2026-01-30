@@ -23,14 +23,15 @@
 #include <assert.h>
 
 #include <cstring>
-#include <filesystem>
+#include <filesystem>  // NOLINT(build/c++17)
 #include <fstream>
+#include <string>
 
 namespace Supla {
 
 LinuxFileStorage::LinuxFileStorage(const std::string &path,
                                    unsigned int storageStartingOffset,
-                                   int reservedSize)
+                                   unsigned int reservedSize)
     : Storage(storageStartingOffset), reservedSize(reservedSize),
       path(path) {
 }
@@ -53,7 +54,7 @@ bool LinuxFileStorage::init() {
 
   unsigned char c = stateFile.get();
 
-  for (int i = 0; stateFile.good() && i < reservedSize; i++) {
+  for (unsigned int i = 0; stateFile.good() && i < reservedSize; i++) {
     data[i] = c;
     c = stateFile.get();
   }
@@ -65,9 +66,10 @@ bool LinuxFileStorage::init() {
 
 int LinuxFileStorage::readStorage(unsigned int offset,
                         unsigned char *buf,
-                        int size,
+                        unsigned int size,
                         bool logs) {
-  for (int i = 0; i < size; i++) {
+  (void)(logs);
+  for (unsigned int i = 0; i < size; i++) {
     assert(offset + i < reservedSize && "Too small state Storage");
     buf[i] = data[offset + i];
   }
@@ -76,9 +78,9 @@ int LinuxFileStorage::readStorage(unsigned int offset,
 
 int LinuxFileStorage::writeStorage(unsigned int offset,
                          const unsigned char *buf,
-                         int size) {
+                         unsigned int size) {
   dataChanged = true;
-  for (int i = 0; i < size; i++) {
+  for (unsigned int i = 0; i < size; i++) {
     assert(offset + i < reservedSize && "Too small state Storage");
     data[offset + i] = buf[i];
   }
@@ -91,7 +93,7 @@ void LinuxFileStorage::commit() {
     std::ofstream stateFile(path + "/state.bin",
         std::ofstream::out | std::ios::binary);
 
-    for (int i = 0; i < reservedSize; i++) {
+    for (unsigned int i = 0; i < reservedSize; i++) {
       stateFile << data[i];
     }
 

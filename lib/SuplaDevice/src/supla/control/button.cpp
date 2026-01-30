@@ -65,7 +65,7 @@ void Button::onTimer() {
     stateChanged = true;
     runAction(ON_PRESS);
     runAction(ON_CHANGE);
-    if (clickCounter == 0 && holdSend == 0) {
+    if (clickCounter <= 1 && holdSend == 0) {
       runAction(CONDITIONAL_ON_PRESS);
       runAction(CONDITIONAL_ON_CHANGE);
     }
@@ -365,7 +365,7 @@ bool Button::isCentral() const {
 }
 
 void Button::onLoadConfig(SuplaDeviceClass *sdc) {
-  if (sdc->getDeviceMode() == Supla::DEVICE_MODE_TEST) {
+  if (sdc && sdc->getDeviceMode() == Supla::DEVICE_MODE_TEST) {
     SUPLA_LOG_DEBUG("Button[%d] test mode", getButtonNumber());
     setButtonType(ButtonType::MONOSTABLE);
     return;

@@ -316,7 +316,7 @@ void Element::ClearInvalidPtr() {
   invalidatePtr = false;
 }
 
-bool Element::isAnyUpdatePending() {
+bool Element::isAnyUpdatePending() const {
   return false;
 }
 
@@ -356,6 +356,10 @@ void Element::onFunctionChange(uint32_t currentFunction, uint32_t newFunction) {
 }
 
 bool Element::isOwnerOfSubDeviceId(int) const {
+  return false;
+}
+
+bool Element::isStateStorageMigrationNeeded() const {
   return false;
 }
 

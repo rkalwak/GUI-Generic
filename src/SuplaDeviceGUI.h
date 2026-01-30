@@ -54,6 +54,9 @@
 #include "Markup.h"
 #include "SuplaConditions.h"
 #include "SuplaWebPageHome.h"
+#include <supla/device/status_led.h>
+#include <supla/io/rgb_led.h>
+
 
 #ifdef SUPLA_OLED
 #include "src/display/OledButtonController.h"

@@ -53,12 +53,29 @@ extern "C" {
 uint32_t last_loop{0};
 #define LOOP_INTERVAL 16
 
+Supla::Device::StatusLed *statusLed;
+
 void setup() {
   Serial.begin(115200);
   eeprom.setStateSavePeriod(5000);
 
   ConfigManager = new SuplaConfigManager();
   ConfigESP = new SuplaConfigESP();
+
+  // Initialize StatusLed with configured LED GPIO
+  uint8_t ledGpio = ConfigESP->getGpio(FUNCTION_CFG_LED);
+  if (ledGpio != OFF_GPIO) {
+    bool levelInverted = ConfigESP->getLevel(ledGpio);
+    #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2 || \
+    CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C3
+    auto extCfgLed = new Supla::Io::RgbLed(255, 255, 255);
+    Serial.println("Initializing Status LED on GPIO " + String(ledGpio) + " inverted: " + String(!levelInverted));
+    statusLed = new Supla::Device::StatusLed(extCfgLed, ledGpio, !levelInverted);
+    #else
+    Serial.println("Initializing Status LED on GPIO " + String(ledGpio) + " inverted: " + String(!levelInverted));
+    statusLed = new Supla::Device::StatusLed(ledGpio, !levelInverted);
+    #endif
+  }
 
   ImprovSerialComponent *improvSerialComponent = new ImprovSerialComponent();
   improvSerialComponent->enable();

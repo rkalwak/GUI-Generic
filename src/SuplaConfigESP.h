@@ -28,8 +28,6 @@
 #include "SuplaConfigManager.h"
 #include <supla/actions.h>
 
-#include <Ticker.h>
-
 enum _ConfigMode
 {
   CONFIG_MODE_10_ON_PRESSES,
@@ -77,9 +75,6 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
 
   const char *getLastStatusMessageSupla();
   int getLastStatusSupla();
-
-  void ledBlinking(int time);
-  void ledBlinkingStop(void);
 
   String getMacAddress(bool formating);
   void getMacAddress(char *macAddress, bool formating);
@@ -153,10 +148,7 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
  private:
   bool MDNSConfigured = false;
   void iterateAlways();
-
-  Ticker led;
 };
 
-void ledBlinkingTicker();
 void status_func(int status, const char *msg);
 #endif  // SuplaConfigESP_h

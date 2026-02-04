@@ -175,7 +175,7 @@ namespace Supla
             Serial.println(meterIdString.c_str());
             Serial.print(readValue);
             Serial.println("m3");
-            sensor->setNewValue((unsigned _supla_int64_t)(readValue * 1000));
+            sensor->setNewValue((uint64_t)(readValue * 1000));
             sensor->iterateAlways();    
           }
           else

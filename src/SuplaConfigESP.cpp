@@ -398,7 +398,7 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
     return Serial1;
   }
 #else
-  return Serial;
+  return Serial1;
 #endif
 #endif
 
@@ -424,9 +424,12 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
     return Serial2;
   }
 #else
-  return Serial;
+  return Serial1;
 #endif
 #endif
+
+  // Default to Serial1 for ESP32 to avoid USBCDC type mismatch
+  return Serial1;
 
 #endif
 
@@ -439,9 +442,13 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
   if (rxPin == 2 && txPin == -1) {
     return Serial1;
   }
-#endif
 
+  // Default to Serial for ESP8266 (HardwareSerial type)
   return Serial;
+#else
+  // Default to Serial1 for ESP32 to avoid USBCDC type mismatch
+  return Serial1;
+#endif
 }
 
 uint8_t SuplaConfigESP::getBaudRate(uint8_t gpio) {

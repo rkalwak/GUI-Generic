@@ -341,7 +341,7 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define SOC_RX0 20
 #elif CONFIG_IDF_TARGET_ESP32C2
 #define SOC_RX0 18
-#elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6
 #define SOC_RX0 18
 #endif
 #endif
@@ -355,7 +355,7 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define SOC_TX0 21
 #elif CONFIG_IDF_TARGET_ESP32C2
 #define SOC_TX0 19
-#elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6
 #define SOC_TX0 19
 #endif
 #endif
@@ -372,7 +372,7 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define RX1 15
 #elif CONFIG_IDF_TARGET_ESP32C2
 #define RX1 18
-#elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6
 #define RX1 18
 #endif
 #endif
@@ -388,7 +388,7 @@ HardwareSerial &SuplaConfigESP::getHardwareSerial(int8_t rxPin, int8_t txPin) {
 #define TX1 16
 #elif CONFIG_IDF_TARGET_ESP32C2
 #define TX1 19
-#elif CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6
 #define TX1 19
 #endif
 #endif
@@ -796,6 +796,8 @@ bool SuplaConfigESP::checkGpio(int gpio) {
 uint8_t SuplaConfigESP::getDefaultLedGpio() {
 #if CONFIG_IDF_TARGET_ESP32C6
   return 8;   // ESP32-C6 DevKitC-1 has LED on GPIO8
+#elif CONFIG_IDF_TARGET_ESP32C5
+  return 8;   // ESP32-C5 DevKitC has LED on GPIO8
 #elif CONFIG_IDF_TARGET_ESP32C3
   return 8;   // ESP32-C3 DevKitC-02 has LED on GPIO8
 #elif CONFIG_IDF_TARGET_ESP32S3

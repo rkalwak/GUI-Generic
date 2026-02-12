@@ -22,7 +22,9 @@
 #define CONFIG_MAX_SIZE 1048 
 #elif ARDUINO_ARCH_ESP32
 #include "SPIFFS.h"
+#ifndef CONFIG_IDF_TARGET_ESP32C5
 #include <os.h>
+#endif
 #include <esp_wifi.h>
 #include <time.h>
 #define CONFIG_MAX_SIZE 4096

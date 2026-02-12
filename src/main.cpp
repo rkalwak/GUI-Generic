@@ -82,7 +82,7 @@ void setup() {
   if (ledGpio != OFF_GPIO) {
     bool levelInverted = ConfigESP->getLevel(ledGpio);
     #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2 || \
-    CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C3
+    CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C3
     auto extCfgLed = new Supla::Io::RgbLed(255, 255, 255);
     Serial.println("Initializing Status LED on GPIO " + String(ledGpio) + " inverted: " + String(!levelInverted));
     statusLed = new Supla::Device::StatusLed(extCfgLed, ledGpio, !levelInverted);
@@ -115,7 +115,7 @@ void setup() {
   }
 
 #ifdef ARDUINO_ARCH_ESP32
-#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C3)
   if (ConfigESP->getGpio(FUNCTION_SDA_2) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_SCL_2) != OFF_GPIO) {
     Wire1.begin(ConfigESP->getGpio(FUNCTION_SDA_2), ConfigESP->getGpio(FUNCTION_SCL_2));
     Wire1.setClock(100000);
@@ -557,8 +557,8 @@ void setup() {
   int8_t pinTX3 = ConfigESP->getGpio(3, FUNCTION_PZEM_TX);
 
   if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO && pinRX3 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C6)
-    // For ESP32-C3, use the same Serial port with different pins
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32C6)
+    // For ESP32-C3/S2/C5/C6, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(Serial, pinRX1, pinTX1, Serial, pinRX2, pinTX2, Serial, pinRX3, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(Serial, pinRX1, pinTX1, Serial1, pinRX2, pinTX2, Serial2, pinRX3, pinTX3);
@@ -567,7 +567,7 @@ void setup() {
 #endif
   }
   else if (pinRX1 != OFF_GPIO && pinTX1 != OFF_GPIO && pinTX2 != OFF_GPIO && pinTX3 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C6)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32C6)
     // For ESP32-C3, use the same Serial port with different pins
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3(Serial, pinRX1, pinTX1, Serial, pinRX1, pinTX2, Serial, pinRX1, pinTX3);
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -612,7 +612,7 @@ void setup() {
   }
 
   if (pinRX2 != OFF_GPIO && pinTX2 != OFF_GPIO) {
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32C6)
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(Serial, pinRX2, pinTX2, 0x01, 0x02, 0x03);
 #elif defined(ARDUINO_ARCH_ESP32)
     PZEMv3 = new Supla::Sensor::ThreePhasePZEMv3_ADDR(Serial2, pinRX2, pinTX2, 0x01, 0x02, 0x03);

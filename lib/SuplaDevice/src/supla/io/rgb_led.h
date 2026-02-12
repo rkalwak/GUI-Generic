@@ -41,7 +41,7 @@ class RgbLed : public Supla::Io::Base {
                           uint8_t pin,
                           uint8_t val) override {
 #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2 || \
-    CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C3
+    CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C3
     if (val == HIGH) {
       rgbLedWrite(pin, red_, green_, blue_);
     } else {

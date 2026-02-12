@@ -289,7 +289,7 @@ void handleSensorI2c(int save) {
   }
 
 #ifdef ARDUINO_ARCH_ESP32
-#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C3)
   addFormHeader(String(S_GPIO_SETTINGS_FOR) + S_SPACE + S_I2C + "2");
   addListGPIOBox(INPUT_SDA_2, String(S_SDA) + "2", FUNCTION_SDA_2);
   addListGPIOBox(INPUT_SCL_2, String(S_SCL) + "2", FUNCTION_SCL_2);

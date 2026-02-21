@@ -239,19 +239,19 @@ const char* const GPIO_P[] PROGMEM = {GPIO0,  GPIO1,  GPIO2,  GPIO3,  GPIO4,  GP
 // ESP32-C3 (GPIO 0-21)
 const char GPIO0[] PROGMEM = "0-IO";
 const char GPIO1[] PROGMEM = "1-IO";
-const char GPIO2[] PROGMEM = "2-MISO";
+const char GPIO2[] PROGMEM = "2-IO";
 const char GPIO3[] PROGMEM = "3-IO";
-const char GPIO4[] PROGMEM = "4-CS/IO";
-const char GPIO5[] PROGMEM = "5-SDA/IO";
-const char GPIO6[] PROGMEM = "6-SCL/SCK/IO";
-const char GPIO7[] PROGMEM = "7-MOSI/IO";
-const char GPIO8[] PROGMEM = "8-IO";
-const char GPIO9[] PROGMEM = "9-IO";
+const char GPIO4[] PROGMEM = "4-SCK/IO";
+const char GPIO5[] PROGMEM = "5-MISO/IO";
+const char GPIO6[] PROGMEM = "6-MOSI/IO";
+const char GPIO7[] PROGMEM = "7-CS/IO";
+const char GPIO8[] PROGMEM = "8-SDA/IO";
+const char GPIO9[] PROGMEM = "9-SCL/IO";
 const char GPIO10[] PROGMEM = "10-IO";
 const char GPIO18[] PROGMEM = "18-IO";
 const char GPIO19[] PROGMEM = "19-IO";
-const char GPIO20[] PROGMEM = "20-TX/IO";
-const char GPIO21[] PROGMEM = "21-RX/IO";
+const char GPIO20[] PROGMEM = "20-RX/IO";
+const char GPIO21[] PROGMEM = "21-TX/IO";
 
 const char* const GPIO_P[] PROGMEM = {GPIO0,  GPIO1,  GPIO2,  GPIO3,  GPIO4,  GPIO5,  GPIO6,  GPIO7,  GPIO8, GPIO9, GPIO10,
                                       S_EMPTY, S_EMPTY, S_EMPTY, S_EMPTY, S_EMPTY, S_EMPTY, S_EMPTY, GPIO18, GPIO19, GPIO20, GPIO21, OFF};

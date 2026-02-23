@@ -438,10 +438,13 @@ void addButtonToRelay(uint8_t nrRelay, Supla::Element *element, Supla::ActionHan
           //   button->addAction(buttonActionInternal, relay[nrButton], buttonEvent);
           //   break;
 
-          // case Supla::Event::ON_CHANGE:
-          //   button->setButtonType(Supla::Control::Button::ButtonType::BISTABLE);
-          //   relay[nrButton]->attach(button);
-          //   break;
+        case Supla::GUI::Event::ON_CHANGE:
+          button->setButtonType(Supla::Control::Button::ButtonType::BISTABLE);
+          if (relay) {
+            relay->attach(button);
+          }
+          break;
+
         case Supla::GUI::Event::ON_MOTION_SENSOR:
           button->setButtonType(Supla::Control::Button::ButtonType::MOTION_SENSOR);
           if (relay) {

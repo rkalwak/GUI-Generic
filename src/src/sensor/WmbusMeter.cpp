@@ -166,15 +166,25 @@ namespace Supla
           if(this->drivers_.count(sensor->get_type()))
           {
             Serial.println("wMBus-lib: Getting driver.");
+            Serial.print("wMBus-lib: Property: ");
+            Serial.println(sensor->get_property_to_send().c_str());
             auto driver = this->drivers_[sensor->get_type()];
             auto mapValues = driver->get_values(frame);
+            Serial.println("wMBus-lib: Available map values:");
+            for (auto const &entry : mapValues)
+            {
+              Serial.print("  ");
+              Serial.print(entry.first.c_str());
+              Serial.print(" = ");
+              Serial.println(entry.second);
+            }
             readValue = mapValues[sensor->get_property_to_send()];
             Serial.print("Meter id as string: ");
             Serial.println(meterIdRealString.c_str());
             Serial.print("Meter id as number: ");
             Serial.println(meterIdString.c_str());
-            Serial.print(readValue);
-            Serial.println("m3");
+            Serial.print("Value read: ");
+            Serial.println(readValue);
             sensor->setNewValue((uint64_t)(readValue * 1000));
             sensor->iterateAlways();    
           }

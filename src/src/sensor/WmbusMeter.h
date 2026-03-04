@@ -16,13 +16,14 @@ namespace Supla {
 namespace Sensor {
 class WmbusMeter : public Element {
  public:
-  WmbusMeter(uint8_t mosi = 23, uint8_t miso = 19, uint8_t clk = 18, uint8_t cs = 5, uint8_t gdo0 = 4, uint8_t gdo2 = 2);
+  WmbusMeter(uint8_t mosi = 23, uint8_t miso = 19, uint8_t clk = 18, uint8_t cs = 5, uint8_t gdo0 = 4, uint8_t gdo2 = 2, bool debugMode=false);
 
   void onFastTimer() override;
   std::map<std::string, Driver *> drivers_{};
   std::map<std::string, SensorBase *> sensors_{};
   void add_driver(Driver *driver);
   void add_sensor(SensorBase *sensor);
+ std::string extract_meter_id_string(const std::vector<unsigned char> &frame);
   bool decrypt_telegram(std::vector<unsigned char> &telegram, std::vector<unsigned char> key);
   float parse_frame(std::vector<unsigned char> &frame);
 

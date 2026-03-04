@@ -24,7 +24,7 @@
 param(
     [string]$Environment = "esp32_test",
     [string]$Port        = "COM3",
-    [switch]$Verbose,
+    [switch]$Verbose     = $true,
     [string]$Filter      = ""
 )
 

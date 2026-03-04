@@ -1,13 +1,17 @@
 /*
  * Unit tests for Sharky774 wM-Bus driver register parsing.
  *
- * Reference telegram (encrypted, key not included in this test):
+ * WARNING: The telegram below was encrypted with an UNKNOWN key.
+ * The key "51728910E66D83F839BC8A10E66D83F8" used in these tests is a placeholder
+ * and does NOT match the encryption key used for this telegram.
+ *
+ * Reference telegram (encrypted with unknown key):
  *   5E44A5111828058141046DF17A460050057960085091B6F8361852F7972492760
  *   B6478A83790B67829B74A26C79E00C0F984BB5A139EC13AD86B45CF5E9A9920A
  *   C3494561AC388B650CECF7CBC9143D7D05086B7DB940D6F29D612BD97A37B7F9
  *   A67EC94734EDADAB93D4D832...
  *
- * Expected decoded values:
+ * Expected decoded values (if correct key were known):
  *   flow_temperature_c          : 44.6
  *   operating_time_h            : 23662
  *   operating_time_in_error_h   : 0
@@ -17,8 +21,8 @@
  *   total_volume_m3             : 538.96
  *   volume_flow_m3h             : 0.053
  *
- * The test below uses a pre-decoded telegram constructed from those values,
- * encoding each field in the DIF/VIF format that the Sharky774 driver expects.
+ * TODO: Replace with a real Sharky774 telegram + matching encryption key,
+ *       similar to the apator162 test which uses a valid telegram/key pair.
  */
 
 #include <unity.h>
@@ -320,65 +324,7 @@ void tearDown_wmbus_meter_key1() {
     wmbus_meter = nullptr;
 }
 
-void setUp_wmbus_meter_key2() {
-    wmbus_meter = new Supla::Sensor::WmbusMeter();
-    wmbus_driver = new Sharky774();
-    wmbus_meter->add_driver(wmbus_driver);
-    
-    // Meter ID: 81052818
-    wmbus_sensor_key2 = new Supla::Sensor::SensorBase("81052818", "sharky774", "total_energy_consumption_kwh", "51728910E66D83F8");
-    wmbus_meter->add_sensor(wmbus_sensor_key2);
-}
 
-void tearDown_wmbus_meter_key2() {
-    delete wmbus_sensor_key2;
-    delete wmbus_driver;
-    delete wmbus_meter;
-    wmbus_sensor_key2 = nullptr;
-    wmbus_driver = nullptr;
-    wmbus_meter = nullptr;
-}
-
-void test_wmbus_meter_decrypt_with_key1() {
-    setUp_wmbus_meter_key1();
-    
-    auto raw = build_sharky774_raw_frame();
-
-    uint8_t lField = raw[0];
-    uint16_t nrBlocks = (lField < 26u) ? 2u : (((lField - 26u) / 16u) + 3u);
-    uint8_t totalWithCrc = (uint8_t)(lField + 1u + 2u * nrBlocks);
-    std::vector<unsigned char> frame(raw.begin(), raw.begin() + totalWithCrc);
-    uint8_t strippedLen = crcRemove(frame.data(), totalWithCrc);
-    frame.resize(strippedLen);
-    
-    bool decrypted = wmbus_meter->decrypt_telegram(frame, wmbus_sensor_key1->get_key());
-    
-    tearDown_wmbus_meter_key1();
-    
-    // Key1 should successfully decrypt (or fail if wrong key)
-    // We test that the function executes without crashing
-    TEST_ASSERT_TRUE(decrypted == true || decrypted == false);
-}
-
-void test_wmbus_meter_decrypt_with_key2() {
-    setUp_wmbus_meter_key2();
-    
-    auto raw = build_sharky774_raw_frame();
-    uint8_t lField = raw[0];
-    uint16_t nrBlocks = (lField < 26u) ? 2u : (((lField - 26u) / 16u) + 3u);
-    uint8_t totalWithCrc = (uint8_t)(lField + 1u + 2u * nrBlocks);
-    std::vector<unsigned char> frame(raw.begin(), raw.begin() + totalWithCrc);
-    uint8_t strippedLen = crcRemove(frame.data(), totalWithCrc);
-    frame.resize(strippedLen);
-    
-    bool decrypted = wmbus_meter->decrypt_telegram(frame, wmbus_sensor_key2->get_key());
-    
-    tearDown_wmbus_meter_key2();
-    
-    // Key2 should successfully decrypt (or fail if wrong key)
-    // We test that the function executes without crashing
-    TEST_ASSERT_TRUE(decrypted == true || decrypted == false);
-}
 
 void test_wmbus_meter_parse_frame_with_key1() {
     setUp_wmbus_meter_key1();
@@ -395,39 +341,10 @@ void test_wmbus_meter_parse_frame_with_key1() {
     
     tearDown_wmbus_meter_key1();
     
-    // With correct key, we expect to get the energy value: 5269.722
-    // If key is wrong, result will be 0.0
-    if (result > 0.0f) {
-        TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
-    } else {
-        // Key didn't work, but test shouldn't fail - just record it
-        TEST_ASSERT_EQUAL_FLOAT(0.0f, result);
-    }
-}
-
-void test_wmbus_meter_parse_frame_with_key2() {
-    setUp_wmbus_meter_key2();
-    
-    auto raw = build_sharky774_raw_frame();
-    uint8_t lField = raw[0];
-    uint16_t nrBlocks = (lField < 26u) ? 2u : (((lField - 26u) / 16u) + 3u);
-    uint8_t totalWithCrc = (uint8_t)(lField + 1u + 2u * nrBlocks);
-    std::vector<unsigned char> frame(raw.begin(), raw.begin() + totalWithCrc);
-    uint8_t strippedLen = crcRemove(frame.data(), totalWithCrc);
-    frame.resize(strippedLen);
-    
-    float result = wmbus_meter->parse_frame(frame);
-    
-    tearDown_wmbus_meter_key2();
-    
-    // With correct key, we expect to get the energy value: 5269.722
-    // If key is wrong, result will be 0.0
-    if (result > 0.0f) {
-        TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
-    } else {
-        // Key didn't work, but test shouldn't fail - just record it
-        TEST_ASSERT_EQUAL_FLOAT(0.0f, result);
-    }
+    // With placeholder/mismatched key, decryption fails and returns 0
+    // TODO: When a valid telegram+key pair is available, change to:
+    // TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, result);
 }
 
 void test_wmbus_meter_parse_all_values_key1() {
@@ -444,8 +361,9 @@ void test_wmbus_meter_parse_all_values_key1() {
     // Use parse_frame method which handles decryption and value extraction
     float result = wmbus_meter->parse_frame(frame);
     
-    // parse_frame returns the value for the configured property (total_energy_consumption_kwh)
-    if (result > 0.0f) {
+    // With placeholder/mismatched key, decryption fails and returns 0
+    // TODO: When a valid telegram+key pair is available, uncomment and fix:
+    /*
         TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
         
         // Also verify we can get all values from the driver after parse_frame
@@ -461,51 +379,11 @@ void test_wmbus_meter_parse_all_values_key1() {
         
         TEST_ASSERT_TRUE(values.count("return_temperature_c") > 0);
         TEST_ASSERT_FLOAT_WITHIN(0.1f, 31.5f, values["return_temperature_c"]);
-    }
+    */
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, result);
     
     tearDown_wmbus_meter_key1();
     
-    // Test passes as long as parse_frame executed without crashing
-    TEST_ASSERT_TRUE(result >= 0.0f);
-}
-
-void test_wmbus_meter_parse_all_values_key2() {
-    setUp_wmbus_meter_key2();
-    
-    auto raw = build_sharky774_raw_frame();
-    uint8_t lField = raw[0];
-    uint16_t nrBlocks = (lField < 26u) ? 2u : (((lField - 26u) / 16u) + 3u);
-    uint8_t totalWithCrc = (uint8_t)(lField + 1u + 2u * nrBlocks);
-    std::vector<unsigned char> frame(raw.begin(), raw.begin() + totalWithCrc);
-    uint8_t strippedLen = crcRemove(frame.data(), totalWithCrc);
-    frame.resize(strippedLen);
-    
-    // Use parse_frame method which handles decryption and value extraction
-    float result = wmbus_meter->parse_frame(frame);
-    
-    // parse_frame returns the value for the configured property (total_energy_consumption_kwh)
-    if (result > 0.0f) {
-        TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
-        
-        // Also verify we can get all values from the driver after parse_frame
-        auto values = wmbus_driver->get_values(frame);
-        TEST_ASSERT_TRUE(values.count("total_volume_m3") > 0);
-        TEST_ASSERT_FLOAT_WITHIN(0.01f, 538.96f, values["total_volume_m3"]);
-        
-        TEST_ASSERT_TRUE(values.count("power_kw") > 0);
-        TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.8f, values["power_kw"]);
-        
-        TEST_ASSERT_TRUE(values.count("flow_temperature_c") > 0);
-        TEST_ASSERT_FLOAT_WITHIN(0.1f, 44.6f, values["flow_temperature_c"]);
-        
-        TEST_ASSERT_TRUE(values.count("return_temperature_c") > 0);
-        TEST_ASSERT_FLOAT_WITHIN(0.1f, 31.5f, values["return_temperature_c"]);
-    }
-    
-    tearDown_wmbus_meter_key2();
-    
-    // Test passes as long as parse_frame executed without crashing
-    TEST_ASSERT_TRUE(result >= 0.0f);
 }
 #endif // SUPLA_CC1101
 
@@ -535,12 +413,9 @@ void setup() {
 
 #ifdef SUPLA_CC1101
     // --- Group 3: WmbusMeter integration tests with encryption keys ---
-    RUN_TEST(test_wmbus_meter_decrypt_with_key1);
-    RUN_TEST(test_wmbus_meter_decrypt_with_key2);
     RUN_TEST(test_wmbus_meter_parse_frame_with_key1);
-    RUN_TEST(test_wmbus_meter_parse_frame_with_key2);
     RUN_TEST(test_wmbus_meter_parse_all_values_key1);
-    RUN_TEST(test_wmbus_meter_parse_all_values_key2);
+
 #endif
 
     UNITY_END();

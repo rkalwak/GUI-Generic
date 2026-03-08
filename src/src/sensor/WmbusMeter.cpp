@@ -170,7 +170,7 @@ namespace Supla
     {
       Serial.print("wMBus-lib: Frame size: ");
       Serial.println(frame.size());
-      Serial.print("wMBus-lib: (hex): ");
+      Serial.print("wMBus-lib: (hex) without CRC: ");
       for(size_t i = 0; i < frame.size(); i++) {
         if(frame[i] < 0x10) Serial.print("0");
         Serial.print(frame[i], HEX);
@@ -216,6 +216,12 @@ namespace Supla
         }
         if (isOk)
         {
+          Serial.print("wMBus-lib: decrypted frame: ");
+          for(size_t i = 0; i < frame.size(); i++) {
+            if(frame[i] < 0x10) Serial.print("0");
+            Serial.print(frame[i], HEX);
+          }
+          Serial.println();
           if(this->drivers_.count(sensor->get_type()))
           {
             Serial.println("wMBus-lib: Getting driver.");

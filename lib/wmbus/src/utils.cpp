@@ -140,13 +140,14 @@ bool decrypt_TPL_AES_CBC_IV(std::vector<unsigned char> &frame,
                             std::vector<unsigned char> &key,
                             unsigned char *iv,
                             int *num_encrypted_bytes,
-                            int *num_not_encrypted_at_end) {
+                            int *num_not_encrypted_at_end,
+                            uint8_t tpl_num_encr_blocks) {
   std::vector<unsigned char> buffer;
   buffer.insert(buffer.end(), pos, frame.end());
   size_t num_bytes_to_decrypt = frame.end()-pos;
-  uint8_t tpl_num_encr_blocks = 3; //t->tpl_num_encr_blocks
 
-  if (tpl_num_encr_blocks) {
+  // Use provided tpl_num_encr_blocks, default to all remaining bytes if 0
+  if (tpl_num_encr_blocks > 0) {
     num_bytes_to_decrypt = tpl_num_encr_blocks*16;
   }
 

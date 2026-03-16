@@ -134,12 +134,38 @@ namespace Supla
         Serial.println(" not recognized");
       }
 
+      // Parse tpl-cfg to get number of encrypted blocks
+      // tpl-cfg is at bytes 13-14 (after CRC removal) for Format A
+      // tpl-cfg format: bits 4-7 contain nb (number of encrypted blocks)
+      uint16_t tpl_cfg = 0;
+      uint8_t num_encr_blocks = 0;
+      
+      if (offset == 15) { // Format A
+        if (telegram.size() >= 15) {
+          tpl_cfg = ((uint16_t)telegram[14] << 8) | telegram[13];  // Little-endian
+          num_encr_blocks = (tpl_cfg >> 4) & 0x0F;
+          Serial.print("wMBus-lib: tpl-cfg = 0x");
+          Serial.print(tpl_cfg, HEX);
+          Serial.print(", num_encr_blocks = ");
+          Serial.println(num_encr_blocks);
+        }
+      } else if (offset == 23) { // Format B
+        if (telegram.size() >= 23) {
+          tpl_cfg = ((uint16_t)telegram[22] << 8) | telegram[21];  // Little-endian
+          num_encr_blocks = (tpl_cfg >> 4) & 0x0F;
+          Serial.print("wMBus-lib: tpl-cfg = 0x");
+          Serial.print(tpl_cfg, HEX);
+          Serial.print(", num_encr_blocks = ");
+          Serial.println(num_encr_blocks);
+        }
+      }
+
       pos = telegram.begin() + offset;
       int num_encrypted_bytes = 0;
       int num_not_encrypted_at_end = 0;
 
       if (decrypt_TPL_AES_CBC_IV(telegram, pos, key, iv,
-                                 &num_encrypted_bytes, &num_not_encrypted_at_end))
+                                 &num_encrypted_bytes, &num_not_encrypted_at_end, num_encr_blocks))
       {
         Serial.println("wMBus-lib: decrypt_TPL_AES_CBC_IV returned true");
         uint32_t decrypt_check = 0x2F2F;

@@ -83,7 +83,7 @@ void handleSensorSpi(int save) {
       String sensorKey1 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(0);
       addTextBox(INPUT_WMBUS_SENSOR_KEY1, S_WMBUS_SENSOR_KEY, sensorKey1.c_str(), 1, 50, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY1).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_PROP1, S_WMBUS_SENSOR_PROP, sensors_properties, 24, selected);
+      addListBox(INPUT_WMBUS_SENSOR_PROP1, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
 
       // second sensor
@@ -97,7 +97,7 @@ void handleSensorSpi(int save) {
       String sensorKey2 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(1);
       addTextBox(INPUT_WMBUS_SENSOR_KEY2, S_WMBUS_SENSOR_KEY, sensorKey2.c_str(), 1, 50, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY2).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_PROP2, S_WMBUS_SENSOR_PROP, sensors_properties, 24, selected);
+      addListBox(INPUT_WMBUS_SENSOR_PROP2, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
 
       // third sensor
@@ -111,7 +111,7 @@ void handleSensorSpi(int save) {
       String sensorKey3 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(2);
       addTextBox(INPUT_WMBUS_SENSOR_KEY3, S_WMBUS_SENSOR_KEY, sensorKey3.c_str(), 1, 50, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY3).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_PROP3, S_WMBUS_SENSOR_PROP, sensors_properties, 24, selected);
+      addListBox(INPUT_WMBUS_SENSOR_PROP3, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
 
       // fourth sensor
@@ -125,7 +125,7 @@ void handleSensorSpi(int save) {
       String sensorKey4 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(3);
       addTextBox(INPUT_WMBUS_SENSOR_KEY4, S_WMBUS_SENSOR_KEY, sensorKey4.c_str(), 1, 50, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY4).toInt();  
-      addListBox(INPUT_WMBUS_SENSOR_PROP4, S_WMBUS_SENSOR_PROP, sensors_properties, 24, selected);
+      addListBox(INPUT_WMBUS_SENSOR_PROP4, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
     }
   }
@@ -290,6 +290,60 @@ void handleSensorSpiSave() {
     ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED4, 0);
   }
   // fourth sensor
+
+  // fifth sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED5;
+  elementIndex = 4;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED5, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE5;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE5, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID5;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY5;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP5;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY5, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED5, 0);
+  }
+  // fifth sensor
+
+  // sixth sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED6;
+  elementIndex = 5;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED6, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE6;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE6, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID6;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY6;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP6;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY6, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED6, 0);
+  }
+  // sixth sensor
 
 #endif
 

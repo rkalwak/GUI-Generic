@@ -344,6 +344,83 @@ struct Driver {
     return ret_val;
   };
 
+  // Volume flow: DIF=0B (3-byte BCD), VIF=3B (l/h) -> m3/h
+  float get_0B3B(std::vector<unsigned char> &telegram) {
+    float ret_val{};
+    uint32_t usage = 0;
+    size_t i = 11;
+    uint32_t total_register = 0x0B3B;
+    while (i < telegram.size()) {
+      uint32_t c = (((uint32_t)telegram[i + 0] << 8) | ((uint32_t)telegram[i + 1]));
+      if (c == total_register) {
+        i += 2;
+        usage = bcd_2_int(telegram, i, 3);
+        // l/h -> m3/h
+        ret_val = usage / 1000.0;
+        break;
+      }
+      i++;
+    }
+    return ret_val;
+  };
+
+  // Power: DIF=0C (4-byte BCD), VIF=2B (W) -> kW
+  float get_0C2B(std::vector<unsigned char> &telegram) {
+    float ret_val{};
+    uint32_t usage = 0;
+    size_t i = 11;
+    uint32_t total_register = 0x0C2B;
+    while (i < telegram.size()) {
+      uint32_t c = (((uint32_t)telegram[i + 0] << 8) | ((uint32_t)telegram[i + 1]));
+      if (c == total_register) {
+        i += 2;
+        usage = bcd_2_int(telegram, i, 4);
+        // W -> kW
+        ret_val = usage / 1000.0;
+        break;
+      }
+      i++;
+    }
+    return ret_val;
+  };
+
+  // Operating time: DIF=0B (3-byte BCD), VIF=26 (hours)
+  float get_0B26(std::vector<unsigned char> &telegram) {
+    float ret_val{};
+    uint32_t usage = 0;
+    size_t i = 11;
+    uint32_t total_register = 0x0B26;
+    while (i < telegram.size()) {
+      uint32_t c = (((uint32_t)telegram[i + 0] << 8) | ((uint32_t)telegram[i + 1]));
+      if (c == total_register) {
+        i += 2;
+        usage = bcd_2_int(telegram, i, 3);
+        ret_val = (float)usage;
+        break;
+      }
+      i++;
+    }
+    return ret_val;
+  };
+
+  // Operating time in error: DIF=0A (2-byte BCD), VIF=A6 (hours, ext bit set), VIFE=18
+  float get_0AA618(std::vector<unsigned char> &telegram) {
+    float ret_val{};
+    uint32_t usage = 0;
+    size_t i = 11;
+    while (i + 2 < telegram.size()) {
+      // 3-byte register match: DIF=0A, VIF=A6, VIFE=18
+      if (telegram[i] == 0x0A && telegram[i + 1] == 0xA6 && telegram[i + 2] == 0x18) {
+        i += 3;
+        usage = bcd_2_int(telegram, i, 2);
+        ret_val = (float)usage;
+        break;
+      }
+      i++;
+    }
+    return ret_val;
+  };
+
   // Operating time: DIF=04 (4-byte int LE), VIF=76 (hours)
   float get_0476(std::vector<unsigned char> &telegram) {
     float ret_val{};

@@ -193,10 +193,24 @@ void test_wmbus_meter_parse_all_values() {
   wmbus_meter->add_driver(wmbus_driver);
 
   // Meter ID: 81052818 (pair-swapped from frame bytes 4-7: 18280581)
-  auto wmbus_sensor = new Supla::Sensor::SensorBase("81052818", "sharky774", "total_energy_consumption_kwh", "51728910E66D83F839BC8A10E66D83F8");
+  auto wmbus_sensor = new Supla::Sensor::SensorBase("81052818", "sharky774", "total_energy_consumption_kwh", "51728910E66D83F851728910E66D83F8");
   wmbus_meter->add_sensor(wmbus_sensor);
   // 5E44A5111828058141046DF17A4900500521BA8F123FDE8B924B3EFB3B7BD143159D913EB08FA29EE2030F73B672E1EC8F4253B98A443DF7051AF17F3AF98E3FEF86677BF5FB674534CCE08BC9BD73137EE513479F405F915848755F7CD08FDAF4153994C741E1CD78246164320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
+// wmbusmeters decoded values:
+//"_":"telegram",
+//"media":"heat",
+//"meter":"sharky774",
+//"name":"",
+//"id":"81052818",
+//"flow_temperature_c":32.3,
+//"operating_time_h":23983,
+//"operating_time_in_error_h":0,
+//"power_kw":0,
+//"return_temperature_c":31.8,
+//"total_energy_consumption_kwh":5366.111111,
+//"total_volume_m3":553.942,
+//"volume_flow_m3h":0,
+//"timestamp":"2026-03-21T18:45:21Z"
   static uint8_t sharky[254] = {0x5E, 0x44, 0xA5, 0x11, 0x18, 0x28, 0x05, 0x81, 0x41, 0x04, 0x6D, 0xF1, 0x7A, 0x49, 0x00, 0x50,
                                 0x05, 0x21, 0xBA, 0x8F, 0x12, 0x3F, 0xDE, 0x8B, 0x92, 0x4B, 0x3E, 0xFB, 0x3B, 0x7B, 0xD1, 0x43,
                                 0x15, 0x9D, 0x91, 0x3E, 0xB0, 0x8F, 0xA2, 0x9E, 0xE2, 0x03, 0x0F, 0x73, 0xB6, 0x72, 0xE1, 0xEC,
@@ -218,32 +232,103 @@ void test_wmbus_meter_parse_all_values() {
   float result = wmbus_meter->parse_frame(frame);
 
   // parse_frame returns the value for the configured property (total_energy_consumption_kwh)
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, result);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5366.111111f, result);
 
   auto values = wmbus_driver->get_values(frame);
   TEST_ASSERT_TRUE(values.count("total_energy_consumption_kwh") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5269.722f, values["total_energy_consumption_kwh"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5366.111111f, values["total_energy_consumption_kwh"]);
 
   TEST_ASSERT_TRUE(values.count("total_volume_m3") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, 538.96f, values["total_volume_m3"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 553.942f, values["total_volume_m3"]);
 
   TEST_ASSERT_TRUE(values.count("power_kw") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.8f, values["power_kw"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, values["power_kw"]);
 
   TEST_ASSERT_TRUE(values.count("flow_temperature_c") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.1f, 44.6f, values["flow_temperature_c"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 32.3f, values["flow_temperature_c"]);
 
   TEST_ASSERT_TRUE(values.count("return_temperature_c") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.1f, 31.5f, values["return_temperature_c"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 31.8f, values["return_temperature_c"]);
 
   TEST_ASSERT_TRUE(values.count("operating_time_h") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(1.0f, 23662.0f, values["operating_time_h"]);
+  TEST_ASSERT_FLOAT_WITHIN(1.0f, 23983.0f, values["operating_time_h"]);
 
   TEST_ASSERT_TRUE(values.count("operating_time_in_error_h") > 0);
   TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, values["operating_time_in_error_h"]);
 
   TEST_ASSERT_TRUE(values.count("volume_flow_m3h") > 0);
-  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.053f, values["volume_flow_m3h"]);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, values["volume_flow_m3h"]);
+}
+
+void test_wmbus_meter_parse_all_values_flow() {
+  // Test complete parsing of all Sharky774 fields from AES-encrypted telegram
+  // Frame type: OMS (ci_field=0x7A, tpl_cfg bit 12=0)
+  // Encryption: AES-128-CBC with full 16-byte key
+  // Validates: energy, volume, flow, power, temperatures, operating times
+  auto wmbus_meter = new Supla::Sensor::WmbusMeter(1, 2, 3, 4, 6, 7, true);
+  auto wmbus_driver = new Sharky774();
+  wmbus_meter->add_driver(wmbus_driver);
+
+  // Meter ID: 81052818 (pair-swapped from frame bytes 4-7: 18280581)
+  auto wmbus_sensor = new Supla::Sensor::SensorBase("81052818", "sharky774", "total_energy_consumption_kwh", "51728910E66D83F851728910E66D83F8");
+  wmbus_meter->add_sensor(wmbus_sensor);
+  // 5e44a5111828058141046df17aB80050053cB593472acf5ee93f5984e86B4BBBf39fa2988d108299d5e8643a276a8c7e9089Ba78f7c847B1B62f5e19614a82f8f8a5914f0e35599cBfcaa04a4Bed32B519ac93ed40Be5B9a3487Ba5d14337399ee751a51cc6d55d7983003a233
+ //{
+  //"_":"telegram",
+  //"media":"heat",
+  //"meter":"sharky774",
+  //"name":"",
+  //"id":"81052818",
+  //"flow_temperature_c":44.5,
+  //"operating_time_h":24138,
+  //"operating_time_in_error_h":0,
+  //"power_kw":0.715,
+  //"return_temperature_c":37.8,
+  //"total_energy_consumption_kwh":5421.388889,
+  //"total_volume_m3":564.066,
+  //"volume_flow_m3h":0.093,
+  //"timestamp":"2026-03-21T14:27:07Z"
+    
+
+static uint8_t sharky[109] = {0x5E, 0x44, 0xA5, 0x11, 0x18, 0x28, 0x05, 0x81, 0x41, 0x04, 0x6D, 0xF1, 0x7A, 0xB8, 0x00, 0x50,
+                                0x05, 0x3C, 0xB5, 0x93, 0x47, 0x2A, 0xCF, 0x5E, 0xE9, 0x3F, 0x59, 0x84, 0xE8, 0x6B, 0x4B, 0xBB,
+                                0xF3, 0x9F, 0xA2, 0x98, 0x8D, 0x10, 0x82, 0x99, 0xD5, 0xE8, 0x64, 0x3A, 0x27, 0x6A, 0x8C, 0x7E,
+                                0x90, 0x89, 0xBA, 0x78, 0xF7, 0xC8, 0x47, 0xB1, 0xB6, 0x2F, 0x5E, 0x19, 0x61, 0x4A, 0x82, 0xF8,
+                                0xF8, 0xA5, 0x91, 0x4F, 0x0E, 0x35, 0x59, 0x9C, 0xBF, 0xCA, 0xA0, 0x4A, 0x4B, 0xED, 0x32, 0xB5,
+                                0x19, 0xAC, 0x93, 0xED, 0x40, 0xBE, 0x5B, 0x9A, 0x34, 0x87, 0xBA, 0x5D, 0x14, 0x33, 0x73, 0x99,
+                                0xEE, 0x75, 0x1A, 0x51, 0xCC, 0x6D, 0x55, 0xD7, 0x98, 0x30, 0x03, 0xA2, 0x33};
+
+  uint8_t len_without_crc = crcRemove(sharky, packetSize(sharky[0]));
+  std::vector<unsigned char> frame(sharky, sharky + len_without_crc);
+  float result = wmbus_meter->parse_frame(frame);
+
+  // parse_frame returns the value for the configured property (total_energy_consumption_kwh)
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5421.388889f, result);
+
+  auto values = wmbus_driver->get_values(frame);
+  TEST_ASSERT_TRUE(values.count("total_energy_consumption_kwh") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5421.388889f, values["total_energy_consumption_kwh"]);
+
+  TEST_ASSERT_TRUE(values.count("total_volume_m3") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 564.066f, values["total_volume_m3"]);
+
+  TEST_ASSERT_TRUE(values.count("power_kw") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.715f, values["power_kw"]);
+
+  TEST_ASSERT_TRUE(values.count("flow_temperature_c") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 44.5f, values["flow_temperature_c"]);
+
+  TEST_ASSERT_TRUE(values.count("return_temperature_c") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 37.8f, values["return_temperature_c"]);
+
+  TEST_ASSERT_TRUE(values.count("operating_time_h") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(1.0f, 24138.0f, values["operating_time_h"]);
+
+  TEST_ASSERT_TRUE(values.count("operating_time_in_error_h") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, values["operating_time_in_error_h"]);
+
+  TEST_ASSERT_TRUE(values.count("volume_flow_m3h") > 0);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.093f, values["volume_flow_m3h"]);
 }
 
 // ---------------------------------------------------------------------------
@@ -257,6 +342,8 @@ void setup() {
   UNITY_BEGIN();
 
   RUN_TEST(test_full_frame_full_key);
+  RUN_TEST(test_wmbus_meter_parse_all_values);
+  RUN_TEST(test_wmbus_meter_parse_all_values_flow);
 
   UNITY_END();
 }

@@ -141,6 +141,21 @@ Using driver   : sharky774 00/00
 #endif
 #include <mbus_packet.hpp>
 
+// Helper: captures the value delivered via setNewValue so tests can assert it.
+class TrackingSensor : public Supla::Sensor::SensorBase {
+ public:
+  TrackingSensor(const char *meter_id, const char *type, const char *property, const char *key)
+      : SensorBase(meter_id, type, property, key), receivedValue(-1.0f), valueSet(false) {}
+
+  void setNewValue(uint64_t value) override {
+    receivedValue = static_cast<float>(value) / 1000.0f;
+    valueSet = true;
+  }
+
+  float receivedValue;
+  bool valueSet;
+};
+
 void setUp() {
 }
 
@@ -331,6 +346,77 @@ static uint8_t sharky[109] = {0x5E, 0x44, 0xA5, 0x11, 0x18, 0x28, 0x05, 0x81, 0x
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.093f, values["volume_flow_m3h"]);
 }
 
+void test_wmbus_meter_multiple_sensors_all_properties() {
+  // Tests that multiple SensorBase instances – one per Sharky774 property –
+  // are each updated with the correct value after a single parse_frame call.
+  // Frame: AES-128-CBC OMS telegram with non-zero flow/power values.
+  // Expected values match wmbusmeters output (see test_wmbus_meter_parse_all_values_flow).
+  auto wmbus_meter = new Supla::Sensor::WmbusMeter(1, 2, 3, 4, 6, 7, true);
+  auto wmbus_driver = new Sharky774();
+  wmbus_meter->add_driver(wmbus_driver);
+
+  const char *meterId    = "81052818";
+  const char *driverName = "sharky774";
+  const char *key        = "51728910E66D83F851728910E66D83F8";
+
+  auto sensor_energy      = new TrackingSensor(meterId, driverName, "total_energy_consumption_kwh", key);
+  auto sensor_volume      = new TrackingSensor(meterId, driverName, "total_volume_m3",              key);
+  auto sensor_power       = new TrackingSensor(meterId, driverName, "power_kw",                    key);
+  auto sensor_flow_temp   = new TrackingSensor(meterId, driverName, "flow_temperature_c",           key);
+  auto sensor_return_temp = new TrackingSensor(meterId, driverName, "return_temperature_c",         key);
+  auto sensor_op_time     = new TrackingSensor(meterId, driverName, "operating_time_h",             key);
+  auto sensor_err_time    = new TrackingSensor(meterId, driverName, "operating_time_in_error_h",    key);
+  auto sensor_vol_flow    = new TrackingSensor(meterId, driverName, "volume_flow_m3h",              key);
+
+  wmbus_meter->add_sensor(sensor_energy);
+  wmbus_meter->add_sensor(sensor_volume);
+  wmbus_meter->add_sensor(sensor_power);
+  wmbus_meter->add_sensor(sensor_flow_temp);
+  wmbus_meter->add_sensor(sensor_return_temp);
+  wmbus_meter->add_sensor(sensor_op_time);
+  wmbus_meter->add_sensor(sensor_err_time);
+  wmbus_meter->add_sensor(sensor_vol_flow);
+
+  // Same telegram as test_wmbus_meter_parse_all_values_flow
+  static uint8_t sharky[109] = {
+    0x5E, 0x44, 0xA5, 0x11, 0x18, 0x28, 0x05, 0x81, 0x41, 0x04, 0x6D, 0xF1, 0x7A, 0xB8, 0x00, 0x50,
+    0x05, 0x3C, 0xB5, 0x93, 0x47, 0x2A, 0xCF, 0x5E, 0xE9, 0x3F, 0x59, 0x84, 0xE8, 0x6B, 0x4B, 0xBB,
+    0xF3, 0x9F, 0xA2, 0x98, 0x8D, 0x10, 0x82, 0x99, 0xD5, 0xE8, 0x64, 0x3A, 0x27, 0x6A, 0x8C, 0x7E,
+    0x90, 0x89, 0xBA, 0x78, 0xF7, 0xC8, 0x47, 0xB1, 0xB6, 0x2F, 0x5E, 0x19, 0x61, 0x4A, 0x82, 0xF8,
+    0xF8, 0xA5, 0x91, 0x4F, 0x0E, 0x35, 0x59, 0x9C, 0xBF, 0xCA, 0xA0, 0x4A, 0x4B, 0xED, 0x32, 0xB5,
+    0x19, 0xAC, 0x93, 0xED, 0x40, 0xBE, 0x5B, 0x9A, 0x34, 0x87, 0xBA, 0x5D, 0x14, 0x33, 0x73, 0x99,
+    0xEE, 0x75, 0x1A, 0x51, 0xCC, 0x6D, 0x55, 0xD7, 0x98, 0x30, 0x03, 0xA2, 0x33};
+
+  uint8_t len_without_crc = crcRemove(sharky, packetSize(sharky[0]));
+  std::vector<unsigned char> frame(sharky, sharky + len_without_crc);
+  wmbus_meter->parse_frame(frame);
+
+  // Assert every sensor was called and holds the correct value.
+  TEST_ASSERT_TRUE(sensor_energy->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 5421.388889f, sensor_energy->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_volume->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 564.066f, sensor_volume->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_power->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.715f, sensor_power->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_flow_temp->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 44.5f, sensor_flow_temp->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_return_temp->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.1f, 37.8f, sensor_return_temp->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_op_time->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(1.0f, 24138.0f, sensor_op_time->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_err_time->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(1.0f, 0.0f, sensor_err_time->receivedValue);
+
+  TEST_ASSERT_TRUE(sensor_vol_flow->valueSet);
+  TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.093f, sensor_vol_flow->receivedValue);
+}
+
 // ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
@@ -344,6 +430,7 @@ void setup() {
   RUN_TEST(test_full_frame_full_key);
   RUN_TEST(test_wmbus_meter_parse_all_values);
   RUN_TEST(test_wmbus_meter_parse_all_values_flow);
+  RUN_TEST(test_wmbus_meter_multiple_sensors_all_properties);
 
   UNITY_END();
 }

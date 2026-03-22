@@ -40,7 +40,7 @@ namespace Supla
 
     void WmbusMeter::add_sensor(SensorBase *sensor)
     {
-      this->sensors_[sensor->get_meter_id()] = sensor;
+      this->sensors_.insert({sensor->get_meter_id(), sensor});
       Serial.println("------");
       Serial.print("Type:");
       Serial.println(sensor->get_type().c_str());
@@ -226,16 +226,26 @@ namespace Supla
       std::string meterIdRealString = s;
 
       // either we have sensors defined or we have just one without ID (like Izar)
-      if(sensors_.count(meterIdRealString) > 0 || (sensors_.size() == 1 && sensors_.begin()->second->get_meter_id() == "" ))
+      // Determine which sensors match this meter ID
+      std::string lookupId = meterIdRealString;
+      bool isIzarCase = (sensors_.count(meterIdRealString) == 0 &&
+                         sensors_.count("") > 0);
+      if (isIzarCase) {
+        lookupId = "";
+      }
+
+      if(sensors_.count(lookupId) > 0)
       {
         Serial.println("wMBus-lib: Getting sensor config.");
-        auto sensor = (sensors_.size() == 1 && sensors_.begin()->second->get_meter_id() == "" )? sensors_.begin()->second : sensors_[meterIdRealString];
+        auto range = sensors_.equal_range(lookupId);
+        // Use the first matching sensor to get key and type for decryption
+        auto firstSensor = range.first->second;
         bool isOk = true;
         float readValue = 0.0;
-        if (sensor->get_key().size() >0)
+        if (firstSensor->get_key().size() > 0)
         {
           Serial.println("wMBus-lib: Key provided, decrypting frame.");
-          if (!decrypt_telegram(frame, sensor->get_key()))
+          if (!decrypt_telegram(frame, firstSensor->get_key()))
           {
             isOk = false;
           }
@@ -248,12 +258,10 @@ namespace Supla
             Serial.print(frame[i], HEX);
           }
           Serial.println();
-          if(this->drivers_.count(sensor->get_type()))
+          if(this->drivers_.count(firstSensor->get_type()))
           {
             Serial.println("wMBus-lib: Getting driver.");
-            Serial.print("wMBus-lib: Property: ");
-            Serial.println(sensor->get_property_to_send().c_str());
-            auto driver = this->drivers_[sensor->get_type()];
+            auto driver = this->drivers_[firstSensor->get_type()];
             auto mapValues = driver->get_values(frame);
             Serial.println("wMBus-lib: Available map values:");
             for (auto const &entry : mapValues)
@@ -263,20 +271,29 @@ namespace Supla
               Serial.print(" = ");
               Serial.println(entry.second);
             }
-            readValue = mapValues[sensor->get_property_to_send()];
-            Serial.print("Meter id as string: ");
-            Serial.println(meterIdRealString.c_str());
-            Serial.print("Meter id as number: ");
-            Serial.println(meterIdString.c_str());
-            Serial.print("Value read: ");
-            Serial.println(readValue);
-            sensor->setNewValue((uint64_t)(readValue * 1000));
-            sensor->iterateAlways();    
+            // Iterate over ALL sensors matching this meter ID
+            for (auto it = range.first; it != range.second; ++it)
+            {
+              auto sensor = it->second;
+              Serial.print("wMBus-lib: Property: ");
+              Serial.println(sensor->get_property_to_send().c_str());
+              float value = mapValues[sensor->get_property_to_send()];
+              Serial.print("Meter id as string: ");
+              Serial.println(meterIdRealString.c_str());
+              Serial.print("Value read: ");
+              Serial.println(value);
+              sensor->setNewValue((uint64_t)(value * 1000));
+              sensor->iterateAlways();
+              // Return the first sensor's value for backward compatibility
+              if (it == range.first) {
+                readValue = value;
+              }
+            }
           }
           else
           {
             Serial.print("wMBus-lib: Driver for sensor: ");
-            Serial.print(sensor->get_type().c_str());
+            Serial.print(firstSensor->get_type().c_str());
             Serial.println(" does not exist.");
           }
         }

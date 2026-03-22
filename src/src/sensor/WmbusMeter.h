@@ -20,7 +20,7 @@ class WmbusMeter : public Element {
 
   void onFastTimer() override;
   std::map<std::string, Driver *> drivers_{};
-  std::map<std::string, SensorBase *> sensors_{};
+  std::multimap<std::string, SensorBase *> sensors_{};
   void add_driver(Driver *driver);
   void add_sensor(SensorBase *sensor);
  std::string extract_meter_id_string(const std::vector<unsigned char> &frame);

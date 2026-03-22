@@ -50,6 +50,7 @@ namespace Supla
       Serial.println(sensor->get_key_string().c_str());
       Serial.print("Property:");
       Serial.println(sensor->get_property_to_send().c_str());
+      Serial.println("------");
     }
     
      std::string WmbusMeter::extract_meter_id_string(const std::vector<unsigned char> &frame) {
@@ -194,21 +195,7 @@ namespace Supla
 
     float WmbusMeter::parse_frame(std::vector<unsigned char> &frame)
     {
-      Serial.print("wMBus-lib: Frame size: ");
-      Serial.println(frame.size());
-      Serial.print("wMBus-lib: (hex) without CRC: ");
-      for(size_t i = 0; i < frame.size(); i++) {
-        if(frame[i] < 0x10) Serial.print("0");
-        Serial.print(frame[i], HEX);
-      }
-      Serial.println();
-      Serial.println("wMBus-lib: Formatting as string.");
-
       std::string telegram = format_hex_pretty(frame);
-      Serial.println("wMBus-lib: Formatted telegram:");
-      Serial.println(telegram.c_str());
-      Serial.println("wMBus-lib: Removing helping characters.");
-
       telegram.erase(std::remove(telegram.begin(), telegram.end(), '.'), telegram.end());
       Serial.println("wMBus-lib: Telegram after removing dots:");
       Serial.println(telegram.c_str());

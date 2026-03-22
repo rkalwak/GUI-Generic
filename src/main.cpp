@@ -415,6 +415,47 @@ void setup() {
         sensorProperty = sensors_properties[indexOfSensorProperty];
         meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
       }
+
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED7).toInt() == 1) {
+        indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE7).toInt();
+        sensorType = sensors_types[indexOfSensorType];
+        sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(6).c_str();
+        sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(6).c_str();
+        indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY7).toInt();
+        sensorProperty = sensors_properties[indexOfSensorProperty];
+        meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
+      }
+
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED8).toInt() == 1) {
+        indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE8).toInt();
+        sensorType = sensors_types[indexOfSensorType];
+        sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(7).c_str();
+        sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(7).c_str();
+        indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY8).toInt();
+        sensorProperty = sensors_properties[indexOfSensorProperty];
+        meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
+      }
+
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED9).toInt() == 1) {
+        indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE9).toInt();
+        sensorType = sensors_types[indexOfSensorType];
+        sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(8).c_str();
+        sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(8).c_str();
+        indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY9).toInt();
+        sensorProperty = sensors_properties[indexOfSensorProperty];
+        meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
+      }
+
+      if (ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED10).toInt() == 1) {
+        indexOfSensorType = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE10).toInt();
+        sensorType = sensors_types[indexOfSensorType];
+        sensorId = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(9).c_str();
+        sensorKey = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(9).c_str();
+        indexOfSensorProperty = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY10).toInt();
+        sensorProperty = sensors_properties[indexOfSensorProperty];
+        meter->add_sensor(new Supla::Sensor::SensorInfo(sensorId, sensorType, sensorProperty, sensorKey));
+      }
+      
       Serial.println("------");
       meter->add_driver(new Amiplus());
       meter->add_driver(new Apator08());

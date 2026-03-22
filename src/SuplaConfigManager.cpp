@@ -466,13 +466,17 @@ SuplaConfigManager::SuplaConfigManager() : Supla::SPIFFSConfig(CONFIG_MAX_SIZE) 
 #endif
 
 #ifdef SUPLA_CC1101
-    this->addKey(KEY_WMBUS_SENSOR, 30);
+// assuming max 10 sensors, 
+// each with enabled flag, index of type and index of property to read, which gives 3 values per sensor
+// each having ID of 8 characters
+// each having Key of 32 characters
+    this->addKey(KEY_WMBUS_SENSOR, 100);
     this->addKey(KEY_WMBUS_SENSOR_ID, 100);
-    this->addKey(KEY_WMBUS_SENSOR_KEY, 200);
+    this->addKey(KEY_WMBUS_SENSOR_KEY, 350);
 #else
-    this->addKey(KEY_WMBUS_SENSOR, 30, false);
+    this->addKey(KEY_WMBUS_SENSOR, 100, false);
     this->addKey(KEY_WMBUS_SENSOR_ID, 100, false);
-    this->addKey(KEY_WMBUS_SENSOR_KEY, 200, false);
+    this->addKey(KEY_WMBUS_SENSOR_KEY, 350, false);
 #endif
 
     SPIFFS.end();

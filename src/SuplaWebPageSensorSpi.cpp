@@ -373,6 +373,114 @@ void handleSensorSpiSave() {
   }
   // sixth sensor
 
+  // seventh sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED7;
+  elementIndex = 6;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED7, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE7;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE7, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID7;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY7;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP7;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY7, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED7, 0);
+  }
+  // seventh sensor
+
+  // eighth sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED8;
+  elementIndex = 7;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED8, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE8;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE8, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID8;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY8;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP8;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY8, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED8, 0);
+  }
+  // eighth sensor
+
+  // ninth sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED9;
+  elementIndex = 8;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED9, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE9;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE9, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID9;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY9;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP9;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY9, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED9, 0);
+  }
+  // ninth sensor
+
+  // tenth sensor is optional
+  input = INPUT_WMBUS_SENSOR_ENABLED10;
+  elementIndex = 9;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED10, 1);
+    input = INPUT_WMBUS_SENSOR_TYPE10;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE10, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  
+    input = INPUT_WMBUS_SENSOR_ID10;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_KEY10;
+    ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, elementIndex, WebServer->httpServer->arg(input).c_str());
+
+    input = INPUT_WMBUS_SENSOR_PROP10;
+    if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+      ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY10, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+    }
+  }
+  else
+  {
+    ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED10, 0);
+  }
+  // tenth sensor
+
 #endif
 
 #ifdef SUPLA_INA229

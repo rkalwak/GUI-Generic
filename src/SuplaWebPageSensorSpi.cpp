@@ -142,7 +142,7 @@ void handleSensorSpi(int save) {
       addListBox(INPUT_WMBUS_SENSOR_PROP5, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
 
-       // sixth sensor
+      // sixth sensor
       addFormHeader(String(S_WMBUS_METER) + " 6");
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED6).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED6, S_ON, selected);
@@ -154,6 +154,62 @@ void handleSensorSpi(int save) {
       addTextBox(INPUT_WMBUS_SENSOR_KEY6, S_WMBUS_SENSOR_KEY, sensorKey6.c_str(), 1, 50, false);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY6).toInt();  
       addListBox(INPUT_WMBUS_SENSOR_PROP6, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
+      addFormHeaderEnd();
+
+      // seventh sensor
+      addFormHeader(String(S_WMBUS_METER) + " 7");
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED7).toInt();
+      addCheckBox(INPUT_WMBUS_SENSOR_ENABLED7, S_ON, selected);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE7).toInt();
+      addListBox(INPUT_WMBUS_SENSOR_TYPE7, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      String sensorId7 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(6);
+      addTextBox(INPUT_WMBUS_SENSOR_ID7, S_WMBUS_SENSOR_ID, sensorId7.c_str(), 1, 9, false);
+      String sensorKey7 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(6);
+      addTextBox(INPUT_WMBUS_SENSOR_KEY7, S_WMBUS_SENSOR_KEY, sensorKey7.c_str(), 1, 50, false);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY7).toInt();  
+      addListBox(INPUT_WMBUS_SENSOR_PROP7, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
+      addFormHeaderEnd();
+
+      // eighth sensor
+      addFormHeader(String(S_WMBUS_METER) + " 8");
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED8).toInt();
+      addCheckBox(INPUT_WMBUS_SENSOR_ENABLED8, S_ON, selected);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE8).toInt();
+      addListBox(INPUT_WMBUS_SENSOR_TYPE8, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      String sensorId8 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(7);
+      addTextBox(INPUT_WMBUS_SENSOR_ID8, S_WMBUS_SENSOR_ID, sensorId8.c_str(), 1, 9, false);
+      String sensorKey8 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(7);
+      addTextBox(INPUT_WMBUS_SENSOR_KEY8, S_WMBUS_SENSOR_KEY, sensorKey8.c_str(), 1, 50, false);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY8).toInt();  
+      addListBox(INPUT_WMBUS_SENSOR_PROP8, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
+      addFormHeaderEnd();
+
+      // ninth sensor
+      addFormHeader(String(S_WMBUS_METER) + " 9");
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED9).toInt();
+      addCheckBox(INPUT_WMBUS_SENSOR_ENABLED9, S_ON, selected);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE9).toInt();
+      addListBox(INPUT_WMBUS_SENSOR_TYPE9, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      String sensorId9 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(8);
+      addTextBox(INPUT_WMBUS_SENSOR_ID9, S_WMBUS_SENSOR_ID, sensorId9.c_str(), 1, 9, false);
+      String sensorKey9 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(8);
+      addTextBox(INPUT_WMBUS_SENSOR_KEY9, S_WMBUS_SENSOR_KEY, sensorKey9.c_str(), 1, 50, false);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY9).toInt();  
+      addListBox(INPUT_WMBUS_SENSOR_PROP9, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
+      addFormHeaderEnd();
+
+      // tenth sensor
+      addFormHeader(String(S_WMBUS_METER) + " 10");
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED10).toInt();
+      addCheckBox(INPUT_WMBUS_SENSOR_ENABLED10, S_ON, selected);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE10).toInt();
+      addListBox(INPUT_WMBUS_SENSOR_TYPE10, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      String sensorId10 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(9);
+      addTextBox(INPUT_WMBUS_SENSOR_ID10, S_WMBUS_SENSOR_ID, sensorId10.c_str(), 1, 9, false);
+      String sensorKey10 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(9);
+      addTextBox(INPUT_WMBUS_SENSOR_KEY10, S_WMBUS_SENSOR_KEY, sensorKey10.c_str(), 1, 50, false);
+      selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_PROPERTY10).toInt();  
+      addListBox(INPUT_WMBUS_SENSOR_PROP10, S_WMBUS_SENSOR_PROP, sensors_properties, 29, selected);
       addFormHeaderEnd();
     }
   }

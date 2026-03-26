@@ -236,6 +236,7 @@
 #define S_WMBUS_SENSOR_ID "Sensor id"
 #define S_WMBUS_SENSOR_KEY "Sensor key"
 #define S_WMBUS_SENSOR_PROP "Sensor property"
+#define S_WMBUS_SENSOR_CHANNEL "Sensor channel type"
 #endif
 
 #define S_SET "Définir"

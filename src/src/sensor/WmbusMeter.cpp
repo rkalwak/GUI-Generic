@@ -128,11 +128,64 @@ namespace Supla
           iv[i++] = telegram[19];
         }
       }
+      else if (*pos == 0xA0 || *pos == 0xA1)
+      {
+        // Apator NA-1 manufacturer-specific format.
+        // Encrypted payload starts at byte 13; IV construction identical to Format A.
+        Serial.println("wMBus-lib: CI matched Apator NA-1 manufacturer-specific format");
+        offset = 13;
+        Serial.print("wMBus-lib: Data offset set to: ");
+        Serial.println(offset);
+
+        // dll-mfct + dll-id + dll-version + dll-type (bytes 2..9)
+        for (int j = 0; j < 8; ++j)
+        {
+          iv[i++] = telegram[2 + j];
+        }
+        // access counter at byte 11, repeated 8 times
+        for (int j = 0; j < 8; ++j)
+        {
+          iv[i++] = telegram[11];
+        }
+      }
+      else if (*pos == 0x8C)
+      {
+        // ELL I (Extended Link Layer I): 3 bytes at 10-12 (CI, CC, ACC).
+        // TPL CI follows at byte 13; only short header (0x7A) is supported here.
+        unsigned char tpl_ci = (telegram.size() > 13) ? telegram[13] : 0x00;
+        if (tpl_ci == 0x7A)
+        {
+          Serial.println("wMBus-lib: CI matched ELL I + TPL short header (0x8C + 0x7A)");
+          // Encrypted payload starts at byte 18 (after 0x2F 0x2F check bytes).
+          offset = 18;
+          Serial.print("wMBus-lib: Data offset set to: ");
+          Serial.println(offset);
+
+          // IV: dll-mfct + dll-id + dll-version + dll-type (bytes 2..9)
+          for (int j = 0; j < 8; ++j)
+          {
+            iv[i++] = telegram[2 + j];
+          }
+          // tpl-acc is at byte 14, repeated 8 times
+          for (int j = 0; j < 8; ++j)
+          {
+            iv[i++] = telegram[14];
+          }
+        }
+        else
+        {
+          Serial.print("wMBus-lib: ELL I with unsupported TPL CI: 0x");
+          Serial.println(tpl_ci, HEX);
+          return false;
+        }
+      }
       else
       {
         Serial.print("wMBus-lib: CI unknown - value 0x");
         Serial.print(*pos, HEX);
         Serial.println(" not recognized");
+        // Return false without modifying the telegram to prevent data corruption.
+        return false;
       }
 
       // Parse tpl-cfg to get number of encrypted blocks
@@ -159,6 +212,15 @@ namespace Supla
           Serial.print(", num_encr_blocks = ");
           Serial.println(num_encr_blocks);
         }
+      } else if (offset == 18) { // ELL I + TPL short header
+        if (telegram.size() >= 18) {
+          tpl_cfg = (uint16_t)telegram[16] | ((uint16_t)telegram[17] << 8);  // Little-endian
+          num_encr_blocks = (tpl_cfg >> 4) & 0x0F;
+          Serial.print("wMBus-lib: tpl-cfg = 0x");
+          Serial.print(tpl_cfg, HEX);
+          Serial.print(", num_encr_blocks = ");
+          Serial.println(num_encr_blocks);
+        }
       }
 
       pos = telegram.begin() + offset;
@@ -169,21 +231,31 @@ namespace Supla
                                  &num_encrypted_bytes, &num_not_encrypted_at_end, num_encr_blocks))
       {
         Serial.println("wMBus-lib: decrypt_TPL_AES_CBC_IV returned true");
-        uint32_t decrypt_check = 0x2F2F;
-        uint32_t dc = (((uint32_t)telegram[offset] << 8) | ((uint32_t)telegram[offset + 1]));
-        Serial.print("wMBus-lib: Decrypt check value: 0x");
-        Serial.print(dc, HEX);
-        Serial.print(" (expected: 0x");
-        Serial.print(decrypt_check, HEX);
-        Serial.println(")");
-        if (dc == decrypt_check)
+        // For Apator NA-1 (offset=13, manufacturer-specific), skip the standard 0x2F2F check
+        // because the proprietary plaintext does not begin with those bytes.
+        if (offset == 13)
         {
-          Serial.println("wMBus-lib: Decryption successful!");
+          Serial.println("wMBus-lib: Decryption successful (Apator NA-1 manufacturer-specific)!");
           ret_val = true;
         }
         else
         {
-          Serial.println("wMBus-lib: Decryption failed, wrong key?");
+          uint32_t decrypt_check = 0x2F2F;
+          uint32_t dc = (((uint32_t)telegram[offset] << 8) | ((uint32_t)telegram[offset + 1]));
+          Serial.print("wMBus-lib: Decrypt check value: 0x");
+          Serial.print(dc, HEX);
+          Serial.print(" (expected: 0x");
+          Serial.print(decrypt_check, HEX);
+          Serial.println(")");
+          if (dc == decrypt_check)
+          {
+            Serial.println("wMBus-lib: Decryption successful!");
+            ret_val = true;
+          }
+          else
+          {
+            Serial.println("wMBus-lib: Decryption failed, wrong key?");
+          }
         }
       }
       else

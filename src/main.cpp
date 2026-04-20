@@ -415,6 +415,8 @@ void setup() {
       meter->add_driver(new Ultrimis());
       meter->add_driver(new Unismart());
       meter->add_driver(new Vario451());
+      meter->add_driver(new ApatorNA1());
+      meter->add_driver(new ApatorOP04());
     }
 #endif
   }

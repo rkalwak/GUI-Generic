@@ -77,7 +77,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED1).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED1, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE1).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE1, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE1, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId1 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(0);
       addTextBox(INPUT_WMBUS_SENSOR_ID1, S_WMBUS_SENSOR_ID, sensorId1.c_str(), 1, 9, false);
       String sensorKey1 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(0);
@@ -93,7 +93,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED2).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED2, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE2).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE2, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE2, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId2 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(1);
       addTextBox(INPUT_WMBUS_SENSOR_ID2, S_WMBUS_SENSOR_ID, sensorId2.c_str(), 1, 9, false);
       String sensorKey2 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(1);
@@ -109,7 +109,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED3).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED3, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE3).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE3, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE3, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId3 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(2);
       addTextBox(INPUT_WMBUS_SENSOR_ID3, S_WMBUS_SENSOR_ID, sensorId3.c_str(), 1, 9, false);
       String sensorKey3 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(2);
@@ -125,7 +125,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED4).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED4, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE4).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE4, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE4, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId4 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(3);
       addTextBox(INPUT_WMBUS_SENSOR_ID4, S_WMBUS_SENSOR_ID, sensorId4.c_str(), 1, 9, false);
       String sensorKey4 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(3);
@@ -141,7 +141,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED5).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED5, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE5).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE5, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE5, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId5 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(4);
       addTextBox(INPUT_WMBUS_SENSOR_ID5, S_WMBUS_SENSOR_ID, sensorId5.c_str(), 1, 9, false);
       String sensorKey5 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(4);
@@ -157,7 +157,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED6).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED6, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE6).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE6, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE6, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId6 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(5);
       addTextBox(INPUT_WMBUS_SENSOR_ID6, S_WMBUS_SENSOR_ID, sensorId6.c_str(), 1, 9, false);
       String sensorKey6 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(5);
@@ -173,7 +173,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED7).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED7, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE7).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE7, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE7, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId7 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(6);
       addTextBox(INPUT_WMBUS_SENSOR_ID7, S_WMBUS_SENSOR_ID, sensorId7.c_str(), 1, 9, false);
       String sensorKey7 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(6);
@@ -189,7 +189,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED8).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED8, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE8).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE8, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE8, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId8 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(7);
       addTextBox(INPUT_WMBUS_SENSOR_ID8, S_WMBUS_SENSOR_ID, sensorId8.c_str(), 1, 9, false);
       String sensorKey8 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(7);
@@ -205,7 +205,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED9).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED9, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE9).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE9, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE9, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId9 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(8);
       addTextBox(INPUT_WMBUS_SENSOR_ID9, S_WMBUS_SENSOR_ID, sensorId9.c_str(), 1, 9, false);
       String sensorKey9 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(8);
@@ -221,7 +221,7 @@ void handleSensorSpi(int save) {
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_ENABLED10).toInt();
       addCheckBox(INPUT_WMBUS_SENSOR_ENABLED10, S_ON, selected);
       selected = ConfigManager->get(KEY_WMBUS_SENSOR)->getElement(WMBUS_CFG_SENSOR_TYPE10).toInt();
-      addListBox(INPUT_WMBUS_SENSOR_TYPE10, S_WMBUS_SENSOR_TYPE, sensors_types, 27, selected);
+      addListBox(INPUT_WMBUS_SENSOR_TYPE10, S_WMBUS_SENSOR_TYPE, sensors_types, 28, selected);
       String sensorId10 = ConfigManager->get(KEY_WMBUS_SENSOR_ID)->getElement(9);
       addTextBox(INPUT_WMBUS_SENSOR_ID10, S_WMBUS_SENSOR_ID, sensorId10.c_str(), 1, 9, false);
       String sensorKey10 = ConfigManager->get(KEY_WMBUS_SENSOR_KEY)->getElement(9);

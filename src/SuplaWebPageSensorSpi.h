@@ -125,7 +125,9 @@ const char* const sensors_types[] PROGMEM = {
     "topaseskr",
     "ultrimis",
     "unismart",
-    "vario451"
+    "vario451",
+    "apatorna1",
+    "apatorop04"
   };
 
   const char* const sensors_properties[] PROGMEM = {

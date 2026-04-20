@@ -207,6 +207,9 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(Parameter_SUPLA_CC1101_SensorProperty1)
   ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY1, Parameter_SUPLA_CC1101_SensorProperty1);
 #endif  // Parameter_SUPLA_CC1101_SensorProperty
+#if defined(Parameter_SUPLA_CC1101_SenserChannel1)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL1, Parameter_SUPLA_CC1101_SenserChannel1);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel1
 
 #if defined(Parameter_SUPLA_CC1101_Enabled2) && Parameter_SUPLA_CC1101_Enabled2 > 0
   ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED2, 1);
@@ -223,7 +226,9 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(Parameter_SUPLA_CC1101_SensorProperty2)
   ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY2, Parameter_SUPLA_CC1101_SensorProperty2);
 #endif  // Parameter_SUPLA_CC1101_SensorProperty2
-
+#if defined(Parameter_SUPLA_CC1101_SenserChannel2)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL2, Parameter_SUPLA_CC1101_SenserChannel2);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel2
 #endif  // Parameter_SUPLA_CC1101_Enabled2
 
 #if defined(Parameter_SUPLA_CC1101_Enabled3) && Parameter_SUPLA_CC1101_Enabled3 > 0
@@ -241,7 +246,9 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(Parameter_SUPLA_CC1101_SensorProperty3)
   ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY3, Parameter_SUPLA_CC1101_SensorProperty3);
 #endif  // Parameter_SUPLA_CC1101_SensorProperty3
-
+#if defined(Parameter_SUPLA_CC1101_SenserChannel3)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL3, Parameter_SUPLA_CC1101_SenserChannel3);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel3
 #endif  // Parameter_SUPLA_CC1101_Enabled3
 
 #if defined(Parameter_SUPLA_CC1101_Enabled4) && Parameter_SUPLA_CC1101_Enabled4 > 0
@@ -259,10 +266,132 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(Parameter_SUPLA_CC1101_SensorProperty4)
   ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY4, Parameter_SUPLA_CC1101_SensorProperty4);
 #endif  // Parameter_SUPLA_CC1101_SensorProperty4
-
+#if defined(Parameter_SUPLA_CC1101_SenserChannel4)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL4, Parameter_SUPLA_CC1101_SenserChannel4);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel4
 #endif  // Parameter_SUPLA_CC1101_Enabled4
 
-#endif  // SUPLA_CC1101
+#if defined(Parameter_SUPLA_CC1101_Enabled5) && Parameter_SUPLA_CC1101_Enabled5 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED5, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType5)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE5, Parameter_SUPLA_CC1101_SensorType5);
+#endif  // Parameter_SUPLA_CC1101_SensorType5
+#if defined(Parameter_SUPLA_CC1101_SensorID5)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 4, Parameter_SUPLA_CC1101_SensorID5);
+#endif  // Parameter_SUPLA_CC1101_SensorID5
+#if defined(Parameter_SUPLA_CC1101_SensorKey5)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 4, Parameter_SUPLA_CC1101_SensorKey5);
+#endif  // Parameter_SUPLA_CC1101_SensorKey5
+#if defined(Parameter_SUPLA_CC1101_SensorProperty5)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY5, Parameter_SUPLA_CC1101_SensorProperty5);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty5
+#if defined(Parameter_SUPLA_CC1101_SenserChannel5)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL5, Parameter_SUPLA_CC1101_SenserChannel5);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel5
+#endif  // Parameter_SUPLA_CC1101_Enabled5
+
+#if defined(Parameter_SUPLA_CC1101_Enabled6) && Parameter_SUPLA_CC1101_Enabled6 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED6, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType6)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE6, Parameter_SUPLA_CC1101_SensorType6);
+#endif  // Parameter_SUPLA_CC1101_SensorType6
+#if defined(Parameter_SUPLA_CC1101_SensorID6)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 5, Parameter_SUPLA_CC1101_SensorID6);
+#endif  // Parameter_SUPLA_CC1101_SensorID6
+#if defined(Parameter_SUPLA_CC1101_SensorKey6)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 5, Parameter_SUPLA_CC1101_SensorKey6);
+#endif  // Parameter_SUPLA_CC1101_SensorKey6
+#if defined(Parameter_SUPLA_CC1101_SensorProperty6)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY6, Parameter_SUPLA_CC1101_SensorProperty6);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty6
+#if defined(Parameter_SUPLA_CC1101_SenserChannel6)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL6, Parameter_SUPLA_CC1101_SenserChannel6);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel6
+#endif  // Parameter_SUPLA_CC1101_Enabled6
+
+#if defined(Parameter_SUPLA_CC1101_Enabled7) && Parameter_SUPLA_CC1101_Enabled7 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED7, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType7)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE7, Parameter_SUPLA_CC1101_SensorType7);
+#endif  // Parameter_SUPLA_CC1101_SensorType7
+#if defined(Parameter_SUPLA_CC1101_SensorID7)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 6, Parameter_SUPLA_CC1101_SensorID7);
+#endif  // Parameter_SUPLA_CC1101_SensorID7
+#if defined(Parameter_SUPLA_CC1101_SensorKey7)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 6, Parameter_SUPLA_CC1101_SensorKey7);
+#endif  // Parameter_SUPLA_CC1101_SensorKey7
+#if defined(Parameter_SUPLA_CC1101_SensorProperty7)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY7, Parameter_SUPLA_CC1101_SensorProperty7);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty7
+#if defined(Parameter_SUPLA_CC1101_SenserChannel7)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL7, Parameter_SUPLA_CC1101_SenserChannel7);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel7
+#endif  // Parameter_SUPLA_CC1101_Enabled7
+
+#if defined(Parameter_SUPLA_CC1101_Enabled8) && Parameter_SUPLA_CC1101_Enabled8 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED8, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType8)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE8, Parameter_SUPLA_CC1101_SensorType8);
+#endif  // Parameter_SUPLA_CC1101_SensorType8
+#if defined(Parameter_SUPLA_CC1101_SensorID8)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 7, Parameter_SUPLA_CC1101_SensorID8);
+#endif  // Parameter_SUPLA_CC1101_SensorID8
+#if defined(Parameter_SUPLA_CC1101_SensorKey8)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 7, Parameter_SUPLA_CC1101_SensorKey8);
+#endif  // Parameter_SUPLA_CC1101_SensorKey8
+#if defined(Parameter_SUPLA_CC1101_SensorProperty8)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY8, Parameter_SUPLA_CC1101_SensorProperty8);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty8
+#if defined(Parameter_SUPLA_CC1101_SenserChannel8)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL8, Parameter_SUPLA_CC1101_SenserChannel8);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel8
+#endif  // Parameter_SUPLA_CC1101_Enabled8
+
+#if defined(Parameter_SUPLA_CC1101_Enabled9) && Parameter_SUPLA_CC1101_Enabled9 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED9, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType9)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE9, Parameter_SUPLA_CC1101_SensorType9);
+#endif  // Parameter_SUPLA_CC1101_SensorType9
+#if defined(Parameter_SUPLA_CC1101_SensorID9)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 8, Parameter_SUPLA_CC1101_SensorID9);
+#endif  // Parameter_SUPLA_CC1101_SensorID9
+#if defined(Parameter_SUPLA_CC1101_SensorKey9)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 8, Parameter_SUPLA_CC1101_SensorKey9);
+#endif  // Parameter_SUPLA_CC1101_SensorKey9
+#if defined(Parameter_SUPLA_CC1101_SensorProperty9)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY9, Parameter_SUPLA_CC1101_SensorProperty9);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty9
+#if defined(Parameter_SUPLA_CC1101_SenserChannel9)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL9, Parameter_SUPLA_CC1101_SenserChannel9);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel9
+#endif  // Parameter_SUPLA_CC1101_Enabled9
+
+#if defined(Parameter_SUPLA_CC1101_Enabled10) && Parameter_SUPLA_CC1101_Enabled10 > 0
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_ENABLED10, 1);
+
+#if defined(Parameter_SUPLA_CC1101_SensorType10)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_TYPE10, Parameter_SUPLA_CC1101_SensorType10);
+#endif  // Parameter_SUPLA_CC1101_SensorType10
+#if defined(Parameter_SUPLA_CC1101_SensorID10)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_ID, 9, Parameter_SUPLA_CC1101_SensorID10);
+#endif  // Parameter_SUPLA_CC1101_SensorID10
+#if defined(Parameter_SUPLA_CC1101_SensorKey10)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR_KEY, 9, Parameter_SUPLA_CC1101_SensorKey10);
+#endif  // Parameter_SUPLA_CC1101_SensorKey10
+#if defined(Parameter_SUPLA_CC1101_SensorProperty10)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_PROPERTY10, Parameter_SUPLA_CC1101_SensorProperty10);
+#endif  // Parameter_SUPLA_CC1101_SensorProperty10
+#if defined(Parameter_SUPLA_CC1101_SenserChannel10)
+  ConfigManager->setElement(KEY_WMBUS_SENSOR, WMBUS_CFG_SENSOR_CHANNEL10, Parameter_SUPLA_CC1101_SenserChannel10);
+#endif  // Parameter_SUPLA_CC1101_SenserChannel10
+#endif  // Parameter_SUPLA_CC1101_Enabled10
+
+#endif  // Parameter_SUPLA_CC1101_Enabled
 
   ConfigManager->set(KEY_PRECONFIGURED_STATE, 1);
   ConfigManager->save();

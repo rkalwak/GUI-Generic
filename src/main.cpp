@@ -402,6 +402,7 @@ void setup() {
       meter->add_driver(new Evo868());
       meter->add_driver(new FhkvdataIII());
       meter->add_driver(new Hydrocalm3());
+      meter->add_driver(new Hydrodigit());
       meter->add_driver(new Hydrus());
       meter->add_driver(new Iperl());
       meter->add_driver(new Itron());

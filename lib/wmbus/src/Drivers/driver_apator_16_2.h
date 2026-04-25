@@ -18,6 +18,7 @@ struct Apator162 : Driver
     std::map<std::string, float> ret_val{};
 
     add_to_map(ret_val, "total_water_m3", this->get_total_water_m3(telegram));
+    add_to_map(ret_val, "battery_voltage_v", this->get_battery_voltage(telegram));
 
     if (ret_val.size() > 0)
     {
@@ -67,6 +68,29 @@ private:
     return ret_val;
   };
 
+  float get_battery_voltage(std::vector<unsigned char> &telegram)
+  {
+    // Manufacturer-specific payload starts at byte 18 (byte 17 = 0x0F DIF).
+    // Scan forward for register 0x41 (Voltage, 2 bytes, little-endian mV).
+    size_t i = 18;
+    while (i < telegram.size())
+    {
+      int c = telegram[i];
+      if (c == 0xFF)
+        break;
+      int size = this->registerSize(c);
+      i++;
+      if (size == -1 || i + (size_t)size > telegram.size())
+        break;
+      if (c == 0x41 && size == 2)
+      {
+        uint16_t raw = (uint16_t)telegram[i] | ((uint16_t)telegram[i + 1] << 8);
+        return raw / 1000.0f; // mV → V
+      }
+      i += size;
+    }
+    return -1.0f; // register not present in this telegram
+  };
   int registerSize(int c)
   {
     switch (c)

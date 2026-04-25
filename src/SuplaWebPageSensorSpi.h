@@ -159,7 +159,8 @@ const char* const sensors_types[] PROGMEM = {
     "power_kw",
     "operating_time_h",
     "operating_time_in_error_h",
-    "volume_flow_m3h"
+    "volume_flow_m3h",
+    "battery_voltage_v"
   };
 
   const char* const sensors_channels[] PROGMEM = {

@@ -378,6 +378,10 @@ namespace Supla
         Serial.println("wMBus-lib: Found telegram.");
         dumpHex(receiver.MBpacket, packetLength);
         WMbusFrame mbus_data = receiver.get_frame();
+        lastRssi = mbus_data.rssi;
+        lastLqi  = mbus_data.lqi;
+        Serial.printf("wMBus-lib: RSSI: %d dBm, LQI: %u\n",
+                      (int)lastRssi, (unsigned)lastLqi);
         std::vector<unsigned char> frame = mbus_data.frame;
         Serial.println("----------------");
         Serial.println("wMBus-lib: Parsing frame.");

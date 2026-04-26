@@ -160,7 +160,20 @@ const char* const sensors_types[] PROGMEM = {
     "operating_time_h",
     "operating_time_in_error_h",
     "volume_flow_m3h",
-    "battery_voltage_v"
+    "battery_voltage_v",
+    "backflow_m3",
+    "January_total_m3",
+    "February_total_m3",
+    "March_total_m3",
+    "April_total_m3",
+    "May_total_m3",
+    "June_total_m3",
+    "July_total_m3",
+    "August_total_m3",
+    "September_total_m3",
+    "October_total_m3",
+    "November_total_m3",
+    "December_total_m3"
   };
 
   const char* const sensors_channels[] PROGMEM = {

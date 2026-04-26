@@ -248,6 +248,71 @@ void test_wmbus_meter_parse_all_values_with_crc() {
 }
 
 // ---------------------------------------------------------------------------
+// Synthetic frames for battery-voltage register (0x41) tests
+//
+// Frame layout (35 bytes, already decrypted, no CRC):
+//   [0..14]  : standard DLL + TPL short header  (meter 02719887, APA, CI=0x7A)
+//   [15..16] : 0x2F 0x2F  decryption marker
+//   [17]     : 0x0F  DIF (manufacturer specific)
+//   [18..20] : reg 0x41  voltage  = 0x0E10 = 3600 mV → 3.6 V
+//   [21..22] : reg 0xA2  (1-byte padding)
+//   [23..24] : reg 0xA5  (1-byte padding)
+//   [25..29] : reg 0x10  total water = 0x89 = 137 → 0.137 m³
+//   [30..34] : 0xFF  end padding
+// ---------------------------------------------------------------------------
+static const uint8_t apator162_battery_frame[] = {
+    0x22, 0x44, 0x01, 0x06, 0x87, 0x98, 0x71, 0x02, 0x05, 0x07, // DLL header
+    0x7A, 0x22, 0x00, 0x30, 0x85,                                 // TPL short header
+    0x2F, 0x2F,                                                    // decryption marker
+    0x0F,                                                          // DIF: manufacturer specific
+    0x41, 0x10, 0x0E,                                             // reg 0x41: 0x0E10=3600 mV → 3.6 V
+    0xA2, 0x00,                                                    // reg 0xA2: 1-byte filler
+    0xA5, 0x00,                                                    // reg 0xA5: 1-byte filler
+    0x10, 0x89, 0x00, 0x00, 0x00,                                 // reg 0x10: 137 → 0.137 m³
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF                                   // end padding
+};
+
+// Same layout but 0x41 replaced by 0x43 (days) — no voltage register.
+static const uint8_t apator162_no_battery_frame[] = {
+    0x22, 0x44, 0x01, 0x06, 0x87, 0x98, 0x71, 0x02, 0x05, 0x07,
+    0x7A, 0x22, 0x00, 0x30, 0x85,
+    0x2F, 0x2F,
+    0x0F,
+    0x43, 0x3E, 0x05,  // reg 0x43: 1342 days  (no 0x41)
+    0xA5, 0x00,
+    0xA5, 0x00,
+    0x10, 0x89, 0x00, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+};
+
+void test_battery_voltage_register_found() {
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_battery_frame,
+                                     apator162_battery_frame + sizeof(apator162_battery_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_TRUE_MESSAGE(vals.count("battery_voltage_v") > 0,
+                             "battery_voltage_v key missing from map");
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 3.6f, vals["battery_voltage_v"]);
+}
+
+void test_battery_voltage_total_water_from_battery_frame() {
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_battery_frame,
+                                     apator162_battery_frame + sizeof(apator162_battery_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.137f, vals["total_water_m3"]);
+}
+
+void test_battery_voltage_not_found_absent_from_map() {
+    // When register 0x41 is absent the key must not appear in the map.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_no_battery_frame,
+                                     apator162_no_battery_frame + sizeof(apator162_no_battery_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_EQUAL_UINT(0u, (unsigned)vals.count("battery_voltage_v"));
+}
+
+// ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
 
@@ -262,6 +327,10 @@ void setup() {
   RUN_TEST(test_short_frame);
 
   RUN_TEST(text_crc_removal);
+
+  RUN_TEST(test_battery_voltage_register_found);
+  RUN_TEST(test_battery_voltage_total_water_from_battery_frame);
+  RUN_TEST(test_battery_voltage_not_found_absent_from_map);
   /*
 
       RUN_TEST(test_full_frame_crc_strip_length);

@@ -18,6 +18,9 @@ struct Hydrodigit: Driver
 
     float total_water = this->get_0C14(telegram);
     if (total_water == 0.0f) {
+      total_water = this->get_0C13(telegram);
+    }
+    if (total_water == 0.0f) {
       total_water = this->get_0413(telegram);
     }
     add_to_map(ret_val, "total_water_m3", total_water);

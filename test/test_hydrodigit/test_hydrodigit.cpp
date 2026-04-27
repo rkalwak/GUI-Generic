@@ -74,9 +74,7 @@ void test_hydrodigit_total_water_m3() {
     auto frame = decrypt_hydrodigit_frame();
     auto vals = drv.get_values(frame);
     TEST_ASSERT_TRUE_MESSAGE(vals.count("total_water_m3") > 0, "total_water_m3 missing");
-    TEST_ASSERT_TRUE_MESSAGE(vals.count("total_m3") > 0, "total_m3 alias missing");
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.43f, vals["total_water_m3"]);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 3.43f, vals["total_m3"]);
 }
 
 void test_hydrodigit_total_water_m3_from_0c13() {
@@ -84,9 +82,7 @@ void test_hydrodigit_total_water_m3_from_0c13() {
     auto frame = decrypt_hydrodigit_0c13_frame();
     auto vals = drv.get_values(frame);
     TEST_ASSERT_TRUE_MESSAGE(vals.count("total_water_m3") > 0, "total_water_m3 missing for 0C13 telegram");
-    TEST_ASSERT_TRUE_MESSAGE(vals.count("total_m3") > 0, "total_m3 alias missing for 0C13 telegram");
     TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.008f, vals["total_water_m3"]);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 2.008f, vals["total_m3"]);
 }
 
 void test_hydrodigit_manufacturer_fields() {

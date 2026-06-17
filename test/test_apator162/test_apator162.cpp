@@ -313,6 +313,156 @@ void test_battery_voltage_not_found_absent_from_map() {
 }
 
 // ---------------------------------------------------------------------------
+// Real decrypted frames from hardware logs (meter 00489912, June 2026).
+// These frames are already decrypted — use directly with drv.get_values().
+//
+// MAGN_06  AccNum=0x06: magnet released, register 0x80 appears, evt[6]=0x02 (magnetic only)
+// MAGN_05  AccNum=0x05: magnet HELD, byte[24]=0x01 active-alarm flag, no 0x80 yet
+// COVR_30  AccNum=0x30: after cover removal, 0x80 updated, evt[6]=0x03 (magnetic + cover)
+// ILLUM_F2 AccNum=0xF2: during illumination test — only 0x81/0x82, no alarm registers
+// ---------------------------------------------------------------------------
+
+// clang-format off
+// Real frame: magnet released — 0x80 present, evt[6]=0x02 (bit1=magnetic, bit0=cover absent)
+static const uint8_t apator162_magnet_frame[] = {
+    0x3E,0x44,0x01,0x06,0x12,0x99,0x48,0x00,0x05,0x07,0x7A,0x06,0x00,0x30,0x85,
+    0x2F,0x2F,
+    0x0F,0x63,0x91,0x76,0x9A,0x07,0x02,0x00,
+    0x43,0x36,0x0E,
+    0x80,0x62,0x91,0x56,0x62,0x91,0x56,0x02,0x02,0x00,0x00,
+    0x10,0x45,0x38,0x09,0x00,
+    0x71,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xA0,0x31,0x57,0xFE,0x03,
+    0xFF,0xFF,0x55,0x9A
+};
+
+// Real frame: magnet HELD — byte[24]=0x01, register 0x80 not yet in this frame
+static const uint8_t apator162_tamper_active_frame[] = {
+    0x3E,0x44,0x01,0x06,0x12,0x99,0x48,0x00,0x05,0x07,0x7A,0x05,0x00,0x30,0x85,
+    0x2F,0x2F,
+    0x0F,0x62,0x91,0x76,0x9A,0x07,0x02,0x01,   // byte[24]=0x01 <-- active alarm
+    0x43,0x36,0x0E,
+    0x82,0x1F,0x70,0x56,0xCE,0x70,0x56,0x0A,0x38,0x00,0x00,
+    0x10,0x45,0x38,0x09,0x00,
+    0x71,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xA0,0x31,0x57,0xFE,0x03,
+    0xFF,0xFF,0xCA,0x96
+};
+
+// Real frame: after cover removal — 0x80 evt[6]=0x03 (bit1=magnetic, bit0=cover)
+static const uint8_t apator162_cover_removed_frame[] = {
+    0x3E,0x44,0x01,0x06,0x12,0x99,0x48,0x00,0x05,0x07,0x7A,0x30,0x00,0x30,0x85,
+    0x2F,0x2F,
+    0x0F,0x78,0x91,0x76,0x9A,0x07,0x02,0x00,
+    0x43,0x36,0x0E,
+    0x80,0x62,0x91,0x56,0x65,0x91,0x56,0x03,0x05,0x00,0x00,
+    0x10,0x45,0x38,0x09,0x00,
+    0x71,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xA0,0x31,0x57,0xFE,0x03,
+    0xFF,0xFF,0x53,0xEC
+};
+
+// Real frame: during illumination — only 0x81/0x82 in rotation, no alarm registers ever appeared
+static const uint8_t apator162_illumination_frame[] = {
+    0x3E,0x44,0x01,0x06,0x12,0x99,0x48,0x00,0x05,0x07,0x7A,0xF2,0x00,0x30,0x85,
+    0x2F,0x2F,
+    0x0F,0x59,0x91,0x76,0x9A,0x06,0x02,0x00,   // byte[22]=0x06 (no alarm ever)
+    0x43,0x36,0x0E,
+    0x81,0x20,0x70,0x56,0xCD,0x70,0x56,0x0F,0x66,0x00,0x00,
+    0x10,0x45,0x38,0x09,0x00,
+    0x71,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xA0,0x31,0x57,0xFE,0x03,
+    0xFF,0xFF,0x3A,0xD4
+};
+
+// Synthetic frame: register 0x83 backflow, count=3 (not yet observed on real hardware)
+static const uint8_t apator162_backflow_frame[] = {
+    0x2C,0x44,0x01,0x06,0x87,0x98,0x71,0x02,0x05,0x07,
+    0x7A,0x01,0x00,0x30,0x85,
+    0x2F,0x2F,
+    0x0F,0x01,0x10,0x56,0x9A,0x06,0x02,0x00,
+    0x43,0x35,0x0E,
+    0x83,0x03,0x70,0x56,0xCD,0x70,0x56,0x0A,0x38,0x00,0x00,
+    0x10,0x08,0x36,0x09,0x00,
+    0xFF
+};
+// clang-format on
+
+void test_tamper_count_and_magnetic_flag_in_real_magnet_frame() {
+    // Real hardware frame: magnet released. 0x80 present, evt[6]=0x02 => only magnetic set.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_magnet_frame,
+                                     apator162_magnet_frame + sizeof(apator162_magnet_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.5f, 98.0f, vals["tamper_count"]);   // evt[0]=0x62=98
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.0f,  vals["magnetic_tamper"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f,  vals["cover_removed"]);  // bit0 not set
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f,  vals["tamper_active"]);  // byte[24]=0
+}
+
+void test_cover_removed_flag_set_after_cover_event() {
+    // Real hardware frame: after cover removal. evt[6]=0x03 => both magnetic and cover set.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_cover_removed_frame,
+                                     apator162_cover_removed_frame + sizeof(apator162_cover_removed_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.0f, vals["magnetic_tamper"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.0f, vals["cover_removed"]);
+}
+
+void test_tamper_active_flag_set_while_magnet_held() {
+    // Real hardware frame: magnet being held, byte[24]=0x01.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_tamper_active_frame,
+                                     apator162_tamper_active_frame + sizeof(apator162_tamper_active_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 1.0f, vals["tamper_active"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["tamper_count"]); // 0x80 not in this frame
+}
+
+void test_no_alarm_registers_during_illumination() {
+    // Real hardware frame: illumination log — illumination triggered NO alarm registers.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_illumination_frame,
+                                     apator162_illumination_frame + sizeof(apator162_illumination_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["tamper_count"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["magnetic_tamper"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["cover_removed"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["tamper_active"]);
+}
+
+void test_backflow_register_found_with_count() {
+    // Synthetic frame: register 0x83 backflow — not yet observed on real hardware.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_backflow_frame,
+                                     apator162_backflow_frame + sizeof(apator162_backflow_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.5f, 3.0f, vals["backflow_count"]);
+}
+
+void test_backflow_volume_still_parsed() {
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_backflow_frame,
+                                     apator162_backflow_frame + sizeof(apator162_backflow_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 603.656f, vals["total_water_m3"]);
+}
+
+void test_alarm_registers_absent_when_no_tamper() {
+    // Battery frame has no alarm registers and byte[24]=0x00 — all tamper fields absent.
+    Apator162 drv;
+    std::vector<unsigned char> frame(apator162_battery_frame,
+                                     apator162_battery_frame + sizeof(apator162_battery_frame));
+    auto vals = drv.get_values(frame);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["tamper_count"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["magnetic_tamper"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["cover_removed"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["tamper_active"]);
+    TEST_ASSERT_FLOAT_WITHIN(0.1f, 0.0f, vals["backflow_count"]);
+}
+
+// ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
 
@@ -331,6 +481,17 @@ void setup() {
   RUN_TEST(test_battery_voltage_register_found);
   RUN_TEST(test_battery_voltage_total_water_from_battery_frame);
   RUN_TEST(test_battery_voltage_not_found_absent_from_map);
+
+  // --- Alarm / tamper event registers (real hardware frames, meter 00489912, June 2026) ---
+  RUN_TEST(test_tamper_count_and_magnetic_flag_in_real_magnet_frame);
+  RUN_TEST(test_cover_removed_flag_set_after_cover_event);
+  RUN_TEST(test_tamper_active_flag_set_while_magnet_held);
+  RUN_TEST(test_no_alarm_registers_during_illumination);
+  RUN_TEST(test_alarm_registers_absent_when_no_tamper);
+
+  // --- Backflow register (synthetic frame, not yet observed on hardware) ---
+  RUN_TEST(test_backflow_register_found_with_count);
+  RUN_TEST(test_backflow_volume_still_parsed);
   /*
 
       RUN_TEST(test_full_frame_crc_strip_length);

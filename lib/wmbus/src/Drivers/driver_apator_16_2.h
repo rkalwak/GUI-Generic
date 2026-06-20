@@ -22,39 +22,28 @@ struct Apator162 : Driver
     add_to_map(ret_val, "total_water_m3", this->get_total_water_m3(telegram));
     add_to_map(ret_val, "battery_voltage_v", this->get_battery_voltage(telegram));
 
-    // Byte [24]: real-time active-tamper flag.
-    // Set to 0x01 while a tamper condition is physically active (e.g. magnet held against meter).
-    // Returns to 0x00 as soon as the condition is removed.
-    // Confirmed: observed 0x01 during live magnet test (meter 00489912, 2026-06-17).
-    add_to_map(ret_val, "tamper_active",
-               (telegram.size() > 24) ? (float)telegram[24] : 0.0f);
-
-    // Register 0x80: physical tamper record (10 bytes).
-    // Appears in the register stream once any tamper event has been recorded.
-    // Replaces the normal 0x81/0x82 rotation slot: frames cycle 0x81 -> 0x82 -> 0x80 -> ...
-    //
-    // evt[0] (byte 0): cumulative tamper counter (increments on each new distinct tamper event)
-    // evt[6] (byte 6): tamper-type bitmap (confirmed via real hardware logs 2026-06-17):
-    //   bit 1 (0x02): magnetic tamper has occurred (magnet applied)
-    //   bit 0 (0x01): cover removal has occurred (nakładka)
-    //   Both bits set (0x03): both tamper types recorded on this meter
-    //
-    // NOTE: register 0x84, previously hypothesised as a separate cover-removal register,
-    // was NEVER observed in hardware. Cover removal is signalled via 0x80 evt[6] bit 0.
+    // Byte [24]: real-time active-tamper FLAGS (bitmask).
+    //   bit0 (0x01) = magnetic tamper ACTIVE  — CONFIRMED 2026-06-17/18: set while magnet held
+    //   bit2 (0x04) = cover tamper ACTIVE     — CONFIRMED 2026-06-18: set while cover removed
+    // Both bits return to 0x00 immediately when the condition is removed.
+    // When any bit is set, register 0x80 DISAPPEARS from the frame rotation.
     {
-      float tamper_id = this->get_event_count(telegram, 0x80);
-      int evt6 = this->get_event_data_byte(telegram, 0x80, 6);
-      add_to_map(ret_val, "tamper_count",    tamper_id  >= 0.0f ? tamper_id : 0.0f);
-      add_to_map(ret_val, "magnetic_tamper", (evt6 >= 0 && (evt6 & 0x02)) ? 1.0f : 0.0f);
-      add_to_map(ret_val, "cover_removed",   (evt6 >= 0 && (evt6 & 0x01)) ? 1.0f : 0.0f);
+      uint8_t flags = (telegram.size() > 24) ? telegram[24] : 0;
+      add_to_map(ret_val, "tamper_active",          (flags != 0)   ? 1.0f : 0.0f);
+      add_to_map(ret_val, "magnetic_tamper_active", (flags & 0x01) ? 1.0f : 0.0f);
+      add_to_map(ret_val, "cover_tamper_active",    (flags & 0x04) ? 1.0f : 0.0f);
     }
 
-    // Register 0x83: backflow counter (10 bytes).
-    // Not yet observed in the 3-block (63-byte) short frame format; may only appear in
-    // the 6-block (111-byte) long frame (config 0x6085). Included speculatively.
+    // Register 0x80: cumulative tamper record (10 bytes).
+    // Present in the frame rotation ONLY when byte[24]==0x00 (no active tamper).
+    // When byte[24]!=0x00 (active tamper), this register DISAPPEARS from the frame
+    // and only the normal 0x81/0x82 rotation is transmitted.
+    //
+    // evt[0] = tamper occurrence counter (increments with each new tamper event).
+    // Returns 0.0 when the register is absent (i.e. during an active tamper event).
     {
-      float backflow = this->get_event_count(telegram, 0x83);
-      add_to_map(ret_val, "backflow_count", backflow >= 0.0f ? backflow : 0.0f);
+      float tamper_count = this->get_event_count(telegram, 0x80);
+      add_to_map(ret_val, "tamper_count", tamper_count >= 0.0f ? tamper_count : 0.0f);
     }
 
     // Register 0x85 (illumination / optical tamper, 11 bytes): NOT observed in hardware.
@@ -162,25 +151,6 @@ private:
   };
 
   // Return the byte at position `offset` within the event data of target_reg.
-  // offset 0 = evt[0], offset 6 = evt[6] (tamper-type bitmap for 0x80), etc.
-  // Returns -1 if the register is absent or offset is out of range.
-  int get_event_data_byte(std::vector<unsigned char> &telegram, int target_reg, int offset)
-  {
-    size_t i = 25;
-    while (i < telegram.size())
-    {
-      int c = telegram[i];
-      if (c == 0xFF) break;
-      int size = this->registerSize(c);
-      i++;
-      if (size == -1 || i + (size_t)size > telegram.size()) break;
-      if (c == target_reg && offset < size)
-        return telegram[i + (size_t)offset];
-      i += size;
-    }
-    return -1;
-  };
-
   float get_random_value(std::vector<unsigned char> &telegram)
   {
     static bool seeded = false;
@@ -242,10 +212,12 @@ private:
     //   evt[6]     tamper-type bitmap (0x80 only): bit1=magnetic, bit0=cover
     //   evt[7]     time of last occurrence
     //   evt[8-9]   padding / flags
-    case 0x80: // Physical tamper (magnetic + cover — confirmed 2026-06-17)
+    case 0x80: // Physical tamper record (per-type: see byte[24] bitmask)
     case 0x81: // Type-A normal transmission record (not an alarm)
     case 0x82: // Type-B normal transmission record (not an alarm)
-    case 0x83: // Backflow (not yet observed in 3-block frames)
+    case 0x83: // Backflow — register ABSENT in 3-block frames even during real backflow events
+               // (CONFIRMED DENIED 2026-06-20: volume decreases but 0x83 never appears)
+               // Backflow only detectable via total_water_m3 decreasing.
     case 0x84: // Unconfirmed — never observed in hardware
     case 0x86:
     case 0x87:
@@ -408,27 +380,35 @@ private:
  * Event register codes and meanings
  * ============================================================================
  *
- *  0x80   10 B   Physical tamper         (magnetic tamper AND cover removal combined)
- *                                         -> tamper_count (evt[0])
- *                                         -> magnetic_tamper (evt[6] bit 1)
- *                                         -> cover_removed  (evt[6] bit 0)
+ *  0x80   10 B   Physical tamper record (combined: both magnetic and cover events)
+ *                 -> tamper_count (evt[0], cumulative occurrence counter)
+ *                 Per-type discrimination is via byte[24] bitmask (NOT via evt[6]):
+ *                   byte[24] bit0 (0x01) = magnetic_tamper_active
+ *                   byte[24] bit2 (0x04) = cover_tamper_active
+ *                 CONFIRMED 2026-06-18 hardware logs.
  *  0x81   10 B   Type-A frame record     (normal transmission, NOT an alarm)
  *  0x82   10 B   Type-B frame record     (normal transmission, NOT an alarm)
- *  0x83   10 B   wsteczny przepływ       (backflow)                 -> backflow_count
- *                                         [NOT observed in 3-block frames, may need 6-block]
- *  0x84   10 B   NOT observed in real logs; previously assumed cover removal (DENIED)
+ *  0x83   10 B   wsteczny przepływ       (backflow)
+ *                                         [ABSENT in 3-block frames even during real backflow
+ *                                          events: CONFIRMED DENIED 2026-06-20. Volume
+ *                                          decreases (total_water_m3) but register never
+ *                                          appears. Not decoded; may only exist in 6-block.]
+ *  0x84   10 B   NOT observed in any hardware log (previously assumed cover removal — DENIED)
  *  0x85   11 B   oświetlanie             (illumination / optical)
- *                                         [NOT observed: illumination log showed NO register change]
+ *                                         [NOT observed: 4-min test showed NO register change]
  *
  * Registers 0x81 and 0x82 alternate every frame in normal operation.
- * When any tamper has occurred, 0x80 joins the rotation: 0x81 -> 0x82 -> 0x80 -> repeat.
+ * While byte[24]!=0x00 (active tamper), register 0x80 is ABSENT from the frame;
+ * only 0x81/0x82 rotate. After tamper cleared, 0x80 rejoins the rotation.
  * Only ONE alarm register slot exists in the 3-block (63-byte) short frame.
  *
- * Confirmed via real hardware logs (June 2026, meter 00489912):
- *   - Byte [24] = 0x01 while magnet is physically held against meter (real-time flag -> tamper_active)
- *   - Byte [22] increments persistently (0x06 -> 0x07) when first tamper event recorded
- *   - Register 0x84 (cover removal) NEVER appeared; cover removal updates 0x80 evt[6] bit 0 instead
- *   - Register 0x85 (illumination): illumination log showed ZERO register changes
+ * Confirmed via real hardware logs (meter 00489912, June 2026):
+ *   - Byte [24] bit0 (0x01): magnetic tamper ACTIVE while magnet held; 0x00 after release
+ *   - Byte [24] bit2 (0x04): cover tamper ACTIVE while cover removed; 0x00 after replace
+ *   - Register 0x80 ABSENT whenever byte[24]!=0x00 (any active tamper)
+ *   - Register 0x84 NEVER appeared in any captured frame
+ *   - Register 0x85 NEVER triggered despite 4-minute optical illumination test
+ *   - evt[6] inside 0x80 is a time byte, NOT a tamper-type bitmap
  *
  * ============================================================================
  * 10-byte event record structure (bytes relative to register data start)
@@ -440,8 +420,8 @@ private:
  *  [3]    First-occurrence time byte
  *  [4]    Last-occurrence date byte 1:  bits[4:0]=day, bits[7:5]=year_low
  *  [5]    Last-occurrence date byte 2:  bits[3:0]=month, bits[7:4]=year_high
- *  [6]    Last-occurrence time byte (minutes?)
- *  [7]    Last-occurrence time byte (hours?)
+ *  [6]    Time byte of last occurrence (NOT a tamper-type bitmap — disproved 2026-06-18)
+ *  [7]    Time byte of last occurrence
  *  [8]    Additional flags/accumulated counter (0x00 in normal frames)
  *  [9]    Padding (always 0x00); register 0x85 has an extra byte here
  *

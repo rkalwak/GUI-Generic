@@ -75,6 +75,7 @@ void setup() {
   eeprom.setStateSavePeriod(5000);
 
   ConfigManager = new SuplaConfigManager();
+  ConfigManager->saveVersionFile();
   ConfigESP = new SuplaConfigESP();
 
   // Initialize StatusLed with configured LED GPIO

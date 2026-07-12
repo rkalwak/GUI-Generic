@@ -545,6 +545,24 @@ bool SuplaConfigManager::SPIFFSbegin() {
   return false;
 }
 
+void SuplaConfigManager::saveVersionFile() {
+#ifdef BUILD_VERSION
+  if (!SPIFFSbegin()) {
+    Serial.println(F("[SPIFFS] saveVersionFile: failed to mount"));
+    return;
+  }
+  File file = SPIFFS.open(VERSION_FILE_PATH, "w");
+  if (file) {
+    file.print("SV-" BUILD_VERSION);
+    file.close();
+    Serial.println(F("[SPIFFS] Version file saved: Z2S-" BUILD_VERSION));
+  } else {
+    Serial.println(F("[SPIFFS] saveVersionFile: failed to open file"));
+  }
+  SPIFFS.end();
+#endif
+}
+
 bool SuplaConfigManager::migrationConfig() {
   bool migration = false;
   // Serial.print(F("migration Config ver:"));

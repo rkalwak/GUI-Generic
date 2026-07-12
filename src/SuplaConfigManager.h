@@ -36,6 +36,7 @@
 
 #define CURENT_VERSION   1
 #define CONFIG_FILE_PATH "/dat"
+#define VERSION_FILE_PATH  "/version"
 
 #define DEFAULT_HOSTNAME   "GUI Generic"
 #define DEFAULT_LOGIN      "admin"
@@ -329,6 +330,7 @@ class SuplaConfigManager : public Supla::SPIFFSConfig {
  public:
   explicit SuplaConfigManager();
   bool SPIFFSbegin();
+  void saveVersionFile();
   bool migrationConfig();
   uint8_t addKey(uint8_t key, int maxLength, bool loadKey = true);
   uint8_t addKey(uint8_t key, const char *value, int maxLength, bool loadKey = true);

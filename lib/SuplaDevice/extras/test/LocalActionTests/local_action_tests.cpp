@@ -180,3 +180,40 @@ TEST(LocalActionTests, FourItemsTestsWithCalls) {
   delete b3;
   delete b4;
 }
+
+TEST(LocalActionTests, ConfigModeDisableRestoresOnlyPreviouslyEnabledActions) {
+  Supla::LocalAction trigger;
+  ActionHandlerMock enabledHandler;
+  ActionHandlerMock disabledHandler;
+  ActionHandlerMock alwaysEnabledHandler;
+  constexpr int event = 11;
+
+  trigger.addAction(1, enabledHandler, event);
+  trigger.addAction(2, disabledHandler, event);
+  trigger.addAction(3, alwaysEnabledHandler, event, true);
+
+  auto enabledClient = trigger.getHandlerForClient(&enabledHandler, event);
+  auto disabledClient = trigger.getHandlerForClient(&disabledHandler, event);
+  auto alwaysEnabledClient =
+      trigger.getHandlerForClient(&alwaysEnabledHandler, event);
+  ASSERT_NE(enabledClient, nullptr);
+  ASSERT_NE(disabledClient, nullptr);
+  ASSERT_NE(alwaysEnabledClient, nullptr);
+
+  disabledClient->disable();
+  enabledClient->disableForConfigMode();
+  disabledClient->disableForConfigMode();
+  alwaysEnabledClient->disableForConfigMode();
+
+  EXPECT_FALSE(enabledClient->isEnabled());
+  EXPECT_FALSE(disabledClient->isEnabled());
+  EXPECT_TRUE(alwaysEnabledClient->isEnabled());
+
+  enabledClient->restoreAfterConfigMode();
+  disabledClient->restoreAfterConfigMode();
+  alwaysEnabledClient->restoreAfterConfigMode();
+
+  EXPECT_TRUE(enabledClient->isEnabled());
+  EXPECT_FALSE(disabledClient->isEnabled());
+  EXPECT_TRUE(alwaysEnabledClient->isEnabled());
+}

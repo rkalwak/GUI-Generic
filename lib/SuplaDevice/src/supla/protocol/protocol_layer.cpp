@@ -90,6 +90,10 @@ bool ProtocolLayer::isConnecting() {
   return false;
 }
 
+bool ProtocolLayer::isMqtt() const {
+  return false;
+}
+
 void ProtocolLayer::getUserLocaltime() {
 }
 

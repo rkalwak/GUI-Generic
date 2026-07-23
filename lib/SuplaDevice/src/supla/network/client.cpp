@@ -45,7 +45,7 @@ int Supla::Client::connect(IPAddress ip, uint16_t port) {
 
 int Supla::Client::connect(const char *host, uint16_t port) {
   if (sslEnabled) {
-    if (rootCACert == nullptr) {
+    if (!isCertificateValidationEnabled()) {
       SUPLA_LOG_WARNING(
               "Connecting without certificate validation (INSECURE)");
     }
@@ -106,6 +106,12 @@ size_t Supla::Client::println(const char *str) {
   return dataSend;
 }
 
+#ifdef ARDUINO
+size_t Supla::Client::println(const ::__FlashStringHelper *str) {
+  return println(reinterpret_cast<const char *>(str));
+}
+#endif
+
 size_t Supla::Client::print(const char *str) {
   int size = strlen(str);
   int response = 0;
@@ -119,12 +125,22 @@ size_t Supla::Client::print(const char *str) {
   return response;
 }
 
+#ifdef ARDUINO
+size_t Supla::Client::print(const ::__FlashStringHelper *str) {
+  return print(reinterpret_cast<const char *>(str));
+}
+#endif
+
 void Supla::Client::setSSLEnabled(bool enabled) {
   sslEnabled = enabled;
 }
 
 void Supla::Client::setCACert(const char *rootCA) {
   rootCACert = rootCA;
+}
+
+bool Supla::Client::isCertificateValidationEnabled() const {
+  return rootCACert != nullptr;
 }
 
 int Supla::Client::read() {

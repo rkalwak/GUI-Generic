@@ -22,6 +22,8 @@
 #include <gmock/gmock.h>
 #include <supla/storage/config.h>
 
+using Supla::NetifConfigBlob;
+
 class ConfigMock : public Supla::Config {
  public:
   ConfigMock();
@@ -47,6 +49,15 @@ class ConfigMock : public Supla::Config {
               getBlob,
               (const char* key, char* value, size_t blobSize),
               (override));
+  MOCK_METHOD(bool,
+              loadNetifConfig,
+              (const char* blobName, NetifConfigBlob* cfg),
+              (override));
+  MOCK_METHOD(bool,
+              saveNetifConfig,
+              (const char* blobName, const NetifConfigBlob& cfg),
+              (override));
+  MOCK_METHOD(bool, removeNetifConfig, (const char* blobName), (override));
   MOCK_METHOD(bool, eraseKey, (const char* key), (override));
   MOCK_METHOD(int, getBlobSize, (const char* key), (override));
   MOCK_METHOD(bool, getInt8, (const char* key, int8_t* result), (override));
@@ -77,6 +88,7 @@ class ConfigMock : public Supla::Config {
   MOCK_METHOD(enum Supla::DeviceMode, getDeviceMode, (), (override));
   MOCK_METHOD(bool, getGUID, (char* result), (override));
   MOCK_METHOD(bool, getSwUpdateServer, (char* url), (override));
+  MOCK_METHOD(bool, isSwUpdateSkipCert, (), (override));
   MOCK_METHOD(bool, isSwUpdateBeta, (), (override));
   MOCK_METHOD(bool, setSwUpdateServer, (const char* url), (override));
   MOCK_METHOD(bool, setSwUpdateBeta, (bool enabled), (override));

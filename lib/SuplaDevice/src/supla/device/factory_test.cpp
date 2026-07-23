@@ -16,19 +16,19 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include "factory_test.h"
+
 #include <SuplaDevice.h>
-#include <supla/log_wrapper.h>
-#include <supla/time.h>
 #include <string.h>
 #include <supla/actions.h>
-#include <supla/device/register_device.h>
-#include <supla/protocol/supla_srpc.h>
-#include <supla/storage/storage.h>
-#include <supla/storage/config.h>
-#include <supla/network/web_server.h>
 #include <supla/clock/clock.h>
-
-#include "factory_test.h"
+#include <supla/device/register_device.h>
+#include <supla/log_wrapper.h>
+#include <supla/network/web_server.h>
+#include <supla/protocol/supla_srpc.h>
+#include <supla/storage/config.h>
+#include <supla/storage/storage.h>
+#include <supla/time.h>
 
 #ifdef ESP8266
 #define FLASH_STRLEN(p) strlen_P(p)
@@ -36,15 +36,24 @@
 #define FLASH_STRLEN(p) strlen(p)
 #endif
 
-
 namespace Supla {
 namespace Device {
+
+FactoryTest::InsecureOptions FactoryTest::insecureOptions = 0;
 
 FactoryTest::FactoryTest(SuplaDeviceClass *sdc, uint32_t timeoutS)
     : sdc(sdc), timeoutS(timeoutS) {
 }
 
 FactoryTest::~FactoryTest() {
+}
+
+void FactoryTest::setInsecureOptions(InsecureOptions options) {
+  insecureOptions = options;
+}
+
+FactoryTest::InsecureOptions FactoryTest::getInsecureOptions() {
+  return insecureOptions;
 }
 
 int16_t FactoryTest::getManufacturerId() {
@@ -195,14 +204,17 @@ void FactoryTest::onInit() {
   }
 
   if (cfg && !cfg->isEncryptionEnabled()) {
-    SUPLA_LOG_ERROR("TEST failed: config encryption is disabled");
-#ifndef SUPLA_DEBUG
-    testFailed = true;
-    failReason = 16;
-    if (!selfTestMode) {
-      return;
+    if ((insecureOptions & AllowConfigEncryptionDisabled) == 0) {
+      SUPLA_LOG_ERROR("TEST failed: config encryption is disabled");
+      testFailed = true;
+      failReason = 16;
+      if (!selfTestMode) {
+        return;
+      }
+    } else {
+      SUPLA_LOG_WARNING(
+          "INSECURE PRODUCT PROFILE: config encryption is disabled");
     }
-#endif
   }
 
   auto webServer = Supla::WebServer::Instance();
@@ -214,12 +226,17 @@ void FactoryTest::onInit() {
       return;
     }
   }
-  if (webServer && !webServer->verifyCertificatesFormat()) {
-    SUPLA_LOG_ERROR("TEST failed: invalid certificates format");
-    testFailed = true;
-    failReason = 18;
-    if (!selfTestMode) {
-      return;
+  if (webServer && !webServer->verifyEmbeddedHttpsCertificates()) {
+    if ((insecureOptions & AllowMissingHttpsCertificates) == 0) {
+      SUPLA_LOG_ERROR("TEST failed: missing or invalid HTTPS certificates");
+      testFailed = true;
+      failReason = 18;
+      if (!selfTestMode) {
+        return;
+      }
+    } else {
+      SUPLA_LOG_WARNING(
+          "INSECURE PRODUCT PROFILE: missing or invalid HTTPS certificates");
     }
   }
 
@@ -233,20 +250,30 @@ void FactoryTest::onInit() {
   }
 
   if (!sdc->isSecurityLogEnabled()) {
-    SUPLA_LOG_ERROR("TEST failed: security log is disabled");
-    testFailed = true;
-    failReason = 20;
-    if (!selfTestMode) {
-      return;
+    if ((insecureOptions & AllowSecurityLogDisabled) == 0) {
+      SUPLA_LOG_ERROR("TEST failed: security log is disabled");
+      testFailed = true;
+      failReason = 20;
+      if (!selfTestMode) {
+        return;
+      }
+    } else {
+      SUPLA_LOG_WARNING(
+          "INSECURE PRODUCT PROFILE: security log is disabled");
     }
   }
 
   if (sdc->getInitialMode() == Supla::InitialMode::StartInCfgMode) {
-    SUPLA_LOG_ERROR("TEST failed: initial mode is set to config mode");
-    testFailed = true;
-    failReason = 21;
-    if (!selfTestMode) {
-      return;
+    if ((insecureOptions & AllowStartInCfgMode) == 0) {
+      SUPLA_LOG_ERROR("TEST failed: initial mode is set to config mode");
+      testFailed = true;
+      failReason = 21;
+      if (!selfTestMode) {
+        return;
+      }
+    } else {
+      SUPLA_LOG_WARNING(
+          "INSECURE PRODUCT PROFILE: StartInCfgMode allowed");
     }
   }
 }
@@ -261,8 +288,7 @@ void FactoryTest::iterateAlways() {
   }
 
   if (!checkTestStep()) {
-    SUPLA_LOG_ERROR("TEST[%d,%d]: check test step failed",
-        testStage, testStep);
+    SUPLA_LOG_ERROR("TEST[%d,%d]: check test step failed", testStage, testStep);
     testFailed = true;
     // failReason should be set in checkTestStep
     // if it wasn't, fill it with default value

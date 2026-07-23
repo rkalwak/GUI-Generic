@@ -16,7 +16,10 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include <openssl/rand.h>
+#include <supla/log_wrapper.h>
 #include <supla/tools.h>
+
 #include <cstdlib>
 
 void deviceSoftwareReset() {
@@ -40,4 +43,16 @@ bool Supla::isLastResetPower() {
 int Supla::getPlatformId() {
   // TODO(klew): do we need platfom id for linux SW?
   return 0;
+}
+
+void Supla::fillRandom(uint8_t *buffer, int size) {
+  if (buffer == nullptr || size <= 0) {
+    SUPLA_LOG_ERROR("fillRandom: invalid buffer or size");
+    std::exit(1);
+  }
+
+  if (RAND_bytes(buffer, size) != 1) {
+    SUPLA_LOG_ERROR("fillRandom: OpenSSL RAND_bytes failed");
+    std::exit(1);
+  }
 }

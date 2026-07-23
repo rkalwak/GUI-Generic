@@ -18,37 +18,71 @@
 
 #include "roller_shutter.h"
 
-#include <supla/log_wrapper.h>
-
-#include <supla/storage/storage.h>
-#include <supla/time.h>
-#include <supla/io.h>
 #include <supla/control/button.h>
+#include <supla/io.h>
+#include <supla/log_wrapper.h>
 #include <supla/storage/config.h>
 #include <supla/storage/config_tags.h>
+#include <supla/storage/storage.h>
+#include <supla/time.h>
 
 namespace Supla {
 namespace Control {
+
+namespace {
+
+Supla::Io::IoPin MakeOutputPin(Supla::Io::Base *io, int pin, bool highIsOn) {
+  Supla::Io::IoPin result(pin, io);
+  result.setActiveHigh(highIsOn);
+  result.setMode(OUTPUT);
+  return result;
+}
+
+}  // namespace
 
 RollerShutter::RollerShutter(Supla::Io::Base *io,
                              int pinUp,
                              int pinDown,
                              bool highIsOn,
                              bool tiltFunctionsEnabled)
-    : RollerShutter(pinUp, pinDown, highIsOn, tiltFunctionsEnabled) {
-  this->io = io;
+    : RollerShutter(MakeOutputPin(io, pinUp, highIsOn),
+                    MakeOutputPin(io, pinDown, highIsOn),
+                    tiltFunctionsEnabled) {
+}
+
+RollerShutter::RollerShutter(Supla::Io::IoPin pinUp,
+                             Supla::Io::IoPin pinDown,
+                             bool tiltFunctionsEnabled)
+    : RollerShutterInterface(tiltFunctionsEnabled),
+      pinUp(pinUp),
+      pinDown(pinDown) {
+  this->pinUp.setMode(OUTPUT);
+  this->pinDown.setMode(OUTPUT);
+  channel.setFlag(SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS);
+  channel.setFlag(SUPLA_CHANNEL_FLAG_CALCFG_RECALIBRATE);
+}
+
+RollerShutter::RollerShutter(Supla::Io::IoPin pinUp,
+                             Supla::Io::IoPin pinDown,
+                             bool tiltFunctionsEnabled,
+                             Supla::Channel &externalChannel,
+                             ElementMode mode)
+    : RollerShutterInterface(tiltFunctionsEnabled, externalChannel, mode),
+      pinUp(pinUp),
+      pinDown(pinDown) {
+  this->pinUp.setMode(OUTPUT);
+  this->pinDown.setMode(OUTPUT);
+  channel.setFlag(SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS);
+  channel.setFlag(SUPLA_CHANNEL_FLAG_CALCFG_RECALIBRATE);
 }
 
 RollerShutter::RollerShutter(int pinUp,
                              int pinDown,
                              bool highIsOn,
                              bool tiltFunctionsEnabled)
-    : RollerShutterInterface(tiltFunctionsEnabled),
-      pinUp(pinUp),
-      pinDown(pinDown),
-      highIsOn(highIsOn) {
-  channel.setFlag(SUPLA_CHANNEL_FLAG_RS_SBS_AND_STOP_ACTIONS);
-  channel.setFlag(SUPLA_CHANNEL_FLAG_CALCFG_RECALIBRATE);
+    : RollerShutter(MakeOutputPin(nullptr, pinUp, highIsOn),
+                    MakeOutputPin(nullptr, pinDown, highIsOn),
+                    tiltFunctionsEnabled) {
 }
 
 void RollerShutter::onInit() {
@@ -59,21 +93,20 @@ void RollerShutter::onInit() {
 }
 
 void RollerShutter::setPinUp(int pin) {
-  pinUp = pin;
+  pinUp.setPin(pin);
+  pinUp.setMode(OUTPUT);
   initGpio(pinUp);
 }
 
 void RollerShutter::setPinDown(int pin) {
-  pinDown = pin;
+  pinDown.setPin(pin);
+  pinDown.setMode(OUTPUT);
   initGpio(pinDown);
 }
 
-void RollerShutter::initGpio(int gpio) {
-  if (gpio >= 0) {
-    Supla::Io::digitalWrite(
-        channel.getChannelNumber(), gpio, highIsOn ? LOW : HIGH, io);
-    Supla::Io::pinMode(channel.getChannelNumber(), gpio, OUTPUT, io);
-  }
+void RollerShutter::initGpio(const Supla::Io::IoPin &pin) {
+  pin.writeInactive(channel.getChannelNumber());
+  pin.pinMode(channel.getChannelNumber());
 }
 
 void RollerShutter::stopMovement() {
@@ -86,39 +119,19 @@ void RollerShutter::stopMovement() {
 }
 
 void RollerShutter::relayDownOn() {
-  if (pinUp >= 0 && pinDown >= 0) {
-    Supla::Io::digitalWrite(channel.getChannelNumber(),
-                            pinDown,
-                            highIsOn ? HIGH : LOW,
-                            io);
-  }
+  pinDown.writeActive(channel.getChannelNumber());
 }
 
 void RollerShutter::relayUpOn() {
-  if (pinUp >= 0 && pinDown >= 0) {
-    Supla::Io::digitalWrite(channel.getChannelNumber(),
-                            pinUp,
-                            highIsOn ? HIGH : LOW,
-                            io);
-  }
+  pinUp.writeActive(channel.getChannelNumber());
 }
 
 void RollerShutter::relayDownOff() {
-  if (pinUp >= 0 && pinDown >= 0) {
-    Supla::Io::digitalWrite(channel.getChannelNumber(),
-                            pinDown,
-                            highIsOn ? LOW : HIGH,
-                            io);
-  }
+  pinDown.writeInactive(channel.getChannelNumber());
 }
 
 void RollerShutter::relayUpOff() {
-  if (pinUp >= 0 && pinDown >= 0) {
-    Supla::Io::digitalWrite(channel.getChannelNumber(),
-                            pinUp,
-                            highIsOn ? LOW : HIGH,
-                            io);
-  }
+  pinUp.writeInactive(channel.getChannelNumber());
 }
 
 void RollerShutter::startClosing() {
@@ -151,10 +164,16 @@ void RollerShutter::switchOffRelays() {
 }
 
 void RollerShutter::onTimer() {
-  if (doNothingTime != 0 && millis() - doNothingTime <
-      500) {  // doNothingTime time is used when we change
-              // direction of roller - to stop for a moment
-              // before enabling opposite direction
+  if (!pinUp.isSet() || !pinDown.isSet()) {
+    switchOffRelays();
+    return;
+  }
+
+  if (doNothingTime != 0 &&
+      millis() - doNothingTime <
+          500) {  // doNothingTime time is used when we change
+                  // direction of roller - to stop for a moment
+                  // before enabling opposite direction
     return;
   }
   doNothingTime = 0;
@@ -165,7 +184,7 @@ void RollerShutter::onTimer() {
     targetPosition = STOP_POSITION;
     stopMovement();
     stopCalibration();
-//    SUPLA_LOG_DEBUG("RS[%d] Stop movement", channel.getChannelNumber());
+    //    SUPLA_LOG_DEBUG("RS[%d] Stop movement", channel.getChannelNumber());
   }
   if (targetPosition == STOP_POSITION) {
     newTargetPositionAvailable = false;
@@ -298,10 +317,9 @@ void RollerShutter::onTimer() {
       } else if (targetPosition == MOVE_DOWN_POSITION) {
         newDirection = Directions::DOWN_DIR;
         operationTimeoutMs = closingTimeMs + getTimeMarginValue(closingTimeMs);
-        SUPLA_LOG_DEBUG(
-            "RS[%d] Set new direction: DOWN, operation timeout: %d",
-            channel.getChannelNumber(),
-            operationTimeoutMs);
+        SUPLA_LOG_DEBUG("RS[%d] Set new direction: DOWN, operation timeout: %d",
+                        channel.getChannelNumber(),
+                        operationTimeoutMs);
       } else {
         operationTimeoutMs = 0;
         int newMovementValue = targetPosition != UNKNOWN_POSITION
@@ -312,7 +330,8 @@ void RollerShutter::onTimer() {
         // 0 - 100 = -100 (move down); 50 -
         // 20 = 30 (move up 30%), etc
         SUPLA_LOG_DEBUG("RS[%d] New movement value: %d, new tilting value: %d",
-                        channel.getChannelNumber(), newMovementValue,
+                        channel.getChannelNumber(),
+                        newMovementValue,
                         newTiltingValue);
         if (newMovementValue > 0) {
           newDirection = Directions::DOWN_DIR;  // move down
@@ -414,9 +433,9 @@ void RollerShutter::calculateCurrentPositionAndTilt() {
   }
 
   const int positionDistance =
-    upDir ? lastPositionBeforeMovement : 10000 - lastPositionBeforeMovement;
+      upDir ? lastPositionBeforeMovement : 10000 - lastPositionBeforeMovement;
   int tiltingDistance =
-    upDir ? lastTiltBeforeMovement : 10000 - lastTiltBeforeMovement;
+      upDir ? lastTiltBeforeMovement : 10000 - lastTiltBeforeMovement;
 
   uint32_t positionChangeTimeRequired =
       (1.0 * fullPositionChangeTime * positionDistance / 10000.0);
@@ -512,8 +531,12 @@ void RollerShutter::calculateCurrentPositionAndTilt() {
 }
 
 void RollerShutter::setTargetPosition(int newPosition, int newTilt) {
+  // Position adjustment requires nonzero movement times. They may legitimately
+  // be unavailable for channels with
+  // SUPLA_CHANNEL_FLAG_TIME_SETTING_NOT_AVAILABLE.
   if (isTiltConfigured() && newTilt > UNKNOWN_POSITION &&
-      newPosition > UNKNOWN_POSITION && isCalibrated() &&
+      newPosition > UNKNOWN_POSITION && isCalibrated() && openingTimeMs != 0 &&
+      closingTimeMs != 0 &&
       tiltConfig.tiltControlType ==
           SUPLA_TILT_CONTROL_TYPE_CHANGES_POSITION_WHILE_TILTING) {
     SUPLA_LOG_DEBUG("RS[%d] new target position before adjustment %d, tilt %d",
@@ -563,8 +586,7 @@ void RollerShutter::setTargetPosition(int newPosition, int newTilt) {
         tiltConfig.tiltingTime);
 
     if (positionAfterTilting > newPosition) {
-      uint32_t tiltDownRequiredTime =
-          newTilt * tiltConfig.tiltingTime / 100;
+      uint32_t tiltDownRequiredTime = newTilt * tiltConfig.tiltingTime / 100;
       uint32_t posChangeForTiltDown =
           10000 * tiltDownRequiredTime / closingTimeMs;
       SUPLA_LOG_DEBUG("RS[%d] tiltDownRequiredTime %d, posChangeForTiltDown %d",
@@ -575,12 +597,11 @@ void RollerShutter::setTargetPosition(int newPosition, int newTilt) {
     } else if (positionAfterTilting < newPosition) {
       uint32_t tiltUpRequiredTime =
           (100 - newTilt) * tiltConfig.tiltingTime / 100;
-      uint32_t posChangeForTiltUp =
-          10000 * tiltUpRequiredTime / openingTimeMs;
-          SUPLA_LOG_DEBUG("RS[%d] tiltUpRequiredTime %d, posChangeForTiltUp %d",
-                          channel.getChannelNumber(),
-                          tiltUpRequiredTime,
-                          posChangeForTiltUp);
+      uint32_t posChangeForTiltUp = 10000 * tiltUpRequiredTime / openingTimeMs;
+      SUPLA_LOG_DEBUG("RS[%d] tiltUpRequiredTime %d, posChangeForTiltUp %d",
+                      channel.getChannelNumber(),
+                      tiltUpRequiredTime,
+                      posChangeForTiltUp);
       newPosition += (posChangeForTiltUp + 50) / 100;
     }
     if (newPosition < 0) {

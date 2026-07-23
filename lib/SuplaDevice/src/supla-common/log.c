@@ -16,6 +16,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#define _POSIX_C_SOURCE 200809L
+
 #include "log.h"
 
 #include <stdarg.h>
@@ -64,6 +66,20 @@ static const char *SUPLA_TAG = "SUPLA";
 #ifdef __ANDROID__
 #include <android/log.h>
 #endif /*__ANDROID__*/
+
+static int __supla_log_level = LOG_VERBOSE;
+
+void LOG_ICACHE_FLASH supla_log_set_level(int level) {
+  __supla_log_level = level;
+}
+
+int LOG_ICACHE_FLASH supla_log_get_level(void) {
+  return __supla_log_level;
+}
+
+char LOG_ICACHE_FLASH supla_log_is_enabled(int level) {
+  return level <= __supla_log_level;
+}
 
 #ifdef __LOG_CALLBACK
 _supla_log_callback __supla_log_callback = NULL;
@@ -270,9 +286,10 @@ void LOG_ICACHE_FLASH supla_log(int __pri, const char *__fmt, ...) {
 
 #if defined(ESP8266) || defined(ARDUINO) || defined(_WIN32) || \
     defined(SUPLA_DEVICE)
-  if (__fmt == NULL) return;
+  if (__fmt == NULL || !supla_log_is_enabled(__pri)) return;
 #else
-  if (__fmt == NULL || (debug_mode == 0 && __pri == LOG_DEBUG)) return;
+  if (__fmt == NULL || !supla_log_is_enabled(__pri) ||
+      (debug_mode == 0 && __pri == LOG_DEBUG)) return;
 #endif
 
   while (1) {

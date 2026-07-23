@@ -231,7 +231,7 @@ void IRAM_ATTR MCP23017::_interrupt() {
 namespace Supla {
 namespace Control {
 
-ExpanderMCP23017::ExpanderMCP23017(TwoWire* wire, uint8_t address) : Supla::Io::Base(false) {
+ExpanderMCP23017::ExpanderMCP23017(TwoWire* wire, uint8_t address) : Supla::Io::Base() {
   if (_control.begin(address, wire)) {
     Serial.print("MCP23017 is connected address: ");
     Serial.println(address, HEX);

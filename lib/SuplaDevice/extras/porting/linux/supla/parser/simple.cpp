@@ -17,6 +17,7 @@
 #include "simple.h"
 
 #include <sstream>
+#include <string>
 
 Supla::Parser::Simple::Simple(Supla::Source::Source *src)
     : Supla::Parser::Parser(src) {
@@ -27,7 +28,7 @@ Supla::Parser::Simple::~Simple() {
 
 double Supla::Parser::Simple::getValue(const std::string &key) {
   int index = keys[key];
-  if (index < 0 || index >= values.size()) {
+  if (index < 0 || static_cast<size_t>(index) >= values.size()) {
     valid = false;
     return 0;
   }
@@ -45,7 +46,7 @@ double Supla::Parser::Simple::getValue(const std::string &key) {
 std::variant<int, bool, std::string> Supla::Parser::Simple::getStateValue(
     const std::string &key) {
   int index = keys[key];
-  if (index < 0 || index >= values.size()) {
+  if (index < 0 || static_cast<size_t>(index) >= values.size()) {
     valid = false;
     return 0;
   }

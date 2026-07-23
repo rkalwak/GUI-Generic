@@ -23,6 +23,7 @@
 #include <supla/log_wrapper.h>
 
 #include <vector>
+#include <string>
 
 namespace Supla::Source {
 
@@ -44,6 +45,10 @@ Mqtt::~Mqtt() {
       client->unsubscribeTopic(topic);
     }
   }
+}
+
+bool Supla::Source::Mqtt::isConnected() {
+  return client && client->isConnected();
 }
 
 std::string Supla::Source::Mqtt::getContent() {

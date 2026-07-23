@@ -31,6 +31,8 @@ extern "C" void supla_vlog(int __pri, const char *message);
 #define PRINTF_UINT64_HEX(x) \
   static_cast<uint32_t>((x) >> 32), static_cast<uint32_t>(x)
 
+#define SUPLA_LOG_IS_ENABLED(level) supla_log_is_enabled(level)
+
 #ifdef ARDUINO
 #include <Arduino.h>
 
@@ -61,56 +63,97 @@ void supla_logf(int __pri, const __FlashStringHelper *__fmt, ...);
 #ifdef SUPLA_DEVICE_ESP32
 #include <esp_log.h>
 extern const char *SUPLA_TAG;
+void supla_device_logf(int __pri, const char *__fmt, ...);
 #ifndef SUPLA_LOG_VERBOSE
 #define SUPLA_LOG_VERBOSE(arg_format, ...) \
-            ESP_LOGV(SUPLA_TAG, arg_format, ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_VERBOSE)) { \
+                supla_device_logf(LOG_VERBOSE, arg_format, ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_DEBUG
 #define SUPLA_LOG_DEBUG(arg_format, ...) \
-            ESP_LOGD(SUPLA_TAG, arg_format, ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_DEBUG)) { \
+                supla_device_logf(LOG_DEBUG, arg_format, ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_INFO
 #define SUPLA_LOG_INFO(arg_format, ...) \
-            ESP_LOGI(SUPLA_TAG, arg_format, ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_INFO)) { \
+                supla_device_logf(LOG_INFO, arg_format, ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_WARNING
 #define SUPLA_LOG_WARNING(arg_format, ...) \
-            ESP_LOGW(SUPLA_TAG, arg_format, ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_WARNING)) { \
+                supla_device_logf(LOG_WARNING, arg_format, ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_ERROR
 #define SUPLA_LOG_ERROR(arg_format, ...) \
-            ESP_LOGE(SUPLA_TAG, arg_format, ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_ERR)) { \
+                supla_device_logf(LOG_ERR, arg_format, ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #endif
 
 #ifndef SUPLA_LOG_VERBOSE
 #define SUPLA_LOG_VERBOSE(arg_format, ...) \
-            supla_logf(LOG_VERBOSE, F(arg_format) , ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_VERBOSE)) { \
+                supla_logf(LOG_VERBOSE, F(arg_format) , ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_DEBUG
 #define SUPLA_LOG_DEBUG(arg_format, ...) \
-            supla_logf(LOG_DEBUG, F(arg_format) , ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_DEBUG)) { \
+                supla_logf(LOG_DEBUG, F(arg_format) , ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_INFO
 #define SUPLA_LOG_INFO(arg_format, ...) \
-            supla_logf(LOG_INFO, F(arg_format) , ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_INFO)) { \
+                supla_logf(LOG_INFO, F(arg_format) , ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_WARNING
 #define SUPLA_LOG_WARNING(arg_format, ...) \
-            supla_logf(LOG_WARNING, F(arg_format) , ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_WARNING)) { \
+                supla_logf(LOG_WARNING, F(arg_format) , ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #ifndef SUPLA_LOG_ERROR
 #define SUPLA_LOG_ERROR(arg_format, ...) \
-            supla_logf(LOG_ERR, F(arg_format) , ## __VA_ARGS__)
+            do { \
+              if (SUPLA_LOG_IS_ENABLED(LOG_ERR)) { \
+                supla_logf(LOG_ERR, F(arg_format) , ## __VA_ARGS__); \
+              } \
+            } while (0)
 #endif
 
 #endif  // SRC_SUPLA_LOG_WRAPPER_H_

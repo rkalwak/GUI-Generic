@@ -38,4 +38,6 @@ class BoardMock : public BoardInterface {
   MOCK_METHOD(void, deviceSoftwareReset, (), (override));
 };
 
+void setLastResetSoft(bool value);
+
 #endif  // EXTRAS_TEST_DOUBLES_BOARD_MOCK_H_

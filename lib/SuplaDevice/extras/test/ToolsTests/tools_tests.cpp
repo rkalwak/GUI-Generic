@@ -14,7 +14,9 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include <limits.h>
 #include <gtest/gtest.h>
+#include <supla-common/proto.h>
 #include <supla/tools.h>
 
 TEST(ToolsTests, isArrayEmptyTests) {
@@ -36,6 +38,11 @@ TEST(ToolsTests, isArrayEmptyTests) {
 
   EXPECT_FALSE(isArrayEmpty(buf4, 1000));
   EXPECT_TRUE(isArrayEmpty(buf5, 1000));
+}
+
+TEST(ToolsTests, relayChannelNameForStaircaseTimer) {
+  EXPECT_STREQ("Staircase timer",
+               Supla::getRelayChannelName(SUPLA_CHANNELFNC_STAIRCASETIMER));
 }
 
 TEST(ToolsTests, adjustRangeTests) {
@@ -61,61 +68,95 @@ TEST(ToolsTests, generateHexStringTests) {
   EXPECT_STREQ(buf, "00");
 }
 
-TEST(ToolsTests, hexStringToIntTests) {
-  EXPECT_EQ(hexStringToInt("10", 2), 16);
-  EXPECT_EQ(hexStringToInt("A0", 2), 160);
-  EXPECT_EQ(hexStringToInt("a5", 2), 165);
-  EXPECT_EQ(hexStringToInt("5", 1), 5);
-  EXPECT_EQ(hexStringToInt("05", 2), 5);
-  EXPECT_EQ(hexStringToInt("0a", 2), 10);
-  EXPECT_EQ(hexStringToInt("0A", 2), 10);
-  EXPECT_EQ(hexStringToInt("FF", 2), 255);
-  EXPECT_EQ(hexStringToInt("fF", 2), 255);
-  EXPECT_EQ(hexStringToInt("ff", 2), 255);
-  EXPECT_EQ(hexStringToInt("0ff", 3), 255);
-  EXPECT_EQ(hexStringToInt("1ff", 3), 511);
-  EXPECT_EQ(hexStringToInt("45FAc21", 7), 73378849);
+TEST(ToolsTests, hexByteToIntTests) {
+  uint8_t value = 0;
 
-  // uint32_t max
-  EXPECT_EQ(hexStringToInt("FFFFFFFF", 8), 4294967295);
-  // out of uint32_t limit call
-  hexStringToInt("FFFFFFFF2", 9);
+  EXPECT_TRUE(hexByteToInt("10", &value));
+  EXPECT_EQ(value, 16);
+
+  EXPECT_TRUE(hexByteToInt("A0", &value));
+  EXPECT_EQ(value, 160);
+
+  EXPECT_TRUE(hexByteToInt("a5", &value));
+  EXPECT_EQ(value, 165);
+
+  EXPECT_TRUE(hexByteToInt("05", &value));
+  EXPECT_EQ(value, 5);
+
+  EXPECT_TRUE(hexByteToInt("0a", &value));
+  EXPECT_EQ(value, 10);
+
+  EXPECT_TRUE(hexByteToInt("0A", &value));
+  EXPECT_EQ(value, 10);
+
+  EXPECT_TRUE(hexByteToInt("FF", &value));
+  EXPECT_EQ(value, 255);
+
+  EXPECT_TRUE(hexByteToInt("fF", &value));
+  EXPECT_EQ(value, 255);
+
+  EXPECT_TRUE(hexByteToInt("ff", &value));
+  EXPECT_EQ(value, 255);
+
+  EXPECT_FALSE(hexByteToInt("G0", &value));
+  EXPECT_FALSE(hexByteToInt("%0", &value));
+  EXPECT_FALSE(hexByteToInt("0", &value));
 }
 
-TEST(ToolsTest, urlDecodeInplaceTests) {
+TEST(ToolsTests, hexStringToArrayTests) {
+  char out[4] = {};
+
+  EXPECT_TRUE(hexStringToArray("00010203", out, 4));
+  EXPECT_EQ(static_cast<uint8_t>(out[0]), 0);
+  EXPECT_EQ(static_cast<uint8_t>(out[1]), 1);
+  EXPECT_EQ(static_cast<uint8_t>(out[2]), 2);
+  EXPECT_EQ(static_cast<uint8_t>(out[3]), 3);
+
+  EXPECT_FALSE(hexStringToArray("00010G03", out, 4));
+  EXPECT_EQ(static_cast<uint8_t>(out[0]), 0);
+  EXPECT_EQ(static_cast<uint8_t>(out[1]), 1);
+  EXPECT_EQ(static_cast<uint8_t>(out[2]), 0);
+}
+
+TEST(ToolsTests, urlDecodeInplaceTests) {
   {
     char buf[] = "%61la ma+supla%1";
-    urlDecodeInplace(buf, sizeof(buf) - 1);
+    EXPECT_TRUE(urlDecodeInplace(buf, sizeof(buf) - 1));
     EXPECT_STREQ(buf, "ala ma supla");
   }
 
   {
     char buf[] = "ala+ma+supla";
-    urlDecodeInplace(buf, sizeof(buf) - 1);
+    EXPECT_TRUE(urlDecodeInplace(buf, sizeof(buf) - 1));
     EXPECT_STREQ(buf, "ala ma supla");
   }
 
   {
     char buf[] = "ala+ma%20supla";
-    urlDecodeInplace(buf, sizeof(buf) - 1);
+    EXPECT_TRUE(urlDecodeInplace(buf, sizeof(buf) - 1));
     EXPECT_STREQ(buf, "ala ma supla");
   }
 
   {
     char buf[] = "ala+ma+supla";
-    urlDecodeInplace(buf, sizeof(buf) - 1);
+    EXPECT_TRUE(urlDecodeInplace(buf, sizeof(buf) - 1));
     EXPECT_STREQ(buf, "ala ma supla");
   }
 
   {
     char buf[] = "ala+ma+supla";
-    urlDecodeInplace(buf, sizeof(buf) - 1);
+    EXPECT_TRUE(urlDecodeInplace(buf, sizeof(buf) - 1));
     EXPECT_STREQ(buf, "ala ma supla");
   }
 
+  {
+    char buf[] = "ala%G0ma";
+    EXPECT_FALSE(urlDecodeInplace(buf, sizeof(buf) - 1));
+    EXPECT_STREQ(buf, "ala%G0ma");
+  }
 }
 
-TEST(ToolsTest, urlEncodeTests) {
+TEST(ToolsTests, urlEncodeTests) {
   {
     char input[] = "ala ma supla";
     char output[1024] = {};
@@ -135,7 +176,9 @@ TEST(ToolsTest, urlEncodeTests) {
     char input[] = "~@#$   +~-';][/., ala MA supla";
     char output[1024] = {};
     EXPECT_EQ(urlEncode(input, output, 1024), 62);
-    EXPECT_STREQ(output, "~%40%23%24%20%20%20%2B~-%27%3B%5D%5B%2F.%2C%20ala%20MA%20supla");
+    EXPECT_STREQ(
+        output,
+        "~%40%23%24%20%20%20%2B~-%27%3B%5D%5B%2F.%2C%20ala%20MA%20supla");
   }
 
   {
@@ -172,10 +215,9 @@ TEST(ToolsTest, urlEncodeTests) {
     EXPECT_EQ(urlEncode(input, output, 1024), 0);
     EXPECT_STREQ(output, "");
   }
-
 }
 
-TEST(ToolsTest, strncmpInsensitiveTests) {
+TEST(ToolsTests, strncmpInsensitiveTests) {
   {
     char s1[] = "ala ma supla";
     char s2[] = "test";
@@ -309,9 +351,21 @@ TEST(ToolsTests, stringToIntTests) {
   EXPECT_EQ(stringToInt("-1234"), -1234);
   EXPECT_EQ(stringToInt("1234"), 1234);
   EXPECT_EQ(stringToInt("-1-"), 0);
+  EXPECT_EQ(stringToInt("2147483647"), 2147483647);
+  EXPECT_EQ(stringToInt("2147483648"), 0);
+  EXPECT_EQ(stringToInt("-2147483648"), INT32_MIN);
+  EXPECT_EQ(stringToInt("-2147483649"), 0);
 }
 
-TEST(ToolsTest, stringToColorTests) {
+TEST(ToolsTests, stringToUIntTests) {
+  EXPECT_EQ(stringToUInt("0"), 0U);
+  EXPECT_EQ(stringToUInt("10"), 10U);
+  EXPECT_EQ(stringToUInt("4294967295"), UINT32_MAX);
+  EXPECT_EQ(stringToUInt("4294967296"), 0U);
+  EXPECT_EQ(stringToUInt("12a3"), 0U);
+}
+
+TEST(ToolsTests, stringToColorTests) {
   uint8_t red = 0;
   uint8_t green = 0;
   uint8_t blue = 0;
@@ -364,7 +418,7 @@ TEST(ToolsTest, stringToColorTests) {
   EXPECT_EQ(blue, 255);
 }
 
-TEST(ToolsTest, rssiToSignalStrengthTests) {
+TEST(ToolsTests, rssiToSignalStrengthTests) {
   EXPECT_EQ(Supla::rssiToSignalStrength(0), 100);
   EXPECT_EQ(Supla::rssiToSignalStrength(10), 100);
   EXPECT_EQ(Supla::rssiToSignalStrength(-100), 0);
@@ -386,7 +440,7 @@ TEST(ToolsTest, rssiToSignalStrengthTests) {
   EXPECT_EQ(Supla::rssiToSignalStrength(-100, -150), 50);
 }
 
-TEST(ToolsTest, compareSemVerTests) {
+TEST(ToolsTests, compareSemVerTests) {
   EXPECT_EQ(Supla::compareSemVer("1.0.0", "1.0.0"), 0);
   EXPECT_EQ(Supla::compareSemVer("1.0.0", "1.0.1"), -1);
   EXPECT_EQ(Supla::compareSemVer("1.0.0", "1.1.0"), -1);

@@ -17,6 +17,7 @@
  */
 
 #include <esp_system.h>
+#include <esp_random.h>
 #ifdef SUPLA_DEVICE_ESP32
 #include <esp_chip_info.h>
 #endif
@@ -68,4 +69,8 @@ int Supla::getPlatformId() {
   }
 #endif
   return 1;  // ESP8266
+}
+
+void Supla::fillRandom(uint8_t *buffer, int size) {
+  esp_fill_random(buffer, size);
 }

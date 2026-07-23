@@ -17,10 +17,10 @@
 #ifndef SRC_SUPLA_SHA256_H_
 #define SRC_SUPLA_SHA256_H_
 
-#include "nettle/sha2.h"
+#include <stdint.h>
 
 /*
- * Simple wrapper for nettle SHA256 methods.
+ * Simple platform SHA256 wrapper without exposing platform-specific types.
  */
 
 namespace Supla {
@@ -30,11 +30,15 @@ class Sha256 {
   Sha256();
   ~Sha256();
   void update(const uint8_t *data, const int size);
-  struct sha256_ctx* getHash();
   void digest(uint8_t *output, int length = 32);
 
  protected:
-  struct sha256_ctx hash;
+#ifndef SUPLA_TEST
+  void *ctx;
+#else
+  uint8_t state[32];
+  uint32_t offset;
+#endif
 };
 
 };  // namespace Supla

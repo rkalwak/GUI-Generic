@@ -119,7 +119,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 // CS  - client -> server
 // SC  - server -> client
 
-#define SUPLA_PROTO_VERSION 27
+#define SUPLA_PROTO_VERSION 28
 #define SUPLA_PROTO_VERSION_MIN 1
 
 #if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO) || defined(SUPLA_DEVICE)
@@ -129,7 +129,6 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 // SUPLA_MAX_DATA_SIZE should be bigger then calcfg, device config, channel
 // config MAXSIZE. Otherwise sending will fail
 #define SUPLA_MAX_DATA_SIZE 600  // Registration header without channels
-#define USE_DEPRECATED_EMEV_V2   // Temporary. It will be removed.
 #elif defined(ESP8266)
 #define USE_DEPRECATED_EMEV_V2  // Temporary. It will be removed.
 // supla-espressif-esp compilations
@@ -409,6 +408,10 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CHANNELTYPE_WEATHER_STATION 3100        // ver. >= 8
 #define SUPLA_CHANNELTYPE_CONTAINER 3200              // ver. >= 26
 
+// Since ver. >= 28 channel types DIMMER, RGBLIGHTING, DIMMERANDRGBLIGHTING
+// support all RGBW/dimmer related functions, when their RGBW_FuncList is != 0.
+// List of supported functions should be determined based on the RGBW_FuncList
+// bitmap value.
 #define SUPLA_CHANNELTYPE_DIMMER 4000            // ver. >= 4
 #define SUPLA_CHANNELTYPE_RGBLEDCONTROLLER 4010  // ver. >= 4
 #define SUPLA_CHANNELTYPE_DIMMERANDRGBLED 4020   // ver. >= 4
@@ -454,8 +457,10 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CHANNELFNC_ALARM 160
 #define SUPLA_CHANNELFNC_NOTIFICATION 170
 #define SUPLA_CHANNELFNC_DIMMER 180
+#define SUPLA_CHANNELFNC_DIMMER_CCT 185  // ver. >= 28
 #define SUPLA_CHANNELFNC_RGBLIGHTING 190
 #define SUPLA_CHANNELFNC_DIMMERANDRGBLIGHTING 200
+#define SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB 205            // ver. >= 28
 #define SUPLA_CHANNELFNC_DEPTHSENSOR 210                   // ver. >= 5
 #define SUPLA_CHANNELFNC_DISTANCESENSOR 220                // ver. >= 5
 #define SUPLA_CHANNELFNC_OPENINGSENSOR_WINDOW 230          // ver. >= 8
@@ -482,6 +487,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CHANNELFNC_HVAC_FAN 424                      // ver. >= 21
 #define SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL 425  // ver. >= 21
 #define SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER 426       // ver. >= 21
+#define SUPLA_CHANNELFNC_HVAC_HRV 430                      // ver. >= 29
 #define SUPLA_CHANNELFNC_VALVE_OPENCLOSE 500               // ver. >= 12
 #define SUPLA_CHANNELFNC_VALVE_PERCENTAGE 510              // ver. >= 12
 #define SUPLA_CHANNELFNC_GENERAL_PURPOSE_MEASUREMENT 520   // ver. >= 23
@@ -506,6 +512,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CHANNELFNC_MOTION_SENSOR 1010                // ver. >= 27
 #define SUPLA_CHANNELFNC_BINARY_SENSOR 1020                // ver. >= 27
 
+// Channel's FuncList bit values:
 #define SUPLA_BIT_FUNC_CONTROLLINGTHEGATEWAYLOCK 0x00000001
 #define SUPLA_BIT_FUNC_CONTROLLINGTHEGATE 0x00000002
 #define SUPLA_BIT_FUNC_CONTROLLINGTHEGARAGEDOOR 0x00000004
@@ -534,6 +541,14 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR 0x02000000            // ver. >= 24
 #define SUPLA_BIT_FUNC_PUMPSWITCH 0x04000000                    // ver. >= 25
 #define SUPLA_BIT_FUNC_HEATORCOLDSOURCESWITCH 0x08000000        // ver. >= 25
+
+// Channel's RGBW_FuncList bit values (only for SUPLA_CHANNELTYPE_DIMMER,
+// SUPLA_CHANNELTYPE_RGBLEDCONTROLLER, SUPLA_CHANNELTYPE_DIMMERANDRGBLED):
+#define SUPLA_RGBW_BIT_FUNC_DIMMER 0x00000001                   // ver. >= 28
+#define SUPLA_RGBW_BIT_FUNC_RGB_LIGHTING 0x00000002             // ver. >= 28
+#define SUPLA_RGBW_BIT_FUNC_DIMMER_AND_RGB_LIGHTING 0x00000004  // ver. >= 28
+#define SUPLA_RGBW_BIT_FUNC_DIMMER_CCT 0x00000008               // ver. >= 28
+#define SUPLA_RGBW_BIT_FUNC_DIMMER_CCT_AND_RGB 0x00000010       // ver. >= 28
 
 #define SUPLA_EVENT_CONTROLLINGTHEGATEWAYLOCK 10
 #define SUPLA_EVENT_CONTROLLINGTHEGATE 20
@@ -584,6 +599,9 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_MFR_AURATON 18
 #define SUPLA_MFR_HPD 19
 #define SUPLA_MFR_LUKFUD 20
+#define SUPLA_MFR_WALA 21
+#define SUPLA_MFR_PROVENT 22
+#define SUPLA_MFR_SMARTBOB 23
 
 // BIT map definition for TDS_SuplaRegisterDevice_*::Flags (32 bit)
 #define SUPLA_DEVICE_FLAG_CALCFG_ENTER_CFG_MODE 0x0010          // ver. >= 17
@@ -602,6 +620,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
   0x8000  // ver. >= 28
 #define SUPLA_DEVICE_FLAG_CALCFG_SET_CFG_MODE_PASSWORD_SUPPORTED \
   0x10000  // ver. >= 28
+#define SUPLA_DEVICE_FLAG_SUPLET_SUPPORTED 0x20000  // FDEV
 
 // BIT map definition for TDS_SuplaRegisterDevice_F::ConfigFields (64 bit)
 // type: TDeviceConfig_StatusLed
@@ -628,7 +647,6 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_DEVICE_CONFIG_FIELD_MODBUS (1ULL << 9)  // v. >= 27
 // type: TDeviceConfig_FirmwareUpdate
 #define SUPLA_DEVICE_CONFIG_FIELD_FIRMWARE_UPDATE (1ULL << 10)  // v. >= 28
-
 // BIT map definition for TDS_SuplaDeviceChannel_C::Flags (32 bit)
 // BIT map definition for TDS_SuplaDeviceChannel_D::Flags (64 bit)
 // BIT map definition for TDS_SuplaDeviceChannel_E::Flags (64 bit)
@@ -662,11 +680,17 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CHANNEL_FLAG_POSSIBLE_SLEEP_MODE_deprecated \
   0x04000000  // ver. >= 12  DEPRECATED
 #define SUPLA_CHANNEL_FLAG_RUNTIME_CHANNEL_CONFIG_UPDATE \
-  0x08000000                                                    // ver. >= 21
-#define SUPLA_CHANNEL_FLAG_WEEKLY_SCHEDULE 0x10000000           // ver. >= 21
-#define SUPLA_CHANNEL_FLAG_HAS_PARENT 0x20000000                // ver. >= 21
-#define SUPLA_CHANNEL_FLAG_CALCFG_RESTART_SUBDEVICE 0x40000000  // ver. >= 25
-#define SUPLA_CHANNEL_FLAG_BATTERY_COVER_AVAILABLE 0x80000000   // ver. >= 25
+  0x08000000                                                       // ver. >= 21
+#define SUPLA_CHANNEL_FLAG_WEEKLY_SCHEDULE 0x10000000              // ver. >= 21
+#define SUPLA_CHANNEL_FLAG_HAS_PARENT 0x20000000                   // ver. >= 21
+#define SUPLA_CHANNEL_FLAG_CALCFG_RESTART_SUBDEVICE 0x40000000     // ver. >= 25
+#define SUPLA_CHANNEL_FLAG_BATTERY_COVER_AVAILABLE 0x80000000      // ver. >= 25
+#define SUPLA_CHANNEL_FLAG_BUTTON_MODE_SUPPORTED 0x100000000       // ver. >= 28
+#define SUPLA_CHANNEL_FLAG_RELAY_MODE_ONCE_SUPPORTED 0x200000000   // ver. >= 28
+#define SUPLA_CHANNEL_FLAG_RELAY_MODE_FORCED_SUPPORTED \
+  0x400000000  // ver. >= 28
+#define SUPLA_CHANNEL_FLAG_RELAY_MODE_AUTOMATIC_SUPPORTED \
+  0x800000000  // ver. >= 28
 #pragma pack(push, 1)
 
 typedef struct {
@@ -815,9 +839,28 @@ typedef struct {
   char value[SUPLA_CHANNELVALUE_SIZE];
 } TDS_SuplaDeviceChannel_B;  // ver. >= 2
 
+// Button lock mode definitions (for AT channel):
+#define SUPLA_BUTTON_MODE_NOT_SET 0        // default, all unlocked
+#define SUPLA_BUTTON_MODE_LOCKED 1         // all locked
+// #define SUPLA_BUTTON_MODE_REMOTE_LOCKED 2  // only remote locked, local
+//                                            // actions are allowed
+// #define SUPLA_BUTTON_MODE_LOCAL_LOCKED 3   // only local locked, remote
+//                                            // actions are allowed
+#define SUPLA_BUTTON_MODE_CMD_WEEKLY_SCHEDULE 4  // Command to switch to
+                                                 // weekly schedule
+#define SUPLA_BUTTON_MODE_CMD_SWITCH_TO_MANUAL 5  // Command to switch to
+                                                  // manual mode
+
+// Action Trigger Flags definitions (bit positions):
+#define SUPLA_ACTION_TRIGGER_FLAG_WEEKLY_SCHEDULE_ENABLED (1 << 0)
+
 typedef struct {
   unsigned char relatedChannelNumber;  // ChannelNumber + 1.
   unsigned _supla_int_t disablesLocalOperation;
+  unsigned char ButtonMode;  // see SUPLA_BUTTON_MODE_, v. >= 28,
+                             // only if channel Flag:
+                             // SUPLA_CHANNEL_FLAG_BUTTON_MODE_SUPPORTED is set.
+  unsigned char Flags;  // SUPLA_ACTION_TRIGGER_FLAG_
 } TActionTriggerProperties;
 
 #define SUPLA_HVAC_VALUE_FLAG_SETPOINT_TEMP_HEAT_SET (1ULL << 0)
@@ -960,7 +1003,12 @@ typedef struct {
 
   union {
     _supla_int_t FuncList;
-    unsigned _supla_int_t ActionTriggerCaps;  // ver. >= 16
+    unsigned _supla_int_t ActionTriggerCaps;  // ver. >= 16 only for
+                                              // SUPLA_CHANNELTYPE_ACTIONTRIGGER
+    unsigned _supla_int_t
+        RGBW_FuncList;  // ver. >= 28 only for SUPLA_CHANNELTYPE_DIMMER,
+                        // SUPLA_CHANNELTYPE_RGBLEDCONTROLLER,
+                        // SUPLA_CHANNELTYPE_DIMMERANDRGBLED
   };
 
   _supla_int_t Default;
@@ -1619,7 +1667,10 @@ typedef struct {
   unsigned _supla_int_t Color;  // 0 == Ignore
   char ColorRandom;
   char OnOff;
-  char Reserved[8];
+  char Command;    // RGBW_COMMAND_, requires
+                   // SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED v. >= 21
+  char WhiteTemperature;  // ver. >= 28
+  char Reserved[6];
 } TAction_RGBW_Parameters;  // ver. >= 19
 
 typedef struct {
@@ -2156,6 +2207,28 @@ typedef struct {
 #define SUPLA_CALCFG_CMD_TAKE_OCR_PHOTO 9420              // v. >= 25
 #define SUPLA_CALCFG_CMD_MUTE_ALARM_SOUND 9430            // v. >= 26
 
+#define SUPLA_CALCFG_CMD_SUPLET_GET_CAPABILITIES 9500     // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_INSTANCE_COUNT 9510   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_INSTANCE_LIST 9520    // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_INSTANCE_INFO 9530    // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_INSTANCE_CONFIG 9540  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_DEFINITION_BEGIN 9550   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_DEFINITION_CHUNK 9560   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_DEFINITION_COMMIT 9570  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_DEFINITION_ABORT 9580   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_DEFINITION_REMOVE 9585  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_DEFINITION_LIST 9586  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_GET_DEFINITION_CONFIG 9587  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_BEGIN 9590     // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_CHUNK 9600     // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_COMMIT 9610    // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_REMOVE 9620    // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_ABORT 9630     // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_UPGRADE_BEGIN 9640   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_UPGRADE_CHUNK 9650   // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_UPGRADE_COMMIT 9660  // FDEV
+#define SUPLA_CALCFG_CMD_SUPLET_INSTANCE_UPGRADE_ABORT 9670   // FDEV
+
 #define SUPLA_CALCFG_DATATYPE_RS_SETTINGS 1000
 #define SUPLA_CALCFG_DATATYPE_FB_SETTINGS 1100  // v. >= 17
 
@@ -2232,6 +2305,263 @@ typedef struct {
   char Name[SUPLA_CALCFG_SUBDEVICE_NAME_MAXSIZE];  // UTF8. Last variable in
                                                    // struct!
 } TCalCfg_SubdevicePairingResult;                  // v. >= 25
+
+#define SUPLA_CALCFG_SUPLET_RESULT_OK 0
+#define SUPLA_CALCFG_SUPLET_RESULT_INVALID_REQUEST 1
+#define SUPLA_CALCFG_SUPLET_RESULT_UNSUPPORTED_DEFINITION 2
+#define SUPLA_CALCFG_SUPLET_RESULT_DEFINITION_NOT_FOUND 3
+#define SUPLA_CALCFG_SUPLET_RESULT_DEFINITION_TRANSFER_FAILED 4
+#define SUPLA_CALCFG_SUPLET_RESULT_DEFINITION_SHA_MISMATCH 5
+#define SUPLA_CALCFG_SUPLET_RESULT_INSTANCE_LIMIT_EXCEEDED 6
+#define SUPLA_CALCFG_SUPLET_RESULT_CHANNEL_LIMIT_EXCEEDED 7
+#define SUPLA_CALCFG_SUPLET_RESULT_RAM_LIMIT_EXCEEDED 8
+#define SUPLA_CALCFG_SUPLET_RESULT_CONFIG_TOO_LARGE 9
+#define SUPLA_CALCFG_SUPLET_RESULT_INVALID_CONFIG 10
+#define SUPLA_CALCFG_SUPLET_RESULT_STORAGE_ERROR 11
+#define SUPLA_CALCFG_SUPLET_RESULT_BUSY 12
+#define SUPLA_CALCFG_SUPLET_RESULT_CREATE_ONLY_PARAM_CHANGED 13
+#define SUPLA_CALCFG_SUPLET_RESULT_TOPOLOGY_CHANGE_NOT_ALLOWED 14
+#define SUPLA_CALCFG_SUPLET_RESULT_DEFINITION_CANNOT_BE_CHANGED 15
+#define SUPLA_CALCFG_SUPLET_RESULT_INVALID_DEFINITION 16
+#define SUPLA_CALCFG_SUPLET_RESULT_INSTANCE_NOT_FOUND 17
+#define SUPLA_CALCFG_SUPLET_RESULT_VERSION_MISMATCH 18
+
+#define SUPLA_CALCFG_SUPLET_PHASE_NONE 0
+#define SUPLA_CALCFG_SUPLET_PHASE_VALIDATE 1
+#define SUPLA_CALCFG_SUPLET_PHASE_TRANSFER_TEMPLATE 2
+#define SUPLA_CALCFG_SUPLET_PHASE_PARSE_TEMPLATE 3
+#define SUPLA_CALCFG_SUPLET_PHASE_VALIDATE_CONFIG 4
+#define SUPLA_CALCFG_SUPLET_PHASE_ALLOCATE_CHANNELS 5
+#define SUPLA_CALCFG_SUPLET_PHASE_SAVE_INSTANCE 6
+#define SUPLA_CALCFG_SUPLET_PHASE_RUNTIME_REFRESH 7
+
+#define SUPLA_CALCFG_SUPLET_CAPABILITY_MAX_ITEMS 4
+#define SUPLA_CALCFG_SUPLET_INSTANCE_LIST_MAX_ITEMS 5
+#define SUPLA_CALCFG_SUPLET_DEFINITION_LIST_MAX_ITEMS 2
+#define SUPLA_CALCFG_SUPLET_CONFIG_CHUNK_MAXSIZE 100
+#define SUPLA_CALCFG_SUPLET_DEFINITION_CHUNK_MAXSIZE 112
+#define SUPLA_CALCFG_SUPLET_INSTANCE_CHUNK_MAXSIZE 112
+
+#define SUPLA_CALCFG_SUPLET_DEFINITION_SOURCE_BUILTIN 1
+#define SUPLA_CALCFG_SUPLET_DEFINITION_SOURCE_CACHED 2
+
+typedef struct {
+  unsigned char Version;
+  unsigned char DetailCode;  // SUPLA_CALCFG_SUPLET_RESULT_*
+  unsigned char Phase;       // SUPLA_CALCFG_SUPLET_PHASE_*
+  unsigned char Flags;
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t Required;
+  unsigned _supla_int16_t Available;
+} TCalCfg_SupletResult;  // FDEV
+
+typedef struct {
+  unsigned char Offset;
+  unsigned char Limit;
+} TCalCfg_SupletListRequest;  // FDEV
+
+typedef struct {
+  unsigned char Category;
+  unsigned char Kind;
+  unsigned char MinSchemaVersion;
+  unsigned char MaxSchemaVersion;
+  unsigned char HandlerVersion;
+  unsigned char MaxInstances;
+  unsigned char SupportsDownloadedDefinition;
+  unsigned char Reserved;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t MinDefinitionVersion;
+  unsigned _supla_int16_t MaxDefinitionVersion;
+} TCalCfg_SupletCapabilityItem;  // FDEV
+
+typedef struct {
+  unsigned char Offset;
+  unsigned char Count;
+  unsigned char Total;
+  unsigned char Reserved;
+  TCalCfg_SupletCapabilityItem
+      Items[SUPLA_CALCFG_SUPLET_CAPABILITY_MAX_ITEMS];
+} TCalCfg_SupletCapabilityList;  // FDEV
+
+typedef struct {
+  unsigned char Category;
+  unsigned char Kind;
+  unsigned char SchemaVersion;
+  unsigned char HandlerVersion;
+  unsigned char MaxInstances;
+  unsigned char Source;  // SUPLA_CALCFG_SUPLET_DEFINITION_SOURCE_*
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t JsonSize;
+  unsigned char JsonSha256[32];
+} TCalCfg_SupletDefinitionListItem;  // FDEV
+
+typedef struct {
+  unsigned char Offset;
+  unsigned char Count;
+  unsigned char Total;
+  unsigned char Reserved;
+  TCalCfg_SupletDefinitionListItem
+      Items[SUPLA_CALCFG_SUPLET_DEFINITION_LIST_MAX_ITEMS];
+} TCalCfg_SupletDefinitionList;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t Offset;
+  unsigned char MaxSize;
+  unsigned char Reserved;
+} TCalCfg_SupletDefinitionConfigRequest;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t Offset;
+  unsigned _supla_int16_t TotalSize;
+  unsigned char Source;  // SUPLA_CALCFG_SUPLET_DEFINITION_SOURCE_*
+  unsigned char Size;
+  char Data[SUPLA_CALCFG_SUPLET_CONFIG_CHUNK_MAXSIZE];
+} TCalCfg_SupletDefinitionConfigChunk;  // FDEV
+
+typedef struct {
+  unsigned char Count;
+  unsigned char MaxInstances;
+  unsigned char MaxChannelsPerInstance;
+  unsigned char MaxCachedDefinitions;
+} TCalCfg_SupletInstanceCount;  // FDEV
+
+typedef struct {
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned char SubDeviceId;
+  unsigned char ChannelCount;
+  unsigned char Reserved4;
+  unsigned char Reserved5;
+} TCalCfg_SupletInstanceListItem;  // FDEV
+
+typedef struct {
+  unsigned char Offset;
+  unsigned char Count;
+  unsigned char Total;
+  unsigned char Reserved;
+  TCalCfg_SupletInstanceListItem
+      Items[SUPLA_CALCFG_SUPLET_INSTANCE_LIST_MAX_ITEMS];
+} TCalCfg_SupletInstanceList;  // FDEV
+
+typedef struct {
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+} TCalCfg_SupletInstanceRequest;  // FDEV
+
+typedef struct {
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned char SubDeviceId;
+  unsigned char ChannelCount;
+  unsigned char Reserved4;
+  unsigned char Reserved5;
+  unsigned _supla_int16_t ParamsSize;
+  unsigned char ParamsSha256[32];
+} TCalCfg_SupletInstanceInfo;  // FDEV
+
+typedef struct {
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int16_t Offset;
+  unsigned char MaxSize;
+  unsigned char Reserved;
+} TCalCfg_SupletInstanceConfigRequest;  // FDEV
+
+typedef struct {
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int16_t Offset;
+  unsigned _supla_int16_t TotalSize;
+  unsigned char Size;
+  char Data[SUPLA_CALCFG_SUPLET_CONFIG_CHUNK_MAXSIZE];
+} TCalCfg_SupletInstanceConfigChunk;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t JsonSize;
+  unsigned char JsonSha256[32];
+  unsigned char Flags;
+  unsigned char Reserved;
+} TCalCfg_SupletDefinitionBegin;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+  unsigned _supla_int16_t Offset;
+  unsigned char Size;
+  char Data[SUPLA_CALCFG_SUPLET_DEFINITION_CHUNK_MAXSIZE];
+} TCalCfg_SupletDefinitionChunk;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t Reserved;
+} TCalCfg_SupletDefinitionRequest;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t DefinitionVersion;
+  unsigned _supla_int16_t ParamsSize;
+  unsigned char ParamsSha256[32];
+  unsigned char Flags;
+  unsigned char Reserved4;
+} TCalCfg_SupletInstanceBegin;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+  unsigned char InstanceId;
+  unsigned char Reserved1;
+  unsigned char Reserved2;
+  unsigned char Reserved3;
+  unsigned _supla_int_t DefinitionId;
+  unsigned _supla_int16_t FromDefinitionVersion;
+  unsigned _supla_int16_t ToDefinitionVersion;
+  unsigned _supla_int16_t ParamsSize;
+  unsigned char ParamsSha256[32];
+  unsigned char Flags;
+  unsigned char Reserved4;
+} TCalCfg_SupletInstanceUpgradeBegin;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+  unsigned _supla_int16_t Offset;
+  unsigned char Size;
+  char Data[SUPLA_CALCFG_SUPLET_INSTANCE_CHUNK_MAXSIZE];
+} TCalCfg_SupletInstanceChunk;  // FDEV
+
+typedef struct {
+  unsigned _supla_int_t SessionId;
+} TCalCfg_SupletSessionRequest;  // FDEV
 
 // CALCFG == CALIBRATION / CONFIG
 typedef struct {
@@ -2341,35 +2671,55 @@ typedef struct {
 // Stores color value (R, G, B) and ignores all other bytes.
 // If RGB is off, it stays off
 #define RGBW_COMMAND_SET_RGB_WITHOUT_TURN_ON 12
-// Start brightness dimmer iteration
-#define RGBW_COMMAND_START_ITERATE_DIMMER 13
-// Start color brightness iteration
-#define RGBW_COMMAND_START_ITERATE_RGB 14
-// Start dimmer and rgb brightness iteration
-#define RGBW_COMMAND_START_ITERATE_ALL 15
-// Stop brightness dimmer iteration
-#define RGBW_COMMAND_STOP_ITERATE_DIMMER 16
-// Stop color brightness iteration
-#define RGBW_COMMAND_STOP_ITERATE_RGB 17
-// Stop dimmer and rgb brightness iteration
-#define RGBW_COMMAND_STOP_ITERATE_ALL 18
+// Start brightness dimmer adjustment (0..100..0 etc)
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_DIMMER_START 13
+// Start color brightness adjustment
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_COLOR_START 14
+// Start dimmer and rgb brightness adjustment
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_ALL_START 15
+// Stop brightness dimmer adjustment
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_DIMMER_STOP 16
+// Stop color brightness adjustment
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_COLOR_STOP 17
+// Stop dimmer and rgb brightness adjustment
+#define RGBW_COMMAND_BRIGHTNESS_ADJUSTMENT_ALL_STOP 18
+// Store dimmer white temperature value and ignores all other bytes
+#define RGBW_COMMAND_SET_WHITE_TEMPERATURE_WITHOUT_TURN_ON 19
 
 typedef struct {
-  char brightness;
-  char colorBrightness;
-  char B;
-  char G;
-  char R;
+  char brightness;       // 0..100
+  char colorBrightness;  // 0..100
+  unsigned char B;       // 0..255
+  unsigned char G;       // 0..255
+  unsigned char R;       // 0..255
   char onOff;
-  char command;  // RGBW_COMMAND_, requires
-                 // SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED v. >= 21
-} TRGBW_Value;   // v. >= 10
+  char command;    // RGBW_COMMAND_, requires
+                   // SUPLA_CHANNEL_FLAG_RGBW_COMMANDS_SUPPORTED v. >= 21
+  char whiteTemperature;  // v. >= 25, 0..100 (0 warm, 50 neutral, 100 cold)
+} TRGBW_Value;     // v. >= 10
 
-#define SUPLA_RELAY_FLAG_OVERCURRENT_RELAY_OFF 0x1
+// Relay flags definitions (bit positions):
+#define SUPLA_RELAY_FLAG_OVERCURRENT_RELAY_OFF (1 << 0)
+#define SUPLA_RELAY_FLAG_WEEKLY_SCHEDULE_ENABLED (1 << 1)
+
+// Relay modes and commands
+#define SUPLA_RELAY_MODE_NOT_SET 0
+#define SUPLA_RELAY_MODE_ON_ONCE 1
+#define SUPLA_RELAY_MODE_OFF_ONCE 2
+#define SUPLA_RELAY_MODE_FORCED_ON 3
+#define SUPLA_RELAY_MODE_FORCED_OFF 4
+#define SUPLA_RELAY_MODE_AUTOMATIC 5
+#define SUPLA_RELAY_MODE_CMD_WEEKLY_SCHEDULE 6   // Command to switch to
+                                                 // weekly schedule mode
+#define SUPLA_RELAY_MODE_CMD_SWITCH_TO_MANUAL 7  // Command to switch to
+                                                 // manual mode
 
 typedef struct {
   char hi;  // actual state of relay  - 0 turned off, >= 1 - turned on
   unsigned _supla_int16_t flags;  // SUPLA_RELAY_FLAG_*
+  unsigned char RelayMode;  // see SUPLA_RELAY_MODE_, v. >= 28,
+                            // only if channel Flags:
+                            // SUPLA_CHANNEL_FLAG_RELAY_MODE_* are set.
 } TRelayChannel_Value;            // v. >= 15
 
 #define DIGIGLASS_TOO_LONG_OPERATION_WARNING 0x1
@@ -2595,6 +2945,7 @@ typedef struct {
 #define SUPLA_CHANNELSTATE_FIELD_BRIDGENODESIGNALSTRENGTH 0x0040
 #define SUPLA_CHANNELSTATE_FIELD_UPTIME 0x0080
 #define SUPLA_CHANNELSTATE_FIELD_CONNECTIONUPTIME 0x0100
+// Use exclusively with SUPLA_CHANNELSTATE_FIELD_BATTERY_STATE
 #define SUPLA_CHANNELSTATE_FIELD_BATTERYHEALTH 0x0200
 #define SUPLA_CHANNELSTATE_FIELD_BRIDGENODEONLINE 0x0400
 #define SUPLA_CHANNELSTATE_FIELD_LASTCONNECTIONRESETCAUSE 0x0800
@@ -2610,12 +2961,22 @@ typedef struct {
 // SWITCHCYCLECOUNT and defualtIconField are mutually exclusive. Use only one
 // of them.
 #define SUPLA_CHANNELSTATE_FIELD_SWITCHCYCLECOUNT 0x8000
+// Device battery level is used to inform server that channel's battery level
+// should be applied to whole device
 #define SUPLA_CHANNELSTATE_FIELD_DEVICE_BATTERYLEVEL 0x10000
+// Use exclusively with SUPLA_CHANNELSTATE_FIELD_BATTERYHEALTH
+#define SUPLA_CHANNELSTATE_FIELD_BATTERY_STATE 0x20000
+// Device battery state is used to inform server that channel's battery state
+// should be applied to whole device
+#define SUPLA_CHANNELSTATE_FIELD_DEVICE_BATTERY_STATE 0x40000
 
 #define SUPLA_LASTCONNECTIONRESETCAUSE_UNKNOWN 0
 #define SUPLA_LASTCONNECTIONRESETCAUSE_ACTIVITY_TIMEOUT 1
 #define SUPLA_LASTCONNECTIONRESETCAUSE_WIFI_CONNECTION_LOST 2
 #define SUPLA_LASTCONNECTIONRESETCAUSE_SERVER_CONNECTION_LOST 3
+
+#define SUPLA_BATTERY_STATE_OK 0
+#define SUPLA_BATTERY_STATE_LOW 1
 
 typedef struct {
   _supla_int_t ReceiverID;  // Not used in extended values
@@ -2639,7 +3000,10 @@ typedef struct {
   unsigned char BridgeNodeSignalStrength;  // 0 - 100%
   unsigned _supla_int_t Uptime;            // sec.
   unsigned _supla_int_t ConnectionUptime;  // sec.
-  unsigned char BatteryHealth;
+  union {
+    unsigned char BatteryHealth;  // 0 - 100%
+    unsigned char BatteryState;   // SUPLA_BATTERY_STATE_*
+  };
   unsigned char LastConnectionResetCause;  // SUPLA_LASTCONNECTIONRESETCAUSE_*
   unsigned _supla_int16_t LightSourceLifespan;  // 0 - 65535 hours
   union {
@@ -2648,7 +3012,7 @@ typedef struct {
                                              // -32767 = -327.67%
     _supla_int_t LightSourceOperatingTime;   // -3932100sec. - 3932100sec.
     // OperatingTime is not implemented in apps
-    unsigned _supla_int_t OperatingTime;     // time in seconds
+    unsigned _supla_int_t OperatingTime;  // time in seconds
   };
   char EOL;            // End Of List // v. >= 26
   char EmptySpace[1];  // Empty space for future use
@@ -3121,9 +3485,11 @@ typedef struct {
   unsigned _supla_int_t ActiveActions;
 } TChannelConfig_ActionTrigger;  // v. >= 16
 
-// Weekly schedule definition for HVAC channel
+// Weekly schedule definition for HVAC, Relay, AT channels
 typedef struct {
   unsigned char Mode;  // for HVAC: SUPLA_HVAC_MODE_
+                       // for AT: SUPLA_BUTTON_MODE_
+                       // for Relay: SUPLA_RELAY_MODE_
   union {
     _supla_int16_t SetpointTemperatureHeat;  // * 0.01 - used for heating
     _supla_int16_t Value1;
@@ -3201,8 +3567,11 @@ typedef struct {
       Timeout;                // 0 - not used, > 0 - time in 0.1 s, max 36000
   unsigned char Sensitivity;  // 0 - not used, 1..101 - sensitivity 0..100 %
                               // value 1 (0 %) means "OFF"
+  unsigned char AlarmMuted;  // 0 - not used, 1 - alarm is muted, 2 - alarm is
+                             // not muted
   unsigned char
-      Reserved[29 - sizeof(unsigned char) - sizeof(unsigned _supla_int16_t)];
+      Reserved[29 - sizeof(unsigned char) - sizeof(unsigned _supla_int16_t) -
+               sizeof(unsigned char)];
 } TChannelConfig_BinarySensor;  // v. >= 21
 
 // Not set is set when there is no thermometer for "AUX" available
@@ -3742,6 +4111,10 @@ typedef struct {
 #define SUPLA_ACTION_CAP_SHORT_PRESS_x3 (1 << 13)
 #define SUPLA_ACTION_CAP_SHORT_PRESS_x4 (1 << 14)
 #define SUPLA_ACTION_CAP_SHORT_PRESS_x5 (1 << 15)
+
+// Other Action Trigger events
+#define SUPLA_ACTION_CAP_ROTATE_RIGHT (1 << 7)
+#define SUPLA_ACTION_CAP_ROTATE_LEFT (1 << 8)
 
 #define SUPLA_VALVE_FLAG_FLOODING 0x1
 #define SUPLA_VALVE_FLAG_MANUALLY_CLOSED 0x2

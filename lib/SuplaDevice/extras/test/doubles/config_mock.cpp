@@ -18,5 +18,9 @@
 
 #include "config_mock.h"
 
-ConfigMock::ConfigMock() {}
+#include <gmock/gmock.h>
+
+ConfigMock::ConfigMock() {
+  ON_CALL(*this, isSwUpdateSkipCert()).WillByDefault(::testing::Return(false));
+}
 ConfigMock::~ConfigMock() {}

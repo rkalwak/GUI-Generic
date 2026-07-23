@@ -18,7 +18,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <simple_time.h>
+#include <supla/io.h>
 #include <supla/control/button.h>
+#include <supla/control/sequence_button.h>
 #include "supla/events.h"
 
 using ::testing::Return;
@@ -27,6 +29,38 @@ class ActionHandlerMock : public Supla::ActionHandler {
  public:
   MOCK_METHOD(void, handleAction, (int, int), (override));
 };
+
+TEST(ButtonTests, IoPinConstructorUsesConfiguredPolarity) {
+  DigitalInterfaceMock ioMock;
+
+  Supla::Io::IoPin inputPin(5);
+  inputPin.setPullUp(true);
+  inputPin.setActiveHigh(false);
+
+  EXPECT_CALL(ioMock, pinMode(5, INPUT_PULLUP));
+  EXPECT_CALL(ioMock, digitalRead(5)).WillOnce(Return(1));
+
+  Supla::Control::Button button(inputPin);
+  button.onInit();
+
+  EXPECT_EQ(button.getLastState(), Supla::Control::RELEASED);
+}
+
+TEST(ButtonTests, SequenceButtonIoPinConstructorUsesConfiguredPolarity) {
+  DigitalInterfaceMock ioMock;
+
+  Supla::Io::IoPin inputPin(6);
+  inputPin.setPullUp(true);
+  inputPin.setActiveHigh(false);
+
+  EXPECT_CALL(ioMock, pinMode(6, INPUT_PULLUP));
+  EXPECT_CALL(ioMock, digitalRead(6)).WillOnce(Return(1));
+
+  Supla::Control::SequenceButton button(inputPin);
+  button.onInit();
+
+  EXPECT_EQ(button.getLastState(), Supla::Control::RELEASED);
+}
 
 TEST(ButtonTests, OnPressAndOnRelease) {
   SimpleTime time;
@@ -293,8 +327,8 @@ TEST(ButtonTests, Multiclick) {
   // Conditional on_press and on_change are send only on first button press.
   // Conditional on_release is send, because there was multiclick detected.
   // Conditional on_change is send twice (on_press + on_release)
-  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_CHANGE, 10)).Times(2);
-  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_PRESS, 9)).Times(1);
+  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_CHANGE, 10)).Times(3);
+  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_PRESS, 9)).Times(2);
   EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_RELEASE, 11)).Times(1);
 
   Supla::Control::Button button(5, false, false);
@@ -555,8 +589,8 @@ TEST(ButtonTests, MulticlickShouldSendEventAsap) {
   // Conditional on_press and on_change are send only on first button press.
   // Conditional on_release is send, because there was multiclick detected.
   // Conditional on_change is send twice (on_press + on_release)
-  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_CHANGE, 10)).Times(2);
-  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_PRESS, 9)).Times(1);
+  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_CHANGE, 10)).Times(3);
+  EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_PRESS, 9)).Times(2);
   EXPECT_CALL(mock1, handleAction(Supla::CONDITIONAL_ON_RELEASE, 11)).Times(1);
 
   Supla::Control::Button button(5, false, false);

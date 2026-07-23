@@ -85,6 +85,8 @@ void Network::Setup() {
   while (ptr) {
     if (!ptr->isIntfDisabledInConfig()) {
       ptr->setup();
+    } else {
+      ptr->disable();
     }
     ptr = ptr->nextNetIntf;
   }
@@ -93,9 +95,7 @@ void Network::Setup() {
 void Network::Disable() {
   auto ptr = firstNetIntf;
   while (ptr) {
-    if (!ptr->isIntfDisabledInConfig()) {
-      ptr->disable();
-    }
+    ptr->disable();
     ptr = ptr->nextNetIntf;
   }
 }
@@ -184,10 +184,8 @@ bool Network::PopSetupNeeded() {
   bool setupNeeded = false;
   auto ptr = firstNetIntf;
   while (ptr) {
-    if (!ptr->isIntfDisabledInConfig()) {
-      if (ptr->popSetupNeeded()) {
-        setupNeeded = true;
-      }
+    if (ptr->popSetupNeeded()) {
+      setupNeeded = true;
     }
     ptr = ptr->nextNetIntf;
   }
@@ -216,6 +214,14 @@ void Network::SetHostname(const char *buf, int macSize) {
     ptr->setHostname(buf, macSize);
     ptr = ptr->nextNetIntf;
   }
+}
+
+bool Network::hasStaticIpConfig() const {
+  return netifConfig.ipMode == static_cast<uint8_t>(NetifIpMode::Static);
+}
+
+const NetifConfigBlob& Network::getNetifConfig() const {
+  return netifConfig;
 }
 
 bool Network::IsIpSetupTimeout() {
@@ -295,6 +301,7 @@ Network::Network(unsigned char *ip) : Network() {
 }
 
 Network::Network() {
+  normalizeDhcpNetifConfig(&netifConfig);
   mode = DEVICE_MODE_NORMAL;
   setSSLEnabled(true);
   if (netIntf == nullptr) {
@@ -316,8 +323,8 @@ Network::~Network() {
   if (firstNetIntf == this) {
     firstNetIntf = nextNetIntf;
   } else {
-    auto ptr = firstNetIntf->nextNetIntf;
-    auto prev = ptr;
+    auto prev = firstNetIntf;
+    auto ptr = firstNetIntf ? firstNetIntf->nextNetIntf : nullptr;
     while (ptr && ptr != this) {
       prev = ptr;
       ptr = ptr->nextNetIntf;
@@ -459,9 +466,6 @@ bool Network::popSetupNeeded() {
 }
 
 void Network::setSetupNeeded() {
-  if (isIntfDisabledInConfig()) {
-    return;
-  }
   setupNeeded = true;
 }
 

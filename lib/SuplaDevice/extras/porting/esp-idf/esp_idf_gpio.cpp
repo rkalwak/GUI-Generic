@@ -38,16 +38,57 @@ void gpio_hold_dis(gpio_num_t gpio) {
 }
 #endif
 
+namespace {
+
+bool gpioSupportsHold(gpio_num_t gpio) {
+#ifdef SUPLA_DEVICE_ESP32
+#ifdef GPIO_IS_VALID_OUTPUT_GPIO
+  return GPIO_IS_VALID_OUTPUT_GPIO(gpio);
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+  return gpio >= 0 && gpio <= 33;
+#else
+  (void)(gpio);
+  return true;
+#endif
+#else
+  (void)(gpio);
+  return true;
+#endif
+}
+
+bool gpioSupportsPullUp(gpio_num_t gpio) {
+#if defined(CONFIG_IDF_TARGET_ESP32)
+  return gpio < 34 || gpio > 39;
+#else
+  (void)(gpio);
+  return true;
+#endif
+}
+
+void disableGpioHoldIfSupported(gpio_num_t gpio) {
+  if (gpioSupportsHold(gpio)) {
+    gpio_hold_dis(gpio);
+  }
+}
+
+void enableGpioHoldIfSupported(gpio_num_t gpio) {
+  if (gpioSupportsHold(gpio)) {
+    gpio_hold_en(gpio);
+  }
+}
+
+}  // namespace
+
 void pinMode(uint8_t pin, uint8_t mode) {
   SUPLA_LOG_DEBUG(" *** GPIO %d set mode %d", pin, mode);
 
   gpio_config_t cfg = {};
   cfg.pin_bit_mask = (1ULL << pin);
+  gpio_num_t gpio = static_cast<gpio_num_t>(pin);
   switch (mode) {
     case INPUT: {
       cfg.mode = GPIO_MODE_INPUT;
-      gpio_num_t gpio = static_cast<gpio_num_t>(pin);
-      gpio_hold_dis(gpio);
+      disableGpioHoldIfSupported(gpio);
       break;
     }
     case OUTPUT: {
@@ -58,9 +99,13 @@ void pinMode(uint8_t pin, uint8_t mode) {
     }
     case INPUT_PULLUP: {
       cfg.mode = GPIO_MODE_INPUT;
-      cfg.pull_up_en = GPIO_PULLUP_ENABLE;
-      gpio_num_t gpio = static_cast<gpio_num_t>(pin);
-      gpio_hold_dis(gpio);
+      if (gpioSupportsPullUp(gpio)) {
+        cfg.pull_up_en = GPIO_PULLUP_ENABLE;
+      } else {
+        SUPLA_LOG_WARNING(
+            "GPIO pinMode: GPIO %d doesn't support internal pull-up", pin);
+      }
+      disableGpioHoldIfSupported(gpio);
       break;
     }
     default: {
@@ -78,9 +123,9 @@ int digitalRead(uint8_t pin) {
 
 void digitalWrite(uint8_t pin, uint8_t val) {
   gpio_num_t gpio = static_cast<gpio_num_t>(pin);
-  gpio_hold_dis(gpio);
+  disableGpioHoldIfSupported(gpio);
   gpio_set_level(gpio, val);
-  gpio_hold_en(gpio);
+  enableGpioHoldIfSupported(gpio);
 }
 
 void analogWrite(uint8_t pin, int val) {
@@ -113,4 +158,3 @@ void detachInterrupt(uint8_t pin) {
 uint8_t digitalPinToInterrupt(uint8_t pin) {
   return pin;
 }
-

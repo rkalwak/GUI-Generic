@@ -105,9 +105,13 @@ class StateWearLevelingSector : public StateStorageInterface {
   uint16_t getSizeValue(uint16_t availableSize) override;
   bool tryLoadPreamblesFrom(uint32_t offset);
   bool isDataDifferent(uint32_t address, const uint8_t *data, uint32_t size);
+  bool isSlotValid(uint32_t address, uint8_t *buffer);
+  uint32_t getPhysicalSlotCount() const;
+  uint32_t getMaxBitmapSlotCount() const;
   int getSlotSize() const;
   uint32_t getFirstSlotAddress() const;
   uint32_t getNextSlotAddress(uint32_t slotAddress) const;
+  uint32_t getPreviousSlotAddress(uint32_t slotAddress) const;
   uint16_t slotSize() const;
   uint32_t updateStateEntryAddress();
   uint32_t sectionOffset = 0;
@@ -119,6 +123,7 @@ class StateWearLevelingSector : public StateStorageInterface {
   bool elementStateCrcCValid = false;
   bool storageStateOk = false;
   bool initDone = false;
+  bool currentSlotPreparedForFirstWrite = false;
   int repeatBeforeSwitchToAnotherSlot = 0;
 
   uint32_t currentSlotAddress = 0;

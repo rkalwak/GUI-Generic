@@ -17,6 +17,7 @@
 #ifndef SRC_SUPLA_NETWORK_ESP_WEB_SERVER_H_
 #define SRC_SUPLA_NETWORK_ESP_WEB_SERVER_H_
 
+#include <supla/network/html_output_buffer.h>
 #include <supla/network/web_sender.h>
 #include <supla/network/web_server.h>
 #if defined(ESP8266)
@@ -40,8 +41,9 @@ class EspSender : public Supla::WebSender {
   void send(const char *, int) override;
 
  protected:
+  static bool flushChunk(void *context, const char *buf, int size);
   ::ESPWebServer *reqHandler;
-  bool error = false;
+  HtmlOutputBuffer outputBuffer;
 };
 
 class EspWebServer : public Supla::WebServer, public Supla::Element {
@@ -54,12 +56,14 @@ class EspWebServer : public Supla::WebServer, public Supla::Element {
 
   bool handlePost(bool beta = false);
   ::ESPWebServer *getServerPtr();
+  char *getSendBufPtr() const;
 
   bool dataSaved = false;
 
  protected:
   ::ESPWebServer server;
   bool started = false;
+  char *sendBuf = nullptr;
 };
 
 };  // namespace Supla

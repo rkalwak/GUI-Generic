@@ -37,13 +37,15 @@ struct BinarySensorConfig {
       uint16_t filteringTimeMs;  // 0 - not used; > 0 - filtering time
       uint8_t sensitivity;       // 0 - not used; 1..101 -> 0..100 %;
                                      // value 1 is 0% -> off
+      uint8_t alarmMuted;  // 0 - not used, 1 - alarm is muted,
+                           // 2 - alarm is not muted
     };
   };
 
   BinarySensorConfig() : reserved{} {}
 };
-
 #pragma pack(pop)
+
 class BinaryBase : public ElementWithChannelActions {
  public:
   BinaryBase();
@@ -140,6 +142,25 @@ class BinaryBase : public ElementWithChannelActions {
   bool setSensitivity(uint8_t sensitivity, bool local = true);
 
   /**
+   * Get the alarm muted state. 0 - not used, 1 - muted, 2 - not muted.
+   *
+   * @return alarm muted state
+   */
+  uint8_t getAlarmMuted() const;
+
+  /**
+   * Set the alarm muted state. 0 - not used, 1 - muted, 2 - not muted.
+   * Parameter is synchronized with the server.
+   *
+   * @param alarmMuted
+   * @param local use true if change originates locally from the device (i.e.
+   *              from config mode)
+   *
+   * @return true if alarm muted state was changed
+   */
+  bool setAlarmMuted(uint8_t alarmMuted, bool local = true);
+
+  /**
    * Set the read interval in ms. Sensor will try to read value every
    * interval. Setting to 0 will configure default value 100 ms
    *
@@ -164,8 +185,10 @@ class BinaryBase : public ElementWithChannelActions {
                          uint8_t configType) override;
 
  protected:
+  void setInitialChannelValue(bool value);
   void saveConfig();
   void printConfig();
+  void printConfig(const TChannelConfig_BinarySensor *serverConfig);
   uint32_t lastReadTime = 0;
   uint32_t readIntervalMs = 100;
   BinarySensorChannel channel;

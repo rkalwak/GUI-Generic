@@ -33,6 +33,12 @@ using Supla::Control::Button;
 
 int Button::buttonCounter = 0;
 
+Button::Button(Supla::Io::IoPin inputPin)
+    : SimpleButton(inputPin) {
+  buttonNumber = buttonCounter;
+  buttonCounter++;
+}
+
 Button::Button(Supla::Io::Base *io, int pin, bool pullUp, bool invertLogic)
     : SimpleButton(io, pin, pullUp, invertLogic) {
   buttonNumber = buttonCounter;
@@ -61,16 +67,16 @@ void Button::onTimer() {
     return;
   }
   if (stateResult == TO_PRESSED) {
-    SUPLA_LOG_VERBOSE("Button[%d] pressed", getButtonNumber());
+    SUPLA_LOG_DEBUG("Button[%d] pressed", getButtonNumber());
     stateChanged = true;
     runAction(ON_PRESS);
     runAction(ON_CHANGE);
-    if (clickCounter == 0 && holdSend == 0) {
+    if (clickCounter <= 1 && holdSend == 0) {
       runAction(CONDITIONAL_ON_PRESS);
       runAction(CONDITIONAL_ON_CHANGE);
     }
   } else if (stateResult == TO_RELEASED) {
-    SUPLA_LOG_VERBOSE("Button[%d] released", getButtonNumber());
+    SUPLA_LOG_DEBUG("Button[%d] released", getButtonNumber());
     stateChanged = true;
     runAction(ON_RELEASE);
     runAction(ON_CHANGE);
@@ -365,7 +371,7 @@ bool Button::isCentral() const {
 }
 
 void Button::onLoadConfig(SuplaDeviceClass *sdc) {
-  if (sdc->getDeviceMode() == Supla::DEVICE_MODE_TEST) {
+  if (sdc && sdc->getDeviceMode() == Supla::DEVICE_MODE_TEST) {
     SUPLA_LOG_DEBUG("Button[%d] test mode", getButtonNumber());
     setButtonType(ButtonType::MONOSTABLE);
     return;

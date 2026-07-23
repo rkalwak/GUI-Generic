@@ -18,7 +18,14 @@
 
 #include "supla_srpc.h"
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+
+#include <inttypes.h>
 #include <SuplaDevice.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 #include <supla-common/srpc.h>
 #include <supla/channels/channel.h>
@@ -26,19 +33,21 @@
 #include <supla/device/channel_conflict_resolver.h>
 #include <supla/device/register_device.h>
 #include <supla/device/remote_device_config.h>
+#include <supla/device/supla_ca_cert.h>
 #include <supla/log_wrapper.h>
 #include <supla/network/client.h>
 #include <supla/network/network.h>
 #include <supla/storage/storage.h>
 #include <supla/time.h>
 #include <supla/tools.h>
-#include <supla/device/supla_ca_cert.h>
 
 namespace Supla::Protocol {
 struct CalCfgResultPendingItem {
   int16_t channelNo = 0;
   int32_t receiverId = 0;
   int32_t command = 0;
+  uint32_t createdAtMs = 0;
+  uint32_t timeoutMs = 0;
 
   CalCfgResultPendingItem *next = nullptr;
 };
@@ -48,10 +57,1124 @@ bool Supla::Protocol::SuplaSrpc::isSuplaSSLEnabled = true;
 
 static const char wrongCert[] = "SUPLA";
 
+namespace {
+Supla::Client *createNetworkClient() {
+  auto network = Supla::Network::Instance();
+  if (network != nullptr) {
+    return network->createClient();
+  }
+  return Supla::ClientBuilder();
+}
+
+void logRawHexDump(const char *direction,
+                   int callId,
+                   const char *callName,
+                   const uint8_t *buf,
+                   size_t size,
+                   bool verbose);
+
+const char *safeCallName(int callId) {
+  switch (callId) {
+    case SUPLA_DCS_CALL_GETVERSION:
+      return "GETVERSION";
+    case SUPLA_SDC_CALL_GETVERSION_RESULT:
+      return "GETVERSION_RESULT";
+    case SUPLA_SDC_CALL_VERSIONERROR:
+      return "VERSIONERROR";
+    case SUPLA_DCS_CALL_PING_SERVER:
+      return "PING";
+    case SUPLA_SDC_CALL_PING_SERVER_RESULT:
+      return "PONG";
+    case SUPLA_DCS_CALL_SET_ACTIVITY_TIMEOUT:
+      return "SET_ACTIVITY_TIMEOUT";
+    case SUPLA_SDC_CALL_SET_ACTIVITY_TIMEOUT_RESULT:
+      return "SET_ACTIVITY_TIMEOUT_RESULT";
+    case SUPLA_DCS_CALL_GET_REGISTRATION_ENABLED:
+      return "GET_REGISTRATION_ENABLED";
+    case SUPLA_SDC_CALL_GET_REGISTRATION_ENABLED_RESULT:
+      return "GET_REGISTRATION_ENABLED_RESULT";
+    case SUPLA_DCS_CALL_GET_USER_LOCALTIME:
+      return "GET_USER_LOCALTIME";
+    case SUPLA_DCS_CALL_GET_USER_LOCALTIME_RESULT:
+      return "GET_USER_LOCALTIME_RESULT";
+    case SUPLA_CSD_CALL_GET_CHANNEL_STATE:
+      return "GET_CHANNEL_STATE";
+    case SUPLA_DSC_CALL_CHANNEL_STATE_RESULT:
+      return "CHANNEL_STATE_RESULT";
+    case SUPLA_DS_CALL_REGISTER_DEVICE:
+      return "REGISTER_DEVICE";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_B:
+      return "REGISTER_DEVICE_B";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_C:
+      return "REGISTER_DEVICE_C";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_D:
+      return "REGISTER_DEVICE_D";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_E:
+      return "REGISTER_DEVICE_E";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_F:
+      return "REGISTER_DEVICE_F";
+    case SUPLA_DS_CALL_REGISTER_DEVICE_G:
+      return "REGISTER_DEVICE_G";
+    case SUPLA_SD_CALL_REGISTER_DEVICE_RESULT:
+      return "REGISTER_DEVICE_RESULT";
+    case SUPLA_SD_CALL_REGISTER_DEVICE_RESULT_B:
+      return "REGISTER_DEVICE_RESULT_B";
+    case SUPLA_DS_CALL_SET_DEVICE_CONFIG:
+      return "SET_DEVICE_CONFIG";
+    case SUPLA_SD_CALL_SET_DEVICE_CONFIG:
+      return "SET_DEVICE_CONFIG";
+    case SUPLA_DS_CALL_SET_CHANNEL_CONFIG:
+      return "SET_CHANNEL_CONFIG";
+    case SUPLA_SD_CALL_SET_CHANNEL_CONFIG:
+      return "SET_CHANNEL_CONFIG";
+    case SUPLA_DS_CALL_GET_CHANNEL_CONFIG:
+      return "GET_CHANNEL_CONFIG";
+    case SUPLA_SD_CALL_GET_CHANNEL_CONFIG_RESULT:
+      return "GET_CHANNEL_CONFIG_RESULT";
+    case SUPLA_SD_CALL_SET_CHANNEL_CONFIG_RESULT:
+      return "SET_CHANNEL_CONFIG_RESULT";
+    case SUPLA_DS_CALL_SET_CHANNEL_CONFIG_RESULT:
+      return "SET_CHANNEL_CONFIG_RESULT";
+    case SUPLA_SD_CALL_SET_DEVICE_CONFIG_RESULT:
+      return "SET_DEVICE_CONFIG_RESULT";
+    case SUPLA_DS_CALL_SET_DEVICE_CONFIG_RESULT:
+      return "SET_DEVICE_CONFIG_RESULT";
+    case SUPLA_DS_CALL_GET_FIRMWARE_UPDATE_URL:
+      return "GET_FIRMWARE_UPDATE_URL";
+    case SUPLA_SD_CALL_GET_FIRMWARE_UPDATE_URL_RESULT:
+      return "GET_FIRMWARE_UPDATE_URL_RESULT";
+    case SUPLA_DCS_CALL_SET_CHANNEL_CAPTION:
+      return "SET_CHANNEL_CAPTION";
+    case SUPLA_SCD_CALL_SET_CHANNEL_CAPTION_RESULT:
+      return "SET_CHANNEL_CAPTION_RESULT";
+    case SUPLA_SD_CALL_CHANNEL_SET_VALUE:
+      return "CHANNEL_SET_VALUE";
+    case SUPLA_SD_CALL_CHANNELGROUP_SET_VALUE:
+      return "CHANNELGROUP_SET_VALUE";
+    case SUPLA_DS_CALL_CHANNEL_SET_VALUE_RESULT:
+      return "CHANNEL_SET_VALUE_RESULT";
+    case SUPLA_DS_CALL_DEVICE_CHANNEL_VALUE_CHANGED:
+      return "DEVICE_CHANNEL_VALUE_CHANGED";
+    case SUPLA_DS_CALL_DEVICE_CHANNEL_VALUE_CHANGED_B:
+      return "DEVICE_CHANNEL_VALUE_CHANGED_B";
+    case SUPLA_DS_CALL_DEVICE_CHANNEL_VALUE_CHANGED_C:
+      return "VALUE_CHANGED_C";
+    case SUPLA_DS_CALL_DEVICE_CHANNEL_EXTENDEDVALUE_CHANGED:
+      return "DEVICE_CHANNEL_EXTENDEDVALUE_CHANGED";
+    case SUPLA_SD_CALL_DEVICE_CALCFG_REQUEST:
+      return "DEVICE_CALCFG_REQUEST";
+    case SUPLA_DS_CALL_DEVICE_CALCFG_RESULT:
+      return "DEVICE_CALCFG_RESULT";
+    case SUPLA_DS_CALL_GET_CHANNEL_FUNCTIONS:
+      return "GET_CHANNEL_FUNCTIONS";
+    case SUPLA_SD_CALL_GET_CHANNEL_FUNCTIONS_RESULT:
+      return "GET_CHANNEL_FUNCTIONS_RESULT";
+    case SUPLA_SD_CALL_CHANNEL_CONFIG_FINISHED:
+      return "CHANNEL_CONFIG_FINISHED";
+    case SUPLA_DS_CALL_ACTIONTRIGGER:
+      return "ACTIONTRIGGER";
+    case SUPLA_DS_CALL_REGISTER_PUSH_NOTIFICATION:
+      return "REGISTER_PUSH_NOTIFICATION";
+    case SUPLA_DS_CALL_SEND_PUSH_NOTIFICATION:
+      return "SEND_PUSH_NOTIFICATION";
+    case SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS:
+      return "SET_SUBDEVICE_DETAILS";
+    default:
+      break;
+  }
+  return "UNKNOWN";
+}
+
+const char *channelConfigTypeName(unsigned char configType) {
+  switch (configType) {
+    case SUPLA_CONFIG_TYPE_DEFAULT:
+      return "default";
+    case SUPLA_CONFIG_TYPE_WEEKLY_SCHEDULE:
+      return "weekly_schedule";
+    case SUPLA_CONFIG_TYPE_ALT_WEEKLY_SCHEDULE:
+      return "alt_weekly_schedule";
+    case SUPLA_CONFIG_TYPE_OCR:
+      return "ocr";
+    case SUPLA_CONFIG_TYPE_EXTENDED:
+      return "extended";
+    default:
+      return "unknown";
+  }
+}
+
+bool shouldDumpRawChannelConfig(const TSD_ChannelConfig *request) {
+  if (request == nullptr) {
+    return false;
+  }
+
+  switch (request->Func) {
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER:
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEROOFWINDOW:
+    case SUPLA_CHANNELFNC_TERRACE_AWNING:
+    case SUPLA_CHANNELFNC_PROJECTOR_SCREEN:
+    case SUPLA_CHANNELFNC_CURTAIN:
+    case SUPLA_CHANNELFNC_ROLLER_GARAGE_DOOR:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_RollerShutter);
+    case SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND:
+    case SUPLA_CHANNELFNC_VERTICAL_BLIND:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_FacadeBlind);
+    case SUPLA_CHANNELFNC_STAIRCASETIMER:
+      return ((request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+               request->ConfigSize == sizeof(TChannelConfig_StaircaseTimer)) ||
+              (request->ConfigType == SUPLA_CONFIG_TYPE_EXTENDED &&
+               request->ConfigSize == sizeof(TChannelConfig_PowerSwitch)));
+    case SUPLA_CHANNELFNC_POWERSWITCH:
+    case SUPLA_CHANNELFNC_LIGHTSWITCH:
+      return (request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT ||
+              request->ConfigType == SUPLA_CONFIG_TYPE_EXTENDED) &&
+             request->ConfigSize == sizeof(TChannelConfig_PowerSwitch);
+    case SUPLA_CHANNELFNC_VALVE_OPENCLOSE:
+    case SUPLA_CHANNELFNC_VALVE_PERCENTAGE:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_Valve);
+    case SUPLA_CHANNELFNC_ACTIONTRIGGER:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_ActionTrigger);
+    case SUPLA_CHANNELFNC_HVAC_THERMOSTAT:
+      return (request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+              request->ConfigSize == sizeof(TChannelConfig_HVAC)) ||
+             ((request->ConfigType == SUPLA_CONFIG_TYPE_WEEKLY_SCHEDULE ||
+               request->ConfigType == SUPLA_CONFIG_TYPE_ALT_WEEKLY_SCHEDULE) &&
+              request->ConfigSize == sizeof(TChannelConfig_WeeklySchedule));
+    case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_HEAT_COOL:
+    case SUPLA_CHANNELFNC_HVAC_DRYER:
+    case SUPLA_CHANNELFNC_HVAC_FAN:
+    case SUPLA_CHANNELFNC_HVAC_THERMOSTAT_DIFFERENTIAL:
+    case SUPLA_CHANNELFNC_HVAC_DOMESTIC_HOT_WATER:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_HVAC);
+    case SUPLA_CHANNELFNC_BINARY_SENSOR:
+    case SUPLA_CHANNELFNC_MOTION_SENSOR:
+    case SUPLA_CHANNELFNC_FLOOD_SENSOR:
+    case SUPLA_CHANNELFNC_CONTAINER_LEVEL_SENSOR:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATEWAY:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_GATE:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_GARAGEDOOR:
+    case SUPLA_CHANNELFNC_NOLIQUIDSENSOR:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_DOOR:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROLLERSHUTTER:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_ROOFWINDOW:
+    case SUPLA_CHANNELFNC_OPENINGSENSOR_WINDOW:
+    case SUPLA_CHANNELFNC_HOTELCARDSENSOR:
+    case SUPLA_CHANNELFNC_ALARMARMAMENTSENSOR:
+    case SUPLA_CHANNELFNC_MAILSENSOR:
+    case SUPLA_CHANNELFNC_WINDSENSOR:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize == sizeof(TChannelConfig_BinarySensor);
+    case SUPLA_CHANNELFNC_THERMOMETER:
+    case SUPLA_CHANNELFNC_HUMIDITY:
+    case SUPLA_CHANNELFNC_HUMIDITYANDTEMPERATURE:
+      return request->ConfigType == SUPLA_CONFIG_TYPE_DEFAULT &&
+             request->ConfigSize ==
+                 sizeof(TChannelConfig_TemperatureAndHumidity);
+    default:
+      return false;
+  }
+}
+
+bool isRegisterDeviceChunkedCall(int callId) {
+  return callId == SUPLA_DS_CALL_REGISTER_DEVICE_F ||
+         callId == SUPLA_DS_CALL_REGISTER_DEVICE_G;
+}
+
+bool isVerbosePacket(int callId) {
+  switch (callId) {
+    case SUPLA_DCS_CALL_PING_SERVER:
+    case SUPLA_SDC_CALL_PING_SERVER_RESULT:
+    case SUPLA_DS_CALL_DEVICE_CHANNEL_VALUE_CHANGED_C:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool looksLikeRegisterDeviceHeader(int callId,
+                                   const uint8_t *buf,
+                                   size_t size) {
+  const size_t expected_size = sizeof(TSuplaDataPacket) - SUPLA_MAX_DATA_SIZE +
+                               sizeof(TDS_SuplaRegisterDeviceHeader);
+  if (!isRegisterDeviceChunkedCall(callId) || buf == nullptr ||
+      size != expected_size) {
+    return false;
+  }
+
+  const auto *packet = reinterpret_cast<const TSuplaDataPacket *>(buf);
+  if (packet->call_id != static_cast<unsigned _supla_int_t>(callId)) {
+    return false;
+  }
+
+  return packet->data_size > sizeof(TDS_SuplaRegisterDeviceHeader);
+}
+
+bool looksLikeRegisterDeviceChannelChunk(int callId,
+                                         const uint8_t *buf,
+                                         size_t size) {
+  if (buf == nullptr) {
+    return false;
+  }
+
+  return (callId == SUPLA_DS_CALL_REGISTER_DEVICE_F &&
+          size == sizeof(TDS_SuplaDeviceChannel_D)) ||
+         (callId == SUPLA_DS_CALL_REGISTER_DEVICE_G &&
+          size == sizeof(TDS_SuplaDeviceChannel_E));
+}
+
+const char *registerDeviceChannelFuncFieldName(int callId, int channelType) {
+  if (channelType == SUPLA_CHANNELTYPE_ACTIONTRIGGER) {
+    return "ActionTriggerCaps";
+  }
+
+  if (callId == SUPLA_DS_CALL_REGISTER_DEVICE_G &&
+      (channelType == SUPLA_CHANNELTYPE_DIMMER ||
+       channelType == SUPLA_CHANNELTYPE_RGBLEDCONTROLLER ||
+       channelType == SUPLA_CHANNELTYPE_DIMMERANDRGBLED)) {
+    return "RGBW_FuncList";
+  }
+
+  return "FuncList";
+}
+
+#if __cplusplus >= 201703L
+[[maybe_unused]]
+#endif
+const char *offlineFlagName(unsigned char offline) {
+  switch (offline) {
+    case SUPLA_CHANNEL_OFFLINE_FLAG_ONLINE:
+      return "online";
+    case SUPLA_CHANNEL_OFFLINE_FLAG_OFFLINE:
+      return "offline";
+    case SUPLA_CHANNEL_OFFLINE_FLAG_ONLINE_BUT_NOT_AVAILABLE:
+      return "online (not available)";
+    case SUPLA_CHANNEL_OFFLINE_FLAG_OFFLINE_REMOTE_WAKEUP_NOT_SUPPORTED:
+      return "offline (remote wakeup not supported)";
+    case SUPLA_CHANNEL_OFFLINE_FLAG_FIRMWARE_UPDATE_ONGOING:
+      return "firmware update ongoing";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+void formatChannelValueHex(const uint8_t *value, char *buffer, size_t size) {
+  if (buffer == nullptr || size == 0) {
+    return;
+  }
+
+  buffer[0] = '\0';
+  generateHexString(value, buffer, SUPLA_CHANNELVALUE_SIZE, ' ');
+}
+
+void escapeLogString(const char *input,
+                     size_t inputSize,
+                     char *output,
+                     size_t outputSize) {
+  if (output == nullptr || outputSize == 0) {
+    return;
+  }
+
+  output[0] = '\0';
+  if (input == nullptr || inputSize == 0) {
+    return;
+  }
+
+  size_t outPos = 0;
+  for (size_t i = 0; i < inputSize && input[i] != '\0'; i++) {
+    unsigned char ch = static_cast<unsigned char>(input[i]);
+    const char *replacement = nullptr;
+    char hex[5] = {};
+
+    switch (ch) {
+      case '\\':
+        replacement = "\\\\";
+        break;
+      case '"':
+        replacement = "\\\"";
+        break;
+      case '\n':
+        replacement = "\\n";
+        break;
+      case '\r':
+        replacement = "\\r";
+        break;
+      case '\t':
+        replacement = "\\t";
+        break;
+      default:
+        if (ch < 0x20 || ch > 0x7E) {
+          snprintf(hex, sizeof(hex), "\\x%02X", ch);
+          replacement = hex;
+        }
+        break;
+    }
+
+    const char *append = replacement;
+    size_t appendLen = replacement != nullptr ? strlen(replacement) : 1;
+    if (replacement == nullptr) {
+      hex[0] = static_cast<char>(ch);
+      hex[1] = '\0';
+      append = hex;
+      appendLen = 1;
+    }
+
+    if (outPos + appendLen >= outputSize) {
+      const char *truncated = "...";
+      size_t truncatedLen = strlen(truncated);
+      if (outPos + truncatedLen < outputSize) {
+        memcpy(output + outPos, truncated, truncatedLen);
+        outPos += truncatedLen;
+      }
+      break;
+    }
+    memcpy(output + outPos, append, appendLen);
+    outPos += appendLen;
+  }
+
+  output[outPos] = '\0';
+}
+
+bool appendLogToken(char *buffer,
+                    size_t bufferSize,
+                    size_t *pos,
+                    const char *token) {
+  if (buffer == nullptr || pos == nullptr || token == nullptr) {
+    return false;
+  }
+
+  size_t tokenLen = strlen(token);
+  if (*pos + tokenLen >= bufferSize) {
+    return false;
+  }
+  memcpy(buffer + *pos, token, tokenLen);
+  *pos += tokenLen;
+  buffer[*pos] = '\0';
+  return true;
+}
+
+void logRegisterDeviceHeader(int callId,
+                             const uint8_t *buf,
+                             size_t size,
+                             const char *direction,
+                             const char *callName) {
+  const auto *packet = reinterpret_cast<const TSuplaDataPacket *>(buf);
+  TDS_SuplaRegisterDeviceHeader header = {};
+  memcpy(&header, packet->data, sizeof(header));
+  char escapedName[96] = {};
+  char escapedSoftVer[32] = {};
+  char escapedServerName[96] = {};
+  escapeLogString(
+      header.Name, sizeof(header.Name), escapedName, sizeof(escapedName));
+  escapeLogString(header.SoftVer,
+                  sizeof(header.SoftVer),
+                  escapedSoftVer,
+                  sizeof(escapedSoftVer));
+  escapeLogString(header.ServerName,
+                  sizeof(header.ServerName),
+                  escapedServerName,
+                  sizeof(escapedServerName));
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={Email=<redacted>, "
+      "AuthKey=<redacted>, GUID=<redacted>, Name=\"%s\", SoftVer=\"%s\", "
+      "ServerName=\"%s\", Flags=0x%" PRIX32
+      ", ManufacturerID=%d, ProductID=%d, "
+      "channel_count=%u}",
+      direction,
+      callName,
+      callId,
+      size,
+      escapedName,
+      escapedSoftVer,
+      escapedServerName,
+      static_cast<uint32_t>(header.Flags),
+      static_cast<int16_t>(header.ManufacturerID),
+      static_cast<int16_t>(header.ProductID),
+      static_cast<unsigned int>(header.channel_count));
+}
+
+void logSubdeviceDetails(int callId,
+                         const TDS_SubdeviceDetails *details,
+                         const char *direction,
+                         const char *callName,
+                         size_t size) {
+  char escapedName[96] = {};
+  char escapedSoftVer[32] = {};
+  char escapedProductCode[64] = {};
+  char escapedSerialNumber[64] = {};
+  escapeLogString(
+      details->Name, sizeof(details->Name), escapedName, sizeof(escapedName));
+  escapeLogString(details->SoftVer,
+                  sizeof(details->SoftVer),
+                  escapedSoftVer,
+                  sizeof(escapedSoftVer));
+  escapeLogString(details->ProductCode,
+                  sizeof(details->ProductCode),
+                  escapedProductCode,
+                  sizeof(escapedProductCode));
+  escapeLogString(details->SerialNumber,
+                  sizeof(details->SerialNumber),
+                  escapedSerialNumber,
+                  sizeof(escapedSerialNumber));
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={SubDeviceId=%u, Name=\"%s\", "
+      "SoftVer=\"%s\", ProductCode=\"%s\", SerialNumber=\"%s\"}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(details->SubDeviceId),
+      escapedName,
+      escapedSoftVer,
+      escapedProductCode,
+      escapedSerialNumber);
+}
+
+void logSetChannelCaption(int callId,
+                          const TDCS_SetCaption *caption,
+                          const char *direction,
+                          const char *callName,
+                          size_t size) {
+  char escapedCaption[128] = {};
+  escapeLogString(caption->Caption,
+                  caption->CaptionSize > 0 ? caption->CaptionSize - 1 : 0,
+                  escapedCaption,
+                  sizeof(escapedCaption));
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={ChannelNumber=%u, "
+      "CaptionSize=%" PRIu32 ", Caption=\"%s\"}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(caption->ChannelNumber),
+      static_cast<uint32_t>(caption->CaptionSize),
+      escapedCaption);
+}
+
+void logSetChannelCaptionResult(int callId,
+                                const TSCD_SetCaptionResult *caption,
+                                const char *direction,
+                                const char *callName,
+                                size_t size) {
+  char escapedCaption[128] = {};
+  escapeLogString(caption->Caption,
+                  caption->CaptionSize > 0 ? caption->CaptionSize - 1 : 0,
+                  escapedCaption,
+                  sizeof(escapedCaption));
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={ChannelNumber=%u, "
+      "ResultCode=%u, CaptionSize=%" PRIu32 ", Caption=\"%s\"}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(caption->ChannelNumber),
+      static_cast<unsigned int>(caption->ResultCode),
+      static_cast<uint32_t>(caption->CaptionSize),
+      escapedCaption);
+}
+
+void logDeviceCalCfgRequest(int callId,
+                            const TSD_DeviceCalCfgRequest *request,
+                            const char *direction,
+                            const char *callName,
+                            size_t size) {
+  if (request == nullptr) {
+    return;
+  }
+
+  if (request->Command == SUPLA_CALCFG_CMD_SET_CFG_MODE_PASSWORD) {
+    SUPLA_LOG_DEBUG(
+        "SRPC %s call=%s(%d) size=%zu payload={SenderID=%" PRId32
+        ", ChannelNumber=%" PRId32 ", Command=%" PRId32
+        ", SuperUserAuthorized=%u, DataType=%" PRId32 ", DataSize=%" PRIu32
+        ", Data=<redacted>}",
+        direction,
+        callName,
+        callId,
+        size,
+        static_cast<int32_t>(request->SenderID),
+        static_cast<int32_t>(request->ChannelNumber),
+        static_cast<int32_t>(request->Command),
+        static_cast<unsigned int>(request->SuperUserAuthorized),
+        static_cast<int32_t>(request->DataType),
+        static_cast<uint32_t>(request->DataSize));
+    return;
+  }
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={SenderID=%" PRId32
+      ", ChannelNumber=%" PRId32 ", Command=%" PRId32
+      ", SuperUserAuthorized=%u, DataType=%" PRId32 ", DataSize=%" PRIu32
+      "}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<int32_t>(request->SenderID),
+      static_cast<int32_t>(request->ChannelNumber),
+      static_cast<int32_t>(request->Command),
+      static_cast<unsigned int>(request->SuperUserAuthorized),
+      static_cast<int32_t>(request->DataType),
+      static_cast<uint32_t>(request->DataSize));
+
+  const size_t headerSize = offsetof(TSD_DeviceCalCfgRequest, Data);
+  const size_t dataSize = static_cast<size_t>(request->DataSize);
+  if (dataSize == 0) {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) payload={Data=<empty>}",
+                    direction,
+                    callName,
+                    callId);
+    return;
+  }
+  if (dataSize > SUPLA_CALCFG_DATA_MAXSIZE) {
+    SUPLA_LOG_DEBUG(
+        "SRPC %s call=%s(%d) payload={Data=<invalid-size>, DataSize=%zu}",
+        direction,
+        callName,
+        callId,
+        dataSize);
+    return;
+  }
+  if (size < headerSize || dataSize > size - headerSize) {
+    const size_t availableSize = size > headerSize ? size - headerSize : 0;
+    (void)(availableSize);
+    SUPLA_LOG_DEBUG(
+        "SRPC %s call=%s(%d) payload={Data=<truncated>, DataSize=%zu, "
+        "Available=%zu}",
+        direction,
+        callName,
+        callId,
+        dataSize,
+        availableSize);
+    return;
+  }
+
+  logRawHexDump(direction,
+                callId,
+                callName,
+                reinterpret_cast<const uint8_t *>(request->Data),
+                dataSize,
+                false);
+}
+
+void logChannelConfigRawPayload(int callId,
+                                const TSD_ChannelConfig *request,
+                                const char *direction,
+                                const char *callName) {
+  logRawHexDump(direction,
+                callId,
+                callName,
+                reinterpret_cast<const uint8_t *>(request->Config),
+                request->ConfigSize,
+                false);
+}
+
+void logChannelConfigOcrPayload(int callId,
+                                const TSD_ChannelConfig *request,
+                                const char *direction,
+                                const char *callName) {
+  if (request->ConfigSize < sizeof(TChannelConfig_OCR)) {
+    SUPLA_LOG_DEBUG(
+        "SRPC %s call=%s(%d) payload={ChannelNumber=%u, Func=%" PRId32 ", "
+        "ConfigType=%u(%s), ConfigSize=%u, OCR=<truncated>}",
+        direction,
+        callName,
+        callId,
+        static_cast<unsigned int>(request->ChannelNumber),
+        static_cast<int32_t>(request->Func),
+        static_cast<unsigned int>(request->ConfigType),
+        channelConfigTypeName(request->ConfigType),
+        static_cast<unsigned int>(request->ConfigSize));
+    return;
+  }
+
+  TChannelConfig_OCR ocrConfig = {};
+  memcpy(&ocrConfig, request->Config, sizeof(ocrConfig));
+  ocrConfig.AuthKey[sizeof(ocrConfig.AuthKey) - 1] = '\0';
+  ocrConfig.Host[sizeof(ocrConfig.Host) - 1] = '\0';
+
+  char escapedHost[128] = {};
+  escapeLogString(
+      ocrConfig.Host, sizeof(ocrConfig.Host), escapedHost, sizeof(escapedHost));
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) payload={ChannelNumber=%u, Func=%" PRId32 ", "
+      "ConfigType=%u(%s), ConfigSize=%u, OCR={AuthKey=<redacted>, "
+      "Host=\"%s\", PhotoIntervalSec=%" PRIu32 ", LightingMode=0x%" PRIX32
+      "%08" PRIX32 ", LightingLevel=%u, MaximumIncrement=0x%" PRIX32
+      "%08" PRIX32 ", AvailableLightingModes=0x%" PRIX32 "%08" PRIX32 "}}",
+      direction,
+      callName,
+      callId,
+      static_cast<unsigned int>(request->ChannelNumber),
+      static_cast<int32_t>(request->Func),
+      static_cast<unsigned int>(request->ConfigType),
+      channelConfigTypeName(request->ConfigType),
+      static_cast<unsigned int>(request->ConfigSize),
+      escapedHost,
+      static_cast<uint32_t>(ocrConfig.PhotoIntervalSec),
+      PRINTF_UINT64_HEX(ocrConfig.LightingMode),
+      static_cast<unsigned int>(ocrConfig.LightingLevel),
+      PRINTF_UINT64_HEX(ocrConfig.MaximumIncrement),
+      PRINTF_UINT64_HEX(ocrConfig.AvailableLightingModes));
+}
+
+void logSetChannelConfigRequest(int callId,
+                                const TSD_ChannelConfig *request,
+                                const char *direction,
+                                const char *callName,
+                                size_t size) {
+  if (request == nullptr) {
+    return;
+  }
+
+  const size_t headerSize = offsetof(TSD_ChannelConfig, Config);
+  const size_t configSize = static_cast<size_t>(request->ConfigSize);
+  const char *configTypeName = channelConfigTypeName(request->ConfigType);
+  (void)configTypeName;
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={ChannelNumber=%u, Func=%" PRId32
+      ", "
+      "ConfigType=%u(%s), ConfigSize=%u}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(request->ChannelNumber),
+      static_cast<int32_t>(request->Func),
+      static_cast<unsigned int>(request->ConfigType),
+      configTypeName,
+      static_cast<unsigned int>(request->ConfigSize));
+
+  if (configSize == 0) {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) payload={Config=<empty>}",
+                    direction,
+                    callName,
+                    callId);
+    return;
+  }
+
+  if (size < headerSize + configSize) {
+    SUPLA_LOG_DEBUG(
+        "SRPC %s call=%s(%d) payload={Config=<truncated>, expected=%zu}",
+        direction,
+        callName,
+        callId,
+        headerSize + configSize);
+    return;
+  }
+
+  switch (request->ConfigType) {
+    case SUPLA_CONFIG_TYPE_OCR:
+      logChannelConfigOcrPayload(callId, request, direction, callName);
+      return;
+    case SUPLA_CONFIG_TYPE_DEFAULT:
+    case SUPLA_CONFIG_TYPE_WEEKLY_SCHEDULE:
+    case SUPLA_CONFIG_TYPE_ALT_WEEKLY_SCHEDULE:
+    case SUPLA_CONFIG_TYPE_EXTENDED:
+      logChannelConfigRawPayload(callId, request, direction, callName);
+      return;
+    default:
+      SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) payload={Config=<unsupported type>}",
+                      direction,
+                      callName,
+                      callId);
+      return;
+  }
+}
+
+void logRegisterDeviceChannelChunk(int callId,
+                                   const TDS_SuplaDeviceChannel_D *channel,
+                                   const char *direction,
+                                   const char *callName,
+                                   size_t size) {
+  char valueHex[3 * SUPLA_CHANNELVALUE_SIZE] = {};
+  formatChannelValueHex(reinterpret_cast<const uint8_t *>(channel->value),
+                        valueHex,
+                        sizeof(valueHex));
+
+  const char *funcFieldName =
+      registerDeviceChannelFuncFieldName(callId, channel->Type);
+  (void)funcFieldName;
+  uint32_t funcFieldValue =
+      (channel->Type == SUPLA_CHANNELTYPE_ACTIONTRIGGER)
+          ? static_cast<uint32_t>(channel->ActionTriggerCaps)
+          : static_cast<uint32_t>(channel->FuncList);
+  (void)funcFieldValue;
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={Number=%u, Type=%" PRId32
+      ", %s=0x%" PRIX32 ", Default=%" PRId32 ", Flags=0x%" PRIX32 "%08" PRIX32
+      ", Offline=%u(%s), ValueValidityTimeSec=%" PRIu32 ", "
+      "value[8]=%s, DefaultIcon=%u}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(channel->Number),
+      static_cast<int32_t>(channel->Type),
+      funcFieldName,
+      funcFieldValue,
+      static_cast<int32_t>(channel->Default),
+      PRINTF_UINT64_HEX(static_cast<uint64_t>(channel->Flags)),
+      static_cast<unsigned int>(channel->Offline),
+      offlineFlagName(channel->Offline),
+      static_cast<uint32_t>(channel->ValueValidityTimeSec),
+      valueHex,
+      static_cast<unsigned int>(channel->DefaultIcon));
+}
+
+void logRegisterDeviceChannelChunk(int callId,
+                                   const TDS_SuplaDeviceChannel_E *channel,
+                                   const char *direction,
+                                   const char *callName,
+                                   size_t size) {
+  char valueHex[3 * SUPLA_CHANNELVALUE_SIZE] = {};
+  formatChannelValueHex(reinterpret_cast<const uint8_t *>(channel->value),
+                        valueHex,
+                        sizeof(valueHex));
+
+  const char *funcFieldName =
+      registerDeviceChannelFuncFieldName(callId, channel->Type);
+  (void)funcFieldName;
+  uint32_t funcFieldValue = 0;
+  (void)funcFieldValue;
+  if (channel->Type == SUPLA_CHANNELTYPE_ACTIONTRIGGER) {
+    funcFieldValue = channel->ActionTriggerCaps;
+  } else if (callId == SUPLA_DS_CALL_REGISTER_DEVICE_G &&
+             (channel->Type == SUPLA_CHANNELTYPE_DIMMER ||
+              channel->Type == SUPLA_CHANNELTYPE_RGBLEDCONTROLLER ||
+              channel->Type == SUPLA_CHANNELTYPE_DIMMERANDRGBLED)) {
+    funcFieldValue = channel->RGBW_FuncList;
+  } else {
+    funcFieldValue = channel->FuncList;
+  }
+
+  SUPLA_LOG_DEBUG(
+      "SRPC %s call=%s(%d) size=%zu payload={Number=%u, Type=%" PRId32
+      ", %s=0x%" PRIX32 ", Default=%" PRId32 ", Flags=0x%" PRIX32 "%08" PRIX32
+      ", Offline=%u(%s), ValueValidityTimeSec=%" PRIu32 ", "
+      "value[8]=%s, DefaultIcon=%u, SubDeviceId=%u}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(channel->Number),
+      static_cast<int32_t>(channel->Type),
+      funcFieldName,
+      funcFieldValue,
+      static_cast<int32_t>(channel->Default),
+      PRINTF_UINT64_HEX(static_cast<uint64_t>(channel->Flags)),
+      static_cast<unsigned int>(channel->Offline),
+      offlineFlagName(channel->Offline),
+      static_cast<uint32_t>(channel->ValueValidityTimeSec),
+      valueHex,
+      static_cast<unsigned int>(channel->DefaultIcon),
+      static_cast<unsigned int>(channel->SubDeviceId));
+}
+
+void logDeviceChannelValueChanged(int callId,
+                                  const TDS_SuplaDeviceChannelValue_C *value,
+                                  const char *direction,
+                                  const char *callName,
+                                  size_t size) {
+  char valueHex[3 * SUPLA_CHANNELVALUE_SIZE] = {};
+  formatChannelValueHex(reinterpret_cast<const uint8_t *>(value->value),
+                        valueHex,
+                        sizeof(valueHex));
+
+  SUPLA_LOG_VERBOSE(
+      "SRPC %s call=%s(%d) size=%zu payload={ChannelNumber=%u, Offline=%u, "
+      "ValidityTimeSec=%" PRIu32 ", value[8]=%s}",
+      direction,
+      callName,
+      callId,
+      size,
+      static_cast<unsigned int>(value->ChannelNumber),
+      static_cast<unsigned int>(value->Offline),
+      static_cast<uint32_t>(value->ValidityTimeSec),
+      valueHex);
+}
+
+void logRawHexDump(const char *direction,
+                   int callId,
+                   const char *callName,
+                   const uint8_t *buf,
+                   size_t size,
+                   bool verbose) {
+  const size_t rleThreshold = 6;
+#if defined(ESP8266) || defined(ARDUINO_ARCH_ESP8266) || defined(__AVR__) || \
+    defined(ARDUINO_ARCH_AVR)
+  char tmp[256] = {};
+#else
+  char tmp[2048] = {};
+#endif
+  size_t pos = 0;
+  bool truncated = false;
+  size_t i = 0;
+  for (; i < size;) {
+    if (pos + 4 >= sizeof(tmp)) {
+      truncated = true;
+      break;
+    }
+
+    size_t run = 1;
+    while (i + run < size && buf[i + run] == buf[i]) {
+      run++;
+    }
+
+    if (run >= rleThreshold) {
+      char runToken[32] = {};
+      snprintf(runToken, sizeof(runToken), "%02X{%zu} ", buf[i], run);
+      if (!appendLogToken(tmp, sizeof(tmp), &pos, runToken)) {
+        truncated = true;
+        break;
+      }
+      i += run;
+      continue;
+    }
+
+    char byteToken[4] = {};
+    snprintf(byteToken, sizeof(byteToken), "%02X ", buf[i]);
+    if (!appendLogToken(tmp, sizeof(tmp), &pos, byteToken)) {
+      truncated = true;
+      break;
+    }
+    i++;
+  }
+
+  if (i < size) {
+    truncated = true;
+  }
+
+  if (truncated) {
+    appendLogToken(tmp, sizeof(tmp), &pos, "...");
+  }
+
+  if (verbose) {
+    SUPLA_LOG_VERBOSE("SRPC %s call=%s(%d) size=%zu raw=[%s]",
+                      direction,
+                      callName,
+                      callId,
+                      size,
+                      tmp);
+  } else {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) size=%zu raw=[%s]",
+                    direction,
+                    callName,
+                    callId,
+                    size,
+                    tmp);
+  }
+}
+
+}  // namespace
+
 Supla::Protocol::SuplaSrpc::SuplaSrpc(SuplaDeviceClass *sdc, int version)
     : Supla::Protocol::ProtocolLayer(sdc), version(version) {
   setSuplaCACert(::suplaCACert);
   setSupla3rdPartyCACert(::supla3rdCACert);
+}
+
+void Supla::Protocol::SuplaSrpc::onPacketSent(void *userParam,
+                                              unsigned _supla_int_t callId,
+                                              void *data,
+                                              unsigned _supla_int_t dataSize,
+                                              void *reserved) {
+  (void)(reserved);
+  auto *self = reinterpret_cast<SuplaSrpc *>(userParam);
+  if (self == nullptr) {
+    return;
+  }
+
+  self->logSrpcPacket(true,
+                      static_cast<int>(callId),
+                      reinterpret_cast<const uint8_t *>(data),
+                      dataSize);
+}
+
+void Supla::Protocol::SuplaSrpc::onPacketReceived(void *userParam,
+                                                  unsigned _supla_int_t callId,
+                                                  void *data,
+                                                  unsigned _supla_int_t
+                                                      dataSize,
+                                                  void *reserved) {
+  (void)(reserved);
+  auto *self = reinterpret_cast<SuplaSrpc *>(userParam);
+  if (self == nullptr) {
+    return;
+  }
+
+  self->logSrpcPacket(false,
+                      static_cast<int>(callId),
+                      reinterpret_cast<const uint8_t *>(data),
+                      dataSize);
+}
+
+void Supla::Protocol::SuplaSrpc::logSrpcPacket(bool send,
+                                               int callId,
+                                               const uint8_t *buf,
+                                               size_t size) {
+  bool verbose = isVerbosePacket(callId);
+  int requiredLogLevel = verbose ? LOG_VERBOSE : LOG_DEBUG;
+
+  if (!supla_log_is_enabled(requiredLogLevel)) {
+    return;
+  }
+
+  const char *direction = send ? "TX" : "RX";
+  const char *callName = callIdToName(callId);
+
+  if (looksLikeRegisterDeviceHeader(callId, buf, size)) {
+    logRegisterDeviceHeader(callId, buf, size, direction, callName);
+    return;
+  }
+
+  if (looksLikeRegisterDeviceChannelChunk(callId, buf, size)) {
+    if (callId == SUPLA_DS_CALL_REGISTER_DEVICE_F) {
+      logRegisterDeviceChannelChunk(
+          callId,
+          reinterpret_cast<const TDS_SuplaDeviceChannel_D *>(buf),
+          direction,
+          callName,
+          size);
+    } else {
+      logRegisterDeviceChannelChunk(
+          callId,
+          reinterpret_cast<const TDS_SuplaDeviceChannel_E *>(buf),
+          direction,
+          callName,
+          size);
+    }
+    return;
+  }
+
+  if (callId == SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS &&
+      size == sizeof(TDS_SubdeviceDetails)) {
+    logSubdeviceDetails(callId,
+                        reinterpret_cast<const TDS_SubdeviceDetails *>(buf),
+                        direction,
+                        callName,
+                        size);
+    return;
+  }
+
+  if (callId == SUPLA_SD_CALL_SET_CHANNEL_CONFIG ||
+      callId == SUPLA_DS_CALL_SET_CHANNEL_CONFIG) {
+    if (size >= offsetof(TSD_ChannelConfig, Config)) {
+      auto *request = reinterpret_cast<const TSD_ChannelConfig *>(buf);
+      if (shouldDumpRawChannelConfig(request)) {
+        logSetChannelConfigRequest(callId, request, direction, callName, size);
+      } else {
+        SUPLA_LOG_DEBUG(
+            "SRPC %s call=%s(%d) size=%zu payload={ChannelNumber=%u, "
+            "Func=%" PRId32
+            ", ConfigType=%u(%s), ConfigSize=%u, Config=<redacted>}",
+            direction,
+            callName,
+            callId,
+            size,
+            static_cast<unsigned int>(request->ChannelNumber),
+            static_cast<int32_t>(request->Func),
+            static_cast<unsigned int>(request->ConfigType),
+            channelConfigTypeName(request->ConfigType),
+            static_cast<unsigned int>(request->ConfigSize));
+      }
+      return;
+    }
+  }
+
+  if (callId == SUPLA_DCS_CALL_SET_CHANNEL_CAPTION &&
+      size >= offsetof(TDCS_SetCaption, Caption)) {
+    auto *caption = reinterpret_cast<const TDCS_SetCaption *>(buf);
+    size_t expectedSize =
+        offsetof(TDCS_SetCaption, Caption) + caption->CaptionSize;
+    if (caption->CaptionSize > 0 &&
+        caption->CaptionSize <= SUPLA_CAPTION_MAXSIZE && size == expectedSize) {
+      logSetChannelCaption(callId, caption, direction, callName, size);
+      return;
+    }
+  }
+
+  if (callId == SUPLA_SCD_CALL_SET_CHANNEL_CAPTION_RESULT &&
+      size >= offsetof(TSCD_SetCaptionResult, Caption)) {
+    auto *caption = reinterpret_cast<const TSCD_SetCaptionResult *>(buf);
+    size_t expectedSize =
+        offsetof(TSCD_SetCaptionResult, Caption) + caption->CaptionSize;
+    if (caption->CaptionSize > 0 &&
+        caption->CaptionSize <= SUPLA_CAPTION_MAXSIZE && size == expectedSize) {
+      logSetChannelCaptionResult(callId, caption, direction, callName, size);
+      return;
+    }
+  }
+
+  if (callId == SUPLA_SD_CALL_DEVICE_CALCFG_REQUEST &&
+      size >= offsetof(TSD_DeviceCalCfgRequest, Data)) {
+    auto *request = reinterpret_cast<const TSD_DeviceCalCfgRequest *>(buf);
+    logDeviceCalCfgRequest(callId, request, direction, callName, size);
+    return;
+  }
+
+  if (callId == SUPLA_DS_CALL_DEVICE_CHANNEL_VALUE_CHANGED_C &&
+      size == sizeof(TDS_SuplaDeviceChannelValue_C)) {
+    logDeviceChannelValueChanged(
+        callId,
+        reinterpret_cast<const TDS_SuplaDeviceChannelValue_C *>(buf),
+        direction,
+        callName,
+        size);
+    return;
+  }
+
+  if (callId == SUPLA_DCS_CALL_PING_SERVER) {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) size=%zu", direction, callName, callId,
+                    size);
+    return;
+  }
+
+  if (callId == SUPLA_SDC_CALL_PING_SERVER_RESULT) {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) size=%zu", direction, callName, callId,
+                    size);
+    return;
+  }
+
+  if (isSensitiveCallId(callId) || buf == nullptr || size == 0) {
+    SUPLA_LOG_DEBUG("SRPC %s call=%s(%d) size=%zu payload=<redacted>",
+                    direction,
+                    callName,
+                    callId,
+                    size);
+    return;
+  }
+
+  logRawHexDump(direction, callId, callName, buf, size, verbose);
+}
+
+const char *Supla::Protocol::SuplaSrpc::callIdToName(int callId) {
+  return safeCallName(callId);
+}
+
+bool Supla::Protocol::SuplaSrpc::isSensitiveCallId(int callId) {
+  switch (callId) {
+    case SUPLA_DS_CALL_REGISTER_DEVICE:
+    case SUPLA_DS_CALL_REGISTER_DEVICE_B:
+    case SUPLA_DS_CALL_REGISTER_DEVICE_C:
+    case SUPLA_DS_CALL_REGISTER_DEVICE_D:
+    case SUPLA_DS_CALL_REGISTER_DEVICE_E:
+      return true;
+    default:
+      return false;
+  }
 }
 
 Supla::Protocol::SuplaSrpc::~SuplaSrpc() {
@@ -69,33 +1192,32 @@ Supla::Protocol::SuplaSrpc::~SuplaSrpc() {
 }
 
 void Supla::Protocol::SuplaSrpc::setNetworkClient(Supla::Client *newClient) {
-  bool debugLogs = verboseLog;
   if (client) {
-    debugLogs = client->isDebugLogs();
     delete client;
   }
   client = newClient;
-  client->setDebugLogs(debugLogs);
   initClient();
 }
 
 void Supla::Protocol::SuplaSrpc::initClient() {
   if (client == nullptr) {
-    if (Supla::Network::Instance()) {
-      client = Supla::Network::Instance()->createClient();
-    } else {
-      client = Supla::ClientBuilder();
-      if (client == nullptr) {
-        SUPLA_LOG_ERROR("Failed to create client");
-        return;
-      }
+    client = createNetworkClient();
+    if (client == nullptr) {
+      SUPLA_LOG_ERROR("Failed to create SRPC network client");
+      return;
     }
-    client->setDebugLogs(verboseLog);
   }
   client->setSdc(sdc);
+  client->setDebugLogs(verboseLog);
   if (port == 2016 || (port == -1 && isSuplaSSLEnabled)) {
     client->setSSLEnabled(true);
     client->setCACert(selectedCertificate);
+  }
+}
+
+void Supla::Protocol::SuplaSrpc::setLowLevelDebugLogs(bool value) {
+  if (client != nullptr) {
+    client->setDebugLogs(value);
   }
 }
 
@@ -232,11 +1354,17 @@ void Supla::Protocol::SuplaSrpc::onInit() {
 
 _supla_int_t Supla::dataRead(void *buf, _supla_int_t count, void *userParams) {
   auto srpcLayer = reinterpret_cast<Supla::Protocol::SuplaSrpc *>(userParams);
+  if (srpcLayer == nullptr || srpcLayer->client == nullptr) {
+    return 0;
+  }
   return srpcLayer->client->read(reinterpret_cast<uint8_t *>(buf), count);
 }
 
 _supla_int_t Supla::dataWrite(void *buf, _supla_int_t count, void *userParams) {
   auto srpcLayer = reinterpret_cast<Supla::Protocol::SuplaSrpc *>(userParams);
+  if (srpcLayer == nullptr || srpcLayer->client == nullptr) {
+    return 0;
+  }
   _supla_int_t r =
       srpcLayer->client->write(reinterpret_cast<uint8_t *>(buf), count);
   if (r > 0) {
@@ -317,10 +1445,12 @@ void Supla::messageReceived(void *srpc,
         result.Result = SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
         result.DataSize = 0;
         SUPLA_LOG_DEBUG(
-            "CALCFG CMD received: senderId %d, ch %d, cmd %d, suauth %d, "
+            "CALCFG CMD received: senderId %d, ch %d, cmd %d (0x%X), suauth "
+            "%d, "
             "datatype %d, datasize %d",
             rd.data.sd_device_calcfg_request->SenderID,
             rd.data.sd_device_calcfg_request->ChannelNumber,
+            rd.data.sd_device_calcfg_request->Command,
             rd.data.sd_device_calcfg_request->Command,
             rd.data.sd_device_calcfg_request->SuperUserAuthorized,
             rd.data.sd_device_calcfg_request->DataType,
@@ -335,7 +1465,7 @@ void Supla::messageReceived(void *srpc,
                result.Command == SUPLA_CALCFG_CMD_CHECK_FIRMWARE_UPDATE) &&
               result.Result == SUPLA_CALCFG_RESULT_TRUE) {
             suplaSrpc->calCfgResultPending.set(
-                result.ChannelNumber, result.ReceiverID, result.Command);
+                result.ChannelNumber, result.ReceiverID, result.Command, 0);
           }
         } else {
           auto element = Supla::Element::getElementByChannelNumber(
@@ -346,13 +1476,19 @@ void Supla::messageReceived(void *srpc,
                 rd.data.sd_device_calcfg_request);
             if (result.Result == SUPLA_SRPC_CALCFG_RESULT_PENDING) {
               suplaSrpc->calCfgResultPending.set(
-                  result.ChannelNumber, result.ReceiverID, result.Command);
+                  result.ChannelNumber,
+                  result.ReceiverID,
+                  result.Command,
+                  element->getCalcfgPendingTimeoutMs(
+                      rd.data.sd_device_calcfg_request));
             } else if (result.Result == SUPLA_CALCFG_RESULT_NOT_SUPPORTED) {
               // if request wasn't processed by channel, try to check if there
               // is element related to it's subdevice (if any)
-              auto subdevice = element->getChannel()->getSubDeviceId();
+              auto channel = element->getChannelByChannelNumber(
+                  rd.data.sd_device_calcfg_request->ChannelNumber);
+              auto subdevice = channel ? channel->getSubDeviceId() : 0;
               SUPLA_LOG_DEBUG("Trying to find subdevice (%d) for channel %d",
-                              element->getChannel()->getSubDeviceId(),
+                              subdevice,
                               rd.data.sd_device_calcfg_request->ChannelNumber);
               if (subdevice > 0) {
                 auto subdeviceElement =
@@ -373,7 +1509,8 @@ void Supla::messageReceived(void *srpc,
           }
         }
         if (result.Result >= 0) {
-          SUPLA_LOG_DEBUG("Sending CALCFG result: CMD %d result: %d",
+          SUPLA_LOG_DEBUG("Sending CALCFG result: cmd %d (0x%X), result: %d",
+                          result.Command,
                           result.Command,
                           result.Result);
           srpc_ds_async_device_calcfg_result(srpc, &result);
@@ -678,6 +1815,7 @@ void Supla::Protocol::SuplaSrpc::onRegisterResult(
       break;
 
     case SUPLA_RESULTCODE_REGISTRATION_DISABLED:
+      SUPLA_LOG_INFO("Registration result: registration disabled");
       sdc->status(
           STATUS_REGISTRATION_DISABLED, F("Registration disabled!"), true);
       break;
@@ -766,6 +1904,8 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
     return false;
   }
 
+  handlePendingCalCfgTimeouts(_millis);
+
   requestNetworkRestart = false;
   if (waitForIterate != 0 && _millis - lastIterateTime < waitForIterate) {
     return false;
@@ -795,12 +1935,14 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
     SUPLA_LOG_INFO("Supla server name not set. Trying to get it from AD");
     // fetch json from https://autodiscover.supla.org/users/email@host
     const char server[] = "iot.autodiscover.supla.org";
-    auto adClient = Supla::ClientBuilder();
-    adClient->setSSLEnabled(true);
-    if (sdc && sdc->getSuplaCACert()) {
-      SUPLA_LOG_INFO("Autodiscover: using Supla CA cert");
-      adClient->setCACert(sdc->getSuplaCACert());
+    auto adClient = createNetworkClient();
+    if (adClient == nullptr) {
+      SUPLA_LOG_ERROR("Failed to create autodiscovery network client");
+      waitForIterate = 1000;
+      return false;
     }
+    adClient->setSSLEnabled(true);
+    adClient->setCACert(::suplaCACert);
 
     if (1 == adClient->connect(server, 443)) {
       adClient->write("GET /users/");
@@ -846,6 +1988,7 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
 
       adClient->stop();
       delete adClient;
+      adClient = nullptr;
 
       SUPLA_LOG_DEBUG("Data: %s", buf);
 
@@ -894,6 +2037,9 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
 
     } else {
       SUPLA_LOG_DEBUG("AD connection failed");
+      adClient->stop();
+      delete adClient;
+      adClient = nullptr;
       waitForIterate = 1000;
       return false;
     }
@@ -909,6 +2055,10 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
 
   if (client == nullptr) {
     initClient();
+  }
+  if (client == nullptr) {
+    waitForIterate = 1000;
+    return false;
   }
   // Establish connection with Supla server
   if (!client->connected()) {
@@ -1020,10 +2170,13 @@ bool Supla::Protocol::SuplaSrpc::iterate(uint32_t _millis) {
         remoteDeviceConfig == nullptr) {
       SUPLA_LOG_INFO("Sending new device config to server");
       remoteDeviceConfig = new Supla::Device::RemoteDeviceConfig();
-      TSDS_SetDeviceConfig deviceConfig = {};
-      if (remoteDeviceConfig->fillSetDeviceConfig(&deviceConfig)) {
-        srpc_ds_async_set_device_config_request(srpc, &deviceConfig);
+      auto *deviceConfig = new TSDS_SetDeviceConfig{};
+      if (deviceConfig &&
+          remoteDeviceConfig->fillSetDeviceConfig(deviceConfig)) {
+        srpc_ds_async_set_device_config_request(srpc, deviceConfig);
+        delete deviceConfig;
       } else {
+        delete deviceConfig;
         cfg->clearDeviceConfigChangeFlag();
         cfg->saveWithDelay(1000);
       }
@@ -1169,6 +2322,9 @@ bool Supla::Protocol::SuplaSrpc::isEnabled() {
 
 void Supla::Protocol::SuplaSrpc::sendChannelStateResult(int32_t receiverId,
                                                         uint8_t channelNo) {
+  if (client == nullptr) {
+    return;
+  }
   TDSC_ChannelState state = {};
   state.ReceiverID = receiverId;
   state.ChannelNumber = channelNo;
@@ -1189,7 +2345,6 @@ void Supla::Protocol::SuplaSrpc::sendChannelStateResult(int32_t receiverId,
   if (element) {
     element->handleGetChannelState(&state);
   }
-
   srpc_csd_async_channel_state_result(srpc, &state);
 }
 
@@ -1219,7 +2374,6 @@ void Supla::Protocol::SuplaSrpc::sendActionTrigger(uint8_t channelNumber,
   TDS_ActionTrigger at = {};
   at.ChannelNumber = channelNumber;
   at.ActionTrigger = actionId;
-
   srpc_ds_async_action_trigger(srpc, &at);
 }
 
@@ -1257,7 +2411,6 @@ bool Supla::Protocol::SuplaSrpc::sendNotification(int context,
     memcpy(notif.TitleAndBody + titleOffset, message, messageLen + 1);
     notif.TitleAndBody[titleOffset + messageLen] = '\0';
   }
-
   srpc_ds_async_send_push_notification(srpc, &notif);
   return true;
 }
@@ -1266,7 +2419,6 @@ void Supla::Protocol::SuplaSrpc::getUserLocaltime() {
   if (!isRegisteredAndReady()) {
     return;
   }
-
   srpc_dcs_async_get_user_localtime(srpc);
 }
 
@@ -1381,10 +2533,13 @@ void Supla::Protocol::SuplaSrpc::handleDeviceConfig(
     }
 
     if (remoteDeviceConfig->isSetDeviceConfigRequired()) {
-      TSDS_SetDeviceConfig deviceConfig = {};
-      if (remoteDeviceConfig->fillSetDeviceConfig(&deviceConfig)) {
-        srpc_ds_async_set_device_config_request(srpc, &deviceConfig);
+      auto *deviceConfig = new TSDS_SetDeviceConfig{};
+      if (deviceConfig &&
+          remoteDeviceConfig->fillSetDeviceConfig(deviceConfig)) {
+        srpc_ds_async_set_device_config_request(srpc, deviceConfig);
+        delete deviceConfig;
       } else {
+        delete deviceConfig;
         auto cfg = Supla::Storage::ConfigInstance();
         if (cfg) {
           cfg->clearDeviceConfigChangeFlag();
@@ -1530,14 +2685,21 @@ void Supla::Protocol::SuplaSrpc::sendRemainingTimeValue(
 
 void Supla::Protocol::CalCfgResultPending::set(int16_t channelNo,
                                                int32_t receiverId,
-                                               int32_t command) {
+                                               int32_t command,
+                                               uint32_t timeoutMs) {
   auto ptr = first;
   CalCfgResultPendingItem *prev = nullptr;
+  uint32_t now = millis();
+  if (now == 0) {
+    now = 1;
+  }
   while (ptr) {
     if (ptr->channelNo == channelNo &&
         (command == -1 || ptr->command == command)) {
       ptr->receiverId = receiverId;
       ptr->command = command;
+      ptr->timeoutMs = timeoutMs;
+      ptr->createdAtMs = now;
       return;
     }
     prev = ptr;
@@ -1547,6 +2709,8 @@ void Supla::Protocol::CalCfgResultPending::set(int16_t channelNo,
   item->channelNo = channelNo;
   item->receiverId = receiverId;
   item->command = command;
+  item->createdAtMs = now;
+  item->timeoutMs = timeoutMs;
   item->next = nullptr;
 
   if (first == nullptr) {
@@ -1576,15 +2740,32 @@ void Supla::Protocol::CalCfgResultPending::clear(int16_t channelNo,
   }
 }
 
-Supla::Protocol::CalCfgResultPending::CalCfgResultPending() {
+void Supla::Protocol::CalCfgResultPending::clearTimeout(int16_t channelNo,
+                                                        int32_t command) {
+  auto ptr = first;
+  while (ptr) {
+    if (ptr->channelNo == channelNo &&
+        (command == -1 || ptr->command == command)) {
+      ptr->timeoutMs = 0;
+      return;
+    }
+    ptr = ptr->next;
+  }
 }
 
-Supla::Protocol::CalCfgResultPending::~CalCfgResultPending() {
+void Supla::Protocol::CalCfgResultPending::clearAll() {
   while (first) {
     auto copy = first;
     first = first->next;
     delete copy;
   }
+}
+
+Supla::Protocol::CalCfgResultPending::CalCfgResultPending() {
+}
+
+Supla::Protocol::CalCfgResultPending::~CalCfgResultPending() {
+  clearAll();
 }
 
 Supla::Protocol::CalCfgResultPendingItem *
@@ -1605,7 +2786,23 @@ void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(int16_t channelNo,
                                                          int32_t command,
                                                          int dataSize,
                                                          void *data) {
-  auto pendingResponse = calCfgResultPending.get(channelNo, command);
+  sendPendingCalCfgResultForCommand(
+      channelNo, resultId, command, command, dataSize, data);
+}
+
+void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResultForCommand(
+    int16_t channelNo,
+    int32_t resultId,
+    int32_t pendingCommand,
+    int32_t responseCommand,
+    int dataSize,
+    void *data) {
+  if (srpc == nullptr) {
+    SUPLA_LOG_WARNING("No active SRPC for CALCFG response on channel %d",
+                      channelNo);
+    return;
+  }
+  auto pendingResponse = calCfgResultPending.get(channelNo, pendingCommand);
   if (pendingResponse == nullptr) {
     SUPLA_LOG_WARNING("No pending response for channel %d", channelNo);
     return;
@@ -1615,18 +2812,53 @@ void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(int16_t channelNo,
   result.ReceiverID = pendingResponse->receiverId;
   result.ChannelNumber = channelNo;
   result.Command = pendingResponse->command;
-  if (command >= 0) {
-    result.Command = command;
+  if (responseCommand >= 0) {
+    result.Command = responseCommand;
   }
 
   result.Result = resultId;
-  result.DataSize = dataSize;
   if (dataSize > SUPLA_CALCFG_DATA_MAXSIZE) {
     SUPLA_LOG_WARNING("Data size %d is too big", dataSize);
     dataSize = SUPLA_CALCFG_DATA_MAXSIZE;
   }
-  memcpy(result.Data, data, dataSize);
-  SUPLA_LOG_DEBUG("Sending CALCFG result: CMD %d result: %d",
+  result.DataSize = dataSize;
+  if (dataSize > 0 && data != nullptr) {
+    memcpy(result.Data, data, dataSize);
+  }
+  SUPLA_LOG_DEBUG("Sending CALCFG result: cmd %d (0x%X) result: %d",
+                  result.Command,
+                  result.Command,
+                  result.Result);
+  srpc_ds_async_device_calcfg_result(srpc, &result);
+}
+
+void Supla::Protocol::SuplaSrpc::sendCalCfgResult(int32_t receiverId,
+                                                  int16_t channelNo,
+                                                  int32_t resultId,
+                                                  int32_t command,
+                                                  int dataSize,
+                                                  void *data) {
+  if (srpc == nullptr) {
+    SUPLA_LOG_WARNING("No active SRPC for CALCFG response on channel %d",
+                      channelNo);
+    return;
+  }
+
+  TDS_DeviceCalCfgResult result = {};
+  result.ReceiverID = receiverId;
+  result.ChannelNumber = channelNo;
+  result.Command = command;
+  result.Result = resultId;
+  if (dataSize > SUPLA_CALCFG_DATA_MAXSIZE) {
+    SUPLA_LOG_WARNING("Data size %d is too big", dataSize);
+    dataSize = SUPLA_CALCFG_DATA_MAXSIZE;
+  }
+  result.DataSize = dataSize;
+  if (dataSize > 0 && data != nullptr) {
+    memcpy(result.Data, data, dataSize);
+  }
+  SUPLA_LOG_DEBUG("Sending CALCFG result: cmd %d (0x%X) result: %d",
+                  result.Command,
                   result.Command,
                   result.Result);
   srpc_ds_async_device_calcfg_result(srpc, &result);
@@ -1635,6 +2867,29 @@ void Supla::Protocol::SuplaSrpc::sendPendingCalCfgResult(int16_t channelNo,
 void Supla::Protocol::SuplaSrpc::clearPendingCalCfgResult(int16_t channelNo,
                                                           int32_t command) {
   calCfgResultPending.clear(channelNo, command);
+}
+
+void Supla::Protocol::SuplaSrpc::clearPendingCalCfgTimeout(int16_t channelNo,
+                                                           int32_t command) {
+  calCfgResultPending.clearTimeout(channelNo, command);
+}
+
+void Supla::Protocol::SuplaSrpc::handlePendingCalCfgTimeouts(uint32_t _millis) {
+  auto ptr = calCfgResultPending.first;
+  while (ptr) {
+    auto next = ptr->next;
+    if (ptr->timeoutMs > 0 &&
+        static_cast<uint32_t>(_millis - ptr->createdAtMs) >= ptr->timeoutMs) {
+      SUPLA_LOG_WARNING("CALCFG timeout for channel %d, cmd %d (0x%X)",
+                        ptr->channelNo,
+                        ptr->command,
+                        ptr->command);
+      sendPendingCalCfgResult(
+          ptr->channelNo, SUPLA_CALCFG_RESULT_FALSE, ptr->command);
+      calCfgResultPending.clear(ptr->channelNo, ptr->command);
+    }
+    ptr = next;
+  }
 }
 
 void Supla::Protocol::SuplaSrpc::initializeSrpc() {
@@ -1648,6 +2903,10 @@ void Supla::Protocol::SuplaSrpc::initializeSrpc() {
   srpcParams.data_read = &Supla::dataRead;
   srpcParams.data_write = &Supla::dataWrite;
   srpcParams.on_remote_call_received = &Supla::messageReceived;
+#ifdef SRPC_WITH_PACKET_LOG_HOOKS
+  srpcParams.on_packet_sent = &Supla::Protocol::SuplaSrpc::onPacketSent;
+  srpcParams.on_packet_received = &Supla::Protocol::SuplaSrpc::onPacketReceived;
+#endif
   srpcParams.user_params = this;
 
   srpc = srpc_init(&srpcParams);
@@ -1657,6 +2916,7 @@ void Supla::Protocol::SuplaSrpc::initializeSrpc() {
 }
 
 void Supla::Protocol::SuplaSrpc::deinitializeSrpc() {
+  calCfgResultPending.clearAll();
   if (srpc) {
     SUPLA_LOG_INFO("Deinitializing SRPC");
     srpc_free(srpc);

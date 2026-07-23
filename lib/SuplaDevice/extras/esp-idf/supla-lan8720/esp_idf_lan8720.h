@@ -43,6 +43,8 @@ class EspIdfLan8720 : public Supla::LAN {
 
   SuplaDeviceClass *getSdc();
   bool isStateLoggingAllowed();
+  bool isStaticIpConfigured() const;
+  void setEthStarted(bool started);
 
  protected:
   int mdcGpio = -1;
@@ -53,7 +55,9 @@ class EspIdfLan8720 : public Supla::LAN {
   esp_eth_netif_glue_handle_t ethGlue = NULL;
 
   bool initDone = false;
+  bool ethStarted = false;
   bool allowDisable = false;
+  bool staticIpConfigured = false;
 };
 
 };  // namespace Supla

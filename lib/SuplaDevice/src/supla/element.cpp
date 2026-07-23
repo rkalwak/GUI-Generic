@@ -31,7 +31,11 @@ class SuplaSrpc;
 Element *Element::firstPtr = nullptr;
 bool Element::invalidatePtr = false;
 
-Element::Element() {
+Element::Element(ElementMode mode)
+    : registeredElement(mode == ElementMode::Registered) {
+  if (!registeredElement) {
+    return;
+  }
   if (firstPtr == nullptr) {
     firstPtr = this;
   } else {
@@ -40,6 +44,9 @@ Element::Element() {
 }
 
 Element::~Element() {
+  if (!registeredElement) {
+    return;
+  }
   invalidatePtr = true;
   if (begin() == this) {
     firstPtr = next();
@@ -72,7 +79,8 @@ Element *Element::getElementByChannelNumber(int channelNumber) {
   }
 
   Element *element = begin();
-  while (element != nullptr && element->getChannelNumber() != channelNumber) {
+  while (element != nullptr && element->getChannelNumber() != channelNumber &&
+         element->getSecondaryChannelNumber() != channelNumber) {
     element = element->next();
   }
 
@@ -174,6 +182,13 @@ void Element::fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value) {
   (void)(value);
 }
 
+bool Element::getRemainingCountdownTimerSec(uint32_t *remainingSec) const {
+  if (remainingSec) {
+    *remainingSec = 0;
+  }
+  return false;
+}
+
 int Element::getChannelNumber() const {
   int result = -1;
   auto channel = getChannel();
@@ -205,6 +220,42 @@ Channel *Element::getChannel() {
 }
 
 Channel *Element::getSecondaryChannel() {
+  return nullptr;
+}
+
+const Channel *Element::getChannelByChannelNumber(int channelNumber) const {
+  if (channelNumber < 0) {
+    return nullptr;
+  }
+
+  auto channel = getChannel();
+  if (channel && channel->getChannelNumber() == channelNumber) {
+    return channel;
+  }
+
+  channel = getSecondaryChannel();
+  if (channel && channel->getChannelNumber() == channelNumber) {
+    return channel;
+  }
+
+  return nullptr;
+}
+
+Channel *Element::getChannelByChannelNumber(int channelNumber) {
+  if (channelNumber < 0) {
+    return nullptr;
+  }
+
+  auto channel = getChannel();
+  if (channel && channel->getChannelNumber() == channelNumber) {
+    return channel;
+  }
+
+  channel = getSecondaryChannel();
+  if (channel && channel->getChannelNumber() == channelNumber) {
+    return channel;
+  }
+
   return nullptr;
 }
 
@@ -247,6 +298,12 @@ void Element::handleGetChannelState(TDSC_ChannelState *channelState) {
 int Element::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request) {
   (void)(request);
   return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+}
+
+uint32_t Element::getCalcfgPendingTimeoutMs(
+    TSD_DeviceCalCfgRequest *request) const {
+  (void)(request);
+  return 0;
 }
 
 Element & Element::disableChannelState() {
@@ -316,7 +373,7 @@ void Element::ClearInvalidPtr() {
   invalidatePtr = false;
 }
 
-bool Element::isAnyUpdatePending() {
+bool Element::isAnyUpdatePending() const {
   return false;
 }
 
@@ -350,12 +407,20 @@ bool Element::setFunction(uint32_t newFunction) {
   return setDefaultFunction(newFunction);
 }
 
+bool Element::setRuntimeFunction(uint32_t newFunction) {
+  return setFunction(newFunction);
+}
+
 void Element::onFunctionChange(uint32_t currentFunction, uint32_t newFunction) {
   (void)(currentFunction);
   (void)(newFunction);
 }
 
 bool Element::isOwnerOfSubDeviceId(int) const {
+  return false;
+}
+
+bool Element::isStateStorageMigrationNeeded() const {
   return false;
 }
 

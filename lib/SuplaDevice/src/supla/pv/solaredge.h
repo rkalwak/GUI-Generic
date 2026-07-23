@@ -22,8 +22,8 @@
 #ifndef ARDUINO_ARCH_AVR
 // Arduino Mega can't establish https connection, so it can't be supported
 
-#include <WiFiClientSecure.h>
 #include <supla/clock/clock.h>
+#include <supla/network/client.h>
 #include <supla/sensor/electricity_meter.h>
 
 #define APIKEY_MAX_LENGTH    100
@@ -37,13 +37,14 @@ class SolarEdge : public Supla::Sensor::ElectricityMeter {
             const char *siteIdValue,
             const char *inverterSerialNumberValue,
             Supla::Clock *clock);
+  ~SolarEdge();
   void readValuesFromDevice();
   void iterateAlways();
   bool iterateConnected();
   Channel *getSecondaryChannel();
 
  protected:
-  WiFiClientSecure pvClient;
+  ::Supla::Client *pvClient = nullptr;
 
   char buf[1024];
 

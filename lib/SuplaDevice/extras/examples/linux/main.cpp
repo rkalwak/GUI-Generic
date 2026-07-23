@@ -14,26 +14,27 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include <supla-common/tools.h>
-#include <linux_network.h>
-#include <unistd.h>
-
 #include <SuplaDevice.h>
+#include <linux_network.h>
+#include <supla-common/tools.h>
 #include <supla/control/dimmer_leds.h>
 #include <supla/control/rgb_leds.h>
 #include <supla/control/rgbw_leds.h>
 #include <supla/control/virtual_relay.h>
+#include <supla/debug/debug_log_tcp_server.h>
+#include <supla/log_wrapper.h>
 #include <supla/time.h>
 #include <supla/version.h>
-#include <supla/log_wrapper.h>
+#include <unistd.h>
 
 // Below includes are added just for CI compilation check. Some of them
 // are not used in any cpp file, so they would not be compiled otherwise.
 // Remove them and keep only required one in real application.
-#include <linux_file_state_logger.h>
-#include <linux_yaml_config.h>
-#include <linux_file_storage.h>
 #include <linux_clock.h>
+#include <linux_file_state_logger.h>
+#include <linux_file_storage.h>
+#include <linux_mqtt_client.h>
+#include <linux_yaml_config.h>
 #include <supla/IEEE754tools.h>
 #include <supla/action_handler.h>
 #include <supla/actions.h>
@@ -50,7 +51,6 @@
 #include <supla/events.h>
 #include <supla/io.h>
 #include <supla/local_action.h>
-#include <supla/parser/json.h>
 #include <supla/parser/simple.h>
 #include <supla/pv/afore.h>
 #include <supla/pv/fronius.h>
@@ -74,7 +74,6 @@
 #include <supla/sensor/virtual_binary.h>
 #include <supla/sensor/weight.h>
 #include <supla/sensor/wind.h>
-#include <supla/sha256.h>
 #include <supla/source/cmd.h>
 #include <supla/source/file.h>
 #include <supla/supla_lib_config.h>
@@ -82,18 +81,19 @@
 #include <supla/tools.h>
 #include <supla/uptime.h>
 
-#include <linux_mqtt_client.h>
-
 #include <cstdlib>
-#include <iostream>
 #include <cxxopts.hpp>
+#include <iostream>
+#include <memory>
+#include <string>
 
+#include "debug_socket.h"
 
 // reguired by linux_log.c
 int logLevel = LOG_INFO;
 int runAsDaemon = 0;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   try {
     cxxopts::Options options(argv[0], "Supla device client. See www.supla.org");
 
@@ -105,6 +105,12 @@ int main(int argc, char* argv[]) {
         "c,config",
         "Config file name",
         cxxopts::value<std::string>()->default_value("etc/supla-device.yaml"))(
+        "debug-socket",
+        "Read insecure debug command JSON lines from Unix socket path",
+        cxxopts::value<std::string>()->default_value(""))(
+        "debug-log-port",
+        "Stream SUPLA logs over insecure TCP port, 0 disables",
+        cxxopts::value<uint16_t>()->default_value("0"))(
         "d,daemon", "Run in daemon mode (run in background and log to syslog)")(
         "s,service", "Run as a service (log to syslog but don't fork)")(
         "h,help", "Show this help")("v,version", "Show version");
@@ -160,10 +166,22 @@ int main(int argc, char* argv[]) {
       logLevel = LOG_VERBOSE;
     }
 
+    if (result.count("warning") || config->isWarning()) {
+      logLevel = LOG_WARNING;
+    }
+
+    if (result.count("error") || config->isError()) {
+      logLevel = LOG_ERR;
+    }
+    SuplaDevice.setLogLevel(logLevel);
+
     SUPLA_LOG_INFO(" *** Starting supla-device ***");
     SUPLA_LOG_INFO("Using config file %s", cfgFile.c_str());
 
     st_hook_signals();
+
+    auto clock = std::make_unique<Supla::LinuxClock>();
+    (void)(clock);
 
     if (!config->loadChannels()) {
       SUPLA_LOG_ERROR("Loading channels failed. Exit");
@@ -176,9 +194,12 @@ int main(int argc, char* argv[]) {
         new Supla::Device::FileStateLogger(config->getStateFilesPath()));
     Supla::LinuxNetwork network;
 
-    auto clock = std::make_unique<Supla::LinuxClock>();
-    (void)(clock);
+    if (!setupLinuxSupletRuntime(config.get())) {
+      SUPLA_LOG_ERROR("Suplet runtime setup failed. Exit");
+      exit(1);
+    }
 
+    SuplaDevice.setProtoVerboseLog(config->isProtoVerboseLog());
     SuplaDevice.begin(config->getProtoVersion());
 
     if (SuplaDevice.getCurrentStatus() != STATUS_INITIALIZED) {
@@ -186,16 +207,26 @@ int main(int argc, char* argv[]) {
       exit(1);
     }
 
+    if (!initLinuxDebugSocket(result["debug-socket"].as<std::string>())) {
+      SUPLA_LOG_ERROR("Debug socket init failed. Exit");
+      exit(1);
+    }
+    Supla::Debug::DebugLogTcpServer debugLogServer(
+        result["debug-log-port"].as<uint16_t>());
+    debugLogServer.begin();
+
     Supla::LinuxMqttClient::start();
 
     while (st_app_terminate == 0) {
+      iterateLinuxDebugSocket();
+      debugLogServer.iterate();
       SuplaDevice.iterate();
       delay(10);
     }
     SUPLA_LOG_INFO("Exit");
 
     exit(0);
-  } catch (const cxxopts::exceptions::exception& e) {
+  } catch (const cxxopts::exceptions::exception &e) {
     std::cout << "error parsing options: " << e.what() << std::endl;
     exit(1);
   }

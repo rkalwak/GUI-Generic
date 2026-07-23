@@ -21,6 +21,7 @@
 
 #include <supla/device/device_mode.h>
 #include <supla/device/auto_update_policy.h>
+#include <supla/network/netif_config.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -39,6 +40,8 @@
 
 namespace Supla {
 
+class Storage;
+
 #pragma pack(push, 1)
 struct SaltPassword {
   uint8_t salt[SUPLA_CFG_MODE_SALT_SIZE] = {};
@@ -55,6 +58,8 @@ struct SaltPassword {
 
 class Config {
  public:
+  friend class Storage;
+
   Config();
   virtual ~Config();
   virtual bool init() = 0;
@@ -62,6 +67,10 @@ class Config {
   virtual bool isMinimalConfigReady(bool showLogs = true);
   virtual bool isConfigModeSupported();
   virtual bool isEncryptionEnabled();
+  // Returns true when the device-data partition is present in the partition
+  // table, regardless of whether its contents are usable.
+  virtual bool isDeviceDataPartitionDeclared();
+  virtual bool isDeviceDataPartitionAvailable();
 
   // Override this method and setup all default value if needed
   virtual void initDefaultDeviceConfig();
@@ -73,6 +82,9 @@ class Config {
 
   virtual bool setBlob(const char* key, const char* value, size_t blobSize) = 0;
   virtual bool getBlob(const char* key, char* value, size_t blobSize) = 0;
+  // Returns exact blob payload size, or -1 when the key is missing, invalid, or
+  // stores a non-blob value.
+  virtual int getBlobSize(const char* key) = 0;
 
   virtual bool getInt8(const char* key, int8_t* result) = 0;
   virtual bool getUInt8(const char* key, uint8_t* result) = 0;
@@ -110,8 +122,15 @@ class Config {
   virtual bool setCustomCA(const char* customCA);
   virtual bool getAESKey(uint8_t* result);
 
+  virtual bool loadNetifConfig(const char* blobName, NetifConfigBlob* cfg);
+  virtual bool saveNetifConfig(const char* blobName,
+                               const NetifConfigBlob& cfg);
+  virtual bool removeNetifConfig(const char* blobName);
+
+#ifndef ARDUINO_ARCH_AVR
   static void generateSaltPassword(const char* password,
                                    Supla::SaltPassword* result);
+#endif
   virtual bool setCfgModeSaltPassword(const Supla::SaltPassword& saltPassword);
   virtual bool getCfgModeSaltPassword(Supla::SaltPassword* result);
 
@@ -201,16 +220,29 @@ class Config {
    */
   bool setChannelFunction(int channelNo, int32_t channelFunction);
 
+  /**
+   * Returns init result
+   *
+   * @return true if init was successful, false otherwise
+   */
   bool getInitResult() const;
 
+  /**
+   * Checks if config has been initialized
+   *
+   * @return true if config has been initialized
+   */
+  bool isConfigInitDone() const { return configInitDone; }
+
  protected:
-  virtual int getBlobSize(const char* key) = 0;
+  void setConfigInitDone(bool done) { configInitDone = done; }
 
   uint32_t saveDelayTimestamp = 0;
   uint32_t deviceConfigUpdateDelayTimestamp = 0;
   uint16_t saveDelayMs = 0;
   int8_t deviceConfigChangeFlag = -1;
   bool initResult = false;
+  bool configInitDone = false;
 };
 };  // namespace Supla
 

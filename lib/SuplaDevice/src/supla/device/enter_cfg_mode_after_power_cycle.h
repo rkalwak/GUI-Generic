@@ -34,6 +34,7 @@ class EnterCfgModeAfterPowerCycle : public Supla::Element {
   void iterateAlways() override;
   void setAlwaysEnabled(bool alwaysEnabled);
   void setIncrementOnlyOnPowerResetReason(bool value);
+  void resetCounter();
 
  private:
   SuplaDeviceClass *sdc = nullptr;

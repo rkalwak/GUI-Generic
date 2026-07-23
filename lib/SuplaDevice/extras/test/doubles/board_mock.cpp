@@ -22,6 +22,10 @@
 #include <assert.h>
 #include <gmock/gmock.h>
 
+namespace {
+bool lastResetSoft = false;
+}  // namespace
+
 BoardInterface::BoardInterface() {
   instance = this;
 }
@@ -44,8 +48,7 @@ bool isDeviceSoftwareResetSupported() {
 }
 
 bool isLastResetSoft() {
-  // TODO(klew): implement
-  return false;
+  return lastResetSoft;
 }
 
 bool Supla::isLastResetPower() {
@@ -59,3 +62,7 @@ int Supla::getPlatformId() {
 
 BoardMock::BoardMock() {}
 BoardMock::~BoardMock() {}
+
+void setLastResetSoft(bool value) {
+  lastResetSoft = value;
+}

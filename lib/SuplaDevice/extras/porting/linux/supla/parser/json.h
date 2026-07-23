@@ -43,9 +43,11 @@ class Json : public Parser {
 
   bool isBasedOnIndex() override;
   bool isValid() override;
+  bool isSourceValid() override;
 
  protected:
   bool valid = false;
+  bool sourceValid = false;
   std::map<std::string, int> keys;
 
   nlohmann::json json;

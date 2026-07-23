@@ -56,6 +56,9 @@ const char EmPhaseLedPowerLowTag[] = "em_led_pl";
 const char EmPhaseLedPowerHighTag[] = "em_led_ph";
 
 const char RgbwButtonTag[] = "rgbw_btn";
+const char LegacyMigrationTag[] = "lgc_mig";
+
+const char PwmFrequencyTag[] = "pwm_freq";
 
 const char RollerShutterTag[] = "rs_cfg";
 const char RollerShutterMotorUpsideDownTag[] = "usd";
@@ -68,6 +71,7 @@ const char FacadeBlindTiltControlTypeTag[] = "fb_type";
 const char TiltConfigTag[] = "tilt_cfg";
 
 const char RelayOvercurrentThreshold[] = "oc_thr";
+const char RelayTurnOnDuration[] = "on_dur";
 
 const char HvacCfgTag[] = "hvac_cfg";
 const char HvacWeeklyCfgTag[] = "hvac_weekly";
@@ -79,10 +83,14 @@ const char BinarySensorCfgTag[] = "bs_cfg";
 const char ContainerTag[] = "container";
 
 const char ValveCfgTag[] = "valve_cfg";
+const char WifiNetifCfgTag[] = "wifi_cfg";
+const char EthNetifCfgTag[] = "eth_cfg";
 
 const char ModbusCfgTag[] = "modbus_cfg";
 
 const char OtaModeTag[] = "ota_mode";
+
+const char DsSensorConfig[] = "ds_sensor";
 
 static_assert(sizeof(DeviceConfigChangeCfgTag) < 16);
 static_assert(sizeof(ChannelFunctionTag) < 12);
@@ -121,6 +129,7 @@ static_assert(sizeof(TiltConfigTag) < 12);
 static_assert(sizeof(FacadeBlindTiltingTimeTag) < 12);
 static_assert(sizeof(FacadeBlindTiltControlTypeTag) < 12);
 static_assert(sizeof(RelayOvercurrentThreshold) < 12);
+static_assert(sizeof(RelayTurnOnDuration) < 12);
 static_assert(sizeof(HvacCfgTag) < 12);
 static_assert(sizeof(HvacWeeklyCfgTag) <= 12);
 static_assert(sizeof(HvacAltWeeklyCfgTag) <= 13);
@@ -128,8 +137,12 @@ static_assert(sizeof(BinarySensorServerInvertedLogicTag) < 12);
 static_assert(sizeof(BinarySensorCfgTag) < 12);
 static_assert(sizeof(ContainerTag) < 12);
 static_assert(sizeof(ValveCfgTag) < 12);
+static_assert(sizeof(WifiNetifCfgTag) < 12);
+static_assert(sizeof(EthNetifCfgTag) < 12);
 static_assert(sizeof(ModbusCfgTag) < 16);
 static_assert(sizeof(OtaModeTag) < 16);
+static_assert(sizeof(PwmFrequencyTag) < 16);
+static_assert(sizeof(DsSensorConfig) < 12);
 
 }  // namespace ConfigTag
 }  // namespace Supla

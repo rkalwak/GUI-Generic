@@ -25,6 +25,7 @@
 // https://github.com/malarz-supla/ClosedCube_SHT31D_Arduino (fork with fixes)
 
 #include <ClosedCube_SHT31D.h>
+#include <supla/log_wrapper.h>
 
 #include "therm_hygro_meter.h"
 
@@ -55,8 +56,7 @@ class SHT3x : public ThermHygroMeter {
         SHT3XD_REPEATABILITY_LOW, SHT3XD_MODE_CLOCK_STRETCH, 50);
 
     if (result.error != SHT3XD_NO_ERROR) {
-      Serial.print(F("SHT [ERROR] Code #"));
-      Serial.println(result.error);
+      SUPLA_LOG_ERROR("SHT [ERROR] Code #%d", result.error);
       retryCount++;
       if (retryCount > 3) {
         retryCount = 0;

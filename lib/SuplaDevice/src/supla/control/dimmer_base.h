@@ -27,16 +27,19 @@ class DimmerBase : public RGBWBase {
  public:
   DimmerBase();
 
-  void setRGBW(int red,
-               int green,
-               int blue,
-               int colorBrightness,
-               int brightness,
-               bool toggle = false,
-               bool instant = false) override;
+  void setRGBCCT(int red,
+                 int green,
+                 int blue,
+                 int colorBrightness,
+                 int brightness,
+                 int whiteTemperature,
+                 bool toggle = false,
+                 bool instant = false) override;
 
   void onLoadState() override;
   void onSaveState() override;
+
+  void setRGBCCTValueOnDevice(uint32_t output[5], int usedOutputs) override;
 
  protected:
   void iterateDimmerRGBW(int rgbStep, int wStep) override;

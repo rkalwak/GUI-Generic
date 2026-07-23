@@ -21,18 +21,19 @@
 #if !defined(ARDUINO_ARCH_AVR)
 // don't compile it on Arduino Mega
 
-#include <supla/storage/key_value.h>
-#include <supla/log_wrapper.h>
-#include <LittleFS.h>
-#include <string.h>
 #include "littlefs_config.h"
 
-namespace Supla {
-  const char ConfigFileName[] = "/supla-dev.cfg";
-  const char BackupConfigFileName[] = "/supla-dev.cfg.bak";
-  const char CustomCAFileName[] = "/custom_ca.pem";
-};
+#include <LittleFS.h>
+#include <stdio.h>
+#include <string.h>
+#include <supla/log_wrapper.h>
+#include <supla/storage/key_value.h>
 
+namespace Supla {
+const char ConfigFileName[] = "/supla-dev.cfg";
+const char BackupConfigFileName[] = "/supla-dev.cfg.bak";
+const char CustomCAFileName[] = "/custom_ca.pem";
+};  // namespace Supla
 
 #define BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE 32
 
@@ -40,9 +41,13 @@ Supla::LittleFsConfig::LittleFsConfig(int configMaxSize)
     : configMaxSize(configMaxSize) {
 }
 
-Supla::LittleFsConfig::~LittleFsConfig() {}
+Supla::LittleFsConfig::~LittleFsConfig() {
+}
 
 bool Supla::LittleFsConfig::init() {
+  SUPLA_LOG_WARNING(
+      "LittleFsConfig: config stored without encryption (LittleFS). "
+      "Device is not protected against physical access.");
   if (first) {
     SUPLA_LOG_WARNING(
         "LittleFsConfig: init called on non empty database. Aborting");
@@ -114,7 +119,7 @@ bool Supla::LittleFsConfig::init() {
 }
 
 void Supla::LittleFsConfig::commit() {
-  uint8_t *buf = new uint8_t[configMaxSize];
+  uint8_t* buf = new uint8_t[configMaxSize];
   if (buf == nullptr) {
     SUPLA_LOG_ERROR("LittleFsConfig: failed to allocate memory");
     return;
@@ -125,11 +130,11 @@ void Supla::LittleFsConfig::commit() {
   size_t dataSize = serializeToMemory(buf, configMaxSize);
 
   if (!initLittleFs()) {
+    delete[] buf;
     return;
   }
 
   auto files = {ConfigFileName, BackupConfigFileName};
-  bool result = false;
 
   for (auto file : files) {
     SUPLA_LOG_DEBUG("LittleFsConfig: writing to file \"%s\"", file);
@@ -138,13 +143,14 @@ void Supla::LittleFsConfig::commit() {
       SUPLA_LOG_ERROR(
           "LittleFsConfig: failed to open config file \"%s\" for write", file);
       LittleFS.end();
+      delete[] buf;
       return;
     }
 
     cfg.write(buf, dataSize);
     cfg.close();
   }
-  delete []buf;
+  delete[] buf;
   LittleFS.end();
 }
 
@@ -170,15 +176,14 @@ bool Supla::LittleFsConfig::getCustomCA(char* customCA, int maxSize) {
       return false;
     }
 
-    int bytesRead = file.read(reinterpret_cast<uint8_t *>(customCA), fileSize);
+    int bytesRead = file.read(reinterpret_cast<uint8_t*>(customCA), fileSize);
 
     file.close();
     LittleFS.end();
     if (bytesRead != fileSize) {
-      SUPLA_LOG_DEBUG(
-          "LittleFsConfig: read bytes %d, while file is %d bytes",
-          bytesRead,
-          fileSize);
+      SUPLA_LOG_DEBUG("LittleFsConfig: read bytes %d, while file is %d bytes",
+                      bytesRead,
+                      fileSize);
       return false;
     }
 
@@ -209,6 +214,7 @@ int Supla::LittleFsConfig::getCustomCASize() {
     LittleFS.end();
     return fileSize;
   }
+  LittleFS.end();
   return 0;
 }
 
@@ -221,8 +227,7 @@ bool Supla::LittleFsConfig::setCustomCA(const char* customCA) {
 
   File file = LittleFS.open(CustomCAFileName, "w");
   if (!file) {
-    SUPLA_LOG_ERROR(
-        "LittleFsConfig: failed to open custom CA file for write");
+    SUPLA_LOG_ERROR("LittleFsConfig: failed to open custom CA file for write");
     LittleFS.end();
     return false;
   }
@@ -283,10 +288,24 @@ void Supla::LittleFsConfig::removeAll() {
 bool Supla::LittleFsConfig::setBlob(const char* key,
                                     const char* value,
                                     size_t blobSize) {
-  if (blobSize < BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE) {
-    return Supla::KeyValue::setBlob(key, value, blobSize);
+  if (key == nullptr || value == nullptr) {
+    return false;
   }
 
+  if (blobSize < BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE) {
+    bool result = Supla::KeyValue::setBlob(key, value, blobSize);
+    if (result && initLittleFs()) {
+      char filename[50] = {};
+      snprintf(filename, sizeof(filename), "/supla/%s", key);
+      if (LittleFS.exists(filename)) {
+        LittleFS.remove(filename);
+      }
+      LittleFS.end();
+    }
+    return result;
+  }
+
+  Supla::KeyValue::eraseKey(key);
   SUPLA_LOG_DEBUG("LittleFS: writing file %s", key);
   if (!initLittleFs()) {
     return false;
@@ -298,8 +317,8 @@ bool Supla::LittleFsConfig::setBlob(const char* key,
   snprintf(filename, sizeof(filename), "/supla/%s", key);
   File file = LittleFS.open(filename, "w");
   if (!file) {
-    SUPLA_LOG_ERROR(
-        "LittleFsConfig: failed to open blob file \"%s\" for write", key);
+    SUPLA_LOG_ERROR("LittleFsConfig: failed to open blob file \"%s\" for write",
+                    key);
     LittleFS.end();
     return false;
   }
@@ -313,7 +332,11 @@ bool Supla::LittleFsConfig::setBlob(const char* key,
 bool Supla::LittleFsConfig::getBlob(const char* key,
                                     char* value,
                                     size_t blobSize) {
-  if (blobSize < BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE) {
+  if (key == nullptr || value == nullptr) {
+    return false;
+  }
+
+  if (Supla::KeyValue::getBlobSize(key) == static_cast<int>(blobSize)) {
     return Supla::KeyValue::getBlob(key, value, blobSize);
   }
 
@@ -333,8 +356,8 @@ bool Supla::LittleFsConfig::getBlob(const char* key,
     return false;
   }
   size_t fileSize = file.size();
-  if (fileSize > blobSize) {
-    SUPLA_LOG_ERROR("LittleFsConfig: blob file is too big");
+  if (fileSize != blobSize) {
+    SUPLA_LOG_ERROR("LittleFsConfig: blob file has invalid size");
     file.close();
     LittleFS.end();
     return false;
@@ -344,10 +367,19 @@ bool Supla::LittleFsConfig::getBlob(const char* key,
 
   file.close();
   LittleFS.end();
-  return bytesRead == fileSize;
+  return (bytesRead < 0) ? false : static_cast<size_t>(bytesRead) == fileSize;
 }
 
 int Supla::LittleFsConfig::getBlobSize(const char* key) {
+  if (key == nullptr) {
+    return -1;
+  }
+
+  int keyValueBlobSize = Supla::KeyValue::getBlobSize(key);
+  if (keyValueBlobSize >= 0) {
+    return keyValueBlobSize;
+  }
+
   if (!initLittleFs()) {
     return -1;
   }
@@ -368,6 +400,25 @@ int Supla::LittleFsConfig::getBlobSize(const char* key) {
   return fileSize;
 }
 
+bool Supla::LittleFsConfig::eraseKey(const char* key) {
+  if (key == nullptr) {
+    return false;
+  }
+
+  bool removed = Supla::KeyValue::eraseKey(key);
+
+  if (!initLittleFs()) {
+    return removed;
+  }
+
+  char filename[50] = {};
+  snprintf(filename, sizeof(filename), "/supla/%s", key);
+  if (LittleFS.exists(filename) && LittleFS.remove(filename)) {
+    removed = true;
+  }
+  LittleFS.end();
+  return removed;
+}
 
 #endif  // !defined(ARDUINO_ARCH_AVR)
 #endif  // SUPLA_EXCLUDE_LITTLEFS_CONFIG

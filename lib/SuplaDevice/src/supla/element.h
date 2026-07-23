@@ -31,12 +31,17 @@ namespace Protocol {
 class SuplaSrpc;
 }  // namespace Protocol
 
+enum class ElementMode : uint8_t {
+  Registered,
+  Detached,
+};
+
 /**
  * Base class for all elements of SuplaDevice
  */
 class Element {
  public:
-  Element();
+  explicit Element(ElementMode mode = ElementMode::Registered);
   virtual ~Element();
   /**
    * Returns first Element (based on creation order)
@@ -151,6 +156,18 @@ class Element {
   virtual void onSaveState();
 
   /**
+   * Method called after onInit() to check if state storage migration is needed.
+   * WARNING: state storage migration is not done in a way that it guarantees
+   * that data will be properly migrated. If something unexpected happens during
+   * migration (i.e. power loss), state storage may be lost. Don't rely on it,
+   * when state storage contain critical data (i.e. energy meters or impulse
+   * counters).
+   *
+   * @return true if storage migration is needed
+   */
+  virtual bool isStateStorageMigrationNeeded() const;
+
+  /**
    * Method called each time when device successfully registers to Supla server
    *
    * @param suplaSrpc
@@ -225,6 +242,17 @@ class Element {
    */
   virtual void fillSuplaChannelNewValue(TSD_SuplaChannelNewValue *value);
 
+  /**
+   * Returns active countdown timer remaining time in seconds.
+   *
+   * @param remainingSec output pointer for remaining seconds. It is set to 0
+   *                     when the countdown timer is not available or inactive.
+   *
+   * @return true when remainingSec contains a valid active timer value, false
+   *         otherwise.
+   */
+  virtual bool getRemainingCountdownTimerSec(uint32_t *remainingSec) const;
+
   // Handles "get channel state" request from server
   // channelState is prefilled with network and device status informations
   /**
@@ -243,6 +271,13 @@ class Element {
    * @return SUPLA_CALCFG_RESULT_* (see proto.h)
    */
   virtual int handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request);
+
+  /**
+   * Returns timeout in milliseconds for CALCFG requests that become pending.
+   * Zero means no timeout.
+   */
+  virtual uint32_t getCalcfgPendingTimeoutMs(
+      TSD_DeviceCalCfgRequest *request) const;
 
   // Returns SUPLA_RESULTCODE_
   /**
@@ -337,6 +372,15 @@ class Element {
   virtual Channel *getSecondaryChannel();
 
   /**
+   * Returns pointer to the channel matching channelNumber.
+   *
+   * @return pointer to primary/secondary channel, nullptr if not owned by this
+   * element
+   */
+  const Channel *getChannelByChannelNumber(int channelNumber) const;
+  Channel *getChannelByChannelNumber(int channelNumber);
+
+  /**
    * Generates key used for Config
    *
    * Adds "x_" prefix to the key where x is a channel number. Output is
@@ -366,7 +410,7 @@ class Element {
    *
    * @return true if any update is pending
    */
-  virtual bool isAnyUpdatePending();
+  virtual bool isAnyUpdatePending() const;
 
   /**
    * Sets initial caption.
@@ -401,6 +445,19 @@ class Element {
   bool setFunction(uint32_t newFunction);
 
   /**
+   * Sets channel's function at runtime.
+   *
+   * Elements which require additional runtime setup after a function change
+   * should override this method. The default implementation calls
+   * setFunction().
+   *
+   * @param newFunction
+   *
+   * @return true if function was changed, false otherwise
+   */
+  virtual bool setRuntimeFunction(uint32_t newFunction);
+
+  /**
    * Called when channel function changes
    *
    * @param currentFunction old function
@@ -411,6 +468,7 @@ class Element {
  protected:
   static Element *firstPtr;
   static bool invalidatePtr;
+  bool registeredElement = true;
   Element *nextPtr = nullptr;
 };
 

@@ -53,6 +53,7 @@ class ProtocolLayer {
   virtual uint32_t getConnectionFailTime() = 0;
   virtual bool isConnectionError();
   virtual bool isConnecting();
+  virtual bool isMqtt() const;
   virtual bool isUpdatePending();
   virtual bool isRegisteredAndReady() = 0;
   virtual void sendActionTrigger(uint8_t channelNumber, uint32_t actionId) = 0;
@@ -95,7 +96,7 @@ class ProtocolLayer {
   ProtocolLayer *nextPtr = nullptr;
   SuplaDeviceClass *sdc = nullptr;
   bool configEmpty = true;
-  bool verboseLog = true;
+  bool verboseLog = false;
 };
 
 }  // namespace Protocol

@@ -111,3 +111,19 @@ void EnterCfgModeAfterPowerCycle::setIncrementOnlyOnPowerResetReason(
     bool value) {
   incrementOnlyOnPowerResetReason = value;
 }
+
+void EnterCfgModeAfterPowerCycle::resetCounter() {
+  if (currentPowerCycle == 0 && timestampMs == 0) {
+    return;
+  }
+
+  currentPowerCycle = 0;
+  timestampMs = 0;
+  incremented = true;
+  SUPLA_LOG_DEBUG("PowerCycle: counter reset to 0");
+  auto cfg = Supla::Storage::ConfigInstance();
+  if (cfg) {
+    cfg->setUInt32(Supla::Device::PowerCycleKey, currentPowerCycle);
+    cfg->commit();
+  }
+}

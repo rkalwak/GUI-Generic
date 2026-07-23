@@ -146,6 +146,6 @@ int ModbusDeviceHandler::fillRegBuffer(uint8_t *regBuffer,
   int remainingBytes = regSize * 2;
 
   memcpy(regBuffer, input + byteOffset, remainingBytes);
-  reg += regSize - 1;
+  *reg += regSize - 1;
   return remainingBytes;
 }

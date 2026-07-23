@@ -24,6 +24,7 @@
 #include <supla-common/proto.h>
 #include <supla/uptime.h>
 #include <supla/protocol/mqtt_topic.h>
+#include <supla/protocol/mqtt_channel_handler.h>
 #include <supla/element.h>
 
 #include "protocol_layer.h"
@@ -54,6 +55,7 @@ enum HADeviceClass {
   HADeviceClass_ApparentPower,
   HADeviceClass_Current,
   HADeviceClass_Energy,
+  HADeviceClass_ReactiveEnergy,
   HADeviceClass_Frequency,
   HADeviceClass_PowerFactor,
   HADeviceClass_Power,
@@ -72,6 +74,8 @@ enum HADeviceClass {
   HADeviceClass_Shade,
 };
 
+class HvacMqttHandler;
+
 class Mqtt : public ProtocolLayer {
  public:
   explicit Mqtt(SuplaDeviceClass *sdc);
@@ -87,6 +91,7 @@ class Mqtt : public ProtocolLayer {
   uint32_t getConnectionFailTime() override;
   bool isConnectionError() override;
   bool isConnecting() override;
+  bool isMqtt() const override;
   void publish(const char *topic,
                const char *payload,
                int qos = -1,
@@ -116,6 +121,8 @@ class Mqtt : public ProtocolLayer {
   void publishChannelState(int channel);
   void publishExtendedChannelState(int channel);
   void subscribeChannel(int channel);
+  const char *getPrefix() const;
+  const char *getHostname() const;
   void subscribe(const char *topic, int qos = -1);
   bool isUpdatePending() override;
   bool isRegisteredAndReady() override;
@@ -130,22 +137,24 @@ class Mqtt : public ProtocolLayer {
   bool processData(const char *topic, const char *payload);
   void processRelayRequest(const char *topic,
                            const char *payload,
-                           Supla::Element *element);
+                           Supla::Element *element,
+                           Supla::Channel *channel);
   void processRGBWRequest(const char *topic,
                           const char *payload,
-                          Supla::Element *element);
+                          Supla::Element *element,
+                          int channelNumber);
   void processRGBRequest(const char *topic,
                          const char *payload,
-                         Supla::Element *element);
+                         Supla::Element *element,
+                         int channelNumber);
   void processDimmerRequest(const char *topic,
                             const char *payload,
-                            Supla::Element *element);
-  void processHVACRequest(const char *topic,
-                          const char *payload,
-                          Supla::Element *element);
+                            Supla::Element *element,
+                            int channelNumber);
   void processRollerShutterRequest(const char *topic,
                                    const char *payload,
-                                   Supla::Element *element);
+                                   Supla::Element *element,
+                                   int channelNumber);
 
  protected:
   void generateClientId(char result[MQTT_CLIENTID_MAX_SIZE]);
@@ -154,14 +163,21 @@ class Mqtt : public ProtocolLayer {
   void publishDeviceStatus(bool onRegistration = false);
   void publishHADiscovery(int channel);
   void publishHADiscoveryRelay(Supla::Element *);
+  void publishHADiscoveryRelay(Supla::Element *, Supla::Channel *);
   void publishHADiscoveryRelayImpulse(Supla::Element *);
+  void publishHADiscoveryRelayImpulse(Supla::Element *, Supla::Channel *);
+  void clearHADiscoveryRelayAlternativeTypes(Supla::Channel *channel,
+                                             const char *currentType);
+  void clearHADiscoveryForChannel(Supla::Channel *channel);
+  void clearRelayAlternativeStateTopics(Supla::Channel *channel,
+                                        bool currentIsRoller);
+  void clearStateForChannel(Supla::Channel *channel);
   void publishHADiscoveryThermometer(Supla::Element *);
   void publishHADiscoveryHumidity(Supla::Element *);
   void publishHADiscoveryActionTrigger(Supla::Element *);
   void publishHADiscoveryEM(Supla::Element *);
   void publishHADiscoveryRGB(Supla::Element *);
   void publishHADiscoveryDimmer(Supla::Element *);
-  void publishHADiscoveryHVAC(Supla::Element *);
   void publishHADiscoveryBinarySensor(Supla::Element *);
   void publishHADiscoveryRollerShutter(Supla::Element *);
 
@@ -188,6 +204,10 @@ class Mqtt : public ProtocolLayer {
 
   bool isPayloadOn(const char *);
   bool isOpenClosedBinarySensorFunction(int channelFunction) const;
+
+  MqttChannelHandler *findChannelHandler(int channelType) const;
+
+  friend class HvacMqttHandler;
 
   char server[SUPLA_SERVER_NAME_MAXSIZE] = {};
   int32_t port = -1;

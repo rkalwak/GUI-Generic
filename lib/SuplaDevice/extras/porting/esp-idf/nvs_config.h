@@ -33,13 +33,14 @@ class NvsConfig : public Config {
   virtual ~NvsConfig();
 
   bool isEncryptionEnabled() override;
+  bool isDeviceDataPartitionDeclared() override;
+  bool isDeviceDataPartitionAvailable() override;
 
   bool init() override;
   void removeAll() override;
 
   bool generateGuidAndAuthkey() override;
   bool getAESKey(uint8_t* result) override;
-  bool isDeviceDataPartitionAvailable();
   bool getGUID(char* result) override;
   bool getAuthKey(char* result) override;
   bool setGUID(const char* key) override;
@@ -80,6 +81,8 @@ class NvsConfig : public Config {
   const esp_partition_t *dataPartition = nullptr;
   int dataPartitionOffset = 0;
   bool dataPartitionInitiazlied = false;
+  bool dataPartitionValid = false;
+  bool dataPartitionValidated = false;
   bool nvsEncrypted = false;
   bool flashEncryptionReleaseMode = false;
 };

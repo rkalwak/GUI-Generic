@@ -35,13 +35,23 @@
 using Supla::Channel;
 
 Channel *Channel::firstPtr = nullptr;
+int Channel::startingChannelNumber = 0;
 
 #ifdef SUPLA_TEST
 // Method used in tests to restore default values for static members
 void Supla::Channel::resetToDefaults() {
   Supla::RegisterDevice::resetToDefaults();
+  startingChannelNumber = 0;
 }
 #endif
+
+void Supla::Channel::setStartingChannelNumber(int channelNumber) {
+  startingChannelNumber = channelNumber < 0 ? 0 : channelNumber;
+}
+
+int Supla::Channel::getStartingChannelNumber() {
+  return startingChannelNumber;
+}
 
 Channel::Channel(int number) {
   if (firstPtr == nullptr) {
@@ -309,6 +319,7 @@ void Channel::setType(uint32_t type) {
 }
 
 void Channel::setDefault(uint32_t value) {
+  SUPLA_LOG_DEBUG("Channel[%d]: setDefaultFunction: %d", channelNumber, value);
   if (value > UINT16_MAX) {
     SUPLA_LOG_ERROR("Channel[%d]: Invalid defaultFunction value %d",
                     channelNumber, value);
@@ -517,13 +528,17 @@ void Channel::setNewValue(uint8_t red,
                    uint8_t green,
                    uint8_t blue,
                    uint8_t colorBrightness,
-                   uint8_t brightness) {
+                   uint8_t brightness,
+                   uint8_t whiteTemperature) {
   char newValue[SUPLA_CHANNELVALUE_SIZE] = {};
   newValue[0] = brightness;
   newValue[1] = colorBrightness;
   newValue[2] = blue;
   newValue[3] = green;
   newValue[4] = red;
+  // 5-6 not used in DS direction
+  newValue[7] = whiteTemperature;
+  auto prevWhiteTemp = getValueWhiteTemperature();
   auto prevBright = getValueBrightness();
   auto prevColorBright = getValueColorBrightness();
   auto prevRed = getValueRed();
@@ -544,6 +559,9 @@ void Channel::setNewValue(uint8_t red,
     }
     if (prevBright != getValueBrightness()) {
       runAction(ON_DIMMER_BRIGHTNESS_CHANGE);
+    }
+    if (prevWhiteTemp != getValueWhiteTemperature()) {
+      runAction(ON_WHITE_TEMPERATURE_CHANGE);
     }
     if (prevColorBright == 0 && getValueColorBrightness() != 0) {
       runAction(ON_COLOR_TURN_ON);
@@ -622,8 +640,15 @@ void Channel::setNewValue(uint8_t red,
     }
 
     SUPLA_LOG_DEBUG(
-        "Channel(%d) value changed to RGB(%d, %d, %d), colBr(%d), bright(%d)",
-        channelNumber, red, green, blue, colorBrightness, brightness);
+        "Channel(%d) value changed to RGB(%d, %d, %d), colBr(%d), bright(%d), "
+        "whiteTemp(%d)",
+        channelNumber,
+        red,
+        green,
+        blue,
+        colorBrightness,
+        brightness,
+        whiteTemperature);
   }
 }
 
@@ -672,24 +697,28 @@ bool Channel::getValueBool() {
   return value[0] != 0;
 }
 
-uint8_t Channel::getValueRed() {
+uint8_t Channel::getValueRed() const {
   return value[4];
 }
 
-uint8_t Channel::getValueGreen() {
+uint8_t Channel::getValueGreen() const {
   return value[3];
 }
 
-uint8_t Channel::getValueBlue() {
+uint8_t Channel::getValueBlue() const {
   return value[2];
 }
 
-uint8_t Channel::getValueColorBrightness() {
+uint8_t Channel::getValueColorBrightness() const {
   return value[1];
 }
 
-uint8_t Channel::getValueBrightness() {
+uint8_t Channel::getValueBrightness() const {
   return value[0];
+}
+
+uint8_t Channel::getValueWhiteTemperature() const {
+  return value[7];
 }
 
 uint8_t Channel::getValueClosingPercentage() const {
@@ -722,6 +751,18 @@ double Channel::getLastTemperature() {
 
 void Channel::setValidityTimeSec(uint32_t timeSec) {
   validityTimeSec = timeSec;
+}
+
+void Channel::clearValue() {
+  const int8_t emptyValue[SUPLA_CHANNELVALUE_SIZE] = {};
+  const bool valueChanged =
+      memcmp(value, emptyValue, SUPLA_CHANNELVALUE_SIZE) != 0;
+  const bool validityChanged = validityTimeSec != 0;
+  memcpy(value, emptyValue, SUPLA_CHANNELVALUE_SIZE);
+  validityTimeSec = 0;
+  if (valueChanged || validityChanged) {
+    setSendValue();
+  }
 }
 
 bool Channel::isSleepingEnabled() {
@@ -1526,31 +1567,6 @@ void Channel::fillDeviceChannelStruct(
   deviceChannelStruct->ValueValidityTimeSec = validityTimeSec;
   deviceChannelStruct->DefaultIcon = getDefaultIcon();
   memcpy(deviceChannelStruct->value, value, SUPLA_CHANNELVALUE_SIZE);
-  // on some ESP platforms, printf functions for 64 bits is not available
-  // so we have to print it as two separate 32 bit values 0x%X%08X
-  SUPLA_LOG_VERBOSE(
-      "CH[%i], type: %d, FuncList: 0x%X, function: %d, flags: 0x%X%08X, "
-      "%s, validityTimeSec: %d, icon: %d, "
-      "value: "
-      "[%02x %02x %02x %02x %02x %02x %02x %02x]",
-      getChannelNumber(),
-      getChannelType(),
-      getFuncList(),
-      getDefaultFunction(),
-      PRINTF_UINT64_HEX(getFlags()),
-      state == 0   ? "online"
-      : state == 1 ? "offline"
-                   : "online (not available)",
-      validityTimeSec,
-      getDefaultIcon(),
-      static_cast<uint8_t>(value[0]),
-      static_cast<uint8_t>(value[1]),
-      static_cast<uint8_t>(value[2]),
-      static_cast<uint8_t>(value[3]),
-      static_cast<uint8_t>(value[4]),
-      static_cast<uint8_t>(value[5]),
-      static_cast<uint8_t>(value[6]),
-      static_cast<uint8_t>(value[7]));
 }
 
 void Channel::fillDeviceChannelStruct(
@@ -1574,36 +1590,6 @@ void Channel::fillDeviceChannelStruct(
   deviceChannelStruct->DefaultIcon = getDefaultIcon();
   deviceChannelStruct->SubDeviceId = getSubDeviceId();
   memcpy(deviceChannelStruct->value, value, SUPLA_CHANNELVALUE_SIZE);
-  // uint64_t printf is crashing on ESP32-C2 in method vnsnprintf
-  SUPLA_LOG_VERBOSE(
-      "CH[%i], subDevId: %d, type: %d, FuncList: 0x%X, function: %d, flags: "
-      "0x%X%08X, %s, validityTimeSec: %d, icon: %d, value: "
-      "[%02x %02x %02x %02x %02x %02x %02x %02x]",
-      getChannelNumber(),
-      getSubDeviceId(),
-      getChannelType(),
-      getFuncList(),
-      getDefaultFunction(),
-      PRINTF_UINT64_HEX(getFlags()),
-      state == SUPLA_CHANNEL_OFFLINE_FLAG_ONLINE    ? "online"
-      : state == SUPLA_CHANNEL_OFFLINE_FLAG_OFFLINE ? "offline"
-      : state == SUPLA_CHANNEL_OFFLINE_FLAG_ONLINE_BUT_NOT_AVAILABLE
-          ? "online (not available)"
-      : state == SUPLA_CHANNEL_OFFLINE_FLAG_OFFLINE_REMOTE_WAKEUP_NOT_SUPPORTED
-          ? "offline (remote wakeup not supported)"
-      : state == SUPLA_CHANNEL_OFFLINE_FLAG_FIRMWARE_UPDATE_ONGOING
-          ? "firmware update ongoing"
-          : "UNKNOWN",
-      validityTimeSec,
-      getDefaultIcon(),
-      static_cast<uint8_t>(value[0]),
-      static_cast<uint8_t>(value[1]),
-      static_cast<uint8_t>(value[2]),
-      static_cast<uint8_t>(value[3]),
-      static_cast<uint8_t>(value[4]),
-      static_cast<uint8_t>(value[5]),
-      static_cast<uint8_t>(value[6]),
-      static_cast<uint8_t>(value[7]));
 }
 
 void Channel::fillRawValue(void *valueToFill) {
@@ -2040,4 +2026,3 @@ bool Channel::isRelayOvercurrentCutOff() const {
   }
   return false;
 }
-

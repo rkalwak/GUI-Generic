@@ -16,19 +16,34 @@
    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include <gtest/gtest.h>
-#include <supla/channel.h>
 #include <arduino_mock.h>
+#include <gtest/gtest.h>
 #include <simple_time.h>
 #include <storage_mock.h>
-#include <supla/device/register_device.h>
-
-#include <supla/control/roller_shutter.h>
 #include <supla/actions.h>
+#include <supla/channel.h>
+#include <supla/control/bistable_roller_shutter.h>
+#include <supla/control/roller_shutter.h>
+#include <supla/control/tripple_button_roller_shutter.h>
+#include <supla/device/register_device.h>
+#include <supla_io_mock.h>
+
 #include "gmock/gmock.h"
 
 using ::testing::_;
 using ::testing::AtLeast;
+using ::testing::Return;
+
+namespace {
+
+Supla::Io::IoPin MakeOutputPin(Supla::Io::Base *io, int pin, bool highIsOn) {
+  Supla::Io::IoPin result(pin, io);
+  result.setActiveHigh(highIsOn);
+  result.setMode(OUTPUT);
+  return result;
+}
+
+}  // namespace
 
 class RollerShutterFixture : public testing::Test {
  public:
@@ -61,11 +76,10 @@ TEST_F(RollerShutterFixture, basicTests) {
   EXPECT_EQ(rs.getChannel()->getChannelType(), SUPLA_CHANNELTYPE_RELAY);
   EXPECT_EQ(rs.getChannel()->getFuncList(),
             SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER |
-                      SUPLA_BIT_FUNC_CONTROLLINGTHEROOFWINDOW |
-                      SUPLA_BIT_FUNC_TERRACE_AWNING |
-                      SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR |
-                      SUPLA_BIT_FUNC_CURTAIN |
-                      SUPLA_BIT_FUNC_PROJECTOR_SCREEN);
+                SUPLA_BIT_FUNC_CONTROLLINGTHEROOFWINDOW |
+                SUPLA_BIT_FUNC_TERRACE_AWNING |
+                SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR | SUPLA_BIT_FUNC_CURTAIN |
+                SUPLA_BIT_FUNC_PROJECTOR_SCREEN);
 
   EXPECT_EQ(rs.getChannel()->getDefaultFunction(),
             SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER);
@@ -86,7 +100,7 @@ TEST_F(RollerShutterFixture, onInitHighIsOn) {
   EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
   EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
   EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
-  EXPECT_CALL(ioMock, pinMode(gpioDown,  OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
 
   rs.onInit();
 }
@@ -97,9 +111,104 @@ TEST_F(RollerShutterFixture, onInitLowIsOn) {
   EXPECT_CALL(ioMock, digitalWrite(gpioUp, 1));
   EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
   EXPECT_CALL(ioMock, digitalWrite(gpioDown, 1));
-  EXPECT_CALL(ioMock, pinMode(gpioDown,  OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
 
   rs.onInit();
+}
+
+TEST_F(RollerShutterFixture, ioPinConstructorUsesSeparateIo) {
+  SuplaIoMock ioMockUp;
+  SuplaIoMock ioMockDown;
+
+  Supla::Control::RollerShutter rs(MakeOutputPin(&ioMockUp, gpioUp, false),
+                                   MakeOutputPin(&ioMockDown, gpioDown, true));
+
+  ::testing::InSequence seq;
+
+  EXPECT_CALL(ioMockUp, customDigitalWrite(0, gpioUp, HIGH));
+  EXPECT_CALL(ioMockUp, customPinMode(0, gpioUp, OUTPUT));
+  EXPECT_CALL(ioMockDown, customDigitalWrite(0, gpioDown, LOW));
+  EXPECT_CALL(ioMockDown, customPinMode(0, gpioDown, OUTPUT));
+
+  rs.onInit();
+}
+
+TEST_F(RollerShutterFixture, unsetIoPinsDoNothing) {
+  Supla::Control::RollerShutter rs;
+
+  EXPECT_CALL(ioMock, digitalWrite(_, _)).Times(0);
+  EXPECT_CALL(ioMock, pinMode(_, _)).Times(0);
+
+  rs.onInit();
+}
+
+TEST_F(RollerShutterFixture,
+       incompleteConfigurationWithUpPinUnsetDoesNotStartMovementOrCalibration) {
+  SuplaIoMock ioUp;
+  SuplaIoMock ioDown;
+  Supla::Control::RollerShutter rs(MakeOutputPin(&ioUp, -1, true),
+                                   MakeOutputPin(&ioDown, gpioDown, true));
+
+  EXPECT_CALL(ioUp, customDigitalWrite(_, _, _)).Times(0);
+  EXPECT_CALL(ioUp, customPinMode(_, _, _)).Times(0);
+  EXPECT_CALL(ioDown, customDigitalWrite(0, gpioDown, LOW)).Times(AtLeast(1));
+  EXPECT_CALL(ioDown, customDigitalWrite(0, gpioDown, HIGH)).Times(0);
+  EXPECT_CALL(ioDown, customPinMode(0, gpioDown, OUTPUT));
+
+  rs.onInit();
+  rs.setRsConfigMotorUpsideDownValue(2);
+  EXPECT_EQ(rs.getMotorUpsideDown(), 2);
+
+  rs.handleAction(0, Supla::MOVE_UP);
+  rs.onTimer();
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+
+  rs.handleAction(0, Supla::MOVE_DOWN);
+  rs.onTimer();
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+
+  rs.setOpenCloseTime(10000, 10000);
+  rs.triggerCalibration();
+  rs.onTimer();
+  EXPECT_FALSE(rs.isCalibrationInProgress());
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+}
+
+TEST_F(
+    RollerShutterFixture,
+    incompleteConfigurationWithDownPinUnsetDoesNotStartMovementOrCalibration) {
+  SuplaIoMock ioUp;
+  SuplaIoMock ioDown;
+  Supla::Control::RollerShutter rs(MakeOutputPin(&ioUp, gpioUp, true),
+                                   MakeOutputPin(&ioDown, -1, true));
+
+  EXPECT_CALL(ioDown, customDigitalWrite(_, _, _)).Times(0);
+  EXPECT_CALL(ioDown, customPinMode(_, _, _)).Times(0);
+  EXPECT_CALL(ioUp, customDigitalWrite(0, gpioUp, LOW)).Times(AtLeast(1));
+  EXPECT_CALL(ioUp, customDigitalWrite(0, gpioUp, HIGH)).Times(0);
+  EXPECT_CALL(ioUp, customPinMode(0, gpioUp, OUTPUT));
+
+  rs.onInit();
+
+  rs.handleAction(0, Supla::MOVE_DOWN);
+  rs.onTimer();
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+
+  rs.handleAction(0, Supla::MOVE_UP);
+  rs.onTimer();
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+
+  rs.setOpenCloseTime(10000, 10000);
+  rs.triggerCalibration();
+  rs.onTimer();
+  EXPECT_FALSE(rs.isCalibrationInProgress());
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
 }
 
 #pragma pack(push, 1)
@@ -119,7 +228,7 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
   EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
   EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
   EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
-  EXPECT_CALL(ioMock, pinMode(gpioDown,  OUTPUT));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
 
   // move down
   EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
@@ -159,9 +268,10 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
     time.advance(100);
   }
 
-  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
-                          &value,
-                          SUPLA_CHANNELVALUE_SIZE));
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
 
   rs.handleAction(0, Supla::MOVE_UP);
   for (int i = 0; i < 100; i++) {
@@ -170,9 +280,10 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
     time.advance(100);
   }
 
-  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
-                          &value,
-                          SUPLA_CHANNELVALUE_SIZE));
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
 
   rs.handleAction(0, Supla::STOP);
   for (int i = 0; i < 10; i++) {
@@ -182,7 +293,148 @@ TEST_F(RollerShutterFixture, notCalibratedStartup) {
   }
 }
 
-using ::testing::Return;
+TEST_F(RollerShutterFixture,
+       notCalibratedServerOpenWithZeroTimesStartsOpening) {
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
+
+  rs.onInit();
+
+  TDSC_RollerShutterValue value = {};
+  value.position = -1;
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
+
+  TSD_SuplaChannelNewValue newValueFromServer = {};
+  newValueFromServer.ChannelNumber = 0;
+  newValueFromServer.DurationMS = 0;
+  reinterpret_cast<TCSD_RollerShutterValue *>(newValueFromServer.value)
+      ->position = 10;  // open
+
+  rs.handleNewValueFromServer(&newValueFromServer);
+  EXPECT_EQ(rs.getTargetPosition(), 0);
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+  EXPECT_EQ(rs.getClosingTimeMs(), 0);
+  EXPECT_EQ(rs.getOpeningTimeMs(), 0);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 1));
+
+  rs.onTimer();
+  rs.iterateAlways();
+
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::UP_DIR));
+  EXPECT_EQ(rs.getTargetPosition(), 0);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+
+  for (int i = 0; i < 700; i++) {
+    rs.onTimer();
+    rs.iterateAlways();
+    time.advance(100);
+  }
+
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+}
+
+TEST_F(RollerShutterFixture,
+       notCalibratedServerCloseWithZeroTimesStartsClosing) {
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
+
+  rs.onInit();
+
+  TDSC_RollerShutterValue value = {};
+  value.position = -1;
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
+
+  TSD_SuplaChannelNewValue newValueFromServer = {};
+  newValueFromServer.ChannelNumber = 0;
+  newValueFromServer.DurationMS = 0;
+  reinterpret_cast<TCSD_RollerShutterValue *>(newValueFromServer.value)
+      ->position = 110;  // close
+
+  rs.handleNewValueFromServer(&newValueFromServer);
+  EXPECT_EQ(rs.getTargetPosition(), 100);
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+  EXPECT_EQ(rs.getClosingTimeMs(), 0);
+  EXPECT_EQ(rs.getOpeningTimeMs(), 0);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 1));
+
+  rs.onTimer();
+  rs.iterateAlways();
+
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::DOWN_DIR));
+  EXPECT_EQ(rs.getTargetPosition(), 100);
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+
+  for (int i = 0; i < 700; i++) {
+    rs.onTimer();
+    rs.iterateAlways();
+    time.advance(100);
+  }
+
+  EXPECT_EQ(rs.getCurrentDirection(),
+            static_cast<int>(Supla::Control::Directions::STOP_DIR));
+}
+
+TEST_F(RollerShutterFixture,
+       facadeBlindServerTargetWithUnavailableMovementTimesPreservesRequest) {
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown, true, true);
+
+  rs.setDefaultFunction(SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND);
+  rs.setTiltingTime(1000, false);
+  rs.setTiltControlType(SUPLA_TILT_CONTROL_TYPE_CHANGES_POSITION_WHILE_TILTING,
+                        false);
+  rs.getChannel()->setFlag(SUPLA_CHANNEL_FLAG_TIME_SETTING_NOT_AVAILABLE);
+  rs.setCurrentPosition(50, 50);
+
+  EXPECT_TRUE(rs.isCalibrated());
+  EXPECT_EQ(rs.getOpeningTimeMs(), 0);
+  EXPECT_EQ(rs.getClosingTimeMs(), 0);
+  EXPECT_TRUE(rs.isTiltConfigured());
+
+  TSD_SuplaChannelNewValue newValue = {};
+  newValue.value[0] = 70;  // normalized position: 60
+  newValue.value[1] = 70;  // normalized tilt: 60
+  newValue.DurationMS = 0;
+
+  rs.handleNewValueFromServer(&newValue);
+
+  EXPECT_EQ(rs.getTargetPosition(), 60);
+  EXPECT_EQ(rs.getTargetTilt(), 60);
+}
 
 TEST_F(RollerShutterFixture, movementTests) {
   StorageMock storage;
@@ -198,8 +450,8 @@ TEST_F(RollerShutterFixture, movementTests) {
   {
     ::testing::InSequence seq;
 
-    EXPECT_CALL(
-        storage, readStorage(_, _, /* sizeof(RollerShutterStateData) */ 9, _))
+    EXPECT_CALL(storage,
+                readStorage(_, _, /* sizeof(RollerShutterStateData) */ 9, _))
         .WillOnce([](uint32_t, unsigned char *data, int, bool) {
           RollerShutterStateDataTests rsData = {.closingTimeMs = 10000,
                                                 .openingTimeMs = 10000,
@@ -256,9 +508,10 @@ TEST_F(RollerShutterFixture, movementTests) {
   }
 
   TDSC_RollerShutterValue value = {};
-  EXPECT_EQ(0, memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
-                          &value,
-                          SUPLA_CHANNELVALUE_SIZE));
+  EXPECT_EQ(0,
+            memcmp(Supla::RegisterDevice::getChannelValuePtr(0),
+                   &value,
+                   SUPLA_CHANNELVALUE_SIZE));
 
   rs.handleAction(0, Supla::MOVE_DOWN);
   for (int i = 0; i < 11; i++) {
@@ -307,6 +560,72 @@ TEST_F(RollerShutterFixture, movementTests) {
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 0);
 }
 
+TEST_F(RollerShutterFixture, bistableIoPinConstructorUsesSeparateIo) {
+  SuplaIoMock ioMockUp;
+  SuplaIoMock ioMockDown;
+
+  Supla::Control::BistableRollerShutter rs(
+      MakeOutputPin(&ioMockUp, gpioUp, true),
+      MakeOutputPin(&ioMockDown, gpioDown, false));
+
+  ::testing::InSequence seq;
+
+  EXPECT_CALL(ioMockUp, customDigitalWrite(0, gpioUp, LOW));
+  EXPECT_CALL(ioMockUp, customPinMode(0, gpioUp, OUTPUT));
+  EXPECT_CALL(ioMockDown, customDigitalWrite(0, gpioDown, HIGH));
+  EXPECT_CALL(ioMockDown, customPinMode(0, gpioDown, OUTPUT));
+
+  rs.onInit();
+}
+
+TEST_F(RollerShutterFixture, trippleButtonIoPinConstructorUsesSeparateIo) {
+  SuplaIoMock ioMockUp;
+  SuplaIoMock ioMockDown;
+  SuplaIoMock ioMockStop;
+
+  Supla::Control::TrippleButtonRollerShutter rs(
+      MakeOutputPin(&ioMockUp, gpioUp, true),
+      MakeOutputPin(&ioMockDown, gpioDown, true),
+      MakeOutputPin(&ioMockStop, 3, false));
+
+  ::testing::InSequence seq;
+
+  EXPECT_CALL(ioMockStop, customDigitalWrite(0, 3, HIGH));
+  EXPECT_CALL(ioMockStop, customPinMode(0, 3, OUTPUT));
+  EXPECT_CALL(ioMockUp, customDigitalWrite(0, gpioUp, LOW));
+  EXPECT_CALL(ioMockUp, customPinMode(0, gpioUp, OUTPUT));
+  EXPECT_CALL(ioMockDown, customDigitalWrite(0, gpioDown, LOW));
+  EXPECT_CALL(ioMockDown, customPinMode(0, gpioDown, OUTPUT));
+
+  rs.onInit();
+}
+
+TEST_F(RollerShutterFixture, trippleButtonIoPinConstructorSetsStopOutputMode) {
+  SuplaIoMock ioMockUp;
+  SuplaIoMock ioMockDown;
+  SuplaIoMock ioMockStop;
+
+  const int gpioStop = 3;
+  Supla::Io::IoPin pinStop(gpioStop, &ioMockStop);
+  pinStop.setActiveHigh(false);
+
+  Supla::Control::TrippleButtonRollerShutter rs(
+      Supla::Io::IoPin(gpioUp, &ioMockUp),
+      Supla::Io::IoPin(gpioDown, &ioMockDown),
+      pinStop);
+
+  ::testing::InSequence seq;
+
+  EXPECT_CALL(ioMockStop, customDigitalWrite(0, gpioStop, HIGH));
+  EXPECT_CALL(ioMockStop, customPinMode(0, gpioStop, OUTPUT));
+  EXPECT_CALL(ioMockUp, customDigitalWrite(0, gpioUp, LOW));
+  EXPECT_CALL(ioMockUp, customPinMode(0, gpioUp, OUTPUT));
+  EXPECT_CALL(ioMockDown, customDigitalWrite(0, gpioDown, LOW));
+  EXPECT_CALL(ioMockDown, customPinMode(0, gpioDown, OUTPUT));
+
+  rs.onInit();
+}
+
 TEST_F(RollerShutterFixture, movementByServerTests) {
   StorageMock storage;
   Supla::Control::RollerShutter rs(gpioUp, gpioDown);
@@ -321,8 +640,8 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
   {
     ::testing::InSequence seq;
 
-    EXPECT_CALL(
-        storage, readStorage(_, _, /* sizeof(RollerShutterStateData) */ 9, _))
+    EXPECT_CALL(storage,
+                readStorage(_, _, /* sizeof(RollerShutterStateData) */ 9, _))
         .WillOnce([](uint32_t, unsigned char *data, int, bool) {
           RollerShutterStateDataTests rsData = {.closingTimeMs = 10000,
                                                 .openingTimeMs = 10000,
@@ -425,7 +744,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
   TCSD_RollerShutterValue *value = nullptr;
   TSD_SuplaChannelNewValue newValueFromServer = {};
 
-  value = reinterpret_cast<TCSD_RollerShutterValue*>(newValueFromServer.value);
+  value = reinterpret_cast<TCSD_RollerShutterValue *>(newValueFromServer.value);
 
   newValueFromServer.DurationMS = (100 << 16) | 100;
   newValueFromServer.ChannelNumber = 0;
@@ -498,7 +817,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
 
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 10);
 
-  value->position = 3;  // down or stop
+  value->position = 3;                               // down or stop
   rs.handleNewValueFromServer(&newValueFromServer);  // down
   for (int i = 0; i < 11; i++) {
     rs.onTimer();
@@ -526,7 +845,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
 
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 28);
 
-  value->position = 4;  // move up or stop
+  value->position = 4;                               // move up or stop
   rs.handleNewValueFromServer(&newValueFromServer);  // stop (up or stop)
   for (int i = 0; i < 11; i++) {
     rs.onTimer();
@@ -545,7 +864,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
 
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 20);
 
-  value->position = 1;  // down
+  value->position = 1;                               // down
   rs.handleNewValueFromServer(&newValueFromServer);  // down
   for (int i = 0; i < 16; i++) {
     rs.onTimer();
@@ -555,7 +874,7 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
 
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 29);
 
-  value->position = 2;  // up
+  value->position = 2;                               // up
   rs.handleNewValueFromServer(&newValueFromServer);  // up
   for (int i = 0; i < 16; i++) {
     rs.onTimer();
@@ -564,4 +883,81 @@ TEST_F(RollerShutterFixture, movementByServerTests) {
   }
 
   EXPECT_EQ(Supla::RegisterDevice::getChannelValuePtr(0)[0], 22);
+}
+
+TEST_F(RollerShutterFixture, onLoadStateClampsUnsafeTimes) {
+  StorageMock storage;
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown);
+
+  storage.defaultInitialization(9);
+  EXPECT_CALL(storage, scheduleSave(_, 1000)).Times(AtLeast(0));
+  EXPECT_CALL(storage, writeStorage(8, _, 7)).WillRepeatedly(Return(7));
+  EXPECT_CALL(storage, commit()).WillRepeatedly(Return());
+
+  EXPECT_CALL(storage,
+              readStorage(_, _, /* sizeof(RollerShutterStateData) */ 9, _))
+      .WillOnce([](uint32_t, unsigned char *data, int, bool) {
+        RollerShutterStateDataTests rsData = {
+            .closingTimeMs = RS_MAX_OPERATION_TIME_MS + 1,
+            .openingTimeMs = RS_MAX_OPERATION_TIME_MS + 1234,
+            .currentPosition = 0};
+        EXPECT_EQ(9, sizeof(rsData));
+        memcpy(data, &rsData, sizeof(RollerShutterStateDataTests));
+        return 9;
+      });
+
+  EXPECT_CALL(ioMock, digitalWrite(gpioUp, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioUp, OUTPUT));
+  EXPECT_CALL(ioMock, digitalWrite(gpioDown, 0));
+  EXPECT_CALL(ioMock, pinMode(gpioDown, OUTPUT));
+
+  Supla::Storage::LoadStateStorage();
+  rs.onInit();
+
+  EXPECT_EQ(rs.getClosingTimeMs(), RS_MAX_OPERATION_TIME_MS);
+  EXPECT_EQ(rs.getOpeningTimeMs(), RS_MAX_OPERATION_TIME_MS);
+}
+
+TEST_F(RollerShutterFixture, applyChannelConfigAcceptsMaximumSafeTimes) {
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown);
+  TSD_ChannelConfig channelConfig = {};
+  channelConfig.Func = SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER;
+  channelConfig.ConfigType = SUPLA_CONFIG_TYPE_DEFAULT;
+  channelConfig.ConfigSize = sizeof(TChannelConfig_RollerShutter);
+
+  auto config =
+      reinterpret_cast<TChannelConfig_RollerShutter *>(channelConfig.Config);
+  config->ClosingTimeMS = RS_MAX_OPERATION_TIME_MS;
+  config->OpeningTimeMS = RS_MAX_OPERATION_TIME_MS;
+  config->MotorUpsideDown = 1;
+  config->ButtonsUpsideDown = 1;
+  config->TimeMargin = -1;
+
+  EXPECT_EQ(rs.applyChannelConfig(&channelConfig),
+            Supla::ApplyConfigResult::Success);
+  EXPECT_EQ(rs.getClosingTimeMs(), RS_MAX_OPERATION_TIME_MS);
+  EXPECT_EQ(rs.getOpeningTimeMs(), RS_MAX_OPERATION_TIME_MS);
+}
+
+TEST_F(RollerShutterFixture, applyChannelConfigClampsUnsafeTimes) {
+  Supla::Control::RollerShutter rs(gpioUp, gpioDown);
+  rs.setOpenCloseTime(10000, 11000);
+
+  TSD_ChannelConfig channelConfig = {};
+  channelConfig.Func = SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER;
+  channelConfig.ConfigType = SUPLA_CONFIG_TYPE_DEFAULT;
+  channelConfig.ConfigSize = sizeof(TChannelConfig_RollerShutter);
+
+  auto config =
+      reinterpret_cast<TChannelConfig_RollerShutter *>(channelConfig.Config);
+  config->ClosingTimeMS = RS_MAX_OPERATION_TIME_MS + 1;
+  config->OpeningTimeMS = RS_MAX_OPERATION_TIME_MS + 1234;
+  config->MotorUpsideDown = 1;
+  config->ButtonsUpsideDown = 1;
+  config->TimeMargin = -1;
+
+  EXPECT_EQ(rs.applyChannelConfig(&channelConfig),
+            Supla::ApplyConfigResult::Success);
+  EXPECT_EQ(rs.getClosingTimeMs(), RS_MAX_OPERATION_TIME_MS);
+  EXPECT_EQ(rs.getOpeningTimeMs(), RS_MAX_OPERATION_TIME_MS);
 }

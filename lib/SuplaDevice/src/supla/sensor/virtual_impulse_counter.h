@@ -48,9 +48,20 @@ class VirtualImpulseCounter : public ChannelElement, public ActionHandler {
 
   virtual void resetCounter();
 
+  void setForceStateSaveOnChange(bool value);
+  void setDefaultImpulsesPerUnit(uint32_t impulsesPerUnit);
+
  protected:
+  Supla::ApplyConfigResult applyChannelConfig(TSD_ChannelConfig *result,
+                                              bool local) override;
+  void fillChannelConfig(void *channelConfig,
+                         int *size,
+                         uint8_t configType) override;
+
   uint64_t counter = 0;  // Actual count of impulses
   uint32_t lastReadTime = 0;
+  uint32_t defaultImpulsesPerUnit = 1000;
+  bool forceStateSaveOnChange = false;
 };
 
 }  // namespace Sensor

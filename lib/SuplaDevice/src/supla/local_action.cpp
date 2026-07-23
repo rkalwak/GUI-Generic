@@ -57,11 +57,27 @@ bool ActionHandlerClient::isEnabled() {
 
 void ActionHandlerClient::enable() {
   enabled = true;
+  disabledForConfigMode = false;
 }
 
 void ActionHandlerClient::disable() {
   if (!alwaysEnabled) {
     enabled = false;
+    disabledForConfigMode = false;
+  }
+}
+
+void ActionHandlerClient::disableForConfigMode() {
+  if (!alwaysEnabled && enabled) {
+    enabled = false;
+    disabledForConfigMode = true;
+  }
+}
+
+void ActionHandlerClient::restoreAfterConfigMode() {
+  if (disabledForConfigMode) {
+    enabled = true;
+    disabledForConfigMode = false;
   }
 }
 
@@ -255,6 +271,22 @@ void LocalAction::DeleteActionsTriggeredBy(const LocalAction *trigger) {
   while (ptr) {
     auto next = ptr->next;
     if (ptr->trigger == trigger) {
+      delete ptr;
+      next = ActionHandlerClient::begin;
+    }
+    ptr = next;
+  }
+}
+
+void LocalAction::DeleteAction(const LocalAction *trigger,
+                               const ActionHandler *client,
+                               uint16_t event,
+                               uint16_t action) {
+  auto ptr = ActionHandlerClient::begin;
+  while (ptr) {
+    auto next = ptr->next;
+    if (ptr->trigger == trigger && ptr->client == client &&
+        ptr->onEvent == event && ptr->action == action) {
       delete ptr;
       next = ActionHandlerClient::begin;
     }

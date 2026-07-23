@@ -16,16 +16,20 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-/* This example shows ESP82xx/ESP32 based device with simple WebInterface
- * used to configure Wi-Fi parameters and Supla server connection.
- * There is one RollerShutter, one Relay and 3 buttons configured.
- * Two buttons are for roller shutter with Action Trigger.
- * Third button is for controlling the relay and for switching module to
- * config mode.
- * After fresh installation, device will be in config mode. It will have its
- * own Wi-Fi AP configured. You should connect to it with your mobile phone
- * and open http://192.168.4.1 where you can configure the device.
- * Status LED is also configured. Please adjust GPIOs to your HW.
+/**
+ * @supla-example
+ * @file WebInterface.ino
+ * @brief Comprehensive example of a device with a web interface for Wi-Fi and SUPLA configuration, featuring roller shutter and relay control on ESP8266/ESP32.
+ * This example demonstrates a device that starts in configuration mode with its own Wi-Fi AP, providing a web interface for:
+ * - Configuring Wi-Fi parameters.
+ * - Setting up SUPLA server connection details.
+ * It includes control for a roller shutter (up/down/stop with dedicated buttons), a general purpose relay,
+ * and three buttons (two for roller shutter, one for relay and config mode entry).
+ * The device integrates with the SUPLA cloud via Wi-Fi and stores roller shutter data persistently in EEPROM (or optionally FRAM).
+ * Users need to adjust network settings and GPIO pins for the roller shutter relays, general relay, and buttons.
+ * A status LED is also configured.
+ *
+ * @tags web_interface, config_mode, roller_shutter, relay, button, action_trigger, wifi, esp, esp32, esp8266, EEPROM, FRAM
  */
 
 #define STATUS_LED_GPIO 2
@@ -105,9 +109,6 @@ void setup() {
   buttonCfgRelay->configureAsConfigButton(&SuplaDevice);
   buttonCfgRelay->addAction(Supla::TOGGLE, r1, Supla::ON_CLICK_1);
 
-  buttonCfgRelay->addAction(Supla::ENTER_CONFIG_MODE, r1, Supla::ON_HOLD);
-  buttonCfgRelay->setHoldTime(1000);
-
   // Action trigger configuration
   at1->setRelatedChannel(rs);
   at1->attach(buttonOpen);
@@ -118,24 +119,7 @@ void setup() {
   at3->setRelatedChannel(r1);
   at3->attach(buttonCfgRelay);
 
-  /** When device starts with factory defaults, it will enable AP and enter
-   * config mode (legacy behavior).
-   */
-  // StartInCfgMode = 0,
-  /** When device starts with factory defaults, it will enter offline mode
-   *  immediately. No AP will be started and no config mode will be entered
-   *  automatically.
-   */
-  // StartOffline = 1,
-  /** When device starts with factory defaults, it will enable AP and enter
-   *  config mode for 1 hour and then if will fall back to offline mode.
-   */
-  // StartWithCfgModeThenOffline = 2,
-  /** When device starts with factory defaults, it will enter not configured
-   *  mode (default).
-   */
-  // StartInNotConfiguredMode = 3
-  SuplaDevice.setInitialMode(Supla::InitialMode::StartOffline);
+  SuplaDevice.setInitialMode(Supla::InitialMode::StartInCfgMode);
   SuplaDevice.begin();
 }
 

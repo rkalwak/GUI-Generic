@@ -14,10 +14,11 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include "arduino_mock.h"
+
+#include <gmock/gmock.h>
 
 #include "Arduino.h"
-#include <gmock/gmock.h>
-#include "arduino_mock.h"
 
 SerialStub Serial;
 
@@ -46,6 +47,11 @@ void analogWrite(uint8_t pin, int val) {
   DigitalInterface::instance->analogWrite(pin, val);
 }
 
+int analogRead(uint8_t pin) {
+  (void)(pin);
+  return 0;
+}
+
 void digitalWrite(uint8_t pin, uint8_t val) {
   assert(DigitalInterface::instance);
   DigitalInterface::instance->digitalWrite(pin, val);
@@ -61,17 +67,68 @@ void pinMode(uint8_t pin, uint8_t mode) {
   DigitalInterface::instance->pinMode(pin, mode);
 }
 
+void analogWriteResolution(uint8_t pin, uint8_t bits) {
+  assert(DigitalInterface::instance);
+  DigitalInterface::instance->analogWriteResolution(pin, bits);
+}
+
+void analogWriteFrequency(uint8_t pin, uint32_t frequencyHz) {
+  assert(DigitalInterface::instance);
+  DigitalInterface::instance->analogWriteFrequency(pin, frequencyHz);
+}
+
+void analogWriteFreq(uint32_t frequencyHz) {
+  assert(DigitalInterface::instance);
+  DigitalInterface::instance->analogWriteFreq(frequencyHz);
+}
+
+void analogWriteRange(uint32_t range) {
+  assert(DigitalInterface::instance);
+  DigitalInterface::instance->analogWriteRange(range);
+}
+
+unsigned int pulseIn(uint8_t pin, uint8_t val, uint64_t timeoutMicro) {
+  assert(DigitalInterface::instance);
+  return DigitalInterface::instance->pulseIn(pin, val, timeoutMicro);
+}
+
+void attachInterrupt(uint8_t pin, void (*func)(void), int mode) {
+  (void)(pin);
+  (void)(func);
+  (void)(mode);
+}
+
+void detachInterrupt(uint8_t pin) {
+  (void)(pin);
+}
+
+uint8_t digitalPinToInterrupt(uint8_t pin) {
+  return pin;
+}
+
 uint32_t millis() {
   assert(TimeInterface::instance);
   return TimeInterface::instance->millis();
 }
 
-void delay(uint64_t) {}
+void delay(uint64_t) {
+}
 
-long map(long input, long inMin, long inMax, long outMin, long outMax) {
-  long result = (input - inMin) * (outMax - outMin) / (inMax - inMin);
+void delayMicroseconds(uint64_t) {
+}
+
+long map(  // NOLINT
+    long input,  // NOLINT
+    long inMin,  // NOLINT
+    long inMax,  // NOLINT
+    long outMin,  // NOLINT
+    long outMax) {  // NOLINT
+  long result =  // NOLINT
+      (input - inMin) * (outMax - outMin) / (inMax - inMin);
   return result + outMin;
 }
 
-DigitalInterfaceMock::DigitalInterfaceMock() {}
-DigitalInterfaceMock::~DigitalInterfaceMock() {}
+DigitalInterfaceMock::DigitalInterfaceMock() {
+}
+DigitalInterfaceMock::~DigitalInterfaceMock() {
+}

@@ -25,6 +25,9 @@
 #include <algorithm>
 #include <cmath>
 #include <utility>
+#include <string>
+#include <vector>
+#include <map>
 
 using Supla::Sensor::SensorParsedBase;
 
@@ -72,19 +75,81 @@ std::variant<int, bool, std::string> SensorParsedBase::getStateParameterValue(
   return stateValue;
 }
 
-bool SensorParsedBase::refreshParserSource() {
-  if (parser && parser->refreshParserSource()) {
-    updateBatteryInfoFlags();
-    return true;
+bool SensorParsedBase::refreshParserSource(bool updateChannelState) {
+  if (parser) {
+    if (!parser->isSourceConnected()) {
+      if (auto channel = getChannel()) {
+        channel->setStateOffline();
+      }
+      if (auto secondaryChannel = getSecondaryChannel()) {
+        secondaryChannel->setStateOffline();
+      }
+      return false;
+    }
+    if (parser->refreshParserSource()) {
+      if (!parser->isSourceValid()) {
+        return false;
+      }
+      if (updateChannelState) {
+        if (auto channel = getChannel()) {
+          channel->setStateOnline();
+        }
+        if (auto secondaryChannel = getSecondaryChannel()) {
+          secondaryChannel->setStateOnline();
+        }
+      }
+      updateBatteryInfoFlags();
+      return true;
+    }
   }
   return false;
+}
+
+bool SensorParsedBase::setOfflineIfSourceDisconnected() {
+  if (!parser || parser->isSourceConnected()) {
+    return false;
+  }
+
+  setChannelStateOnline(false);
+  return true;
+}
+
+void SensorParsedBase::setChannelStateOnline(bool online) {
+  if (auto channel = getChannel()) {
+    if (online) {
+      channel->setStateOnline();
+    } else {
+      channel->setStateOffline();
+    }
+  }
+  if (auto secondaryChannel = getSecondaryChannel()) {
+    if (online) {
+      secondaryChannel->setStateOnline();
+    } else {
+      secondaryChannel->setStateOffline();
+    }
+  }
+}
+
+bool SensorParsedBase::isSourceStateOffline(bool useOfflineOnInvalidState) {
+  return useOfflineOnInvalidState && parser && getStateValue(false) == -1;
+}
+
+bool SensorParsedBase::isOffline() {
+  return isSourceStateOffline(useOfflineOnInvalidState);
+}
+
+void SensorParsedBase::setUseOfflineOnInvalidState(
+    bool useOfflineOnInvalidState) {
+  this->useOfflineOnInvalidState = useOfflineOnInvalidState;
+  SUPLA_LOG_INFO("useOfflineOnInvalidState = %d", useOfflineOnInvalidState);
 }
 
 bool SensorParsedBase::isParameterConfigured(const std::string &parameter) {
   return parameterToKey.count(parameter) > 0;
 }
 
-int SensorParsedBase::getStateValue() {
+int SensorParsedBase::getStateValue(bool updateChannelState) {
   std::variant<int, bool, std::string> value = -1;
   std::variant<int, bool, std::string> value1 = 1;
   std::variant<int, bool, std::string> valueTrue = true;
@@ -107,7 +172,7 @@ int SensorParsedBase::getStateValue() {
   int state = -1;
 
   if (isParameterConfigured(Supla::Parser::State)) {
-    if (refreshParserSource()) {
+    if (refreshParserSource(updateChannelState)) {
       std::variant<int, bool, std::string> result =
           getStateParameterValue(Supla::Parser::State);
 
@@ -125,6 +190,8 @@ int SensorParsedBase::getStateValue() {
           if (std::find(stateOnValues.begin(), stateOnValues.end(), value) !=
               stateOnValues.end()) {
             state = 1;
+          } else if (value != std::variant<int, bool, std::string>(-1)) {
+            state = 0;
           }
         }
         if (state == -1) {

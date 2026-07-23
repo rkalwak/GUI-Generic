@@ -55,7 +55,7 @@
 #include "SuplaConditions.h"
 #include "SuplaWebPageHome.h"
 #include <supla/device/status_led.h>
-#include <supla/io/rgb_led.h>
+#include "src/control/StatusLedRGB.h"
 
 
 #ifdef SUPLA_OLED

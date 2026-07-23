@@ -21,14 +21,14 @@
 #include <supla/io.h>
 
 namespace Supla {
-namespace Io {
-class RgbLed : public Supla::Io::Base {
+namespace Control {
+class StatusLedRGB : public Supla::Io::Base {
  public:
-  RgbLed(
+  StatusLedRGB(
          uint8_t red = 255,
          uint8_t green = 255,
          uint8_t blue = 255)
-      : Supla::Io::Base(false),
+      : Supla::Io::Base(),
         red_(red),
         green_(green),
         blue_(blue) {
@@ -80,5 +80,5 @@ class RgbLed : public Supla::Io::Base {
   uint8_t green_ = 255;
   uint8_t blue_ = 255;
 };
-};  // namespace Io
+};  // namespace Control
 };  // namespace Supla

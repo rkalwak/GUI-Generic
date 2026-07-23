@@ -14,7 +14,14 @@ https://cloud.supla.org.
 
 For Debian based distributions:
 
-    sudo apt install git libssl-dev build-essential libyaml-cpp-dev cmake
+    sudo apt install git libssl-dev libcurl4-openssl-dev build-essential libyaml-cpp-dev cmake
+
+The `libcurl4-openssl-dev` package is required for `source.type: HTTP`.
+If sd4linux is built without CURL, HTTP sources are not available and YAML
+configuration using `type: HTTP` will be rejected at startup. HTTP source
+support is enabled by default when CURL is found. Use
+`SUPLA_LINUX_ENABLE_HTTP_SOURCE` to control this feature and
+`SUPLA_LINUX_REQUIRE_CURL` to make missing CURL a configuration error.
 
 ## Get supla-device sources
 
@@ -39,6 +46,47 @@ on a PC with low RAM.
 It should produce `supla-device-linux` binary file. Check if it is working:
 
     ./supla-device-linux --version
+
+## Build with extensions
+
+sd4linux can be built with additional channel implementations from external
+repositories. Pass extension directories with `SUPLA_LINUX_EXTENSION_DIRS`.
+Each directory has to provide `supla_linux_extension.cmake`.
+
+Example:
+
+    cmake .. -DSUPLA_LINUX_EXTENSION_DIRS=/path/to/private/custom-extension
+    make
+
+An extension declares its sources with:
+
+    supla_linux_register_extension(
+      NAME custom_extension
+      INIT_FUNCTION initCustomExtension
+      SOURCES /path/to/source.cpp
+      INCLUDE_DIRS /path/to/include
+    )
+
+The channel type provided by an extension is selected directly in
+`supla-device.yaml`:
+
+    channels:
+      - type: custom_extension_channel
+
+This repository also includes a public example extension:
+
+    cmake .. -DSUPLA_LINUX_EXTENSION_DIRS=../../../porting/linux/extensions/sos_binary
+    make
+    ./supla-device-linux -c ../sos_binary.yaml
+
+The `sos_binary` example publishes a binary sensor that blinks `SOS` in Morse
+code. Timings are configured in YAML with:
+
+    channels:
+      - type: sos_binary
+        short_ms: 200
+        long_ms: 600
+        pause_ms: 200
 
 # Usage
 
@@ -143,11 +191,21 @@ Example:
 
 Use it to change log level to different value.
 Parameter is optional. Default log level is `info`.
-Allowed values: `debug`, `verbose`
+Allowed values: `debug`, `verbose`, `warning`, `error`
 
 Example:
 
     log_level: debug
+
+#### Parameter `proto_verbose_log`
+
+Enables insecure low-level SRPC packet logging.
+When turned on, protocol dumps may include secrets and raw payloads.
+Parameter is optional. Default value is `false`.
+
+Example:
+
+    proto_verbose_log: true
 
 #### Parameter `state_files_path`
 
@@ -173,7 +231,7 @@ Parameter is optional. Default value 0.
 
 Example:
 
-    security_level: 2
+    security_level: 0
 
 ### Supla server connection
 
@@ -303,6 +361,7 @@ Supported channel types:
 * `CmdValve` - related class `Supla::Control::CmdValve`
 * `CmdRollerShutter` - related class `Supla::Control::CmdRollerShutter`
 * `Fronius` - related class `Supla::PV::Fronius`
+* `SolarEdge` - related class `Supla::PV::SolarEdge`
 * `Afore` - related class `Supla::PV::Afore`
 * `ThermometerParsed` - related class `Supla::Sensor::ThermometerParsed`
 * `ThermHygroMeterParsed` - related class `Supla::Sensor::ThermHygroMeterParsed`
@@ -320,6 +379,7 @@ Supported channel types:
 * `DistanceParsed` - related class `Supla::Sensor::Distance`
 * `Hvac`, `CustomHvac` - related class `Supla::Control::HvacBase`
 * `CustomChannel` - supports arbitrary channel type
+* `RgbCctParsed` - related class `Supla::Control::RgbCctBase` - not a real support for this function. Just a working class to test it.
 
 Example channels configuration (details are exaplained later):
 
@@ -352,10 +412,32 @@ Example channels configuration (details are exaplained later):
           refresh_time_ms: 1000
         state: 0
 
+    # Single phase Fronius inverter
       - type: Fronius
         ip: 192.168.1.7
         port: 80
         device_id: 1
+        device_type: 0
+
+    # Three phase Fronius inverter
+      - type: Fronius
+        ip: 192.168.1.7
+        port: 80
+        device_id: 1
+        device_type: 1
+
+    # Three phase Fronius meter
+      - type: Fronius
+        ip: 192.168.1.7
+        port: 80
+        device_id: 0
+        device_type: 2
+
+    # SolarEdge inverter
+      - type: SolarEdge
+        api_key: your_api_key
+        site_id: your_site_id
+        inverter_serial_number: your_inverter_serial_number
 
       - type: Afore
         ip: 192.168.1.17
@@ -435,6 +517,7 @@ Example channels configuration (details are exaplained later):
 
       - type: BinaryParsed
         state: 1
+        default_function: mail
         parser:
           use: parser_1
 
@@ -753,6 +836,13 @@ There are three supported parser types:
 3. `MQTT` - use published topic to MQTT broker. A published topic name containing
 control information is provided by `control_topic`.
 
+`Cmd` uses a trusted shell command template. The template supports `{}`, `%s`,
+and `%d`; only the first matching placeholder is replaced. If no placeholder
+is present, the payload is appended as an argument. A string payload is passed
+as one safely shell-quoted argument, while elements of a `vector<int>` are
+passed as separate arguments. Payload data is never interpreted as shell
+syntax, so shell operators in the payload are treated as ordinary characters.
+
 ### `payload` parameter
 `payload` converts channel state change values to the values to be published to 
 a predefined `output`. I.e. in CustomRelay turn on/off commands are published
@@ -794,16 +884,41 @@ three extra configuration options:\
 `default_function_number` - int value representing default function number for this channel type.
 `value` - 8 B hex string representing value to be published, for example "01 00 00 00 00 00 00 00". First value corresponds with value[0] and so on.
 
+### RgbCctParsed
+
+`RgbCctParsed` is a channel which allows to control RGB+CCT light.
+
+`RgbCctParsed` accepts the following parameters:
+`fade_effect_ms` - fade effect time in milliseconds.
+
 ## Parsed channel `source` parameter
 
 `source` defines from where supla-device will get data for `parser` to parsed
 channel. It should be defined as a sub element of a channel.
 
+Common sources can also be defined once in the top-level `sources` map. The map
+key is a source name and the value is the same source configuration that can be
+used inside a channel:
+
+    sources:
+      shared_file:
+        type: File
+        file: temp.txt
+
+Channels can then reference it with either short form:
+
+    source: shared_file
+
+or the older explicit form:
+
+    source:
+      use: shared_file
+
 `source` have one common mandatory parameter `type` which defines type
 of used source. There is also optional `name` parameter. If you name your
 source, then it can be reused for multiple parsers.
 
-There are three supported parser types:
+There are four supported source types:
 1. `File` - use file as an input. File name is provided by `file` parameter and
 additionally you can define `expiration_time_sec` parameter. If last modification
 time of a file is older than `expiration_time_sec` then this source will be
@@ -813,18 +928,47 @@ In order to disable time expiration check, please set `expiration_time_sec` to 0
    field.
 3. `MQTT` - use subscribe topic from MQTT broker. Requires defining the [`mqtt`](#mqtt-broker-connection)
    section. A subscribed topic name containing status information is provided by
-   `state_topic`. If we need more simple data that are in different subtopics, 
-   we can define them as a `sub_topics` array and assign them an index in this array 
+   `state_topic`. If we need more simple data that are in different subtopics,
+   we can define them as a `sub_topics` array and assign them an index in this array
    in the parameters, just like with the `Simple` parser (index counting starts with 0).
    I.e. please take a look at `th5` channel above.
    If source was already defined earlier, and you want to reuse it, you can specify
    `use` parameter with proper name of previously defined source. When `use`
    parameter is used, then no other source configuration parameters are allowed.
+   When the connection to the MQTT broker is lost, all channels using `MQTT` source
+   will be automatically set to offline state. They return to online state once the
+   connection is restored and data is received.
+4. `HTTP` - use HTTP/HTTPS GET response body as an input. It supports static
+   headers, `auth.type: none`, `auth.type: bearer_file`, `refresh_time_ms`,
+   `timeout_ms` and `expiration_time_sec`. HTTP source keeps the last successful
+   response in memory and returns cached content until `refresh_time_ms` expires.
+   Failed requests don't clear the cache. If cached content is older than
+   `expiration_time_sec`, the source is considered invalid. More details and an
+   example are available in `http_source/README.md`.
 
 ## Parsed channel `parser` parameter
 
 Parser takes text input from previously defined `source` and converts it to
 value which can be used for a parsed channel value.
+
+Common parsers can also be defined once in the top-level `parsers` map. The map
+key is a parser name. Top-level parser definitions reference a top-level source
+with `source`:
+
+    parsers:
+      shared_json:
+        type: Json
+        source: shared_file
+        refresh_time_ms: 1000
+
+Channels can then reference the parser with either short form:
+
+    parser: shared_json
+
+or the older explicit form:
+
+    parser:
+      use: shared_json
 
 There are two parsers defined:
 1. `Simple` - it takes input from source and try to convert each line of text
@@ -945,6 +1089,14 @@ Mandatory parameter: `counter` - defines key/index by which data is fetched
 from `parser`.
 Optional parameter: `multiplier` - defines multiplier for fetched value
 (you can put any floating point number).
+Optional parameter: `default_impulses_per_unit` - defines default impulse
+counter channel configuration sent to the server. It doesn't scale parser
+value locally. For example, use `1000` when raw counter is in Wh and the
+function should report kWh, or `1000000` when raw counter is in ml and the
+function should report m3.
+Optional parameter: `default_function` - defines default impulse counter
+function. Supported values: `electricity_meter`, `energy_meter`, `gas_meter`,
+`water_meter`, `heat_meter`, `events`, `seconds`.
 
 ### `BinaryParsed`
 
@@ -954,9 +1106,19 @@ Mandatory parameter: `state` - defines key/index by which data is fetched
 from `parser`.
 Optional parameter: `multiplier` - defines multiplier for fetched value
 (you can put any floating point number).
+Optional parameter: `timeout_s` - default timeout in seconds. The value can be
+fractional, with 0.1 s resolution, for example `2.5`.
+Timeout is evaluated against the logical ON/OFF state, so it respects
+`serverInvertLogic`.
 
 Values equal to "1" (approx) are considered as on/1/true. All other values
 are considered as off/0/false.
+
+Optional parameter: `default_function` - defines default function for binary
+sensor. Allowed values: `opening_door`, `opening_window`, `opening_roller_shutter`,
+`opening_roof_window`, `opening_garag_edoor`, `opening_gate`, `opening_gateway`,
+`no_liquid`, `hotel_card`, `alarm_armament`, `mail`, `container_level`, `flood`,
+`binary`, `motion`.
 
 ### `ElectricityMeterParsed`
 
@@ -1136,6 +1298,9 @@ Optional parameters:
 0, 1, 2, 3, 4.
 * `default_unit_before_value` - defines unit displayed before value (you can put any string up to 14 bytes).
 * `default_unit_after_value` - defines unit displayed after value (you can put any string up to 14 bytes).
+* `state` and `state_on_values` - optionally define a parser state key and
+  values for which the measurement is active. When state is configured and the
+  current state doesn't match, the channel reports `NaN` value and stays online.
 
 ### `GeneralPurposeMeterParsed`
 Add channel with "general purpose meter" type.

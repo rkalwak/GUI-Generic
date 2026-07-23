@@ -16,21 +16,192 @@
 
 #include "sha256.h"
 
-Supla::Sha256::Sha256() {
-  sha256_init(&hash);
+#include <string.h>
+
+#if defined(SUPLA_TEST)
+
+Supla::Sha256::Sha256() : state{}, offset(0) {
 }
 
 Supla::Sha256::~Sha256() {
 }
 
 void Supla::Sha256::update(const uint8_t *data, const int size) {
-  sha256_update(&hash, size, static_cast<const unsigned char *>(data));
-}
-
-struct sha256_ctx* Supla::Sha256::getHash() {
-  return &hash;
+  if (data == nullptr || size <= 0) {
+    return;
+  }
+  for (int i = 0; i < size; i++) {
+    uint32_t index = offset + static_cast<uint32_t>(i);
+    state[index % 32] = static_cast<uint8_t>(
+        state[index % 32] + data[i] + static_cast<uint8_t>(index));
+  }
+  offset += static_cast<uint32_t>(size);
 }
 
 void Supla::Sha256::digest(uint8_t *output, int length) {
-  sha256_digest(&hash, length, output);
+  if (output == nullptr || length <= 0) {
+    return;
+  }
+  if (length > 32) {
+    length = 32;
+  }
+  memcpy(output, state, length);
 }
+
+#elif defined(ESP32) || defined(SUPLA_DEVICE_ESP32)
+
+#include <mbedtls/md.h>
+
+Supla::Sha256::Sha256() : ctx(nullptr) {
+  mbedtls_md_context_t *mdCtx = new mbedtls_md_context_t();
+  mbedtls_md_init(mdCtx);
+  const mbedtls_md_info_t *mdInfo =
+      mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+  if (mdInfo == nullptr ||
+      mbedtls_md_setup(mdCtx, mdInfo, 0) != 0 ||
+      mbedtls_md_starts(mdCtx) != 0) {
+    mbedtls_md_free(mdCtx);
+    delete mdCtx;
+    return;
+  }
+  ctx = mdCtx;
+}
+
+Supla::Sha256::~Sha256() {
+  if (ctx == nullptr) {
+    return;
+  }
+  mbedtls_md_context_t *mdCtx =
+      static_cast<mbedtls_md_context_t *>(ctx);
+  mbedtls_md_free(mdCtx);
+  delete mdCtx;
+  ctx = nullptr;
+}
+
+void Supla::Sha256::update(const uint8_t *data, const int size) {
+  if (ctx == nullptr) {
+    return;
+  }
+  mbedtls_md_context_t *mdCtx =
+      static_cast<mbedtls_md_context_t *>(ctx);
+  mbedtls_md_update(mdCtx,
+                    static_cast<const unsigned char *>(data),
+                    size);
+}
+
+void Supla::Sha256::digest(uint8_t *output, int length) {
+  if (ctx == nullptr || output == nullptr || length <= 0) {
+    return;
+  }
+  uint8_t fullDigest[32] = {};
+  mbedtls_md_context_t tmp;
+  mbedtls_md_init(&tmp);
+  const mbedtls_md_info_t *mdInfo =
+      mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+  if (mdInfo == nullptr ||
+      mbedtls_md_setup(&tmp, mdInfo, 0) != 0 ||
+      mbedtls_md_clone(&tmp,
+          static_cast<const mbedtls_md_context_t *>(ctx)) != 0 ||
+      mbedtls_md_finish(&tmp, fullDigest) != 0) {
+    mbedtls_md_free(&tmp);
+    return;
+  }
+  mbedtls_md_free(&tmp);
+
+  if (length > 32) {
+    length = 32;
+  }
+  memcpy(output, fullDigest, length);
+}
+
+#elif defined(ESP8266) || defined(ARDUINO_ARCH_ESP8266) || \
+    defined(SUPLA_DEVICE_ESP8266)
+
+#include <bearssl/bearssl_hash.h>
+
+Supla::Sha256::Sha256() : ctx(nullptr) {
+  br_sha256_context *shaCtx = new br_sha256_context();
+  br_sha256_init(shaCtx);
+  ctx = shaCtx;
+}
+
+Supla::Sha256::~Sha256() {
+  delete static_cast<br_sha256_context *>(ctx);
+  ctx = nullptr;
+}
+
+void Supla::Sha256::update(const uint8_t *data, const int size) {
+  if (ctx == nullptr || data == nullptr || size <= 0) {
+    return;
+  }
+  br_sha256_update(static_cast<br_sha256_context *>(ctx), data, size);
+}
+
+void Supla::Sha256::digest(uint8_t *output, int length) {
+  if (ctx == nullptr || output == nullptr || length <= 0) {
+    return;
+  }
+
+  uint8_t fullDigest[32] = {};
+  br_sha256_context tmp = *static_cast<br_sha256_context *>(ctx);
+  br_sha256_out(&tmp, fullDigest);
+
+  if (length > 32) {
+    length = 32;
+  }
+  memcpy(output, fullDigest, length);
+}
+
+#elif defined(SUPLA_LINUX)
+
+#include <openssl/evp.h>
+
+Supla::Sha256::Sha256() : ctx(nullptr) {
+  EVP_MD_CTX *mdCtx = EVP_MD_CTX_new();
+  if (mdCtx == nullptr) {
+    return;
+  }
+  if (EVP_DigestInit_ex(mdCtx, EVP_sha256(), nullptr) != 1) {
+    EVP_MD_CTX_free(mdCtx);
+    return;
+  }
+  ctx = mdCtx;
+}
+
+Supla::Sha256::~Sha256() {
+  EVP_MD_CTX_free(static_cast<EVP_MD_CTX *>(ctx));
+  ctx = nullptr;
+}
+
+void Supla::Sha256::update(const uint8_t *data, const int size) {
+  if (ctx == nullptr || data == nullptr || size <= 0) {
+    return;
+  }
+  EVP_DigestUpdate(static_cast<EVP_MD_CTX *>(ctx), data, size);
+}
+
+void Supla::Sha256::digest(uint8_t *output, int length) {
+  if (ctx == nullptr || output == nullptr || length <= 0) {
+    return;
+  }
+
+  uint8_t fullDigest[EVP_MAX_MD_SIZE] = {};
+  unsigned int fullDigestLength = 0;
+  EVP_MD_CTX *tmp = EVP_MD_CTX_new();
+  if (tmp == nullptr) {
+    return;
+  }
+  if (EVP_MD_CTX_copy_ex(tmp, static_cast<EVP_MD_CTX *>(ctx)) != 1 ||
+      EVP_DigestFinal_ex(tmp, fullDigest, &fullDigestLength) != 1) {
+    EVP_MD_CTX_free(tmp);
+    return;
+  }
+  EVP_MD_CTX_free(tmp);
+
+  if (length > static_cast<int>(fullDigestLength)) {
+    length = static_cast<int>(fullDigestLength);
+  }
+  memcpy(output, fullDigest, length);
+}
+
+#endif  // ESP32/SUPLA_DEVICE_ESP32/ESP8266/SUPLA_LINUX

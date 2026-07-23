@@ -26,8 +26,9 @@ HC_SR04::HC_SR04(int8_t trigPin,
                  int16_t minIn,
                  int16_t maxIn,
                  int16_t minOut,
-                 int16_t maxOut)
-    : failCount(0), readouts{}, index(0) {
+                 int16_t maxOut,
+                 Supla::Io::Base *io)
+    : failCount(0), readouts{}, index(0), io(io) {
   _trigPin = trigPin;
   _echoPin = echoPin;
   _minIn = minIn;
@@ -37,9 +38,9 @@ HC_SR04::HC_SR04(int8_t trigPin,
 }
 
 void HC_SR04::onInit() {
-  Supla::Io::pinMode(_trigPin, OUTPUT);
-  Supla::Io::pinMode(_echoPin, INPUT);
-  Supla::Io::digitalWrite(_trigPin, LOW);
+  Supla::Io::pinMode(_trigPin, OUTPUT, io);
+  Supla::Io::pinMode(_echoPin, INPUT, io);
+  Supla::Io::digitalWrite(_trigPin, LOW, io);
   delayMicroseconds(2);
 
   channel.setNewValue(getValue());
@@ -48,11 +49,11 @@ void HC_SR04::onInit() {
 
 double HC_SR04::getValue() {
 //  noInterrupts();
-  Supla::Io::digitalWrite(_trigPin, HIGH);
+  Supla::Io::digitalWrite(_trigPin, HIGH, io);
   // increased delay from 10 to 30 to make it work also for JSN-SR20-Y1 sensor
   delayMicroseconds(30);
-  Supla::Io::digitalWrite(_trigPin, LOW);
-  uint64_t duration = Supla::Io::pulseIn(_echoPin, HIGH, 60000);
+  Supla::Io::digitalWrite(_trigPin, LOW, io);
+  uint64_t duration = Supla::Io::pulseIn(_echoPin, HIGH, 60000, io);
 //  interrupts();
   if (duration > 50) {
     index++;

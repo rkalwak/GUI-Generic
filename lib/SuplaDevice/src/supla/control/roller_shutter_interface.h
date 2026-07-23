@@ -28,6 +28,7 @@
 #define MOVE_DOWN_POSITION -4
 #define STOP_REQUEST       -5
 #define RS_DEFAULT_OPERATION_TIMEOUT_MS 60000
+#define RS_MAX_OPERATION_TIME_MS 600000  // Max opening/closing/tilting time
 
 namespace Supla {
 
@@ -311,6 +312,12 @@ class RollerShutterInterface : public ChannelElement, public ActionHandler {
   void setMotorProblem(bool value);
 
  protected:
+  RollerShutterInterface(bool tiltFunctionsEnabled,
+                         Supla::Channel &externalChannel,
+                         ElementMode mode);
+  void loadRollerShutterConfigOnly();
+  void purgeRollerShutterConfigOnly();
+
   struct ButtonListElement {
     Supla::Control::Button *button = nullptr;
     bool asInternal = true;

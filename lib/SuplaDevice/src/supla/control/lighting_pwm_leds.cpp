@@ -1,0 +1,259 @@
+/*
+ Copyright (C) AC SOFTWARE SP. Z O.O.
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "lighting_pwm_leds.h"
+
+#include <supla/log_wrapper.h>
+
+namespace Supla {
+namespace Control {
+
+namespace {
+uint32_t PwmMaxValueForBits(uint8_t bits) {
+  if (bits == 0) {
+    return 0;
+  }
+  return (1UL << bits) - 1;
+}
+}  // namespace
+
+LightingPwmLeds::LightingPwmLeds(
+    LightingPwmLeds *parent, int out1, int out2, int out3, int out4, int out5)
+    : LightingPwmBase(parent), parentPwm(parent) {
+  outputs[0].pin.setPin(out1);
+  outputs[1].pin.setPin(out2);
+  outputs[2].pin.setPin(out3);
+  outputs[3].pin.setPin(out4);
+  outputs[4].pin.setPin(out5);
+  for (auto &output : outputs) {
+    output.pin.setMode(OUTPUT);
+  }
+  applyDefaultChannelFunctions();
+}
+
+LightingPwmLeds::LightingPwmLeds(LightingPwmLeds *parent,
+                                 Supla::Io::IoPin out1,
+                                 Supla::Io::IoPin out2,
+                                 Supla::Io::IoPin out3,
+                                 Supla::Io::IoPin out4,
+                                 Supla::Io::IoPin out5)
+    : LightingPwmBase(parent), parentPwm(parent) {
+  outputs[0].pin = out1;
+  outputs[1].pin = out2;
+  outputs[2].pin = out3;
+  outputs[3].pin = out4;
+  outputs[4].pin = out5;
+  for (auto &output : outputs) {
+    output.pin.setMode(OUTPUT);
+  }
+  applyDefaultChannelFunctions();
+}
+
+int LightingPwmLeds::getConfiguredOutputsCount() const {
+  int count = 0;
+  for (const auto &output : outputs) {
+    if (!output.pin.isSet()) {
+      break;
+    }
+    count++;
+  }
+  return count;
+}
+
+void LightingPwmLeds::applyDefaultChannelFunctions() {
+  const int outputsCount = getConfiguredOutputsCount();
+  uint32_t funcList = SUPLA_RGBW_BIT_FUNC_DIMMER;
+  uint32_t defaultFunction = SUPLA_CHANNELFNC_DIMMER;
+
+  if (outputsCount >= 2) {
+    funcList |= SUPLA_RGBW_BIT_FUNC_DIMMER_CCT;
+    defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT;
+  }
+  if (outputsCount >= 3) {
+    funcList |= SUPLA_RGBW_BIT_FUNC_RGB_LIGHTING;
+    defaultFunction = SUPLA_CHANNELFNC_RGBLIGHTING;
+  }
+  if (outputsCount >= 4) {
+    funcList |= SUPLA_RGBW_BIT_FUNC_DIMMER_AND_RGB_LIGHTING;
+    defaultFunction = SUPLA_CHANNELFNC_DIMMERANDRGBLIGHTING;
+  }
+  if (outputsCount >= 5) {
+    funcList |= SUPLA_RGBW_BIT_FUNC_DIMMER_CCT_AND_RGB;
+    defaultFunction = SUPLA_CHANNELFNC_DIMMER_CCT_AND_RGB;
+  }
+
+  getChannel()->setFuncList(funcList);
+  getChannel()->setDefaultFunction(defaultFunction);
+}
+
+void LightingPwmLeds::setRGBCCTValueOnDevice(uint32_t output[5],
+                                             int usedOutputs) {
+  if (!initDone || !enabled) {
+    return;
+  }
+
+  bool changed = false;
+  for (int i = 0; i < usedOutputs; i++) {
+    if (outputs[i].lastSourceValue != static_cast<int32_t>(output[i])) {
+      tryCounter = 0;
+      changed = true;
+      break;
+    }
+  }
+
+  tryCounter++;
+
+  if (!changed && tryCounter > 10) {
+    tryCounter = 10;
+    return;
+  }
+
+  for (int i = 0; i < usedOutputs; i++) {
+    outputs[i].lastSourceValue = static_cast<int32_t>(output[i]);
+    uint32_t value = output[i];
+    uint32_t outputMax = getPwmMaxValueForOutput(outputs[i]);
+    if (outputMax > 0 && outputMax != maxHwValue) {
+      value = static_cast<uint32_t>(
+          (static_cast<uint64_t>(value) * outputMax + maxHwValue / 2) /
+          maxHwValue);
+    }
+    if (outputs[i].lastDutyValue == static_cast<int32_t>(value)) {
+      continue;
+    }
+    outputs[i].lastDutyValue = static_cast<int32_t>(value);
+    outputs[i].pin.analogWrite(value);
+  }
+
+  for (int i = usedOutputs; i < lastUsedOutputs; i++) {
+    if (outputs[i].pin.isSet() && outputs[i].lastDutyValue != 0) {
+      outputs[i].lastSourceValue = 0;
+      outputs[i].lastDutyValue = 0;
+      outputs[i].pin.analogWrite(0);
+    }
+  }
+
+  lastUsedOutputs = usedOutputs;
+}
+
+bool LightingPwmLeds::isOutputSharedWithParent(
+    const OutputState &output) const {
+  if (!hasParent() || parentPwm == nullptr || !output.pin.isSet()) {
+    return false;
+  }
+
+  for (const auto &parentOutput : parentPwm->outputs) {
+    if (parentOutput.pin.isSet() && parentOutput.pin == output.pin) {
+      return true;
+    }
+  }
+  return false;
+}
+
+uint8_t LightingPwmLeds::getPwmResolutionBitsForOutput(
+    const OutputState &output) const {
+  if (!output.pin.isSet() || isOutputSharedWithParent(output)) {
+    return 0;
+  }
+
+  if (Supla::Io::canSetPwmResolutionBits(
+          static_cast<uint8_t>(output.pin.getPin()), output.pin.io)) {
+    return getPwmResolutionBits();
+  }
+  return Supla::Io::defaultPwmResolutionBits(
+      static_cast<uint8_t>(output.pin.getPin()), output.pin.io);
+}
+
+uint32_t LightingPwmLeds::getPwmMaxValueForOutput(
+    const OutputState &output) const {
+  return PwmMaxValueForBits(getPwmResolutionBitsForOutput(output));
+}
+
+void LightingPwmLeds::applyPwmResolutionBitsToOutputs() {
+  for (auto &output : outputs) {
+    if (output.pin.isSet() && !isOutputSharedWithParent(output) &&
+        Supla::Io::canSetPwmResolutionBits(
+            static_cast<uint8_t>(output.pin.getPin()), output.pin.io)) {
+      output.pin.setPwmResolutionBits(getPwmResolutionBits());
+    }
+  }
+}
+
+void LightingPwmLeds::applyPwmFrequencyToOutputs() {
+  const uint16_t frequency = getPwmFrequency();
+  Supla::Io::Base *configuredIo[kMaxOutputs] = {};
+  int configuredIoCount = 0;
+  for (auto &output : outputs) {
+    if (output.pin.isSet() && !isOutputSharedWithParent(output)) {
+      bool alreadyConfigured = false;
+      for (int i = 0; i < configuredIoCount; i++) {
+        if (configuredIo[i] == output.pin.io) {
+          alreadyConfigured = true;
+          break;
+        }
+      }
+      if (!alreadyConfigured) {
+        configuredIo[configuredIoCount++] = output.pin.io;
+        output.pin.setPwmFrequency(frequency);
+      }
+    }
+  }
+}
+
+void LightingPwmLeds::onLoadConfig(SuplaDeviceClass *sdc) {
+  LightingPwmBase::onLoadConfig(sdc);
+  applyPwmResolutionBitsToOutputs();
+  applyPwmFrequencyToOutputs();
+}
+
+void LightingPwmLeds::onInit() {
+  if (initDone) {
+    return;
+  }
+
+  uint32_t outputMaxValue = 0;
+  for (const auto &output : outputs) {
+    uint32_t value = getPwmMaxValueForOutput(output);
+    if (value > outputMaxValue) {
+      outputMaxValue = value;
+    }
+  }
+  if (outputMaxValue > 0) {
+    setMaxHwValue(static_cast<int>(outputMaxValue));
+  }
+
+  applyPwmResolutionBitsToOutputs();
+
+  if (hasParent()) {
+    SUPLA_LOG_DEBUG("Light[%d]: initialize parent PWM", getChannelNumber());
+    parentPwm->onInit();
+  }
+
+  applyPwmFrequencyToOutputs();
+
+  for (auto &output : outputs) {
+    if (output.pin.isSet() && !isOutputSharedWithParent(output)) {
+      output.pin.configureAnalogOutput();
+      output.pin.pinMode();
+    }
+  }
+
+  LightingPwmBase::onInit();
+}
+
+}  // namespace Control
+}  // namespace Supla

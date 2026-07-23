@@ -20,6 +20,7 @@
 #define SRC_SUPLA_SENSOR_HC_SR04_H_
 
 #include "supla/channel.h"
+#include "supla/io.h"
 #include "supla/sensor/distance.h"
 
 #define DURATION_COUNT 2
@@ -33,7 +34,8 @@ class HC_SR04 : public Distance {
           int16_t minIn = 0,
           int16_t maxIn = 500,
           int16_t minOut = 0,
-          int16_t maxOut = 500);
+          int16_t maxOut = 500,
+          Supla::Io::Base *io = nullptr);
   void onInit();
   virtual double getValue();
   void setMinMaxIn(int16_t minIn, int16_t maxIn);
@@ -49,6 +51,7 @@ class HC_SR04 : public Distance {
   char failCount;
   uint64_t readouts[5];
   int index;
+  Supla::Io::Base *io;
 };
 
 };  // namespace Sensor

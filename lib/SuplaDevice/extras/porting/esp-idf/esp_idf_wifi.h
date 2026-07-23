@@ -54,6 +54,10 @@ class EspIdfWifi : public Supla::Wifi {
 
   uint32_t getIP() override;
   void setMaxTxPower(int power);
+  uint32_t getConfiguredStaticIp() const;
+  bool isStaticIpConfigured() const;
+  void startConfigModeScan() override;
+  void finishConfigModeScan();
 
 #ifdef SUPLA_DEVICE_ESP32
   esp_netif_t *getStaNetIf() const;
@@ -65,11 +69,14 @@ class EspIdfWifi : public Supla::Wifi {
   bool isIpReady = false;
   bool allowDisable = false;
   uint32_t ipv4 = 0;
+  bool staticIpConfigured = false;
   uint8_t lastChannel = 0;
   int lastReasons[SUPLA_ESP_IDF_WIFI_LAST_REASON_MAX] = {};
   int lastReasonIdx = 0;
   uint32_t connectedToWifiTimestamp = 0;
   int maxTxPower = -1;
+  bool configModeScanInProgress = false;
+  bool isConfigModeScanInProgress() const override;
 #ifdef SUPLA_DEVICE_ESP32
   esp_netif_t *staNetIf = nullptr;
   esp_netif_t *apNetIf = nullptr;

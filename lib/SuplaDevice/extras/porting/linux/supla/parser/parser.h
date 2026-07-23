@@ -40,8 +40,10 @@ class Parser {
       const std::string &key) = 0;
 
   virtual bool isValid();
+  virtual bool isSourceValid();
   virtual bool isBasedOnIndex() = 0;
   void setRefreshTime(unsigned int timeMs);
+  bool isSourceConnected() const;
 
  protected:
   virtual bool refreshSource() = 0;

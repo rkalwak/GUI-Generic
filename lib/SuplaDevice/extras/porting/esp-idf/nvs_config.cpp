@@ -25,6 +25,7 @@
 #include <nvs.h>
 #include <nvs_flash.h>
 #include <esp_flash_encrypt.h>
+#include <limits.h>
 #include <supla/log_wrapper.h>
 #include <supla-common/proto.h>
 #include <string.h>
@@ -288,13 +289,15 @@ bool NvsConfig::getString(const char* key, char* value, size_t maxSize) {
 }
 
 int NvsConfig::getStringSize(const char* key) {
-  auto buf = new char[4000];
-  if (getString(key, buf, 4000)) {
-    int len = strnlen(buf, 4000);
-    delete [] buf;
-    return len;
+  size_t size = 0;
+  esp_err_t err = nvs_get_str(nvsHandle, key, nullptr, &size);
+  if (err != ESP_OK) {
+    return -1;
   }
-  return -1;
+  if (size > static_cast<size_t>(INT32_MAX)) {
+    return -1;
+  }
+  return static_cast<int>(size);
 }
 
 bool NvsConfig::setBlob(const char* key, const char* value, size_t blobSize) {
@@ -308,7 +311,15 @@ bool NvsConfig::getBlob(const char* key, char* value, size_t blobSize) {
 }
 
 int NvsConfig::getBlobSize(const char* key) {
-  return -1;
+  if (key == nullptr) {
+    return -1;
+  }
+  size_t size = 0;
+  esp_err_t err = nvs_get_blob(nvsHandle, key, nullptr, &size);
+  if (err != ESP_OK || size > static_cast<size_t>(INT32_MAX)) {
+    return -1;
+  }
+  return static_cast<int>(size);
 }
 
 bool NvsConfig::getInt8(const char* key, int8_t* result) {
@@ -417,7 +428,7 @@ bool NvsConfig::readDataPartitionImp(int address, char* buf, int size) {
   return true;
 }
 
-bool NvsConfig::isDeviceDataPartitionAvailable() {
+bool NvsConfig::isDeviceDataPartitionDeclared() {
   if (!dataPartitionInitiazlied) {
     dataPartitionInitiazlied = true;
     dataPartition = esp_partition_find_first(
@@ -426,28 +437,43 @@ bool NvsConfig::isDeviceDataPartitionAvailable() {
         SUPLA_DEVICE_DATA_PARTITION_NAME);
 
     if (dataPartition == nullptr) {
-      SUPLA_LOG_ERROR("Data partition partition not found");
-      return false;
-    }
-
-    if (dataPartition->size < 8192) {
-      SUPLA_LOG_ERROR("Data partition too small");
-      dataPartition = nullptr;
-      return false;
-    }
-
-    char buf[16] = {};
-    if (!readDataPartitionImp(0, buf, 16)) {
-      dataPartition = nullptr;
-      return false;
-    }
-    if (!initDeviceDataPartitionCopyAndChecksum()) {
-      dataPartition = nullptr;
+      SUPLA_LOG_INFO("Data partition not found");
       return false;
     }
   }
 
   return dataPartition != nullptr;
+}
+
+bool NvsConfig::isDeviceDataPartitionAvailable() {
+  if (!isDeviceDataPartitionDeclared()) {
+    return false;
+  }
+
+  if (dataPartitionValidated) {
+    return dataPartitionValid;
+  }
+
+  dataPartitionValidated = true;
+  dataPartitionValid = false;
+
+  if (dataPartition->size < 8192) {
+    SUPLA_LOG_ERROR("Data partition too small");
+    return false;
+  }
+
+  char buf[16] = {};
+  if (!readDataPartitionImp(0, buf, 16)) {
+    SUPLA_LOG_ERROR("Data partition declared but not readable");
+    return false;
+  }
+  if (!initDeviceDataPartitionCopyAndChecksum()) {
+    SUPLA_LOG_ERROR("Data partition declared but not usable");
+    return false;
+  }
+
+  dataPartitionValid = true;
+  return true;
 }
 
 bool NvsConfig::isDeviceDataValid(const DeviceDataBuf &buf) const {

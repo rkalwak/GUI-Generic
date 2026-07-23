@@ -25,6 +25,9 @@
 #define MAX_WIFI_PASSWORD_SIZE 64
 
 namespace Supla {
+
+constexpr uint32_t WifiScanRefreshIntervalMs = 60 * 1000;
+
 class Wifi : public Supla::Network {
  public:
   Wifi(const char *wifiSsid = nullptr,
@@ -35,11 +38,18 @@ class Wifi : public Supla::Network {
   void setPassword(const char *wifiPassword) override;
   bool isWifiConfigRequired() override;
   const char* getIntfName() const override;
+  virtual void startConfigModeScan();
+  bool iterate() override;
 
   void onLoadConfig() override;
+
  protected:
+  void requestConfigModeScanIfDue();
+  virtual bool isConfigModeScanInProgress() const;
   char ssid[MAX_SSID_SIZE] = {};
   char password[MAX_WIFI_PASSWORD_SIZE] = {};
+  uint32_t lastConfigModeScanStartMs = 0;
+  bool configModeScanStartRecorded = false;
 };
 
 };  // namespace Supla

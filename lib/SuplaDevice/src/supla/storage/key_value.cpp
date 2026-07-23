@@ -16,6 +16,8 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifndef ARDUINO_ARCH_AVR
+
 #include "key_value.h"
 
 #include <string.h>
@@ -181,6 +183,13 @@ size_t KeyValue::serializeToMemory(uint8_t* output, size_t outputMaxSize) {
   size_t sizeCount = 0;
   for (auto element = first; element; element = element->getNext()) {
     size_t bytesWritten = element->serialize(output, outputMaxSize - sizeCount);
+    if (bytesWritten == 0) {
+      SUPLA_LOG_ERROR(
+          "Failed to serialize key-value element. outputMaxSize: %d, "
+          "sizeCount: %d",
+          outputMaxSize,
+          sizeCount);
+    }
     output += bytesWritten;
     sizeCount += bytesWritten;
   }
@@ -243,9 +252,12 @@ bool KeyValue::getBlob(const char* key, char* value, size_t blobSize) {
 }
 
 int KeyValue::getBlobSize(const char* key) {
+  if (key == nullptr) {
+    return -1;
+  }
   auto element = find(key);
   if (!element) {
-    return 0;
+    return -1;
   }
   return element->getBlobSize();
 }
@@ -367,6 +379,9 @@ bool KeyValueElement::setString(const char* value) {
     size = newSize;
     data.charPtr = new char[size];
   }
+  if (data.charPtr == nullptr) {
+    return false;
+  }
   strncpy(data.charPtr, value, size);
   data.charPtr[size - 1] = '\0';
   return true;
@@ -393,10 +408,13 @@ int KeyValueElement::getStringSize() {
 }
 
 bool KeyValueElement::setBlob(const char* value, size_t blobSize) {
+  if (value == nullptr && blobSize > 0) {
+    return false;
+  }
   if (dataType == DATA_TYPE_NOT_SET) {
     dataType = DATA_TYPE_BLOB;
     size = blobSize;
-    data.uint8ptr = new uint8_t[size];
+    data.uint8ptr = size > 0 ? new uint8_t[size] : nullptr;
   }
   if (dataType != DATA_TYPE_BLOB) {
     return false;
@@ -404,9 +422,14 @@ bool KeyValueElement::setBlob(const char* value, size_t blobSize) {
   if (blobSize != size) {
     delete[] data.uint8ptr;
     size = blobSize;
-    data.uint8ptr = new uint8_t[size];
+    data.uint8ptr = size > 0 ? new uint8_t[size] : nullptr;
   }
-  memcpy(data.uint8ptr, value, blobSize);
+  if (data.uint8ptr == nullptr && size > 0) {
+    return false;
+  }
+  if (blobSize > 0) {
+    memcpy(data.uint8ptr, value, blobSize);
+  }
   return true;
 }
 
@@ -416,7 +439,9 @@ bool KeyValueElement::getBlob(char* value, size_t blobSize) {
   }
 
   if (size == blobSize) {
-    memcpy(value, data.uint8ptr, blobSize);
+    if (blobSize > 0) {
+      memcpy(value, data.uint8ptr, blobSize);
+    }
     return true;
   }
   return false;
@@ -424,7 +449,7 @@ bool KeyValueElement::getBlob(char* value, size_t blobSize) {
 
 int KeyValueElement::getBlobSize() {
   if (dataType != DATA_TYPE_BLOB) {
-    return 0;
+    return -1;
   }
   return size;
 }
@@ -536,6 +561,8 @@ size_t KeyValueElement::serialize(uint8_t* destination, size_t maxSize) {
     SUPLA_LOG_ERROR(
         "KeyValue: serialized configuration size is too big. Config will not "
         "work and may be lost");
+    SUPLA_LOG_ERROR(
+        "Key %s, curBlockSize %d, maxSize %d", key, blockSize, maxSize);
     return 0;
   }
 
@@ -580,17 +607,23 @@ bool KeyValue::eraseKey(const char* key) {
     return false;
   }
 
-  // find previous:
-  auto previous = first;
-  while (previous) {
-    if (previous->getNext() == elementToDelete) {
-      previous->setNext(elementToDelete->getNext());
-      break;
+  if (first == elementToDelete) {
+    first = elementToDelete->getNext();
+  } else {
+    // find previous:
+    auto previous = first;
+    while (previous) {
+      if (previous->getNext() == elementToDelete) {
+        previous->setNext(elementToDelete->getNext());
+        break;
+      }
+      previous = previous->getNext();
     }
-    previous = previous->getNext();
   }
   delete elementToDelete;
   return true;
 }
 
 };  // namespace Supla
+
+#endif  // !defined(ARDUINO_ARCH_AVR)

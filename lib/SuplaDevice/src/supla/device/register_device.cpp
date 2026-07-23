@@ -264,30 +264,29 @@ const char *Supla::RegisterDevice::getServerName() {
 
 // TODO(klew) move to channel
 int Supla::RegisterDevice::getNextFreeChannelNumber() {
-  int nextFreeNumber = 0;
-  bool nextFreeFound = false;
-  do {
-    nextFreeFound = true;
+  for (int candidate = Supla::Channel::getStartingChannelNumber();
+       candidate < SUPLA_CHANNELMAXCOUNT;
+       candidate++) {
+    bool candidateFree = true;
     for (Supla::Channel *ch = Supla::Channel::Begin(); ch != nullptr;
          ch = ch->next()) {
-      if (ch->getChannelNumber() == nextFreeNumber) {
-        nextFreeNumber++;
-        nextFreeFound = false;
+      if (ch->getChannelNumber() == candidate) {
+        candidateFree = false;
         break;
       }
     }
-  } while (!nextFreeFound && nextFreeNumber < SUPLA_CHANNELMAXCOUNT);
 
-  if (!nextFreeFound) {
-    return -1;
+    if (candidateFree) {
+      return candidate;
+    }
   }
 
-  return nextFreeNumber;
+  return -1;
 }
 
 // TODO(klew) move to channel
 bool Supla::RegisterDevice::isChannelNumberFree(int channelNumber) {
-  if (channelNumber >= SUPLA_CHANNELMAXCOUNT) {
+  if (channelNumber < 0 || channelNumber >= SUPLA_CHANNELMAXCOUNT) {
     return false;
   }
 
@@ -299,6 +298,38 @@ bool Supla::RegisterDevice::isChannelNumberFree(int channelNumber) {
   }
 
   return true;
+}
+
+int Supla::RegisterDevice::getFreeChannelCount() {
+  int result = 0;
+  for (int candidate = Supla::Channel::getStartingChannelNumber();
+       candidate < SUPLA_CHANNELMAXCOUNT;
+       candidate++) {
+    if (isChannelNumberFree(candidate)) {
+      result++;
+    }
+  }
+  return result;
+}
+
+bool Supla::RegisterDevice::hasFreeChannelCount(uint8_t requiredCount) {
+  if (requiredCount == 0) {
+    return true;
+  }
+
+  int freeCount = 0;
+  for (int candidate = Supla::Channel::getStartingChannelNumber();
+       candidate < SUPLA_CHANNELMAXCOUNT;
+       candidate++) {
+    if (isChannelNumberFree(candidate)) {
+      freeCount++;
+      if (freeCount >= requiredCount) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 void Supla::RegisterDevice::addChannel(int channelNumber) {
@@ -397,4 +428,3 @@ void Supla::RegisterDevice::generateHttpAgent(char *buffer, int size) {
            Supla::RegisterDevice::getSoftVer());
   buffer[size - 1] = '\0';
 }
-

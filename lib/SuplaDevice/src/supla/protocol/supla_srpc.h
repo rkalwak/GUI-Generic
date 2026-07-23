@@ -19,12 +19,13 @@
 #ifndef SRC_SUPLA_PROTOCOL_SUPLA_SRPC_H_
 #define SRC_SUPLA_PROTOCOL_SUPLA_SRPC_H_
 
+#include <stddef.h>
 #include <supla-common/proto.h>
 
 #include "protocol_layer.h"
 
 #define SUPLA_SRPC_CALCFG_RESULT_DONT_REPLY (-1)
-#define SUPLA_SRPC_CALCFG_RESULT_PENDING (-2)
+#define SUPLA_SRPC_CALCFG_RESULT_PENDING    (-2)
 
 namespace Supla {
 
@@ -42,8 +43,13 @@ struct CalCfgResultPendingItem;
 class CalCfgResultPending {
  public:
   friend class SuplaSrpc;
-  void set(int16_t channelNo, int32_t receiverId, int32_t command);
+  void set(int16_t channelNo,
+           int32_t receiverId,
+           int32_t command,
+           uint32_t timeoutMs = 0);
   void clear(int16_t channelNo, int32_t command = -1);
+  void clearTimeout(int16_t channelNo, int32_t command = -1);
+  void clearAll();
   CalCfgResultPendingItem *get(int16_t channelNo, int32_t command = -1);
 
  protected:
@@ -76,20 +82,24 @@ class SuplaSrpc : public ProtocolLayer {
   void sendRegisterNotification(
       TDS_RegisterPushNotification *notification) override;
   bool sendNotification(int context,
-                      const char *title,
-                      const char *message,
-                      int soundId) override;
+                        const char *title,
+                        const char *message,
+                        int soundId) override;
   void sendSubdeviceDetails(TDS_SubdeviceDetails *subdeviceDetails) override;
   void getUserLocaltime() override;
-  void sendChannelValueChanged(uint8_t channelNumber, int8_t *value,
-      uint8_t offline, uint32_t validityTimeSec) override;
-  void sendExtendedChannelValueChanged(uint8_t channelNumber,
-    TSuplaChannelExtendedValue *value) override;
+  void sendChannelValueChanged(uint8_t channelNumber,
+                               int8_t *value,
+                               uint8_t offline,
+                               uint32_t validityTimeSec) override;
+  void sendExtendedChannelValueChanged(
+      uint8_t channelNumber, TSuplaChannelExtendedValue *value) override;
 
   void getChannelConfig(uint8_t channelNumber, uint8_t configType) override;
   bool setChannelConfig(uint8_t channelNumber,
-      _supla_int_t channelFunction, void *channelConfig, int size,
-      uint8_t configType) override;
+                        _supla_int_t channelFunction,
+                        void *channelConfig,
+                        int size,
+                        uint8_t configType) override;
 
   bool setDeviceConfig(TSDS_SetDeviceConfig *deviceConfig) override;
   bool setInitialCaption(uint8_t channelNumber, const char *caption) override;
@@ -119,8 +129,9 @@ class SuplaSrpc : public ProtocolLayer {
   void setVersion(int value);
   void setSuplaCACert(const char *);
   void setSupla3rdPartyCACert(const char *);
-  const char* getSuplaCACert() const;
-  const char* getSupla3rdPartyCACert() const;
+  const char *getSuplaCACert() const;
+  const char *getSupla3rdPartyCACert() const;
+  void setLowLevelDebugLogs(bool value);
   bool isUpdatePending() override;
   void handleDeviceConfig(TSDS_SetDeviceConfig *deviceConfig);
   void handleSetDeviceConfigResult(TSDS_SetDeviceConfigResult *result);
@@ -132,13 +143,40 @@ class SuplaSrpc : public ProtocolLayer {
                                int32_t command,
                                int dataSize = 0,
                                void *data = nullptr);
+  void sendPendingCalCfgResultForCommand(int16_t channelNo,
+                                         int32_t result,
+                                         int32_t pendingCommand,
+                                         int32_t responseCommand,
+                                         int dataSize = 0,
+                                         void *data = nullptr);
+  void sendCalCfgResult(int32_t receiverId,
+                        int16_t channelNo,
+                        int32_t result,
+                        int32_t command,
+                        int dataSize = 0,
+                        void *data = nullptr);
 
   void clearPendingCalCfgResult(int16_t channelNo, int32_t command = -1);
+  void clearPendingCalCfgTimeout(int16_t channelNo, int32_t command = -1);
 
   static const char *configResultToCStr(int result);
 
   void setChannelConflictResolver(
       Supla::Device::ChannelConflictResolver *resolver);
+
+  static void onPacketSent(void *userParam,
+                           unsigned _supla_int_t callId,
+                           void *data,
+                           unsigned _supla_int_t dataSize,
+                           void *reserved);
+  static void onPacketReceived(void *userParam,
+                               unsigned _supla_int_t callId,
+                               void *data,
+                               unsigned _supla_int_t dataSize,
+                               void *reserved);
+  void logSrpcPacket(bool send, int callId, const uint8_t *buf, size_t size);
+  static const char *callIdToName(int callId);
+  static bool isSensitiveCallId(int callId);
 
  protected:
   bool ping();
@@ -173,6 +211,7 @@ class SuplaSrpc : public ProtocolLayer {
   Supla::Device::ChannelConflictResolver *channelConflictResolver = nullptr;
 
  private:
+  void handlePendingCalCfgTimeouts(uint32_t _millis);
   Supla::Device::RemoteDeviceConfig *remoteDeviceConfig = nullptr;
 };
 }  // namespace Protocol
@@ -183,10 +222,10 @@ _supla_int_t dataRead(void *buf, _supla_int_t count, void *sdc);
 _supla_int_t dataWrite(void *buf, _supla_int_t count, void *sdc);
 // Method passed to SRPC as a callback to handle response from Supla server
 void messageReceived(void *srpc,
-                      unsigned _supla_int_t rrId,
-                      unsigned _supla_int_t callType,
-                      void *userParam,
-                      unsigned char protoVersion);
+                     unsigned _supla_int_t rrId,
+                     unsigned _supla_int_t callType,
+                     void *userParam,
+                     unsigned char protoVersion);
 
 }  // namespace Supla
 

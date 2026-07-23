@@ -20,7 +20,7 @@
 
 #include <supla/log_wrapper.h>
 
-#ifdef ARDUINO
+#if defined(ARDUINO) || defined(SUPLA_TEST)
 #include <Arduino.h>
 #elif defined(ESP_PLATFORM)
 #include <esp_idf_gpio.h>
@@ -72,6 +72,36 @@ uint8_t digitalPinToInterrupt(uint8_t pin) {
   return pin;
 }
 #endif
+
+namespace {
+constexpr uint8_t DefaultAnalogWriteResolutionBits() {
+#if defined(ARDUINO_ARCH_AVR)
+  return 8;
+#elif defined(ARDUINO_ARCH_ESP8266)
+  return 10;
+#elif defined(ARDUINO_ARCH_ESP32)
+  return 8;
+#else
+  return 10;
+#endif
+}
+
+constexpr uint16_t DefaultPwmFrequencyHz() {
+#if defined(ARDUINO_ARCH_AVR)
+  return 490;
+#else
+  return 1000;
+#endif
+}
+
+bool DefaultPwmResolutionBitsMutable() {
+#if defined(ARDUINO_ARCH_AVR)
+  return false;
+#else
+  return true;
+#endif
+}
+}  // namespace
 
 namespace Supla {
 namespace Io {
@@ -192,19 +222,90 @@ uint8_t pinToInterrupt(uint8_t pin, Io::Base *io) {
   return digitalPinToInterrupt(pin);
 }
 
-Base::Base(bool useAsSingleton) : useAsSingleton(useAsSingleton) {
-  if (useAsSingleton) {
-    if (ioInstance != nullptr) {
-      delete ioInstance;
-    }
-    ioInstance = this;
+void setPwmFrequency(uint8_t pin, uint16_t pwmFrequency, Io::Base *io) {
+  if (io) {
+    io->customSetPwmFrequency(pwmFrequency);
+    return;
   }
+#if defined(ARDUINO_ARCH_ESP8266)
+  (void)(pin);
+  analogWriteFreq(pwmFrequency);
+#elif defined(ARDUINO_ARCH_ESP32) || defined(SUPLA_TEST)
+  analogWriteFrequency(pin, pwmFrequency);
+#else
+  (void)(pin);
+  (void)(pwmFrequency);
+#endif
+}
+
+void setPwmResolutionBits(uint8_t pin, uint8_t resolutionBits, Io::Base *io) {
+  if (io) {
+    io->customSetPwmResolutionBits(pin, resolutionBits);
+    return;
+  }
+#if defined(ARDUINO_ARCH_ESP32) || defined(SUPLA_TEST)
+  analogWriteResolution(pin, resolutionBits);
+#elif defined(ARDUINO_ARCH_ESP8266)
+  analogWriteRange(1UL << resolutionBits);
+#elif defined(ARDUINO_ARCH_AVR)
+  (void)(pin);
+  (void)(resolutionBits);
+#else
+  (void)(pin);
+  (void)(resolutionBits);
+#endif
+}
+
+uint8_t defaultPwmResolutionBits(uint8_t pin, Io::Base *io) {
+  if (io != nullptr) {
+    return io->customDefaultPwmResolutionBits(pin);
+  }
+  return DefaultAnalogWriteResolutionBits();
+}
+
+bool canSetPwmResolutionBits(uint8_t pin, Io::Base *io) {
+  if (io != nullptr) {
+    return io->customCanSetPwmResolutionBits(pin);
+  }
+  return DefaultPwmResolutionBitsMutable();
+}
+
+uint8_t pwmResolutionBits(uint8_t pin, Io::Base *io) {
+  if (io != nullptr) {
+    return io->customPwmResolutionBits(pin);
+  }
+  return DefaultAnalogWriteResolutionBits();
+}
+
+uint32_t pwmMaxValue(uint8_t pin, Io::Base *io) {
+  uint8_t bits = pwmResolutionBits(pin, io);
+  if (bits == 0) {
+    return 0;
+  }
+  return (1UL << bits) - 1;
+}
+
+uint8_t pwmResolutionBits(Io::Base *io) {
+  return pwmResolutionBits(0, io);
+}
+
+uint32_t pwmMaxValue(Io::Base *io) {
+  return pwmMaxValue(0, io);
+}
+
+uint16_t pwmFrequency(Io::Base *io) {
+  if (io != nullptr) {
+    return io->customPwmFrequency();
+  }
+  return DefaultPwmFrequencyHz();
+}
+
+Base::Base()
+    : pwmResolutionBitsValue(DefaultAnalogWriteResolutionBits()),
+      pwmFrequencyHzValue(DefaultPwmFrequencyHz()) {
 }
 
 Base::~Base() {
-  if (useAsSingleton) {
-    ioInstance = nullptr;
-  }
 }
 
 bool Base::isReady() const {
@@ -224,6 +325,45 @@ void Base::customDigitalWrite(int, uint8_t, uint8_t) {
 void Base::customAnalogWrite(int, uint8_t, int) {
 }
 
+void Base::customSetPwmResolutionBits(uint8_t pin, uint8_t resolutionBits) {
+  (void)(pin);
+  pwmResolutionBitsValue = resolutionBits;
+}
+
+void Base::customConfigureAnalogOutput(int, uint8_t, bool) {
+}
+
+void Base::customSetPwmFrequency(uint16_t freq) {
+  pwmFrequencyHzValue = freq;
+}
+
+uint8_t Base::customDefaultPwmResolutionBits(uint8_t pin) const {
+  (void)(pin);
+  return pwmResolutionBitsValue;
+}
+
+bool Base::customCanSetPwmResolutionBits(uint8_t pin) const {
+  (void)(pin);
+  return true;
+}
+
+uint8_t Base::customPwmResolutionBits(uint8_t pin) const {
+  (void)(pin);
+  return pwmResolutionBitsValue;
+}
+
+uint32_t Base::customPwmMaxValue(uint8_t pin) const {
+  uint8_t bits = customPwmResolutionBits(pin);
+  if (bits == 0) {
+    return 0;
+  }
+  return (1UL << bits) - 1;
+}
+
+uint16_t Base::customPwmFrequency() const {
+  return pwmFrequencyHzValue;
+}
+
 int Base::customAnalogRead(int, uint8_t) {
   return 0;
 }
@@ -241,8 +381,6 @@ void Base::customDetachInterrupt(uint8_t) {
 uint8_t Base::customPinToInterrupt(uint8_t) {
   return 0;
 }
-
-Base *Base::ioInstance = nullptr;
 
 }  // namespace Io
 }  // namespace Supla

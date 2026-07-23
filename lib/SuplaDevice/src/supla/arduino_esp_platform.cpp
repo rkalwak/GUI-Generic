@@ -18,6 +18,9 @@
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
 #include <supla/log_wrapper.h>
+#if defined(ARDUINO_ARCH_ESP32)
+#include <esp_system.h>
+#endif
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <supla/clock/clock.h>
@@ -139,7 +142,9 @@ class ArduinoEspClient : public Client {
         SUPLA_LOG_ERROR("SSL error: %d, %s", lastErr, buf);
         if (sdc && (lastConnErr != lastErr)) {
           lastConnErr = lastErr;
-          sdc->addLastStateLog(buf);
+          if (lastErr != 48) {
+            sdc->addLastStateLog(buf);
+          }
         }
       }
     }
@@ -219,6 +224,14 @@ Supla::Client *Supla::ClientBuilder() {
 int Supla::getPlatformId() {
   // TODO(klew): do we need platfom id for Arduino based ESP SW?
   return 0;
+}
+
+void Supla::fillRandom(uint8_t *buffer, int size) {
+#if defined(ARDUINO_ARCH_ESP8266)
+  ESP.random(buffer, size);
+#else
+  esp_fill_random(buffer, size);
+#endif
 }
 
 #endif

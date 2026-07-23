@@ -20,14 +20,16 @@
 
 #include <SuplaDevice.h>
 #include <supla/device/sw_update.h>
+#include <cstdio>
 
 SwUpdateMock *SwUpdateMock::instance = nullptr;
 
 class SwUpdateFacade : public Supla::Device::SwUpdate {
  public:
   explicit SwUpdateFacade(SwUpdateMock *mock)
-      : Supla::Device::SwUpdate(nullptr, nullptr), mock(mock) {
-      }
+      : Supla::Device::SwUpdate(nullptr, nullptr, Supla::SwUpdateMode::NotSet),
+        mock(mock) {
+  }
 
   void iterate() override {
     mock->iterate();
@@ -47,15 +49,19 @@ class SwUpdateFacade : public Supla::Device::SwUpdate {
       newVersion = nullptr;
     }
     newVersion = new char[strlen(version) + 1];
-    strcpy(newVersion, version);
+    snprintf(newVersion, strlen(version) + 1, "%s", version);
+  }
+
+  bool isSkipCert() const {
+    return skipCert;
   }
 
   SwUpdateMock *mock;
-
 };
 
 Supla::Device::SwUpdate *Supla::Device::SwUpdate::Create(SuplaDeviceClass *,
-                                                         const char *) {
+                                                         const char *,
+                                                         Supla::SwUpdateMode) {
   assert(SwUpdateMock::instance != nullptr);
   auto facade = new SwUpdateFacade(SwUpdateMock::instance);
   SwUpdateMock::instance->setFacade(facade);
@@ -63,7 +69,7 @@ Supla::Device::SwUpdate *Supla::Device::SwUpdate::Create(SuplaDeviceClass *,
 }
 
 SwUpdateMock::SwUpdateMock()
-    : Supla::Device::SwUpdate(nullptr, nullptr) {
+    : Supla::Device::SwUpdate(nullptr, nullptr, Supla::SwUpdateMode::NotSet) {
   instance = this;
 }
 
@@ -81,4 +87,8 @@ void SwUpdateMock::setNewVersion(const char *version) {
 
 bool SwUpdateMock::isSecurityOnlyOnFacade() {
   return facade->isSecurityOnly();
+}
+
+bool SwUpdateMock::isSkipCertOnFacade() {
+  return facade->isSkipCert();
 }

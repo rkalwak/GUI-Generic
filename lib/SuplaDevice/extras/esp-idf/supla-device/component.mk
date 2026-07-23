@@ -21,6 +21,9 @@ COMPONENT_OBJS := \
   ../../../src/supla/io.o \
   ../../../src/supla/local_action.o \
   ../../../src/supla/log_wrapper.o \
+  ../../../src/supla/debug/command_processor.o \
+  ../../../src/supla/debug/debug_log.o \
+  ../../../src/supla/debug/debug_log_tcp_server.o \
   ../../../src/supla/time.o \
   ../../../src/supla/timer.o \
   ../../../src/supla/tools.o \
@@ -63,6 +66,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/network/html/h2_tag.o \
   ../../../src/supla/network/html/h3_tag.o \
   ../../../src/supla/network/html/button_action_trigger_config.o \
+  ../../../src/supla/network/html/channel_function_parameters.o \
   ../../../src/supla/network/html/text_cmd_input_parameter.o \
   ../../../src/supla/network/html/select_cmd_input_parameter.o \
   ../../../src/supla/network/html/volume_parameters.o \
@@ -102,6 +106,8 @@ COMPONENT_OBJS := \
   ../../../src/supla/control/rgb_base.o \
   ../../../src/supla/control/rgb_leds.o \
   ../../../src/supla/control/rgbw_base.o \
+  ../../../src/supla/control/lighting_pwm_base.o \
+  ../../../src/supla/control/lighting_pwm_leds.o \
   ../../../src/supla/control/rgbw_leds.o \
   ../../../src/supla/control/roller_shutter.o \
   ../../../src/supla/control/roller_shutter_interface.o \
@@ -130,6 +136,7 @@ COMPONENT_OBJS := \
   ../../../src/supla/device/factory_test.o \
   ../../../src/supla/device/remote_device_config.o \
   ../../../src/supla/device/register_device.o \
+  ../../../src/supla/device/channel_conflict_resolver.o \
 	\
   ../../../src/supla/sensor/binary.o \
 	../../../src/supla/sensor/binary_base.o \
@@ -148,6 +155,21 @@ COMPONENT_OBJS := \
   ../../../src/supla/sensor/HC_SR04.o \
   ../../../src/supla/sensor/temperature_drop_sensor.o \
 	../../../src/supla/sensor/container.o \
+	\
+	../../../src/supla/suplet/assignment_applier.o \
+	../../../src/supla/suplet/capability_registry.o \
+	../../../src/supla/suplet/channel_map.o \
+	../../../src/supla/suplet/definition.o \
+	../../../src/supla/suplet/definition_cache.o \
+	../../../src/supla/suplet/json_definition.o \
+	../../../src/supla/suplet/json_instance_config.o \
+	../../../src/supla/suplet/manager.o \
+	../../../src/supla/suplet/registry.o \
+	../../../src/supla/suplet/runtime.o \
+	../../../src/supla/suplet/server_config.o \
+	../../../src/supla/suplet/storage.o \
+	../../../src/supla/suplet/thermometer_group.o \
+	../../../src/supla/suplet/virtual_channel.o \
 	\
   ../../../src/nettle/bignum.o \
   ../../../src/nettle/gmp-glue.o \
@@ -182,6 +204,7 @@ COMPONENT_SRCDIRS := ../../../src/supla-common \
 										 ../../../src/supla/control \
 										 ../../../src/supla/device \
 										 ../../../src/supla/sensor \
+										 ../../../src/supla/suplet \
 										 ../../../src/supla/storage \
 										 ../../../src \
 										 ../../../src/supla/modbus \

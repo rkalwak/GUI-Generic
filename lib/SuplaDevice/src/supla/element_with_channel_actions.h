@@ -80,6 +80,9 @@ class SuplaSrpc;
 
 class ElementWithChannelActions : public Element, public LocalAction {
  public:
+  explicit ElementWithChannelActions(
+      ElementMode mode = ElementMode::Registered);
+
   // Override local action methods in order to delegate execution to Channel
   void addAction(uint16_t action,
       ActionHandler &client,  // NOLINT(runtime/references)
@@ -87,6 +90,25 @@ class ElementWithChannelActions : public Element, public LocalAction {
       bool alwaysEnabled = false) override;
   void addAction(uint16_t action, ActionHandler *client, uint16_t event,
       bool alwaysEnabled = false) override;
+  /**
+   * Adds a conditional local action for a specific event.
+   *
+   * The condition source is this element and the condition client is the
+   * provided action handler. The existing addAction(action, client, condition)
+   * overload remains a shorthand for ON_CHANGE.
+   */
+  virtual void addAction(uint16_t action,
+      ActionHandler &client,  // NOLINT(runtime/references)
+      uint16_t event,
+      Supla::Condition *condition,
+      bool alwaysEnabled = false);
+  /**
+   * Pointer variant of addAction(action, client, event, condition).
+   */
+  virtual void addAction(uint16_t action, ActionHandler *client,
+      uint16_t event,
+      Supla::Condition *condition,
+      bool alwaysEnabled = false);
   virtual void addAction(uint16_t action,
       ActionHandler &client,  // NOLINT(runtime/references)
       Supla::Condition *condition,
@@ -104,16 +126,10 @@ class ElementWithChannelActions : public Element, public LocalAction {
       TSDS_SetChannelConfigResult *result) override;
   void purgeConfig() override;
 
-  void clearChannelConfigChangedFlag();
 
   void runAction(uint16_t event) const override;
 
-  // returns true if function was changed (previous one was different)
-  virtual bool setAndSaveFunction(uint32_t channelFunction);
-  virtual bool loadFunctionFromConfig();
-  virtual bool saveConfigChangeFlag() const;
-  virtual bool loadConfigChangeFlag();
-  bool isAnyUpdatePending() override;
+  bool isAnyUpdatePending() const override;
 
   // methods to override for channels with runtime config support
   virtual ApplyConfigResult applyChannelConfig(TSD_ChannelConfig *result,
@@ -123,6 +139,12 @@ class ElementWithChannelActions : public Element, public LocalAction {
   void triggerSetChannelConfig(int configType = SUPLA_CONFIG_TYPE_DEFAULT);
 
  protected:
+  // returns true if function was changed (previous one was different)
+  virtual bool setAndSaveFunction(uint32_t channelFunction);
+  virtual bool loadFunctionFromConfig();
+  virtual bool saveConfigChangeFlag() const;
+  virtual bool loadConfigChangeFlag();
+  void clearChannelConfigChangedFlag();
   bool iterateConfigExchange();
   /**
    * @brief Returns the next config type to be sent

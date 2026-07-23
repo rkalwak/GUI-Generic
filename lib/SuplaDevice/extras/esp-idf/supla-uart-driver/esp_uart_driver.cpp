@@ -36,15 +36,15 @@ UartDriver::~UartDriver() {
 
 void UartDriver::initialize() {
   if (!isInitialized()) {
-    const uart_config_t uartConfig = {
-        .baud_rate = 115200,
-        .data_bits = UART_DATA_8_BITS,
-        .parity = UART_PARITY_DISABLE,
-        .stop_bits = UART_STOP_BITS_1,
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-        .rx_flow_ctrl_thresh = 0,
-        .source_clk = UART_SCLK_DEFAULT,
-    };
+    uart_config_t uartConfig = {};
+
+    uartConfig.baud_rate = 115200;
+    uartConfig.data_bits = UART_DATA_8_BITS;
+    uartConfig.parity = UART_PARITY_DISABLE;
+    uartConfig.stop_bits = UART_STOP_BITS_1;
+    uartConfig.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
+    uartConfig.rx_flow_ctrl_thresh = 0;
+    uartConfig.source_clk = UART_SCLK_DEFAULT;
     // We won't use a buffer for sending data.
     uart_driver_install(uartNum, RX_BUF_SIZE * 2, 0, 0, NULL, 0);
     uart_param_config(uartNum, &uartConfig);

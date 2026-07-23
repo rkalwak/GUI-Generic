@@ -28,6 +28,13 @@ class SuplaDeviceClass;
 
 namespace Supla {
 
+#ifndef ARDUINO
+#ifdef F
+#undef F
+#endif
+#define F(argument_F) (argument_F)
+#endif
+
 class Client {
  public:
   Client();
@@ -46,6 +53,10 @@ class Client {
 
   size_t print(const char *);
   size_t println(const char *);
+#ifdef ARDUINO
+  size_t print(const ::__FlashStringHelper *);
+  size_t println(const ::__FlashStringHelper *);
+#endif
   size_t println();
 
   int read();
@@ -63,6 +74,7 @@ class Client {
   uint32_t getSrcConnectionIPAddress() const;
 
  protected:
+  virtual bool isCertificateValidationEnabled() const;
   virtual int connectImp(const char *host, uint16_t port) = 0;
   virtual size_t writeImp(const uint8_t *buf, size_t size) = 0;
   virtual int readImp(uint8_t *buf, size_t size) = 0;

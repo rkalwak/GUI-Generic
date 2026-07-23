@@ -40,6 +40,7 @@ void Supla::LinuxNetwork::setup() {
 }
 
 void Supla::LinuxNetwork::disable() {
+  isDeviceReady = false;
 }
 
 bool Supla::LinuxNetwork::iterate() {
@@ -49,4 +50,5 @@ bool Supla::LinuxNetwork::iterate() {
 void Supla::LinuxNetwork::fillStateData(TDSC_ChannelState *channelState) {
   // Source IP address will be configured by SuplaSrpc class
   // TODO(klew): add obtaining MAC address based on IP
+  (void)(channelState);
 }

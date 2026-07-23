@@ -84,7 +84,7 @@ void setup() {
     bool levelInverted = ConfigESP->getLevel(ledGpio);
     #if CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2 || \
     CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C3
-    auto extCfgLed = new Supla::Io::RgbLed(255, 255, 255);
+    Supla::Control::StatusLedRGB *extCfgLed = new Supla::Control::StatusLedRGB(255, 255, 255);
     Serial.println("Initializing Status LED on GPIO " + String(ledGpio) + " inverted: " + String(!levelInverted));
     statusLed = new Supla::Device::StatusLed(extCfgLed, ledGpio, !levelInverted);
     #else

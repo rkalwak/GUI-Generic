@@ -195,6 +195,19 @@ void handleOther(int save) {
   addFormHeaderEnd();
 #endif
 
+#ifdef SUPLA_HCSR04KPOP
+  addFormHeader(S_GPIO_SETTINGS_FOR S_SPACE S_HC_SR04_KPOP);
+  addListGPIOBox(INPUT_TRIG_GPIO, F("TRIG"), FUNCTION_TRIG);
+  addListGPIOBox(INPUT_ECHO_GPIO, F("ECHO"), FUNCTION_ECHO);
+  addNumberBox(INPUT_HC_SR04_KPOP_MIN, S_MIN_RANGE_CM, S_MIN_RANGE_CM, false,
+               ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValue());
+  addNumberBox(INPUT_HC_SR04_KPOP_MAX, S_MAX_RANGE_CM, S_MAX_RANGE_CM, false,
+               ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValue());
+  addCheckBox(INPUT_HC_SR04_KPOP_CALCULATE, S_CALCULATE,
+               ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool());
+  addFormHeaderEnd();
+#endif
+
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP
   addFormHeader(S_GPIO_SETTINGS_FOR S_SPACE S_VINDRIKTNING_IKEA);
   addListGPIOBox(INPUT_VINDRIKTNING_IKEA_RX, S_RX, FUNCTION_VINDRIKTNING_IKEA);
@@ -402,6 +415,17 @@ void handleOtherSave() {
     return;
   }
   ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, WebServer->httpServer->arg(INPUT_HC_SR04_MAX_SENSOR_READ).c_str());
+#endif
+
+#ifdef SUPLA_HCSR04KPOP
+  if (!WebServer->saveGPIO(INPUT_TRIG_GPIO, FUNCTION_TRIG) || !WebServer->saveGPIO(INPUT_ECHO_GPIO, FUNCTION_ECHO)) {
+    handleOther(6);
+    return;
+  }
+  ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, WebServer->httpServer->arg(INPUT_HC_SR04_MAX_SENSOR_READ).c_str());
+  ConfigManager->set(KEY_HC_SR04_KPOP_MIN, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MIN).c_str());
+  ConfigManager->set(KEY_HC_SR04_KPOP_MAX, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MAX).c_str());
+  ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_CALCULATE).toInt());
 #endif
 
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP

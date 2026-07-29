@@ -342,10 +342,20 @@ SuplaConfigManager::SuplaConfigManager() : Supla::SPIFFSConfig(CONFIG_MAX_SIZE) 
     this->addKey(KEY_PUSHOVER_SOUND, 3 * MAX_PUSHOVER_MESSAGE, false);
 #endif
 
-#ifdef SUPLA_HC_SR04
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_HCSR04KPOP)
     this->addKey(KEY_HC_SR04_MAX_SENSOR_READ, 3);
 #else
     this->addKey(KEY_HC_SR04_MAX_SENSOR_READ, 3, false);
+#endif
+
+#ifdef SUPLA_HCSR04KPOP
+    this->addKey(KEY_HC_SR04_KPOP_MIN, 4);
+    this->addKey(KEY_HC_SR04_KPOP_MAX, 4);
+    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 1);
+#else
+    this->addKey(KEY_HC_SR04_KPOP_MIN, 4, false);
+    this->addKey(KEY_HC_SR04_KPOP_MAX, 4, false);
+    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 1, false);
 #endif
 
 #ifdef SUPLA_DIRECT_LINKS

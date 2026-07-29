@@ -84,6 +84,10 @@
 #include "src/sensor/HC_SR04_NewPing.h"
 #endif
 
+#ifdef SUPLA_HCSR04KPOP
+#include "src/sensor/HC_SR04_KPOP.h"
+#endif
+
 #include <supla/sensor/binary.h>
 
 #ifdef SUPLA_BME280

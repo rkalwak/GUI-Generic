@@ -19,7 +19,7 @@
 
 #include "SuplaDeviceGUI.h"
 
-#if defined(SUPLA_HC_SR04) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA_KPOP) || \
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_HCSR04KPOP) || defined(SUPLA_DIRECT_LINKS_SENSOR_THERMOMETR) || defined(SUPLA_VINDRIKTNING_IKEA_KPOP) || \
     defined(SUPLA_PMSX003_KPOP) || defined(SUPLA_DIRECT_LINKS_MULTI_SENSOR)
 #define GUI_SENSOR_OTHER
 #endif
@@ -137,10 +137,19 @@ void changePZEMAddress(uint8_t address);
 #define INPUT_PUSHOVER_SOUND   "ips"
 #endif
 
-#ifdef SUPLA_HC_SR04
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_HCSR04KPOP)
 #define INPUT_TRIG_GPIO               "trig"
 #define INPUT_ECHO_GPIO               "echo"
+#endif
+
+#if defined(SUPLA_HC_SR04) || defined(SUPLA_HCSR04KPOP)
 #define INPUT_HC_SR04_MAX_SENSOR_READ "hsm"
+#endif
+
+#ifdef SUPLA_HCSR04KPOP
+#define INPUT_HC_SR04_KPOP_MIN "hgmin"
+#define INPUT_HC_SR04_KPOP_MAX "hgmax"
+#define INPUT_HC_SR04_KPOP_CALCULATE "hgcalc"
 #endif
 
 #ifdef SUPLA_IMPULSE_COUNTER

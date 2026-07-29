@@ -326,6 +326,22 @@ void setup() {
   }
 #endif
 
+#ifdef SUPLA_HCSR04KPOP
+  if (ConfigESP->getGpio(FUNCTION_TRIG) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_ECHO) != OFF_GPIO) {
+    Supla::Sensor::HC_SR04_KPOP *hcsr04;
+    int16_t gpmMin = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValueInt());
+    int16_t gpmMax = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValueInt());
+    bool calibrate = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool();
+    if (gpmMax == 0) {
+      gpmMax = 500;
+    }
+
+    if (ConfigManager->get(KEY_HC_SR04_MAX_SENSOR_READ)->getValueInt() > 0) {
+      hcsr04 = new Supla::Sensor::HC_SR04_KPOP(ConfigESP->getGpio(FUNCTION_TRIG), ConfigESP->getGpio(FUNCTION_ECHO), gpmMin, gpmMax, calibrate);
+    }
+  }
+#endif
+
 #ifdef GUI_SENSOR_SPI
   if (ConfigESP->getGpio(FUNCTION_CLK) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_CS) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_MISO) != OFF_GPIO) {
 #ifdef SUPLA_MAX6675

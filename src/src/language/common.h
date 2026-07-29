@@ -14,6 +14,7 @@
 //### Device codes not translated ###
 #define S_LED                            "LED"
 #define S_HC_SR04                        "HC-SR04"
+#define S_HC_SR04_KPOP                   "HC-SR04 KPOP"
 #define S_HLW8012                        "HLW8012"
 #define S_RGBW_RGB_DIMMER                "RGBW/RGB/DIMMER"
 #define S_OLED                           "OLED"

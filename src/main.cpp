@@ -328,17 +328,15 @@ void setup() {
 
 #ifdef SUPLA_HCSR04KPOP
   if (ConfigESP->getGpio(FUNCTION_TRIG) != OFF_GPIO && ConfigESP->getGpio(FUNCTION_ECHO) != OFF_GPIO) {
-    Supla::Sensor::HC_SR04_KPOP *hcsr04;
+    Supla::Sensor::HC_SR04_KPOP *hcsr04KPOP;
     int16_t gpmMin = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValueInt());
     int16_t gpmMax = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValueInt());
-    bool calibrate = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool();
+    bool calculate = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool();
     if (gpmMax == 0) {
       gpmMax = 500;
     }
 
-    if (ConfigManager->get(KEY_HC_SR04_MAX_SENSOR_READ)->getValueInt() > 0) {
-      hcsr04 = new Supla::Sensor::HC_SR04_KPOP(ConfigESP->getGpio(FUNCTION_TRIG), ConfigESP->getGpio(FUNCTION_ECHO), gpmMin, gpmMax, calibrate);
-    }
+    hcsr04KPOP = new Supla::Sensor::HC_SR04_KPOP(ConfigESP->getGpio(FUNCTION_TRIG), ConfigESP->getGpio(FUNCTION_ECHO), gpmMin, gpmMax, calculate, false);
   }
 #endif
 

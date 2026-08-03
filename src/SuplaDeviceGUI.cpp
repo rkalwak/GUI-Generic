@@ -394,7 +394,6 @@ void setupPreConfiguredSettingsIfAvailable() {
 #endif  // Parameter_SUPLA_CC1101_Enabled
 
 #if defined(SUPLA_HCSR04KPOP) && defined(Parameter_SUPLA_HCSR04KPOP_Min) && defined(Parameter_SUPLA_HCSR04KPOP_Max)
-  ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, "1");
   ConfigManager->set(KEY_HC_SR04_KPOP_MIN, Parameter_SUPLA_HCSR04KPOP_Min);
   ConfigManager->set(KEY_HC_SR04_KPOP_MAX, Parameter_SUPLA_HCSR04KPOP_Max);
   ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, Parameter_SUPLA_HCSR04KPOP_Calculate);

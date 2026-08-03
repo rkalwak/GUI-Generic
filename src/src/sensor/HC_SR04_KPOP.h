@@ -25,23 +25,29 @@ namespace Supla {
 namespace Sensor {
 class HC_SR04_KPOP : public GeneralPurposeMeasurement {
  public:
-  HC_SR04_KPOP(int8_t trigPin, int8_t echoPin, int16_t minRange = 0, int16_t maxRange = 500, bool calibrate = false)
-      : GeneralPurposeMeasurement(nullptr, false) {
+  HC_SR04_KPOP(int8_t trigPin, int8_t echoPin, int16_t minRange = 0, int16_t maxRange = 500, bool calculate = false, bool simulate = false)
+  : GeneralPurposeMeasurement(nullptr, false) {
     _trigPin = trigPin;
     _echoPin = echoPin;
     _minRange = minRange;
     _maxRange = maxRange;
-    _calibrate = calibrate;
+    _calculate = calculate;
+    _simulate = simulate;
 
-    sonar = new NewPing(_trigPin, _echoPin, _maxRange > 0 ? _maxRange : 500);
-    delay(100);  // give time to initialize, preventing ping_median fails
-    sonar->ping_median(5);
-
+    if(!_simulate) { 
+      sonar = new NewPing(_trigPin, _echoPin, _maxRange > 0 ? _maxRange : 500);
+      delay(100);  // give time to initialize, preventing ping_median fails
+      sonar->ping_median(5);
+    }
     setDefaultUnitAfterValue("%");
     setDefaultValuePrecision(2);
   }
 
   virtual double getValue() {
+    if(_simulate) {
+      return random(_minRange, _maxRange);  // Simulated value for testing purposes
+    }
+
     uint32_t echoTime = sonar->ping_median(5);
     if (echoTime == 0) {
       return NAN;
@@ -53,7 +59,7 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
       return NAN;
     }
 
-    if(_calibrate) {
+    if(_calculate) {
       float percent = (distance - _minRange) / (float)(_maxRange - _minRange) * 100.0f;
       if (percent < 0.0f) {
         percent = 0.0f;
@@ -75,7 +81,8 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
   int8_t _echoPin;
   int16_t _minRange;
   int16_t _maxRange;
-  bool _calibrate;
+  bool _calculate;
+  bool _simulate;
 
   NewPing *sonar = nullptr;
 };

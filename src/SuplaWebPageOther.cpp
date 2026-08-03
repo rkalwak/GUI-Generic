@@ -203,8 +203,8 @@ void handleOther(int save) {
                ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValue());
   addNumberBox(INPUT_HC_SR04_KPOP_MAX, S_MAX_RANGE_CM, S_MAX_RANGE_CM, false,
                ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValue());
-  addCheckBox(INPUT_HC_SR04_KPOP_CALCULATE, S_CALCULATE,
-               ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool());
+  selected = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueInt() > 0;
+  addCheckBox(INPUT_HC_SR04_KPOP_CALCULATE, S_CALCULATE, selected);
   addFormHeaderEnd();
 #endif
 
@@ -422,10 +422,13 @@ void handleOtherSave() {
     handleOther(6);
     return;
   }
-  ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, WebServer->httpServer->arg(INPUT_HC_SR04_MAX_SENSOR_READ).c_str());
+
   ConfigManager->set(KEY_HC_SR04_KPOP_MIN, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MIN).c_str());
   ConfigManager->set(KEY_HC_SR04_KPOP_MAX, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MAX).c_str());
-  ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_CALCULATE).toInt());
+  bool selected = strcmp(WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_CALCULATE).c_str(), "") != 0;
+  ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, selected ? 1 : 0);
+  
+  
 #endif
 
 #ifdef SUPLA_VINDRIKTNING_IKEA_KPOP

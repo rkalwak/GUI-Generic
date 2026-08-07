@@ -331,12 +331,12 @@ void setup() {
     Supla::Sensor::HC_SR04_KPOP *hcsr04KPOP;
     int16_t gpmMin = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValueInt());
     int16_t gpmMax = static_cast<int16_t>(ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValueInt());
-    bool calculate = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueBool();
+    int8_t calculation = static_cast<int8_t>(ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueInt());
     if (gpmMax == 0) {
       gpmMax = 500;
     }
 
-    hcsr04KPOP = new Supla::Sensor::HC_SR04_KPOP(ConfigESP->getGpio(FUNCTION_TRIG), ConfigESP->getGpio(FUNCTION_ECHO), gpmMin, gpmMax, calculate, false);
+    hcsr04KPOP = new Supla::Sensor::HC_SR04_KPOP(ConfigESP->getGpio(FUNCTION_TRIG), ConfigESP->getGpio(FUNCTION_ECHO), gpmMin, gpmMax, calculation, false);
   }
 #endif
 

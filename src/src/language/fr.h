@@ -242,5 +242,11 @@
 #define S_WMBUS_SENSOR_CHANNEL "Sensor channel type"
 #endif
 
+#ifdef SUPLA_HCSR04KPOP
+#define S_HCSR04_DISABLED "Désactivé (comptage en cm)"
+#define S_HCSR04_MIN_MAX "Min->0%, Max->100%"
+#define S_HCSR04_MAX_MIN "Min->100%, Max->0%,"
+#endif
+
 #define S_SET "Définir"
 #endif  // _LANGUAGE_FR_S_H_

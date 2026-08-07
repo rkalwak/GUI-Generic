@@ -203,8 +203,10 @@ void handleOther(int save) {
                ConfigManager->get(KEY_HC_SR04_KPOP_MIN)->getValue());
   addNumberBox(INPUT_HC_SR04_KPOP_MAX, S_MAX_RANGE_CM, S_MAX_RANGE_CM, false,
                ConfigManager->get(KEY_HC_SR04_KPOP_MAX)->getValue());
-  selected = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueInt() > 0;
-  addCheckBox(INPUT_HC_SR04_KPOP_CALCULATE, S_CALCULATE, selected);
+  selected = ConfigManager->get(KEY_HC_SR04_KPOP_CALCULATE)->getValueInt();
+
+  addListBox(INPUT_HC_SR04_KPOP_CALCULATE, S_CALCULATE, HCSR04_CALCULATE_LIST_P, 3, selected);
+  
   addFormHeaderEnd();
 #endif
 
@@ -425,8 +427,7 @@ void handleOtherSave() {
 
   ConfigManager->set(KEY_HC_SR04_KPOP_MIN, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MIN).c_str());
   ConfigManager->set(KEY_HC_SR04_KPOP_MAX, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_MAX).c_str());
-  bool selected = strcmp(WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_CALCULATE).c_str(), "") != 0;
-  ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, selected ? 1 : 0);
+  ConfigManager->set(KEY_HC_SR04_KPOP_CALCULATE, WebServer->httpServer->arg(INPUT_HC_SR04_KPOP_CALCULATE).c_str());
   
   
 #endif

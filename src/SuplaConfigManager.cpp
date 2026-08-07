@@ -351,11 +351,11 @@ SuplaConfigManager::SuplaConfigManager() : Supla::SPIFFSConfig(CONFIG_MAX_SIZE) 
 #ifdef SUPLA_HCSR04KPOP
     this->addKey(KEY_HC_SR04_KPOP_MIN, 4);
     this->addKey(KEY_HC_SR04_KPOP_MAX, 4);
-    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 2);
+    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 4);
 #else
     this->addKey(KEY_HC_SR04_KPOP_MIN, 4, false);
     this->addKey(KEY_HC_SR04_KPOP_MAX, 4, false);
-    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 1, false);
+    this->addKey(KEY_HC_SR04_KPOP_CALCULATE, 4, false);
 #endif
 
 #ifdef SUPLA_DIRECT_LINKS

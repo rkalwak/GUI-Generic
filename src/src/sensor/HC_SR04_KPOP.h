@@ -25,41 +25,53 @@ namespace Supla {
 namespace Sensor {
 class HC_SR04_KPOP : public GeneralPurposeMeasurement {
  public:
-  HC_SR04_KPOP(int8_t trigPin, int8_t echoPin, int16_t minRange = 0, int16_t maxRange = 500, bool calculate = false, bool simulate = false)
+  HC_SR04_KPOP(int8_t trigPin, int8_t echoPin, int16_t minRange = 0, int16_t maxRange = 500,  int8_t calculation = 0, bool simulate = false)
   : GeneralPurposeMeasurement(nullptr, false) {
     _trigPin = trigPin;
     _echoPin = echoPin;
     _minRange = minRange;
     _maxRange = maxRange;
-    _calculate = calculate;
     _simulate = simulate;
-
+    _calculation = calculation;
+    setDefaultUnitAfterValue("%");
+    setDefaultValuePrecision(2);
     if(!_simulate) { 
       sonar = new NewPing(_trigPin, _echoPin, _maxRange > 0 ? _maxRange : 500);
       delay(100);  // give time to initialize, preventing ping_median fails
       sonar->ping_median(5);
     }
-    setDefaultUnitAfterValue("%");
-    setDefaultValuePrecision(2);
+
   }
 
+  float calculateLevelPercent(float distance) {
+  float level = (_minRange - distance) * 100.0 / (_minRange - _maxRange);
+  //if (level > 100) level = 100;
+  //if (level < 0) level = 0;
+  return level;
+}
+
   virtual double getValue() {
+    float distance = 0.0f;
     if(_simulate) {
-      return random(_minRange, _maxRange);  // Simulated value for testing purposes
+      distance= random(_minRange, _maxRange);  // Simulated value for testing purposes
     }
+    else {
+      uint32_t echoTime = sonar->ping_median(5);
+      if (echoTime == 0) {
+        return NAN;
+      }
 
-    uint32_t echoTime = sonar->ping_median(5);
-    if (echoTime == 0) {
-      return NAN;
+      distance = (float)echoTime / US_ROUNDTRIP_CM;
     }
-
-    float distance = (float)echoTime / US_ROUNDTRIP_CM;
 
     if (_maxRange == _minRange) {
       return NAN;
     }
 
-    if(_calculate) {
+    if(_calculation == 0) {
+      return static_cast<double>(distance);
+    }
+    else if(_calculation == 1) {
       float percent = (distance - _minRange) / (float)(_maxRange - _minRange) * 100.0f;
       if (percent < 0.0f) {
         percent = 0.0f;
@@ -68,6 +80,10 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
         percent = 100.0f;
       }
 
+      return static_cast<double>(percent);
+    }
+    else if (_calculation == 2) {
+      float percent = (_minRange - distance) * 100.0 / (_minRange - _maxRange);
       return static_cast<double>(percent);
     } 
     else {
@@ -81,8 +97,8 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
   int8_t _echoPin;
   int16_t _minRange;
   int16_t _maxRange;
-  bool _calculate;
   bool _simulate;
+  int8_t _calculation;
 
   NewPing *sonar = nullptr;
 };

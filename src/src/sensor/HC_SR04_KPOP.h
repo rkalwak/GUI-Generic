@@ -43,13 +43,6 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
 
   }
 
-  float calculateLevelPercent(float distance) {
-  float level = (_minRange - distance) * 100.0 / (_minRange - _maxRange);
-  //if (level > 100) level = 100;
-  //if (level < 0) level = 0;
-  return level;
-}
-
   virtual double getValue() {
     float distance = 0.0f;
     if(_simulate) {
@@ -83,7 +76,7 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
       return static_cast<double>(percent);
     }
     else if (_calculation == 2) {
-      float percent = (_minRange - distance) * 100.0 / (_minRange - _maxRange);
+      float percent = (_maxRange - distance) * 100.0f / (_maxRange - _minRange);
       return static_cast<double>(percent);
     } 
     else {

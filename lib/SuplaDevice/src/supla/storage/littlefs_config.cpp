@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SUPLA_EXCLUDE_LITTLEFS_CONFIG
 
@@ -33,6 +18,7 @@ namespace Supla {
 const char ConfigFileName[] = "/supla-dev.cfg";
 const char BackupConfigFileName[] = "/supla-dev.cfg.bak";
 const char CustomCAFileName[] = "/custom_ca.pem";
+const char MqttCAFileName[] = "/mqtt_ca.pem";
 };  // namespace Supla
 
 #define BIG_BLOG_SIZE_TO_BE_STORED_IN_FILE 32
@@ -238,6 +224,80 @@ bool Supla::LittleFsConfig::setCustomCA(const char* customCA) {
   return true;
 }
 
+bool Supla::LittleFsConfig::getMqttCA(char* mqttCA, int maxSize) {
+  if (!initLittleFs()) {
+    return false;
+  }
+
+  if (!LittleFS.exists(MqttCAFileName)) {
+    LittleFS.end();
+    return false;
+  }
+
+  File file = LittleFS.open(MqttCAFileName, "r");
+  if (!file) {
+    SUPLA_LOG_ERROR("LittleFsConfig: failed to open MQTT CA file");
+    LittleFS.end();
+    return false;
+  }
+
+  int fileSize = file.size();
+  if (fileSize >= maxSize) {
+    SUPLA_LOG_ERROR("LittleFsConfig: MQTT CA file is too big");
+    file.close();
+    LittleFS.end();
+    return false;
+  }
+
+  int bytesRead = file.read(reinterpret_cast<uint8_t*>(mqttCA), fileSize);
+  file.close();
+  LittleFS.end();
+  if (bytesRead != fileSize) {
+    return false;
+  }
+  mqttCA[fileSize] = '\0';
+  return true;
+}
+
+int Supla::LittleFsConfig::getMqttCASize() {
+  if (!initLittleFs()) {
+    return 0;
+  }
+
+  int fileSize = 0;
+  if (LittleFS.exists(MqttCAFileName)) {
+    File file = LittleFS.open(MqttCAFileName, "r");
+    if (file) {
+      fileSize = file.size();
+      file.close();
+    } else {
+      SUPLA_LOG_ERROR("LittleFsConfig: failed to open MQTT CA file");
+    }
+  }
+  LittleFS.end();
+  return fileSize;
+}
+
+bool Supla::LittleFsConfig::setMqttCA(const char* mqttCA) {
+  if (mqttCA == nullptr || !initLittleFs()) {
+    return false;
+  }
+
+  File file = LittleFS.open(MqttCAFileName, "w");
+  if (!file) {
+    SUPLA_LOG_ERROR("LittleFsConfig: failed to open MQTT CA file for write");
+    LittleFS.end();
+    return false;
+  }
+
+  size_t dataSize = strlen(mqttCA);
+  size_t bytesWritten = file.write(
+      reinterpret_cast<const uint8_t*>(mqttCA), dataSize);
+  file.close();
+  LittleFS.end();
+  return bytesWritten == dataSize;
+}
+
 bool Supla::LittleFsConfig::initLittleFs() {
   bool result = LittleFS.begin();
   if (!result) {
@@ -260,6 +320,7 @@ void Supla::LittleFsConfig::removeAll() {
     return;
   }
   LittleFS.remove(CustomCAFileName);
+  LittleFS.remove(MqttCAFileName);
 
   File suplaDir = LittleFS.open("/supla", "r");
   if (suplaDir && suplaDir.isDirectory()) {
@@ -346,12 +407,14 @@ bool Supla::LittleFsConfig::getBlob(const char* key,
 
   char filename[50] = {};
   snprintf(filename, sizeof(filename), "/supla/%s", key);
+  if (!LittleFS.exists(filename)) {
+    LittleFS.end();
+    return false;
+  }
   File file = LittleFS.open(filename, "r");
   if (!file) {
-    SUPLA_LOG_DEBUG(
-        "LittleFsConfig: failed to open blob file \"%s\" for read, blob not "
-        "found",
-        key);
+    SUPLA_LOG_ERROR("LittleFsConfig: failed to open blob file \"%s\" for read",
+                    key);
     LittleFS.end();
     return false;
   }

@@ -1,20 +1,5 @@
-/*
-   Copyright (C) AC SOFTWARE SP. Z O.O.
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-   */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "esp_idf_wifi.h"
 
@@ -27,9 +12,7 @@
 #include <esp_tls.h>
 #include <esp_wifi.h>
 
-#ifdef SUPLA_DEVICE_ESP32
 #include <esp_mac.h>
-#endif
 
 #include <SuplaDevice.h>
 #include <fcntl.h>
@@ -148,6 +131,7 @@ static void eventHandler(void *arg,
         if (thisNetIntfPtr) {
           thisNetIntfPtr->setIpReady(false);
           thisNetIntfPtr->setWifiConnected(false);
+          thisNetIntfPtr->setLastDisconnectReason(data->reason);
           if (firstWiFiScanDone) {
             // we ignore connection error if it happens first time
             thisNetIntfPtr->logWifiReason(data->reason);
@@ -237,13 +221,10 @@ void Supla::EspIdfWifi::setup() {
   if (!initDone) {
     Supla::initEspNetif();
 
-
-#ifdef SUPLA_DEVICE_ESP32
     apNetIf = esp_netif_create_default_wifi_ap();
     esp_netif_set_hostname(apNetIf, hostname);
     staNetIf = esp_netif_create_default_wifi_sta();
     esp_netif_set_hostname(staNetIf, hostname);
-#endif /*SUPLA_DEVICE_ESP32*/
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     Supla::InputNoiseGuard::NotifyWifiTransition();
@@ -309,9 +290,7 @@ void Supla::EspIdfWifi::setup() {
     }
 
     wifi_config.sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
-#ifdef SUPLA_DEVICE_ESP32
     wifi_config.sta.failure_retry_cnt = 2;
-#endif
 
     if (strlen(reinterpret_cast<char *>(wifi_config.sta.password))) {
       wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
@@ -320,7 +299,6 @@ void Supla::EspIdfWifi::setup() {
     Supla::InputNoiseGuard::NotifyWifiTransition();
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-#ifdef SUPLA_DEVICE_ESP32
     if (hasStaticIpConfig() && staNetIf != nullptr) {
       esp_err_t dhcpStopResult = esp_netif_dhcpc_stop(staNetIf);
       if (dhcpStopResult != ESP_OK) {
@@ -348,7 +326,6 @@ void Supla::EspIdfWifi::setup() {
         SUPLA_LOG_INFO("[%s] static IP configured", getIntfName());
       }
     }
-#endif
   }
   delay(50);
 
@@ -365,11 +342,6 @@ void Supla::EspIdfWifi::setup() {
 
   allowDisable = true;
   initDone = true;
-#ifndef SUPLA_DEVICE_ESP32
-  // ESP8266 hostname settings have to be done after esp_wifi_start
-  tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname);
-  tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, hostname);
-#endif
 }
 
 void Supla::EspIdfWifi::disable() {
@@ -446,7 +418,6 @@ void Supla::EspIdfWifi::uninit() {
                         getIntfName(),
                         result);
     }
-#ifdef SUPLA_DEVICE_ESP32
     if (apNetIf) {
       esp_netif_destroy_default_wifi(apNetIf);
       apNetIf = nullptr;
@@ -455,7 +426,6 @@ void Supla::EspIdfWifi::uninit() {
       esp_netif_destroy_default_wifi(staNetIf);
       staNetIf = nullptr;
     }
-#endif
 
     result = esp_wifi_deinit();
     if (result != ESP_OK && result != ESP_ERR_WIFI_NOT_INIT) {
@@ -493,6 +463,21 @@ void Supla::EspIdfWifi::setIpReady(bool ready) {
 void Supla::EspIdfWifi::setWifiConnected(bool state) {
   connectedToWifiTimestamp = millis();
   isWifiConnected = state;
+  if (state) {
+    lastDisconnectReason = 0;
+  }
+}
+
+void Supla::EspIdfWifi::setLastDisconnectReason(int reason) {
+  lastDisconnectReason = reason;
+}
+
+bool Supla::EspIdfWifi::isAccessPointConnected() const {
+  return isWifiConnected;
+}
+
+int Supla::EspIdfWifi::getLastDisconnectReason() const {
+  return lastDisconnectReason;
 }
 
 void Supla::EspIdfWifi::setIpv4Addr(uint32_t ip) {
@@ -680,11 +665,9 @@ uint32_t Supla::EspIdfWifi::getConfiguredStaticIp() const {
   return getNetifConfig().ip;
 }
 
-#ifdef SUPLA_DEVICE_ESP32
 esp_netif_t *Supla::EspIdfWifi::getStaNetIf() const {
   return staNetIf;
 }
-#endif
 
 void Supla::EspIdfWifi::addSecurityLog(uint32_t ip, const char *log) const {
   if (sdc) {

@@ -1,21 +1,9 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <SuplaDevice.h>
 #include <arduino_mock.h>
+#include <board_mock.h>
 #include <clock_mock.h>
 #include <config_mock.h>
 #include <element_mock.h>
@@ -56,6 +44,7 @@ class SuplaDeviceTests : public ::testing::Test {
     Supla::Channel::resetToDefaults();
   }
   virtual void TearDown() {
+    setDeviceSoftwareResetSupported(true);
     Supla::Channel::resetToDefaults();
   }
 };
@@ -113,7 +102,72 @@ class ConfigModeSuplaDevice : public SuplaDeviceClass {
   Supla::CfgModeState getCfgModeStateForTest() const {
     return cfgModeState;
   }
+
+  void setCfgModeTimerForTest(uint32_t enterTimestamp,
+                              uint32_t restartTimestamp = 0) {
+    deviceMode = Supla::DEVICE_MODE_CONFIG;
+    enterConfigModeTimestamp = enterTimestamp;
+    deviceRestartTimeoutTimestamp = restartTimestamp;
+  }
 };
+
+class CalcfgRestartDevice : public SuplaDeviceClass {
+ public:
+  uint32_t getForceRestartTimeMs() const {
+    return forceRestartTimeMs;
+  }
+};
+
+TEST_F(SuplaDeviceTests, CalcfgRestartDeviceUnsupported) {
+  BoardMock board;
+  CalcfgRestartDevice sd;
+  TSD_DeviceCalCfgRequest request = {};
+
+  setDeviceSoftwareResetSupported(false);
+  request.SuperUserAuthorized = 1;
+  request.Command = SUPLA_CALCFG_CMD_RESTART_DEVICE;
+
+  EXPECT_CALL(board, deviceSoftwareReset()).Times(0);
+  EXPECT_EQ(sd.handleCalcfgFromServer(&request),
+            SUPLA_CALCFG_RESULT_NOT_SUPPORTED);
+  EXPECT_EQ(sd.getCurrentStatus(), STATUS_UNKNOWN);
+  EXPECT_EQ(sd.getForceRestartTimeMs(), 0);
+}
+
+TEST_F(SuplaDeviceTests, CalcfgRestartDeviceSupported) {
+  BoardMock board;
+  CalcfgRestartDevice sd;
+  TSD_DeviceCalCfgRequest request = {};
+
+  request.SuperUserAuthorized = 1;
+  request.Command = SUPLA_CALCFG_CMD_RESTART_DEVICE;
+
+  EXPECT_CALL(board, deviceSoftwareReset()).Times(0);
+  EXPECT_EQ(sd.handleCalcfgFromServer(&request), SUPLA_CALCFG_RESULT_DONE);
+  EXPECT_EQ(sd.getCurrentStatus(), STATUS_SOFTWARE_RESET);
+  EXPECT_EQ(sd.getForceRestartTimeMs(), 1);
+}
+
+TEST_F(SuplaDeviceTests, ReportsRemainingCfgModeInactivityTime) {
+  ConfigModeSuplaDevice sd;
+  time.advance(1000);
+  sd.setLeaveCfgModeAfterInactivityMin(5);
+  sd.setCfgModeTimerForTest(time.value);
+
+  EXPECT_EQ(sd.getCfgModeInactivityTimeLeftMs(), 300000);
+
+  time.advance(270000);
+  EXPECT_EQ(sd.getCfgModeInactivityTimeLeftMs(), 30000);
+
+  sd.restartCfgModeTimeout(false);
+  EXPECT_EQ(sd.getCfgModeInactivityTimeLeftMs(), 300000);
+}
+
+TEST_F(SuplaDeviceTests, CfgModeInactivityTimeIsUnavailableOutsideCfgMode) {
+  ConfigModeSuplaDevice sd;
+
+  EXPECT_EQ(sd.getCfgModeInactivityTimeLeftMs(), UINT32_MAX);
+}
 
 TEST_F(SuplaDeviceTests, DefaultValuesTest) {
   SuplaDeviceClass sd;
@@ -293,8 +347,7 @@ TEST_F(SuplaDeviceTests, OtherInitialModesAlwaysDisableActionsInConfigMode) {
   button.runAction(event);
 }
 
-TEST_F(SuplaDeviceTests,
-       StartOfflineKeepsActionsDisabledWhenLeavingReentersCfgMode) {
+TEST_F(SuplaDeviceTests, StartOfflineLeavesConfigModeWithIncompleteConfig) {
   ConfigModeSuplaDevice sd;
   NetworkMockWithMac net;
   NotReadyConfigMock config;
@@ -309,7 +362,7 @@ TEST_F(SuplaDeviceTests,
   button.addAction(1, localHandler, event);
   button.addAction(2, configHandler, event, true);
 
-  EXPECT_CALL(localHandler, handleAction(event, 1)).Times(1);
+  EXPECT_CALL(localHandler, handleAction(event, 1)).Times(2);
   EXPECT_CALL(configHandler, handleAction(event, 2)).Times(3);
 
   button.runAction(event);
@@ -319,7 +372,7 @@ TEST_F(SuplaDeviceTests,
   button.runAction(event);
 
   sd.leaveConfigModeWithoutRestart();
-  EXPECT_EQ(Supla::DEVICE_MODE_CONFIG, sd.getDeviceMode());
+  EXPECT_EQ(Supla::DEVICE_MODE_OFFLINE, sd.getDeviceMode());
   button.runAction(event);
 }
 
@@ -791,7 +844,7 @@ TEST_F(SuplaDeviceTests, TwoChannelElementsNoNetworkWithStorage) {
   EXPECT_TRUE(storage.isPreampleInitialized());
 }
 
-TEST_F(SuplaDeviceTests, OnVersionErrorShouldCallDisconnect) {
+TEST_F(SuplaDeviceTests, OnVersionErrorSetsProtocolVersionErrorStatus) {
   NetworkMockWithMac net;
   TimeInterfaceStub time;
 

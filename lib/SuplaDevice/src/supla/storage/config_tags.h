@@ -1,20 +1,5 @@
-/*
-   Copyright (C) AC SOFTWARE SP. Z O.O
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SRC_SUPLA_STORAGE_CONFIG_TAGS_H_
 #define SRC_SUPLA_STORAGE_CONFIG_TAGS_H_
@@ -87,6 +72,8 @@ const char WifiNetifCfgTag[] = "wifi_cfg";
 const char EthNetifCfgTag[] = "eth_cfg";
 
 const char ModbusCfgTag[] = "modbus_cfg";
+const char ThermalProtectionCfgTag[] = "thermal_cfg";
+const char InputActivationCfgTag[] = "input_act";
 
 const char OtaModeTag[] = "ota_mode";
 
@@ -140,6 +127,8 @@ static_assert(sizeof(ValveCfgTag) < 12);
 static_assert(sizeof(WifiNetifCfgTag) < 12);
 static_assert(sizeof(EthNetifCfgTag) < 12);
 static_assert(sizeof(ModbusCfgTag) < 16);
+static_assert(sizeof(ThermalProtectionCfgTag) < 16);
+static_assert(sizeof(InputActivationCfgTag) < 16);
 static_assert(sizeof(OtaModeTag) < 16);
 static_assert(sizeof(PwmFrequencyTag) < 16);
 static_assert(sizeof(DsSensorConfig) < 12);

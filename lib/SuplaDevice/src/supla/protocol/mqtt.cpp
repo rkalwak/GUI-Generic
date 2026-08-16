@@ -1,20 +1,5 @@
-/*
- * Copyright (C) AC SOFTWARE SP. Z O.O
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mqtt.h"
 
@@ -53,6 +38,29 @@ bool isRollerShutterFunction(uint32_t function) {
     default:
       return false;
   }
+}
+
+bool isTiltFunction(uint32_t function) {
+  return function == SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND ||
+         function == SUPLA_CHANNELFNC_VERTICAL_BLIND;
+}
+
+bool parsePercentage(const char *payload, int *percentage) {
+  if (payload == nullptr || percentage == nullptr || payload[0] == 0) {
+    return false;
+  }
+  int result = 0;
+  for (const char *current = payload; *current != 0; current++) {
+    if (*current < '0' || *current > '9') {
+      return false;
+    }
+    result = result * 10 + (*current - '0');
+    if (result > 100) {
+      return false;
+    }
+  }
+  *percentage = result;
+  return true;
 }
 }  // namespace
 
@@ -866,7 +874,9 @@ void Supla::Protocol::Mqtt::subscribeChannel(int channel) {
     case SUPLA_CHANNELTYPE_RELAY: {
       if (isRollerShutterFunction(ch->getDefaultFunction())) {
         subscribe((topic / "set" / "closing_percentage").c_str());
-        subscribe((topic / "set" / "tilt").c_str());
+        if (isTiltFunction(ch->getDefaultFunction())) {
+          subscribe((topic / "set" / "tilt").c_str());
+        }
       } else {
         subscribe((topic / "set" / "on").c_str());
       }
@@ -899,6 +909,8 @@ void Supla::Protocol::Mqtt::subscribeChannel(int channel) {
       }
       break;
     }
+    case SUPLA_CHANNELTYPE_THERMOMETER:
+    case SUPLA_CHANNELTYPE_HUMIDITYANDTEMPSENSOR:
     case SUPLA_CHANNELTYPE_ACTIONTRIGGER:
     case SUPLA_CHANNELTYPE_ELECTRICITY_METER:
     case SUPLA_CHANNELTYPE_BINARYSENSOR: {
@@ -1143,7 +1155,7 @@ void Mqtt::publishHADiscoveryBinarySensor(Supla::Element *element) {
     }
     case SUPLA_CHANNELFNC_OPENINGSENSOR_GATE:
     case SUPLA_CHANNELFNC_OPENINGSENSOR_GARAGEDOOR: {
-      deviceClass = HADeviceClass_Garage;
+      deviceClass = HADeviceClass_GarageDoor;
       break;
     }
     case SUPLA_CHANNELFNC_FLOOD_SENSOR:
@@ -2421,6 +2433,8 @@ const char *Supla::Protocol::Mqtt::getDeviceClassStr(
     case HADeviceClass_Door:
       return ",\"dev_cla\":\"door\"";
     case HADeviceClass_Garage:
+      return ",\"dev_cla\":\"garage\"";
+    case HADeviceClass_GarageDoor:
       return ",\"dev_cla\":\"garage_door\"";
     case HADeviceClass_Moisture:
       return ",\"dev_cla\":\"moisture\"";
@@ -2658,11 +2672,13 @@ void Mqtt::processRollerShutterRequest(const char *part,
     }
     element->handleNewValueFromServer(&newValue);
   } else if (strcmp(part, "set/tilt") == 0) {
-    int tilt = stringToInt(payload);
-    if (tilt >= 0 && tilt <= 100) {
-      newValue.value[1] = tilt;
+    int tilt = 0;
+    if (parsePercentage(payload, &tilt)) {
+      newValue.value[1] = tilt + 10;
+      element->handleNewValueFromServer(&newValue);
+    } else {
+      SUPLA_LOG_WARNING("Mqtt: invalid roller shutter tilt value");
     }
-    element->handleNewValueFromServer(&newValue);
   } else if (strcmp(part, "execute_action") == 0) {
     if (strncmpInsensitive(payload, "stop", 5) == 0) {
       newValue.value[0] = 0;  // STOP
@@ -2679,6 +2695,9 @@ void Mqtt::processRollerShutterRequest(const char *part,
       TSD_DeviceCalCfgRequest request = {};
       request.ChannelNumber = channelNumber;
       request.Command = SUPLA_CALCFG_CMD_RECALIBRATE;
+      // MQTT broker credentials and ACLs are the authorization boundary here.
+      // CALCFG requires this flag for recalibration, so it is set intentionally
+      // for the locally generated MQTT request.
       request.SuperUserAuthorized = 1;
       element->handleCalcfgFromServer(&request);
     } else {
@@ -2825,8 +2844,7 @@ void Mqtt::processDimmerRequest(const char *part,
 }
 
 void Mqtt::notifyConfigChange(int channelNumber) {
-  if (channelNumber >= 0 && channelNumber < 255) {
-    // set bit on configChangedBit[8]:
-    configChangedBit[channelNumber / 8] |= (1 << (channelNumber % 8));
+  if (channelNumber >= 0 && channelNumber < SUPLA_CHANNELMAXCOUNT) {
+    configChangedBit[channelNumber / 8] |= (1U << (channelNumber % 8));
   }
 }

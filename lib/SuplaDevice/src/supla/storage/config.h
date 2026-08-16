@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SRC_SUPLA_STORAGE_CONFIG_H_
 #define SRC_SUPLA_STORAGE_CONFIG_H_
@@ -78,6 +63,8 @@ class Config {
   // Generic getters and setters
   virtual bool setString(const char* key, const char* value) = 0;
   virtual bool getString(const char* key, char* value, size_t maxSize) = 0;
+  // Returns stored string size including the terminating NUL, or -1 when the
+  // key is missing, invalid, or stores a non-string value.
   virtual int getStringSize(const char* key) = 0;
 
   virtual bool setBlob(const char* key, const char* value, size_t blobSize) = 0;
@@ -170,6 +157,8 @@ class Config {
   virtual bool isMqttCommProtocolEnabled();
   virtual bool setMqttTlsEnabled(bool enabled);
   virtual bool isMqttTlsEnabled();
+  virtual bool setMqttBrokerVerificationEnabled(bool enabled);
+  virtual bool isMqttBrokerVerificationEnabled();
   virtual bool setMqttAuthEnabled(bool enabled);
   virtual bool isMqttAuthEnabled();
   virtual bool setMqttRetainEnabled(bool enabled);
@@ -181,6 +170,10 @@ class Config {
   virtual int32_t getMqttQos();
   virtual bool setMqttPrefix(const char* prefix);
   virtual bool getMqttPrefix(char* result);
+  virtual bool setMqttCA(const char* mqttCA);
+  virtual bool getMqttCA(char* result, int maxSize);
+  // Returns MQTT CA payload size without the terminating NUL.
+  virtual int getMqttCASize();
 
   // WiFi config
   virtual bool setWiFiSSID(const char* ssid);

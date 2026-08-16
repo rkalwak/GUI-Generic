@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
  * Linux YAML based config file.
@@ -76,6 +61,7 @@ channels:
 #include <yaml-cpp/yaml.h>
 
 #include <map>
+#include <set>
 #include <string>
 
 namespace Supla {
@@ -141,6 +127,8 @@ class LinuxYamlConfig : public KeyValue {
   bool getMqttClientFileCA(char* result) const;
 
   void markChannelParameterUsed();
+  YAML::Node getAndMarkChannelParameter(const YAML::Node& channel,
+                                         const char* parameter);
   bool addCommonChannelParameters(const YAML::Node& ch,
                                   Supla::Element* element);
 
@@ -269,7 +257,8 @@ class LinuxYamlConfig : public KeyValue {
   std::map<int, Supla::Payload::Payload*> payloads;
   std::map<int, Supla::Output::Output*> outputs;
 
-  std::size_t paramCount = 0;
+  std::set<std::string> usedChannelParameters;
+  std::size_t untrackedChannelParameterCount = 0;
   int parserCount = 0;
   int sourceCount = 0;
   int payloadCount = 0;

@@ -1,20 +1,5 @@
-/*
- * Copyright (C) AC SOFTWARE SP. Z O.O
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef SRC_SUPLA_PROTOCOL_MQTT_H_
 #define SRC_SUPLA_PROTOCOL_MQTT_H_
@@ -72,6 +57,7 @@ enum HADeviceClass {
   HADeviceClass_Curtain,
   HADeviceClass_Shutter,
   HADeviceClass_Shade,
+  HADeviceClass_GarageDoor,
 };
 
 class HvacMqttHandler;
@@ -232,7 +218,11 @@ class Mqtt : public ProtocolLayer {
   // in current setup.
   // It is important to call publishDeviceStatus first, then to call
   // publishHADiscoveryActionTrigger for each AT channel.
-  uint8_t configChangedBit[8] = {};
+  static constexpr size_t CONFIG_CHANGED_BIT_SIZE =
+      (SUPLA_CHANNELMAXCOUNT + 7) / 8;
+  static_assert(CONFIG_CHANGED_BIT_SIZE * 8 >= SUPLA_CHANNELMAXCOUNT,
+                "MQTT config change bitset is too small");
+  uint8_t configChangedBit[CONFIG_CHANGED_BIT_SIZE] = {};
   Supla::Uptime uptime;
 };
 }  // namespace Protocol

@@ -1,18 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "SuplaDevice.h"
 
@@ -409,9 +396,10 @@ void SuplaDeviceClass::setupDeviceMode() {
 
   switch (initialMode) {
     case Supla::InitialMode::StartOffline: {
+      const bool configModeFinished = cfgModeState == Supla::CfgModeState::Done;
       cfgModeState = Supla::CfgModeState::Done;
       if (deviceMode == Supla::DEVICE_MODE_CONFIG &&
-          configurationState.isEmpty()) {
+          (configurationState.isEmpty() || configModeFinished)) {
         deviceMode = Supla::DEVICE_MODE_OFFLINE;
       }
       break;
@@ -689,6 +677,7 @@ bool SuplaDeviceClass::initSwUpdateInstance(Supla::SwUpdateMode mode,
     SUPLA_LOG_WARNING("Failed to create SW update instance");
     return false;
   }
+  swUpdate->setObserver(swUpdateObserver);
 
   if (cfg) {
     if (cfg->isSwUpdateBeta()) {
@@ -1127,6 +1116,10 @@ int SuplaDeviceClass::handleCalcfgFromServer(TSD_DeviceCalCfgRequest *request,
       }
       case SUPLA_CALCFG_CMD_RESTART_DEVICE: {
         SUPLA_LOG_INFO("CALCFG RESTART DEVICE received");
+        if (!isDeviceSoftwareResetSupported()) {
+          SUPLA_LOG_WARNING("CALCFG RESTART DEVICE is not supported");
+          return SUPLA_CALCFG_RESULT_NOT_SUPPORTED;
+        }
         scheduleSoftRestart(1);
         return SUPLA_CALCFG_RESULT_DONE;
       }
@@ -2083,6 +2076,30 @@ void SuplaDeviceClass::setLeaveCfgModeAfterInactivityMin(int valueMin) {
                  valueMin,
                  valueMin == 0 ? " (disabled)" : "");
   leaveCfgModeAfterInactivityMin = valueMin;
+}
+
+uint32_t SuplaDeviceClass::getCfgModeInactivityTimeLeftMs() const {
+  if (deviceMode != Supla::DEVICE_MODE_CONFIG ||
+      !isLeaveCfgModeAfterInactivityEnabled()) {
+    return UINT32_MAX;
+  }
+  uint32_t timestamp = deviceRestartTimeoutTimestamp != 0
+                           ? deviceRestartTimeoutTimestamp
+                           : enterConfigModeTimestamp;
+  if (timestamp == 0) {
+    return UINT32_MAX;
+  }
+  uint32_t timeoutMs = leaveCfgModeAfterInactivityMin * 60ULL * 1000;
+  uint32_t elapsed = millis() - timestamp;
+  return elapsed >= timeoutMs ? 0 : timeoutMs - elapsed;
+}
+
+void SuplaDeviceClass::setSwUpdateObserver(
+    Supla::Device::SwUpdateObserver *observer) {
+  swUpdateObserver = observer;
+  if (swUpdate) {
+    swUpdate->setObserver(observer);
+  }
 }
 
 bool SuplaDeviceClass::isAutomaticFirmwareUpdateEnabled() const {

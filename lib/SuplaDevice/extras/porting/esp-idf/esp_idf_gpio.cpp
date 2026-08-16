@@ -1,18 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "esp_idf_gpio.h"
 
@@ -26,30 +13,13 @@
 #error This file is for ESP-IDF platform
 #endif
 
-#ifndef SUPLA_DEVICE_ESP32
-// ESP8266 RTOS SDK doesn't provide some methods, so we add empty implementation
-
-void gpio_hold_en(gpio_num_t gpio) {
-  (void)(gpio);
-}
-
-void gpio_hold_dis(gpio_num_t gpio) {
-  (void)(gpio);
-}
-#endif
-
 namespace {
 
 bool gpioSupportsHold(gpio_num_t gpio) {
-#ifdef SUPLA_DEVICE_ESP32
 #ifdef GPIO_IS_VALID_OUTPUT_GPIO
   return GPIO_IS_VALID_OUTPUT_GPIO(gpio);
 #elif defined(CONFIG_IDF_TARGET_ESP32)
   return gpio >= 0 && gpio <= 33;
-#else
-  (void)(gpio);
-  return true;
-#endif
 #else
   (void)(gpio);
   return true;

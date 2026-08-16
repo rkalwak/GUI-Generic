@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "srpc.h"
 
@@ -1129,6 +1114,9 @@ char SRPC_ICACHE_FLASH srpc_getdata(void *_srpc, TsrpcReceivedData *rd,
               1, sizeof(TSD_DeviceCalCfgRequest));
         }
         break;
+      case SUPLA_SD_CALL_DEVICE_SYNC_DONE:
+        call_with_no_data = 1;
+        break;
       case SUPLA_DS_CALL_DEVICE_CALCFG_RESULT:
         if (VALID_SIZE(TDS_DeviceCalCfgResult, char, DataSize,
                        SUPLA_CALCFG_DATA_MAXSIZE)) {
@@ -1868,6 +1856,8 @@ srpc_call_min_version_required(void *_srpc, unsigned _supla_int_t call_id) {
       return 25;
     case SUPLA_SC_CALL_CHANNEL_STATE_PACK_UPDATE:
       return 26;
+    case SUPLA_SD_CALL_DEVICE_SYNC_DONE:
+      return 29;
   }
 
   return 255;
@@ -2425,6 +2415,10 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_get_firmware_update_url_result(
       _srpc, SUPLA_SD_CALL_GET_FIRMWARE_UPDATE_URL_RESULT, (char *)result,
       result->exists == 1 ? sizeof(TSD_FirmwareUpdate_UrlResult)
                           : sizeof(char));
+}
+
+_supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_device_sync_done(void *_srpc) {
+  return srpc_async_call(_srpc, SUPLA_SD_CALL_DEVICE_SYNC_DONE, NULL, 0);
 }
 
 _supla_int_t SRPC_ICACHE_FLASH srpc_ds_async_channel_value_changed(

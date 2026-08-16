@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 /*
  * Default Config implementation assumes that values are stored in key-value
@@ -109,6 +94,23 @@ bool Config::isMqttTlsEnabled() {
   int8_t result = isEncryptionEnabled() ? 1 : 0;
   getInt8("mqtttls", &result);
   return result == 1;
+}
+
+bool Config::setMqttBrokerVerificationEnabled(bool enabled) {
+  int8_t value = enabled ? 1 : 0;
+  return setInt8("mqttverify", value);
+}
+
+bool Config::isMqttBrokerVerificationEnabled() {
+  int8_t result = 0;
+  if (getInt8("mqttverify", &result)) {
+    return result == 1;
+  }
+
+  // Preserve the legacy behavior for already configured MQTT brokers. New
+  // configurations use certificate verification by default.
+  char mqttServer[SUPLA_SERVER_NAME_MAXSIZE] = {};
+  return !getMqttServer(mqttServer) || mqttServer[0] == '\0';
 }
 
 bool Config::setMqttAuthEnabled(bool enabled) {
@@ -437,6 +439,19 @@ bool Config::setMqttPrefix(const char* prefix) {
 
 bool Config::getMqttPrefix(char* result) {
   return getString("mqttprefix", result, 49);
+}
+
+bool Config::setMqttCA(const char* mqttCA) {
+  return setString("mqtt_ca", mqttCA);
+}
+
+bool Config::getMqttCA(char* result, int maxSize) {
+  return getString("mqtt_ca", result, maxSize);
+}
+
+int Config::getMqttCASize() {
+  int size = getStringSize("mqtt_ca");
+  return size > 0 ? size - 1 : size;
 }
 
 void Config::commit() {

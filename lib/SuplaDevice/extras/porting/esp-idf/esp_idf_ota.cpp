@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <cJSON.h>
 #include <ctype.h>
@@ -34,6 +19,7 @@
 #include <supla/tools.h>
 
 #include <cerrno>
+#include <cstring>
 
 #include "supla/device/sw_update.h"
 
@@ -104,16 +90,12 @@ static void formatHttpClientError(const char *prefix,
   snprintf(buf, bufLen, "%s: Error %d", prefix, errorCode);
 }
 
-#ifndef SUPLA_DEVICE_ESP32
-// ESP8266 RTOS doesn't have OTA_WITH_SEQUENTIAL_WRITES, so we replace it with
-// default OTA_SIZE_UNKNOWN for ESP8266 target.
-#define OTA_WITH_SEQUENTIAL_WRITES OTA_SIZE_UNKNOWN
-#endif
-
+#ifndef SUPLA_TEST
 Supla::Device::SwUpdate *Supla::Device::SwUpdate::Create(
     SuplaDeviceClass *sdc, const char *newUrl, Supla::SwUpdateMode mode) {
   return new Supla::EspIdfOta(sdc, newUrl, mode);
 }
+#endif  // SUPLA_TEST
 
 Supla::EspIdfOta::EspIdfOta(SuplaDeviceClass *sdc,
                             const char *newUrl,
@@ -131,7 +113,7 @@ Supla::EspIdfOta::~EspIdfOta() {
     otaBuffer = nullptr;
   }
   if (httpAgent) {
-    free(httpAgent);
+    delete[] httpAgent;
     httpAgent = nullptr;
   }
 }
@@ -272,10 +254,10 @@ void Supla::EspIdfOta::iterate() {
     return;
   }
 
-//  SUPLA_LOG_INFO(
-//      "SW update: checking updates from url: \"%s\", with query: \"%s\"",
-//      url,
-//      queryParams);
+  //  SUPLA_LOG_INFO(
+  //      "SW update: checking updates from url: \"%s\", with query: \"%s\"",
+  //      url,
+  //      queryParams);
 
   int querySize = strlen(queryParams);
 
@@ -324,15 +306,26 @@ void Supla::EspIdfOta::iterate() {
     return;
   }
 
+  size_t responseSize = 0;
   while (true) {
-    int dataRead = esp_http_client_read(
-        client, reinterpret_cast<char *>(otaBuffer), BUFFER_SIZE);
+    int dataRead =
+        esp_http_client_read(client,
+                             reinterpret_cast<char *>(otaBuffer + responseSize),
+                             BUFFER_SIZE - responseSize);
     if (dataRead < 0) {
       fail("SW update: data read error");
       return;
     } else if (dataRead > 0) {
-      otaBuffer[dataRead] = '\0';
+      responseSize += dataRead;
+      otaBuffer[responseSize] = '\0';
       SUPLA_LOG_DEBUG("Read: %s", otaBuffer);
+      if (esp_http_client_is_complete_data_received(client) == true) {
+        break;
+      }
+      if (responseSize == BUFFER_SIZE) {
+        fail("SW update: check update response too large");
+        return;
+      }
     } else if (dataRead == 0) {
       if (errno == ECONNRESET || errno == ENOTCONN) {
         SUPLA_LOG_DEBUG("Connection closed, errno = %d", errno);
@@ -439,8 +432,9 @@ void Supla::EspIdfOta::iterate() {
       return;
     }
   } else {
-    fail("SW update: no new update available");
+    abort = true;
     retryAllowed = false;
+    notifyFinished(Supla::Device::SwUpdateResult::UP_TO_DATE);
     cJSON_Delete(json);
     return;
   }
@@ -450,6 +444,7 @@ void Supla::EspIdfOta::iterate() {
   if (mode == Supla::SwUpdateMode::OnlyCheck) {
     abort = true;
     retryAllowed = false;
+    notifyFinished(true);
     return;
   }
   mode = Supla::SwUpdateMode::CheckAndUpdate;
@@ -509,6 +504,12 @@ void Supla::EspIdfOta::iterate() {
     return;
   }
 
+  int64_t contentLength = esp_http_client_get_content_length(client);
+  uint32_t totalBytes = contentLength > 0 && contentLength <= UINT32_MAX
+                            ? static_cast<uint32_t>(contentLength)
+                            : 0;
+  notifyProgress(0, totalBytes);
+
   // Start fetching bin file and perform update
   const esp_partition_t *updatePartition = NULL;
 
@@ -535,6 +536,7 @@ void Supla::EspIdfOta::iterate() {
   SUPLA_LOG_DEBUG("Getting file from server...");
   int bytesRead = 0;
   int bytesReadPrinted = 0;
+  int bytesReadNotified = 0;
   while (true) {
     int dataRead = esp_http_client_read(
         client, reinterpret_cast<char *>(otaBuffer), BUFFER_SIZE);
@@ -544,6 +546,10 @@ void Supla::EspIdfOta::iterate() {
       return;
     } else if (dataRead > 0) {
       bytesRead += dataRead;
+      if (bytesRead - bytesReadNotified > 64 * 1024) {
+        notifyProgress(bytesRead, totalBytes);
+        bytesReadNotified = bytesRead;
+      }
       if (bytesRead - bytesReadPrinted > 1024 * 100) {
         bytesReadPrinted = bytesRead;
         SUPLA_LOG_DEBUG("SW update: downloaded %d bytes...", bytesRead);
@@ -611,6 +617,8 @@ void Supla::EspIdfOta::iterate() {
   }
   delete[] otaBuffer;
   otaBuffer = nullptr;
+  notifyProgress(binSize, totalBytes);
+  notifyFinished(true);
   return;
 }
 
@@ -718,6 +726,7 @@ void Supla::EspIdfOta::fail(const char *reason) {
   }
 
   log(reason);
+  notifyFinished(false, reason);
   abort = true;
 }
 

@@ -1,18 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <arduino_mock.h>
 #include <gmock/gmock.h>
@@ -20,6 +7,8 @@
 #include <simple_time.h>
 #include <supla/control/rgbw_leds.h>
 #include <supla_io_mock.h>
+
+#include "legacy_pwm_test_io.h"
 
 using ::testing::Return;
 
@@ -147,4 +136,40 @@ TEST(RgbwLedsTests, IoPinConstructorUsesSeparateIoForOutputs) {
   time.advance(1000);
   rgbw.onInit();
   rgbw.setRGBWValueOnDevice(1, 2, 3, 100);
+}
+
+TEST(RgbwLedsTests, ScalesRgbAndBrightnessIndependentlyForFixedOutputs) {
+  FixedEightBitPwmIo redIo;
+  FixedEightBitPwmIo greenIo;
+  FixedEightBitPwmIo blueIo;
+  FixedEightBitPwmIo brightnessIo;
+  Supla::Control::RGBWLeds rgbw(Supla::Io::IoPin(1, &redIo),
+                                Supla::Io::IoPin(2, &greenIo),
+                                Supla::Io::IoPin(3, &blueIo),
+                                Supla::Io::IoPin(4, &brightnessIo));
+
+  rgbw.setRGBWValueOnDevice(511, 767, 1023, 511);
+
+  EXPECT_THAT(redIo.values, ::testing::ElementsAre(127));
+  EXPECT_THAT(greenIo.values, ::testing::ElementsAre(191));
+  EXPECT_THAT(blueIo.values, ::testing::ElementsAre(255));
+  EXPECT_THAT(brightnessIo.values, ::testing::ElementsAre(127));
+}
+
+TEST(RgbwLedsTests, UsesTheEffectiveRangeOfEachOutputBackend) {
+  FixedEightBitPwmIo redIo;
+  MutableTenBitPwmIo greenIo;
+  FixedEightBitPwmIo blueIo;
+  MutableTenBitPwmIo brightnessIo;
+  Supla::Control::RGBWLeds rgbw(Supla::Io::IoPin(1, &redIo),
+                                Supla::Io::IoPin(2, &greenIo),
+                                Supla::Io::IoPin(3, &blueIo),
+                                Supla::Io::IoPin(4, &brightnessIo));
+
+  rgbw.setRGBWValueOnDevice(1023, 1023, 1023, 1023);
+
+  EXPECT_THAT(redIo.values, ::testing::ElementsAre(255));
+  EXPECT_THAT(greenIo.values, ::testing::ElementsAre(1023));
+  EXPECT_THAT(blueIo.values, ::testing::ElementsAre(255));
+  EXPECT_THAT(brightnessIo.values, ::testing::ElementsAre(1023));
 }

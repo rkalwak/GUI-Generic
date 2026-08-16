@@ -1,18 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <SuplaDevice.h>
 #include <gmock/gmock.h>
@@ -120,6 +107,56 @@ TEST_F(ChannelTestsFixture, ChannelMethods) {
 
   first.setFuncList(11);
   EXPECT_EQ(Supla::RegisterDevice::getChannelFunctionList(number), 11);
+}
+
+TEST_F(ChannelTestsFixture, RelayFunctionValidationUsesFunctionListBits) {
+  struct FunctionMapping {
+    uint32_t function;
+    uint32_t functionBit;
+  };
+
+  const FunctionMapping mappings[] = {
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEGATEWAYLOCK},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEGATE, SUPLA_BIT_FUNC_CONTROLLINGTHEGATE},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEGARAGEDOOR},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEDOORLOCK},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEROLLERSHUTTER},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEROOFWINDOW,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEROOFWINDOW},
+      {SUPLA_CHANNELFNC_POWERSWITCH, SUPLA_BIT_FUNC_POWERSWITCH},
+      {SUPLA_CHANNELFNC_LIGHTSWITCH, SUPLA_BIT_FUNC_LIGHTSWITCH},
+      {SUPLA_CHANNELFNC_STAIRCASETIMER, SUPLA_BIT_FUNC_STAIRCASETIMER},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND,
+       SUPLA_BIT_FUNC_CONTROLLINGTHEFACADEBLIND},
+      {SUPLA_CHANNELFNC_TERRACE_AWNING, SUPLA_BIT_FUNC_TERRACE_AWNING},
+      {SUPLA_CHANNELFNC_PROJECTOR_SCREEN, SUPLA_BIT_FUNC_PROJECTOR_SCREEN},
+      {SUPLA_CHANNELFNC_CURTAIN, SUPLA_BIT_FUNC_CURTAIN},
+      {SUPLA_CHANNELFNC_VERTICAL_BLIND, SUPLA_BIT_FUNC_VERTICAL_BLIND},
+      {SUPLA_CHANNELFNC_ROLLER_GARAGE_DOOR, SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR},
+      {SUPLA_CHANNELFNC_PUMPSWITCH, SUPLA_BIT_FUNC_PUMPSWITCH},
+      {SUPLA_CHANNELFNC_HEATORCOLDSOURCESWITCH,
+       SUPLA_BIT_FUNC_HEATORCOLDSOURCESWITCH},
+  };
+
+  Supla::Channel channel;
+  channel.setType(SUPLA_CHANNELTYPE_RELAY);
+
+  channel.setFuncList(0);
+  for (const auto &mapping : mappings) {
+    EXPECT_FALSE(channel.isFunctionValid(mapping.function));
+  }
+
+  for (const auto &selected : mappings) {
+    channel.setFuncList(selected.functionBit);
+    for (const auto &mapping : mappings) {
+      EXPECT_EQ(channel.isFunctionValid(mapping.function),
+                mapping.function == selected.function);
+    }
+  }
 }
 
 TEST_F(ChannelTestsFixture, ChannelNumberOffset) {

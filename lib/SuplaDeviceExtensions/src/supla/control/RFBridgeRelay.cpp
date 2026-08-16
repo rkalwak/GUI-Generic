@@ -33,7 +33,7 @@ void RFBridgeRelay::turnOn(_supla_int_t duration) {
   if (keepTurnOnDurationMs) {
     durationMs = storedTurnOnDurationMs;
   }
-  Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOnValue());
+  outputPin.writeActive(channel.getChannelNumber());
 
   channel.setNewValue(true);
   stateCode = true;
@@ -47,7 +47,7 @@ void RFBridgeRelay::turnOn(_supla_int_t duration) {
 void RFBridgeRelay::turnOff(_supla_int_t duration) {
   durationMs = duration;
   durationTimestamp = millis();
-  Supla::Io::digitalWrite(channel.getChannelNumber(), pin, pinOffValue());
+  outputPin.writeInactive(channel.getChannelNumber());
 
   channel.setNewValue(false);
   stateCode = false;

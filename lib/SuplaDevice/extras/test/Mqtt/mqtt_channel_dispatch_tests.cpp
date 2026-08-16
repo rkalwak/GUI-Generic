@@ -1,20 +1,5 @@
-/*
-   Copyright (C) AC SOFTWARE SP. Z O.O
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License
-   as published by the Free Software Foundation; either version 2
-   of the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-*/
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <SuplaDevice.h>
 #include <channel_element_mock.h>
@@ -389,6 +374,7 @@ TEST_F(MqttChannelDispatchTests, publishChannelStateCoversBasicTypes) {
   ChannelElementMock roller;
   configureRollerRelay(roller.getChannel(),
                        SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER);
+
   TDSC_RollerShutterValue rollerValue = {};
   rollerValue.position = 33;
   roller.getChannel()->setNewValue(rollerValue);
@@ -1070,6 +1056,10 @@ TEST_F(MqttChannelDispatchTests, subscribeChannelCoversControllableTypes) {
   configureRollerRelay(roller.getChannel(),
                        SUPLA_CHANNELFNC_CONTROLLINGTHEROLLERSHUTTER);
 
+  ChannelElementMock facadeBlind;
+  configureRollerRelay(facadeBlind.getChannel(),
+                       SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND);
+
   ChannelElementMock dimmer;
   dimmer.getChannel()->setType(SUPLA_CHANNELTYPE_DIMMER);
 
@@ -1113,10 +1103,6 @@ TEST_F(MqttChannelDispatchTests, subscribeChannelCoversControllableTypes) {
                     0));
   EXPECT_CALL(mqtt,
               subscribeTest(StrEq(expectedChannelTopic(
-                                roller.getChannelNumber(), "set/tilt")),
-                            0));
-  EXPECT_CALL(mqtt,
-              subscribeTest(StrEq(expectedChannelTopic(
                                 roller.getChannelNumber(), "execute_action")),
                             0));
   {
@@ -1129,6 +1115,33 @@ TEST_F(MqttChannelDispatchTests, subscribeChannelCoversControllableTypes) {
                       "public",
                       kExpectedPrefix);
     mqtt.subscribeChannel(roller.getChannelNumber());
+  }
+
+  EXPECT_CALL(mqtt,
+              subscribeTest(StrEq(expectedChannelTopic(
+                                facadeBlind.getChannelNumber(),
+                                "set/closing_percentage")),
+                            0));
+  EXPECT_CALL(mqtt,
+              subscribeTest(StrEq(expectedChannelTopic(
+                                facadeBlind.getChannelNumber(), "set/tilt")),
+                            0));
+  EXPECT_CALL(mqtt,
+              subscribeTest(StrEq(expectedChannelTopic(
+                                facadeBlind.getChannelNumber(),
+                                "execute_action")),
+                            0));
+  {
+    MQTT_DOC_SCENARIO(
+        mqtt.documentationRecorder(),
+        "roller_shutter.facade_blind.commands",
+        "Facade blind command topics",
+        SUPLA_CHANNELTYPE_RELAY,
+        SUPLA_CHANNELFNC_CONTROLLINGTHEFACADEBLIND,
+        facadeBlind.getChannelNumber(),
+        "public",
+        kExpectedPrefix);
+    mqtt.subscribeChannel(facadeBlind.getChannelNumber());
   }
 
   EXPECT_CALL(mqtt,
@@ -1720,7 +1733,7 @@ TEST_F(MqttChannelDispatchTests, publishHADiscoveryCoversRelayImpulseVariants) {
 
   const std::vector<Case> cases = {
       {SUPLA_CHANNELFNC_CONTROLLINGTHEGATE, "gate"},
-      {SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR, "garage_door"},
+      {SUPLA_CHANNELFNC_CONTROLLINGTHEGARAGEDOOR, "garage"},
       {SUPLA_CHANNELFNC_CONTROLLINGTHEDOORLOCK, "door"},
       {SUPLA_CHANNELFNC_CONTROLLINGTHEGATEWAYLOCK, "door"},
   };
@@ -1947,7 +1960,7 @@ TEST_F(MqttChannelDispatchTests,
        false},
       {SUPLA_CHANNELFNC_ROLLER_GARAGE_DOOR,
        SUPLA_BIT_FUNC_ROLLER_GARAGE_DOOR,
-       "garage_door",
+       "garage",
        false},
       {SUPLA_CHANNELFNC_CURTAIN, SUPLA_BIT_FUNC_CURTAIN, "curtain", false},
       {SUPLA_CHANNELFNC_PROJECTOR_SCREEN,
@@ -2927,12 +2940,35 @@ TEST_F(MqttChannelDispatchTests, processDataCoversControlTypes) {
 
   EXPECT_CALL(roller, handleNewValueFromServer(_))
       .WillOnce([](TSD_SuplaChannelNewValue *value) {
-        EXPECT_EQ(20, value->value[1]);
+        EXPECT_EQ(30, value->value[1]);
         return 0;
       });
   EXPECT_TRUE(mqtt.processData(
       (expectedChannelTopic(roller.getChannelNumber(), "set/tilt")).c_str(),
       "20"));
+
+  EXPECT_CALL(roller, handleNewValueFromServer(_))
+      .WillOnce([](TSD_SuplaChannelNewValue *value) {
+        EXPECT_EQ(10, value->value[1]);
+        return 0;
+      });
+  EXPECT_TRUE(mqtt.processData(
+      (expectedChannelTopic(roller.getChannelNumber(), "set/tilt")).c_str(),
+      "0"));
+
+  EXPECT_CALL(roller, handleNewValueFromServer(_))
+      .WillOnce([](TSD_SuplaChannelNewValue *value) {
+        EXPECT_EQ(110, value->value[1]);
+        return 0;
+      });
+  EXPECT_TRUE(mqtt.processData(
+      (expectedChannelTopic(roller.getChannelNumber(), "set/tilt")).c_str(),
+      "100"));
+
+  EXPECT_CALL(roller, handleNewValueFromServer(_)).Times(0);
+  EXPECT_TRUE(mqtt.processData(
+      (expectedChannelTopic(roller.getChannelNumber(), "set/tilt")).c_str(),
+      "malformed"));
 
   EXPECT_CALL(dimmer, handleNewValueFromServer(_))
       .WillOnce([](TSD_SuplaChannelNewValue *value) {

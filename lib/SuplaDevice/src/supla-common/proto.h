@@ -1,20 +1,5 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef supla_proto_H_
 #define supla_proto_H_
@@ -46,7 +31,7 @@ struct _supla_timeval {
 
 #elif defined(ESP8266) || defined(ESP32) || defined(ESP_PLATFORM)
 // *** Espressif NONOS SDK for ESP8266 OR ARDUINO WITH ESP8266 or ESP32 ***
-// *** ESP-IDF, ESP8266 RTOS SDK ***
+// *** ESP-IDF ***
 #ifndef ESP_PLATFORM
 #ifndef ARDUINO
 #include <mem.h>
@@ -119,7 +104,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 // CS  - client -> server
 // SC  - server -> client
 
-#define SUPLA_PROTO_VERSION 28
+#define SUPLA_PROTO_VERSION 29
 #define SUPLA_PROTO_VERSION_MIN 1
 
 #if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO) || defined(SUPLA_DEVICE)
@@ -301,6 +286,7 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_CS_CALL_GET_DEVICE_CONFIG 1240                  // ver. >= 21
 #define SUPLA_SC_CALL_DEVICE_CONFIG_UPDATE_OR_RESULT 1250     // ver. >= 21
 #define SUPLA_DS_CALL_SET_SUBDEVICE_DETAILS 1260              // ver. >= 25
+#define SUPLA_SD_CALL_DEVICE_SYNC_DONE 1270                   // ver. >= 29
 
 #define SUPLA_RESULT_RESPONSE_TIMEOUT -8
 #define SUPLA_RESULT_CANT_CONNECT_TO_HOST -7
@@ -620,7 +606,8 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
   0x8000  // ver. >= 28
 #define SUPLA_DEVICE_FLAG_CALCFG_SET_CFG_MODE_PASSWORD_SUPPORTED \
   0x10000  // ver. >= 28
-#define SUPLA_DEVICE_FLAG_SUPLET_SUPPORTED 0x20000  // FDEV
+#define SUPLA_DEVICE_FLAG_SYNC_DONE_SUPPORTED 0x20000           // ver. >= 29
+#define SUPLA_DEVICE_FLAG_SUPLET_SUPPORTED 0x40000              // FDEV
 
 // BIT map definition for TDS_SuplaRegisterDevice_F::ConfigFields (64 bit)
 // type: TDeviceConfig_StatusLed
@@ -647,6 +634,14 @@ extern char sproto_tag[SUPLA_TAG_SIZE];
 #define SUPLA_DEVICE_CONFIG_FIELD_MODBUS (1ULL << 9)  // v. >= 27
 // type: TDeviceConfig_FirmwareUpdate
 #define SUPLA_DEVICE_CONFIG_FIELD_FIRMWARE_UPDATE (1ULL << 10)  // v. >= 28
+// type: TDeviceConfig_ThermalProtection
+#define SUPLA_DEVICE_CONFIG_FIELD_THERMAL_PROTECTION (1ULL << 11)  // v. >= 29
+// type: TDeviceConfig_InputActivation
+#define SUPLA_DEVICE_CONFIG_FIELD_INPUT_ACTIVATION \
+  (1ULL << 12)  // v. >= 29
+
+#define SUPLA_DEVCFG_INPUT_ACTIVATION_GND (1U << 0)
+#define SUPLA_DEVCFG_INPUT_ACTIVATION_VCC (1U << 1)
 // BIT map definition for TDS_SuplaDeviceChannel_C::Flags (32 bit)
 // BIT map definition for TDS_SuplaDeviceChannel_D::Flags (64 bit)
 // BIT map definition for TDS_SuplaDeviceChannel_E::Flags (64 bit)
@@ -3359,6 +3354,29 @@ typedef struct {
   unsigned char Policy;  // SUPLA_FIRMWARE_UPDATE_POLICY_
   unsigned char Reserved[20];
 } TDeviceConfig_FirmwareUpdate;
+
+// type: TDeviceConfig_InputActivation
+typedef struct {
+  // Bitmask of SUPLA_DEVCFG_INPUT_ACTIVATION_* values supported by the device.
+  // Read-only for clients.
+  unsigned char AvailableModes;
+
+  // One selected SUPLA_DEVCFG_INPUT_ACTIVATION_* value.
+  unsigned char Mode;
+
+  unsigned char Reserved[6];
+} TDeviceConfig_InputActivation;
+
+typedef struct {
+  _supla_int16_t Threshold;     // 0.1°C
+  _supla_int16_t MinThreshold;  // 0.1°C, readonly
+  _supla_int16_t MaxThreshold;  // 0.1°C, readonly
+
+  unsigned char Enabled;         // 0 - disabled, 1 - enabled
+  unsigned char DisableAllowed;  // readonly
+
+  unsigned char Reserved[8];
+} TDeviceConfig_ThermalProtection;  // v. >= 29
 
 /********************************************
  * CHANNEL CONFIG STRUCTURES

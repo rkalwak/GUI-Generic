@@ -1,20 +1,6 @@
-/*
- Copyright (C) AC SOFTWARE SP. Z O.O.
+// SPDX-FileCopyrightText: AC SOFTWARE SP. Z O.O.
+// SPDX-License-Identifier: GPL-2.0-or-later
 
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- as published by the Free Software Foundation; either version 2
- of the License, or (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program; if not, write to the Free Software
- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- */
 #ifndef supladex_H_
 #define supladex_H_
 
@@ -335,6 +321,7 @@ _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_get_firmware_update_url(
     void *_srpc, TDS_FirmwareUpdateParams *params);
 _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_get_firmware_update_url_result(
     void *_srpc, TSD_FirmwareUpdate_UrlResult *result);
+_supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_device_sync_done(void *_srpc);
 _supla_int_t SRPC_ICACHE_FLASH srpc_sd_async_device_calcfg_request(
     void *_srpc, TSD_DeviceCalCfgRequest *request);
 _supla_int_t SRPC_ICACHE_FLASH

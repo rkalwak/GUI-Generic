@@ -18,6 +18,12 @@ kind: pipeline
 name: default
 
 steps:
+- name: html_generator_assets
+  image: devel/freertos
+  pull: never
+  commands:
+  - python3 extras/tools/generate_html_generator_styles.py --check
+
 - name: tests_compilation
   image: devel/freertos
   pull: never
@@ -56,19 +62,6 @@ steps:
   - valgrind --error-exitcode=1 --leak-check=full ./sd4linuxtests --gtest_brief
   depends_on:
   - tests_compilation
-
-    # - name: esp8266_rtos_compilation_check
-    #   image: devel/esp8266_rtos_sdk
-    #   pull: never
-    #   commands:
-    #   - pwd
-    #   - echo $SUPLA_DEVICE_PATH
-    #   - ls -al
-    #   - export SUPLA_DEVICE_PATH=/drone/src
-    #   - cd extras/examples/esp8266_rtos/
-    #   - rm -f build/supla-esp8266-mk.bin
-    #   - /bin/bash -c "source /supla/esp/ESP8266_RTOS_SDK/export.sh && make -j32"
-    #   - /bin/bash -c "[ -f build/supla-esp8266-mk.bin ] && true || false"
 
 - name: esp_idf_setup
   image: devel/esp-idf

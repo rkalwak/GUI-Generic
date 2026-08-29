@@ -36,7 +36,7 @@ class HC_SR04_KPOP : public GeneralPurposeMeasurement {
     setDefaultUnitAfterValue("%");
     setDefaultValuePrecision(2);
     if(!_simulate) { 
-      sonar = new NewPing(_trigPin, _echoPin, _maxRange > 0 ? _maxRange : 500);
+      sonar = new NewPing(_trigPin, _echoPin, 500);
       delay(100);  // give time to initialize, preventing ping_median fails
       sonar->ping_median(5);
     }

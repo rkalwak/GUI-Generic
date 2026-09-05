@@ -216,7 +216,6 @@ bool SuplaWebServer::isLoggedIn(bool force) {
 }
 
 bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr, const String& input_max) {
-  uint8_t gpio = OFF_GPIO, _gpio = OFF_GPIO, _function = FUNCTION_OFF, _nr = 0, current_value = 0, key = KEY_GPIO;
   String input;
   input.reserve(16);
   input = _input + nr;
@@ -229,100 +228,14 @@ bool SuplaWebServer::saveGPIO(const String& _input, uint8_t function, uint8_t nr
   ConfigManager->setElement(KEY_ACTIVE_EXPENDER, function, static_cast<int>(WebServer->httpServer->arg(INPUT_EXPENDER_TYPE).toInt()));
 #endif
 
-  gpio = ConfigESP->getGpio(nr, function);
-  _gpio = WebServer->httpServer->arg(input).toInt();
-
-  // VIRTUAL RELAY
-  if (function == FUNCTION_RELAY && _gpio == GPIO_VIRTUAL_RELAY) {
-    if (gpio != GPIO_VIRTUAL_RELAY) {
-      ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
-      ConfigESP->clearGpio(gpio, function, nr);
-    }
-
-    ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, true);
-    ConfigESP->setNumberButton(nr);
-
-    if (input_max != "\n") {
-      current_value = WebServer->httpServer->arg(input_max).toInt();
-      if (nr >= current_value) {
-        ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
-      }
-    }
-
-    return true;
-  }
-
-#ifdef ARDUINO_ARCH_ESP8266
-  // ANALOG BUTTON
-  if (function == FUNCTION_BUTTON && _gpio == A0) {
-    if (gpio != A0) {
-      ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
-      ConfigESP->clearGpio(gpio, function, nr);
-    }
-
-    ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, true);
-
-    if (input_max != "\n") {
-      current_value = WebServer->httpServer->arg(input_max).toInt();
-      if (nr >= current_value) {
-        ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
-      }
-    }
-    return true;
-  }
-#endif
-
-  key = KEY_GPIO + _gpio;
-
-  if (function == FUNCTION_CFG_BUTTON) {
-    _function = ConfigManager->get(key)->getElement(CFG).toInt();
-  }
-  else if (function == FUNCTION_CFG_LED) {
-    _function = ConfigManager->get(key)->getElement(CFG_LED).toInt();
-  }
-  else {
-    _function = ConfigManager->get(key)->getElement(FUNCTION).toInt();
-    _nr = ConfigManager->get(key)->getElement(NR).toInt() - 1;
-  }
-
-  if (_gpio == OFF_GPIO) {
-    ConfigESP->clearGpio(gpio, function, nr);
-  }
-
-  if (_gpio != OFF_GPIO) {
-    if (_function == FUNCTION_OFF) {
-      ConfigESP->clearGpio(gpio, function, nr);
-      ConfigESP->clearGpio(_gpio, function, nr);
-      ConfigESP->setGpio(_gpio, nr, function);
-
-#ifdef SUPLA_ROLLERSHUTTER
-      if (ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt() * 2 > nr) {
-        // if (nr % 2 == 0) {
-        ConfigESP->setEvent(_gpio, Supla::GUI::Event::ON_PRESS);
-        ConfigESP->setAction(_gpio, Supla::GUI::ActionRolleShutter::OPEN_OR_CLOSE);
-        //  }
-      }
-#endif
-    }
-    else if (function == FUNCTION_CFG_BUTTON || function == FUNCTION_CFG_LED) {
-      ConfigESP->setGpio(_gpio, function);
-    }
-    else if (gpio == _gpio && _function == function && _nr == nr) {
-      ConfigESP->setGpio(_gpio, nr, function);
-    }
-    else {
-      return false;
-    }
-  }
+  uint8_t gpio = WebServer->httpServer->arg(input).toInt();
+  uint8_t maxValue = OFF_GPIO;
 
   if (input_max != "\n") {
-    current_value = WebServer->httpServer->arg(input_max).toInt();
-    if ((ConfigManager->get(key)->getElement(NR).toInt() - 1) >= current_value) {
-      ConfigESP->clearGpio(gpio, function, nr);
-    }
+    maxValue = WebServer->httpServer->arg(input_max).toInt();
   }
 
-  return true;
+  return ConfigESP->saveGPIO(gpio, function, nr, maxValue);
 }
 
 #ifdef GUI_SENSOR_I2C_EXPENDER

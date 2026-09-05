@@ -117,6 +117,7 @@ class SuplaConfigESP : public Supla::ActionHandler, public Supla::Element {
   bool checkBusyGpio(int gpio);
   uint8_t countFreeGpio(uint8_t exception = 0);
   bool checkGpio(int gpio);
+  bool saveGPIO(uint8_t gpio, uint8_t function, uint8_t nr = 0, uint8_t maxValue = OFF_GPIO);
 
   void setLevel(uint8_t gpio, int level);
   void setMemory(uint8_t gpio, int memory, uint8_t nr = 0);

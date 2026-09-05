@@ -115,53 +115,83 @@ void setupPreConfiguredSettingsIfAvailable() {
 #endif  // Parameter_SUPLA_BME280_Altitude
 #endif  // SUPLA_BME280
 
-#if defined(SUPLA_HDC1080)
+#if defined(SUPLA_SHT3x) && defined(Parameter_SUPLA_SHT3x_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x, Parameter_SUPLA_SHT3x_Address);
+#endif  // SUPLA_SHT3x
+
+#if defined(SUPLA_SHT_AUTODETECT) && defined(Parameter_SUPLA_SHT_AUTODETECT_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SHT3x, Parameter_SUPLA_SHT_AUTODETECT_Address);
+#endif  // SUPLA_SHT_AUTODETECT
+
+#if defined(SUPLA_HDC1080) && defined(Parameter_SUPLA_HDC1080_Address)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_HDC1080, Parameter_SUPLA_HDC1080_Address);
 #endif  // SUPLA_HDC1080
 
-#if defined(SUPLA_BH1750)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750, 1);
-#endif  // SUPLA_BH1750
+#if defined(SUPLA_SI7021) && defined(Parameter_SUPLA_SI7021_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SI7021, Parameter_SUPLA_SI7021_Address);
+#endif  // SUPLA_SI7021
 
-#if defined(SUPLA_MAX44009)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009, 1);
-#endif  // SUPLA_MAX44009
+#if defined(SUPLA_SI7021_SONOFF) && defined(Parameter_SUPLA_SI7021_SONOFF_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_SI7021, Parameter_SUPLA_SI7021_SONOFF_Address);
+#endif  // SUPLA_SI7021_SONOFF
 
-#if defined(SUPLA_AHTX0)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, 1);
+#if defined(SUPLA_VL53L0X) && defined(Parameter_SUPLA_VL53L0X_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_VL53L0X, Parameter_SUPLA_VL53L0X_Address);
+#endif  // SUPLA_VL53L0X
+
+#if defined(SUPLA_BH1750_KPOP) && defined(Parameter_SUPLA_BH1750_KPOP_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750, Parameter_SUPLA_BH1750_KPOP_Address);
+#elif defined(SUPLA_BH1750_KPOP) && defined(Parameter_SUPLA_BH1750_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_BH1750, Parameter_SUPLA_BH1750_Address);
+#endif  // SUPLA_BH1750_KPOP
+
+#if defined(SUPLA_MAX44009_KPOP) && defined(Parameter_SUPLA_MAX44009_KPOP_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009, Parameter_SUPLA_MAX44009_KPOP_Address);
+#elif defined(SUPLA_MAX44009_KPOP) && defined(Parameter_SUPLA_MAX44009_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_MAX44009, Parameter_SUPLA_MAX44009_Address);
+#endif  // SUPLA_MAX44009_KPOP
+
+#if defined(SUPLA_AHTX0) && defined(Parameter_SUPLA_AHTX0_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_AHTX0, Parameter_SUPLA_AHTX0_Address);
 #endif  // SUPLA_AHTX0
 
-#if defined(SUPLA_INA219)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA219, 1);
+#if defined(SUPLA_SPS30_KPOP) && defined(Parameter_SUPLA_SPS30_KPOP_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, Parameter_SUPLA_SPS30_KPOP_Address);
+#elif defined(SUPLA_SPS30_KPOP) && defined(Parameter_SUPLA_SPS30_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, Parameter_SUPLA_SPS30_Address);
+#endif  // SUPLA_SPS30_KPOP
+
+#if defined(SUPLA_INA219) && defined(Parameter_SUPLA_INA219_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA219, Parameter_SUPLA_INA219_Address);
 #endif  // SUPLA_INA219
 
-#if defined(SUPLA_INA226)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA226, 1);
+#if defined(SUPLA_INA226) && defined(Parameter_SUPLA_INA226_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA226, Parameter_SUPLA_INA226_Address);
 #endif  // SUPLA_INA226
 
-#if defined(SUPLA_INA228)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA228, 1);
+#if defined(SUPLA_INA228) && defined(Parameter_SUPLA_INA228_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA228, Parameter_SUPLA_INA228_Address);
 #endif  // SUPLA_INA228
 
-#if defined(SUPLA_INA236)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA236, 1);
+#if defined(SUPLA_INA236) && defined(Parameter_SUPLA_INA236_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA236, Parameter_SUPLA_INA236_Address);
 #endif  // SUPLA_INA236
 
-#if defined(SUPLA_INA238)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA238, 1);
+#if defined(SUPLA_INA238) && defined(Parameter_SUPLA_INA238_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA238, Parameter_SUPLA_INA238_Address);
 #endif  // SUPLA_INA238
 
-#if defined(SUPLA_INA260)
-  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA260, 1);
+#if defined(SUPLA_INA260) && defined(Parameter_SUPLA_INA260_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA260, Parameter_SUPLA_INA260_Address);
 #endif  // SUPLA_INA260
 
 #if defined(SUPLA_OLED)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_I2C_OLED, 1);
 #endif  // SUPLA_OLED
 
-#if defined(SUPLA_SPS30)
+#if defined(SUPLA_SPS30_KPOP)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, 1);
-#endif  // SUPLA_SPS30
+#endif  // SUPLA_SPS30_KPOP
 
 // SPI
 #if defined(GLOBALPARAMETERS_MISO)
@@ -187,6 +217,378 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(GLOBALPARAMETERS_GDO2)
   ConfigESP->setGpio(GLOBALPARAMETERS_GDO2, FUNCTION_GDO2);
 #endif  // GLOBALPARAMETERS_GDO2
+
+#if defined(SUPLA_MAX6675) && defined(Parameter_SUPLA_MAX6675_Enabled)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX6675, Parameter_SUPLA_MAX6675_Enabled > 0 ? 1 : 0);
+#endif  // SUPLA_MAX6675
+
+#if defined(SUPLA_MAX31855) && defined(Parameter_SUPLA_MAX31855_Enabled)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR, SENSOR_SPI_MAX31855, Parameter_SUPLA_MAX31855_Enabled > 0 ? 1 : 0);
+#endif  // SUPLA_MAX31855
+
+#if defined(SUPLA_DHT11) && defined(Parameter_SUPLA_DHT11_Count)
+  ConfigManager->set(KEY_MAX_DHT11, Parameter_SUPLA_DHT11_Count);
+#endif  // SUPLA_DHT11
+
+#if defined(SUPLA_DHT22) && defined(Parameter_SUPLA_DHT22_Count)
+  ConfigManager->set(KEY_MAX_DHT22, Parameter_SUPLA_DHT22_Count);
+#endif  // SUPLA_DHT22
+
+#if defined(SUPLA_CONFIG)
+  #if defined(Parameter_SUPLA_CONFIG_GPIOLed)
+    if (Parameter_SUPLA_CONFIG_GPIOLed > 0) {
+      ConfigESP->saveGPIO(Parameter_SUPLA_CONFIG_GPIOLed, FUNCTION_CFG_LED);
+      ConfigESP->setLevel(ConfigESP->getGpio(FUNCTION_CFG_LED), 1);
+    }
+    else {
+      ConfigESP->saveGPIO(OFF_GPIO, FUNCTION_CFG_LED);
+    }
+  #endif  // SUPLA_CONFIG_GPIOLed
+
+  #if defined(Parameter_SUPLA_CONFIG_ActivationState)
+    ConfigESP->setLevel(KEY_ACTIVE_SENSOR,  Parameter_SUPLA_CONFIG_ActivationState);
+  #endif  // SUPLA_CONFIG_ActivationState
+
+  #if defined(Parameter_SUPLA_CONFIG_GPIOButton)
+      ConfigESP->saveGPIO(Parameter_SUPLA_CONFIG_GPIOButton, FUNCTION_CFG_BUTTON);
+  #endif  // SUPLA_CONFIG_GPIOButton
+
+  #if defined(Parameter_SUPLA_CONFIG_ConfigMode)
+    ConfigManager->set(KEY_CFG_MODE, Parameter_SUPLA_CONFIG_ConfigMode);
+  #endif  // SUPLA_CONFIG_ConfigMode
+#endif  // SUPLA_CONFIG
+
+#if defined(SUPLA_RELAY)
+#if defined(Parameter_SUPLA_RELAY_Count)
+  ConfigManager->set(KEY_MAX_RELAY, Parameter_SUPLA_RELAY_Count);
+#endif  // Parameter_SUPLA_RELAY_Count
+
+#if defined(Parameter_SUPLA_RELAY_GPIO1)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO1, FUNCTION_RELAY, 0, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO1, FUNCTION_RELAY, 0);
+  #endif
+  #if defined(Parameter_SUPLA_RELAY_GPIO1State)
+    ConfigESP->setLevel(Parameter_SUPLA_RELAY_GPIO1,Parameter_SUPLA_RELAY_GPIO1State);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1State
+  #if defined(Parameter_SUPLA_RELAY_GPIO1LightControl)
+    ConfigESP->setLightRelay(Parameter_SUPLA_RELAY_GPIO1, Parameter_SUPLA_RELAY_GPIO1LightControl);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1LightControl
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ReactionAfterReset)
+    ConfigESP->setMemory(Parameter_SUPLA_RELAY_GPIO1, Parameter_SUPLA_RELAY_GPIO1ReactionAfterReset);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ReactionAfterReset
+  #if defined(Parameter_SUPLA_RELAY_GPIO1LedGPIO)
+    #if defined(Parameter_SUPLA_RELAY_Count)
+      ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO1LedGPIO, FUNCTION_LED, 0, Parameter_SUPLA_RELAY_Count);
+    #else
+      ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO1LedGPIO, FUNCTION_LED, 0);
+    #endif
+  #endif  // Parameter_SUPLA_RELAY_GPIO1LedGPIO
+  #if defined(Parameter_SUPLA_RELAY_GPIO1LedActivationState)
+    ConfigESP->setLevel(ConfigESP->getGpio(0, FUNCTION_LED), Parameter_SUPLA_RELAY_GPIO1LedActivationState);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1LedActivationState
+  #if defined(Parameter_SUPLA_RELAY_GPIO1DirectLinksOn)
+    ConfigManager->setElement(KEY_DIRECT_LINKS_ON, 0, Parameter_SUPLA_RELAY_GPIO1DirectLinksOn);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1DirectLinksOn
+  #if defined(Parameter_SUPLA_RELAY_GPIO1DirectLinksOff)
+    ConfigManager->setElement(KEY_DIRECT_LINKS_OFF, 0, Parameter_SUPLA_RELAY_GPIO1DirectLinksOff);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1DirectLinksOff
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatType)
+    ConfigManager->setElement(KEY_THERMOSTAT_TYPE, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatType);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatType
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatMainTempChannel)
+    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatMainTempChannel);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatMainTempChannel
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatAdditionalTempChannel)
+    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatAdditionalTempChannel);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatAdditionalTempChannel
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatHisteresis)
+    ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatHisteresis/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatHisteresis
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatMinTemp)
+    ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatMinTemp/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatMinTemp
+  #if defined(Parameter_SUPLA_RELAY_GPIO1ThermostatMaxTemp)
+    ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, 0, Parameter_SUPLA_RELAY_GPIO1ThermostatMaxTemp/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO1ThermostatMaxTemp
+#endif  // Parameter_SUPLA_RELAY_GPIO1
+#if defined(Parameter_SUPLA_RELAY_GPIO2)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO2, FUNCTION_RELAY, 1, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO2, FUNCTION_RELAY, 1);
+  #endif
+  #if defined(Parameter_SUPLA_RELAY_GPIO2State)
+    ConfigESP->setLevel(Parameter_SUPLA_RELAY_GPIO2,Parameter_SUPLA_RELAY_GPIO2State);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2State
+  #if defined(Parameter_SUPLA_RELAY_GPIO2LightControl)
+    ConfigESP->setLightRelay(Parameter_SUPLA_RELAY_GPIO2, Parameter_SUPLA_RELAY_GPIO2LightControl);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2LightControl
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ReactionAfterReset)
+    ConfigESP->setMemory(Parameter_SUPLA_RELAY_GPIO2, Parameter_SUPLA_RELAY_GPIO2ReactionAfterReset);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ReactionAfterReset
+  #if defined(Parameter_SUPLA_RELAY_GPIO2LedGPIO)
+    #if defined(Parameter_SUPLA_RELAY_Count)
+      ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO2LedGPIO, FUNCTION_LED, 1, Parameter_SUPLA_RELAY_Count);
+    #else
+      ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO2LedGPIO, FUNCTION_LED, 1);
+    #endif
+  #endif  // Parameter_SUPLA_RELAY_GPIO2LedGPIO
+  #if defined(Parameter_SUPLA_RELAY_GPIO2LedActivationState)
+    ConfigESP->setLevel(ConfigESP->getGpio(1, FUNCTION_LED), Parameter_SUPLA_RELAY_GPIO2LedActivationState);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2LedActivationState
+  #if defined(Parameter_SUPLA_RELAY_GPIO2DirectLinksOn)
+    ConfigManager->setElement(KEY_DIRECT_LINKS_ON, 1, Parameter_SUPLA_RELAY_GPIO2DirectLinksOn);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2DirectLinksOn
+  #if defined(Parameter_SUPLA_RELAY_GPIO2DirectLinksOff)
+    ConfigManager->setElement(KEY_DIRECT_LINKS_OFF, 1, Parameter_SUPLA_RELAY_GPIO2DirectLinksOff);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2DirectLinksOff
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatType)
+    ConfigManager->setElement(KEY_THERMOSTAT_TYPE, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatType);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatType
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatMainTempChannel)
+    ConfigManager->setElement(KEY_THERMOSTAT_MAIN_THERMOMETER_CHANNEL, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatMainTempChannel);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatMainTempChannel
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatAdditionalTempChannel)
+    ConfigManager->setElement(KEY_THERMOSTAT_AUX_THERMOMETER_CHANNEL, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatAdditionalTempChannel);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatAdditionalTempChannel
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatHisteresis)
+    ConfigManager->setElement(KEY_THERMOSTAT_HISTERESIS, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatHisteresis/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatHisteresis
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatMinTemp)
+    ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MIN, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatMinTemp/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatMinTemp
+  #if defined(Parameter_SUPLA_RELAY_GPIO2ThermostatMaxTemp)
+    ConfigManager->setElement(KEY_THERMOSTAT_TEMPERATURE_MAX, 1, Parameter_SUPLA_RELAY_GPIO2ThermostatMaxTemp/100);
+  #endif  // Parameter_SUPLA_RELAY_GPIO2ThermostatMaxTemp
+#endif  // Parameter_SUPLA_RELAY_GPIO2
+#if defined(Parameter_SUPLA_RELAY_GPIO3)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO3, FUNCTION_RELAY, 2, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO3, FUNCTION_RELAY, 2);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO3
+#if defined(Parameter_SUPLA_RELAY_GPIO4)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO4, FUNCTION_RELAY, 3, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO4, FUNCTION_RELAY, 3);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO4
+#if defined(Parameter_SUPLA_RELAY_GPIO5)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO5, FUNCTION_RELAY, 4, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO5, FUNCTION_RELAY, 4);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO5
+#if defined(Parameter_SUPLA_RELAY_GPIO6)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO6, FUNCTION_RELAY, 5, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO6, FUNCTION_RELAY, 5);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO6
+#if defined(Parameter_SUPLA_RELAY_GPIO7)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO7, FUNCTION_RELAY, 6, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO7, FUNCTION_RELAY, 6);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO7
+#if defined(Parameter_SUPLA_RELAY_GPIO8)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO8, FUNCTION_RELAY, 7, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO8, FUNCTION_RELAY, 7);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO8
+#if defined(Parameter_SUPLA_RELAY_GPIO9)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO9, FUNCTION_RELAY, 8, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO9, FUNCTION_RELAY, 8);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO9
+#if defined(Parameter_SUPLA_RELAY_GPIO10)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO10, FUNCTION_RELAY, 9, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO10, FUNCTION_RELAY, 9);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO10
+#if defined(Parameter_SUPLA_RELAY_GPIO11)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO11, FUNCTION_RELAY, 10, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO11, FUNCTION_RELAY, 10);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO11
+#if defined(Parameter_SUPLA_RELAY_GPIO12)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO12, FUNCTION_RELAY, 11, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO12, FUNCTION_RELAY, 11);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO12
+#if defined(Parameter_SUPLA_RELAY_GPIO13)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO13, FUNCTION_RELAY, 12, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO13, FUNCTION_RELAY, 12);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO13
+#if defined(Parameter_SUPLA_RELAY_GPIO14)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO14, FUNCTION_RELAY, 13, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO14, FUNCTION_RELAY, 13);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO14
+#if defined(Parameter_SUPLA_RELAY_GPIO15)
+  #if defined(Parameter_SUPLA_RELAY_Count)
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO15, FUNCTION_RELAY, 14, Parameter_SUPLA_RELAY_Count);
+  #else
+    ConfigESP->saveGPIO(Parameter_SUPLA_RELAY_GPIO15, FUNCTION_RELAY, 14);
+  #endif
+#endif  // Parameter_SUPLA_RELAY_GPIO15
+#endif  // SUPLA_RELAY
+
+#if defined(SUPLA_LIMIT_SWITCH)
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_Count)
+  ConfigManager->set(KEY_MAX_LIMIT_SWITCH, Parameter_SUPLA_LIMIT_SWITCH_Count);
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_Count
+
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO1)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO1, 0, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO1Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO1, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO1Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO1Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO1
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO2)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO2, 1, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO2Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO2, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO2Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO2Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO2
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO3)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO3, 2, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO3Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO3, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO3Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO3Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO3
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO4)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO4, 3, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO4Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO4, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO4Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO4Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO4
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO5)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO5, 4, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO5Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO5, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO5Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO5Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO5
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO6)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO6, 5, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO6Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO6, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO6Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO6Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO6
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO7)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO7, 6, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO7Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO7, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO7Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO7Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO7
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO8)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO8, 7, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO8Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO8, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO8Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO8Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO8
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO9)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO9, 8, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO9Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO9, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO9Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO9Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO9
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO10)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO10, 9, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO10Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO10, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO10Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO10Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO10
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO11)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO11, 10, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO11Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO11, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO11Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO11Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO11
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO12)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO12, 11, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO12Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO12, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO12Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO12Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO12
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO13)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO13, 12, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO13Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO13, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO13Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO13Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO13
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO14)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO14, 13, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO14Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO14, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO14Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO14Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO14
+#if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO15)
+  ConfigESP->setGpio(Parameter_SUPLA_LIMIT_SWITCH_GPIO15, 14, FUNCTION_LIMIT_SWITCH);
+  #if defined(Parameter_SUPLA_LIMIT_SWITCH_GPIO15Pullup) 
+    ConfigManager->setElement(KEY_GPIO + Parameter_SUPLA_LIMIT_SWITCH_GPIO15, PULL_UP_BUTTON, Parameter_SUPLA_LIMIT_SWITCH_GPIO15Pullup);
+  #endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO15Pullup
+#endif  // Parameter_SUPLA_LIMIT_SWITCH_GPIO15
+#endif  // SUPLA_LIMIT_SWITCH
+
+#if defined(SUPLA_HC_SR04)
+#if defined(Parameter_SUPLA_HC_SR04_Max)
+  ConfigManager->set(KEY_HC_SR04_MAX_SENSOR_READ, Parameter_SUPLA_HC_SR04_Max);
+#endif
+#if defined(Parameter_SUPLA_HC_SR04_Trigger)
+  ConfigESP->setGpio(Parameter_SUPLA_HC_SR04_Trigger, FUNCTION_TRIG);
+#endif
+#if defined(Parameter_SUPLA_HC_SR04_Echo)
+  ConfigESP->setGpio(Parameter_SUPLA_HC_SR04_Echo, FUNCTION_ECHO);
+#endif
+#endif  // SUPLA_HC_SR04
+
+#if defined(SUPLA_HLW8012)
+#if defined(Parameter_SUPLA_HLW8012_CF)
+  ConfigESP->setGpio(Parameter_SUPLA_HLW8012_CF, FUNCTION_CF);
+#endif
+#if defined(Parameter_SUPLA_HLW8012_CF1)
+  ConfigESP->setGpio(Parameter_SUPLA_HLW8012_CF1, FUNCTION_CF1);
+#endif
+#if defined(Parameter_SUPLA_HLW8012_SEL)
+  ConfigESP->setGpio(Parameter_SUPLA_HLW8012_SEL, FUNCTION_SEL);
+#endif
+#endif  // SUPLA_HLW8012
+
+#if defined(SUPLA_CSE7766) && defined(Parameter_SUPLA_CSE7766_RX)
+  ConfigESP->setGpio(Parameter_SUPLA_CSE7766_RX, FUNCTION_CSE7766_RX);
+#endif  // SUPLA_CSE7766
+
+#if defined(SUPLA_MODBUS_SDM) || defined(SUPLA_MODBUS_SDM_ONE_PHASE) || defined(SUPLA_MODBUS_SDM_72_V2)
+#if defined(Parameter_SUPLA_MODBUS_SDM_RX)
+  ConfigESP->setGpio(Parameter_SUPLA_MODBUS_SDM_RX, FUNCTION_SDM_RX);
+#endif
+#if defined(Parameter_SUPLA_MODBUS_SDM_TX)
+  ConfigESP->setGpio(Parameter_SUPLA_MODBUS_SDM_TX, FUNCTION_SDM_TX);
+#endif
+#endif  // SUPLA_MODBUS_SDM
 
 #if defined(SUPLA_CC1101)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_SPI_CC1101, 1);

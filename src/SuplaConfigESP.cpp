@@ -793,6 +793,100 @@ bool SuplaConfigESP::checkGpio(int gpio) {
   return true;
 }
 
+bool SuplaConfigESP::saveGPIO(uint8_t gpio, uint8_t function, uint8_t nr, uint8_t maxValue) {
+  uint8_t currentGpio = getGpio(nr, function);
+  uint8_t key = KEY_GPIO + gpio;
+  uint8_t _function = FUNCTION_OFF;
+  uint8_t _nr = 0;
+
+  if (function == FUNCTION_RELAY && gpio == GPIO_VIRTUAL_RELAY) {
+    if (currentGpio != GPIO_VIRTUAL_RELAY) {
+      ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
+      clearGpio(currentGpio, function, nr);
+    }
+
+    ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, true);
+    setNumberButton(nr);
+
+    if (maxValue != OFF_GPIO) {
+      if (nr >= maxValue) {
+        ConfigManager->setElement(KEY_VIRTUAL_RELAY, nr, false);
+      }
+    }
+
+    return true;
+  }
+
+#ifdef ARDUINO_ARCH_ESP8266
+  if (function == FUNCTION_BUTTON && gpio == A0) {
+    if (currentGpio != A0) {
+      ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
+      clearGpio(currentGpio, function, nr);
+    }
+
+    ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, true);
+
+    if (maxValue != OFF_GPIO) {
+      if (nr >= maxValue) {
+        ConfigManager->setElement(KEY_ANALOG_BUTTON, nr, false);
+      }
+    }
+    return true;
+  }
+#endif
+
+  if (function == FUNCTION_CFG_BUTTON) {
+    _function = ConfigManager->get(key)->getElement(CFG).toInt();
+  }
+  else if (function == FUNCTION_CFG_LED) {
+    _function = ConfigManager->get(key)->getElement(CFG_LED).toInt();
+  }
+  else {
+    _function = ConfigManager->get(key)->getElement(FUNCTION).toInt();
+    _nr = ConfigManager->get(key)->getElement(NR).toInt() - 1;
+  }
+
+  if (gpio == OFF_GPIO) {
+    clearGpio(currentGpio, function, nr);
+    return true;
+  }
+
+  if (_function == FUNCTION_OFF) {
+    clearGpio(currentGpio, function, nr);
+    clearGpio(gpio, function, nr);
+    setGpio(gpio, nr, function);
+
+#ifdef SUPLA_ROLLERSHUTTER
+    if (ConfigManager->get(KEY_MAX_ROLLERSHUTTER)->getValueInt() * 2 > nr) {
+      setEvent(gpio, Supla::GUI::Event::ON_PRESS);
+      setAction(gpio, Supla::GUI::ActionRolleShutter::OPEN_OR_CLOSE);
+    }
+#endif
+    if (maxValue != OFF_GPIO && nr >= maxValue) {
+      clearGpio(gpio, function, nr);
+    }
+    return true;
+  }
+
+  if (function == FUNCTION_CFG_BUTTON || function == FUNCTION_CFG_LED) {
+    setGpio(gpio, function);
+    if (maxValue != OFF_GPIO && nr >= maxValue) {
+      clearGpio(gpio, function, nr);
+    }
+    return true;
+  }
+
+  if (currentGpio == gpio && _function == function && _nr == nr) {
+    setGpio(gpio, nr, function);
+    if (maxValue != OFF_GPIO && nr >= maxValue) {
+      clearGpio(gpio, function, nr);
+    }
+    return true;
+  }
+
+  return false;
+}
+
 uint8_t SuplaConfigESP::getDefaultLedGpio() {
 #if CONFIG_IDF_TARGET_ESP32C6
   return 8;   // ESP32-C6 DevKitC-1 has LED on GPIO8

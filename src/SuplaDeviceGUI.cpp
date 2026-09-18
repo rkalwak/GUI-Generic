@@ -250,12 +250,21 @@ void setupPreConfiguredSettingsIfAvailable() {
   #endif  // SUPLA_CONFIG_ActivationState
 
   #if defined(Parameter_SUPLA_CONFIG_GPIOButton)
+    if (Parameter_SUPLA_CONFIG_GPIOButton > 0) {
       ConfigESP->saveGPIO(Parameter_SUPLA_CONFIG_GPIOButton, FUNCTION_CFG_BUTTON);
+    }
+    else {
+      ConfigESP->saveGPIO(OFF_GPIO, FUNCTION_CFG_BUTTON);
+    }
   #endif  // SUPLA_CONFIG_GPIOButton
 
   #if defined(Parameter_SUPLA_CONFIG_ConfigMode)
     ConfigManager->set(KEY_CFG_MODE, Parameter_SUPLA_CONFIG_ConfigMode);
   #endif  // SUPLA_CONFIG_ConfigMode
+
+  #if defined(Parameter_SUPLA_CONFIG_ForceRestartOnConnectionLoss)
+    ConfigManager->set(KEY_FORCE_RESTART_ESP, Parameter_SUPLA_CONFIG_ForceRestartOnConnectionLoss);
+  #endif  // Parameter_SUPLA_CONFIG_ForceRestartOnConnectionLoss
 #endif  // SUPLA_CONFIG
 
 #if defined(SUPLA_RELAY)

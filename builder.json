@@ -953,6 +953,27 @@
 				"name": "Capteur SPS30",
 				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge des capteurs SPS30."
 			}
+		},
+		"SUPLA_ADS1115_KPOP": {
+			"name": "Sensor ADS1115",
+			"desc": "Ustawienia urządzenia->I2C. Umożliwia obsługę czterokanałowego przetwornika ADC ADS1115.",
+			"defOn": false,
+			"en": {
+				"name": "ADS1115 sensor",
+				"desc": "Device settings->I2C. It enables the support of the 4-channel ADS1115 ADC converter."
+			},
+			"es": {
+				"name": "Sensor ADS1115",
+				"desc": "Configuración del dispositivo->I2C. Habilita el soporte del convertidor ADC ADS1115 de 4 canales."
+			},
+			"de": {
+				"name": "ADS1115 Sensor",
+				"desc": "Geräteeinstellungen->I2C. Es ermöglicht die Unterstützung des 4-Kanal-ADS1115-ADC-Wandlers."
+			},
+			"fr": {
+				"name": "Capteur ADS1115",
+				"desc": "Paramètres de l´appareil->I2C. Il permet la prise en charge du convertisseur ADC ADS1115 4 canaux."
+			}
 		}
 	},
 	"SPI": {

@@ -20,7 +20,7 @@
 #include "SuplaDeviceGUI.h"
 
 /* Define GUI_SENSOR_I2C_2 if any of these sensors are selected. */
-#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP) || defined(SUPLA_INA219) || defined(SUPLA_INA226) || \
+#if defined(SUPLA_MS5611) || defined(SUPLA_AHTX0) || defined(SUPLA_SPS30_KPOP) || defined(SUPLA_ADS1115_KPOP) || defined(SUPLA_INA219) || defined(SUPLA_INA226) || \
     defined(SUPLA_INA228) || defined(SUPLA_INA236) || defined(SUPLA_INA260)
 #define GUI_SENSOR_I2C_2
 #endif
@@ -68,7 +68,8 @@ enum _sensor2
   SENSOR_I2C_INA236, 
   SENSOR_I2C_INA238,
   SENSOR_SPI_INA239,
-  SENSOR_I2C_INA260
+  SENSOR_I2C_INA260,
+  SENSOR_I2C_ADS1115
 };
 
 #if defined(GUI_SENSOR_I2C) || defined(GUI_SENSOR_I2C_ENERGY_METER)
@@ -188,6 +189,27 @@ enum _ahtAdress
 
 #ifdef SUPLA_SPS30_KPOP
 #define INPUT_SPS30 "sps30"
+#endif
+
+#ifdef SUPLA_ADS1115_KPOP
+#define INPUT_ADS1115 "iads1115"
+#define INPUT_ADS1115_GAIN "iads1115gain"
+enum _ads1115Adress
+{
+  ADS1115_ADDRESS_0X48 = 1,
+  ADS1115_ADDRESS_0X49,
+  ADS1115_ADDRESS_0X4A,
+  ADS1115_ADDRESS_0X4B
+};
+enum _ads1115Gain
+{
+  ADS1115_RANGE_6144MV = 0,
+  ADS1115_RANGE_4096MV,
+  ADS1115_RANGE_2048MV,
+  ADS1115_RANGE_1024MV,
+  ADS1115_RANGE_0512MV,
+  ADS1115_RANGE_0256MV
+};
 #endif
 
 #ifdef SUPLA_INA219

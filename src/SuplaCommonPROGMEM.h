@@ -477,6 +477,31 @@ const char* const HCSR04_CALCULATE_LIST_P[] PROGMEM = {HCSR04_OPTIONS_DISABLED, 
 
 const char* const STATE_P[] PROGMEM = {OFF, ON};
 
+#ifdef SUPLA_ADS1115_KPOP
+const char ADR48_ADS1115[] PROGMEM = "0x48";
+const char ADR49_ADS1115[] PROGMEM = "0x49";
+const char ADR4A_ADS1115[] PROGMEM = "0x4A";
+const char ADR4B_ADS1115[] PROGMEM = "0x4B";
+const char* const ADS1115_P[] PROGMEM = {OFF,
+                                        ADR48_ADS1115,
+                                        ADR49_ADS1115,
+                                        ADR4A_ADS1115,
+                                        ADR4B_ADS1115};
+
+const char ADS1115_GAIN_LABEL_6144MV[] PROGMEM = "±6.144V";
+const char ADS1115_GAIN_LABEL_4096MV[] PROGMEM = "±4.096V";
+const char ADS1115_GAIN_LABEL_2048MV[] PROGMEM = "±2.048V";
+const char ADS1115_GAIN_LABEL_1024MV[] PROGMEM = "±1.024V";
+const char ADS1115_GAIN_LABEL_0512MV[] PROGMEM = "±0.512V";
+const char ADS1115_GAIN_LABEL_0256MV[] PROGMEM = "±0.256V";
+const char* const ADS1115_GAIN_P[] PROGMEM = {ADS1115_GAIN_LABEL_6144MV,
+                                             ADS1115_GAIN_LABEL_4096MV,
+                                             ADS1115_GAIN_LABEL_2048MV,
+                                             ADS1115_GAIN_LABEL_1024MV,
+                                             ADS1115_GAIN_LABEL_0512MV,
+                                             ADS1115_GAIN_LABEL_0256MV};
+#endif
+
 const char LOW_STATE_CONTROL[] PROGMEM = S_LOW;
 const char HIGH_STATE_CONTROL[] PROGMEM = S_HIGH;
 const char* const LEVEL_P[] PROGMEM = {LOW_STATE_CONTROL, HIGH_STATE_CONTROL};

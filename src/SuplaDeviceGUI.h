@@ -265,6 +265,10 @@
 #include "src/sensor/SPS30.h"
 #endif
 
+#ifdef SUPLA_ADS1115_KPOP
+#include "src/sensor/ADS1115.h"
+#endif
+
 #ifdef SUPLA_INA219
 #include "src/sensor/INA_219.h"
 #endif

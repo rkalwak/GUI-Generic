@@ -169,6 +169,15 @@ void handleSensorI2c(int save) {
     addFormHeaderEnd();
 #endif
 
+#ifdef SUPLA_ADS1115_KPOP
+    selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_ADS1115).toInt();
+    addFormHeader();
+    addListBox(INPUT_ADS1115, F("ADS1115 Address"), ADS1115_P, 5, selected, 0, true);
+    selected = ConfigManager->get(KEY_ADS1115_GAIN)->getValueInt();
+    addListBox(INPUT_ADS1115_GAIN, F("ADS1115 Gain"), ADS1115_GAIN_P, 6, selected, 0, true);
+    addFormHeaderEnd();
+#endif
+
 #ifdef SUPLA_INA219
     selected = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_INA219).toInt();
     addFormHeader();
@@ -520,6 +529,13 @@ void handleSensorI2cSave() {
   input = INPUT_SPS30;
   if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
     ConfigManager->setElement(key, SENSOR_I2C_SPS30, static_cast<int>(WebServer->httpServer->arg(input).toInt()));
+  }
+#endif
+
+#ifdef SUPLA_ADS1115_KPOP
+  input = INPUT_ADS1115_GAIN;
+  if (strcmp(WebServer->httpServer->arg(input).c_str(), "") != 0) {
+    ConfigManager->set(KEY_ADS1115_GAIN, WebServer->httpServer->arg(input).c_str());
   }
 #endif
 

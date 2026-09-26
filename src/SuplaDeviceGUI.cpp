@@ -161,6 +161,39 @@ void setupPreConfiguredSettingsIfAvailable() {
   ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, P_SUPLA_SPS30_Address);
 #endif  // SUPLA_SPS30_KPOP
 
+#if defined(SUPLA_ADS1115_KPOP) && defined(P_SUPLA_ADS1115_KPOP_Address)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_ADS1115, P_SUPLA_ADS1115_KPOP_Address);
+#endif  // SUPLA_ADS1115_KPOP
+
+#if defined(SUPLA_ADS1115_KPOP) && defined(P_SUPLA_ADS1115_KPOP_Gain)
+  uint8_t adsGainValue = static_cast<uint8_t>(P_SUPLA_ADS1115_KPOP_Gain);
+  uint8_t adsGainIndex = 0;
+  switch (adsGainValue) {
+    case ADS1X15_GAIN_6144MV:
+      adsGainIndex = ADS1115_RANGE_6144MV;
+      break;
+    case ADS1X15_GAIN_4096MV:
+      adsGainIndex = ADS1115_RANGE_4096MV;
+      break;
+    case ADS1X15_GAIN_2048MV:
+      adsGainIndex = ADS1115_RANGE_2048MV;
+      break;
+    case ADS1X15_GAIN_1024MV:
+      adsGainIndex = ADS1115_RANGE_1024MV;
+      break;
+    case ADS1X15_GAIN_0512MV:
+      adsGainIndex = ADS1115_RANGE_0512MV;
+      break;
+    case ADS1X15_GAIN_0256MV:
+      adsGainIndex = ADS1115_RANGE_0256MV;
+      break;
+    default:
+      adsGainIndex = ADS1115_RANGE_6144MV;
+      break;
+  }
+  ConfigManager->set(KEY_ADS1115_GAIN, String(adsGainIndex).c_str());
+#endif  // SUPLA_ADS1115_KPOP
+
 #if defined(SUPLA_INA219) && defined(P_SUPLA_INA219_Address)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_INA219, P_SUPLA_INA219_Address);
 #endif  // SUPLA_INA219
@@ -192,6 +225,10 @@ void setupPreConfiguredSettingsIfAvailable() {
 #if defined(SUPLA_SPS30_KPOP)
   ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_SPS30, 1);
 #endif  // SUPLA_SPS30_KPOP
+
+#if defined(SUPLA_ADS1115_KPOP)
+  ConfigManager->setElement(KEY_ACTIVE_SENSOR_2, SENSOR_I2C_ADS1115, 1);
+#endif  // SUPLA_ADS1115_KPOP
 
 // SPI
 #if defined(GLOBALPARAMETERS_MISO)

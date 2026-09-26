@@ -14,6 +14,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "SuplaDeviceGUI.h"
+#include <ADS1X15.h>
 
 #ifdef SUPLA_PZEM_V_3
 #include "src/sensor/PzemV3.h"
@@ -63,6 +64,33 @@ static uint8_t getINAAddress(int addressEnum) {
   }
   
   return 0; // Invalid address
+}
+
+static uint8_t getADS1115Address(int addressEnum) {
+  if (addressEnum >= 1 && addressEnum <= 4) {
+    return 0x48 + (addressEnum - 1);
+  }
+
+  return 0;
+}
+
+static uint8_t getADS1115GainValue() {
+  switch (ConfigManager->get(KEY_ADS1115_GAIN)->getValueInt()) {
+    case 0:
+      return ADS1X15_GAIN_6144MV;
+    case 1:
+      return ADS1X15_GAIN_4096MV;
+    case 2:
+      return ADS1X15_GAIN_2048MV;
+    case 3:
+      return ADS1X15_GAIN_1024MV;
+    case 4:
+      return ADS1X15_GAIN_0512MV;
+    case 5:
+      return ADS1X15_GAIN_0256MV;
+    default:
+      return ADS1X15_GAIN_6144MV;
+  }
 }
 
 uint32_t last_loop{0};
@@ -1017,6 +1045,21 @@ void setup() {
       auto spsPM025 = new Supla::Sensor::SPS30_PM025(sps30);
       auto spsPM04 = new Supla::Sensor::SPS30_PM04(sps30);
       auto spsPM10 = new Supla::Sensor::SPS30_PM10(sps30);
+    }
+#endif
+
+#ifdef SUPLA_ADS1115_KPOP
+    if (int addressEnum = ConfigManager->get(KEY_ACTIVE_SENSOR_2)->getElement(SENSOR_I2C_ADS1115).toInt()) {
+      uint8_t address = getADS1115Address(addressEnum);
+      if (address != 0) {
+        uint8_t adsGain = getADS1115GainValue();
+
+        auto ads1115 = new Supla::Sensor::ADS1115_X(address, adsGain);
+        auto adsA0 = new Supla::Sensor::ADS1115_A0(ads1115);
+        auto adsA1 = new Supla::Sensor::ADS1115_A1(ads1115);
+        auto adsA2 = new Supla::Sensor::ADS1115_A2(ads1115);
+        auto adsA3 = new Supla::Sensor::ADS1115_A3(ads1115);
+      }
     }
 #endif
 
